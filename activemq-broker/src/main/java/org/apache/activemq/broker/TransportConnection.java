@@ -715,7 +715,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             try {
                 cs.addSession(info);
             } catch (IllegalStateException e) {
-                e.printStackTrace();
+                LOG.warn("Failed to add session: {}", info.getSessionId(), e);
                 broker.removeSession(cs.getContext(), info);
             }
         }
@@ -1199,7 +1199,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     LOG.debug("Cleaning up connection resources: {}", getRemoteAddress());
                     processRemoveConnection(cs.getInfo().getConnectionId(), RemoveInfo.LAST_DELIVERED_UNKNOWN);
                 } catch (Throwable ignore) {
-                    ignore.printStackTrace();
+                    LOG.debug("Exception caught removing connection {}. This exception is ignored.", cs.getInfo().getConnectionId(), ignore);
                 }
             }
         }

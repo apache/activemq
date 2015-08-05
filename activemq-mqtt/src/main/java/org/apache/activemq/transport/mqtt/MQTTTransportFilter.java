@@ -143,7 +143,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
                 default: return frame.toString();
             }
         } catch (Throwable e) {
-            e.printStackTrace();
+            LOG.warn(e.getMessage(), e);
             return frame.toString();
         }
     }

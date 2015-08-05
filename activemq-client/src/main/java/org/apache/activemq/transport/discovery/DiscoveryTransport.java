@@ -114,7 +114,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
             try {
                 ((Suspendable)discoveryAgent).suspend();
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.warn("Exception suspending discoverAgent: ", discoveryAgent);
             }
         }
         super.transportResumed();
@@ -126,7 +126,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
             try {
                 ((Suspendable)discoveryAgent).resume();
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.warn("Exception resuming discoverAgent: ", discoveryAgent);
             }
         }
         super.transportInterupted();

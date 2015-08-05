@@ -160,13 +160,13 @@ public class MQTTProtocolConverter {
                         try {
                             handler.onResponse(this, new Response());
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            LOG.warn("Failed to send command " + command, e);
                         }
                     }
                     return;
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LOG.warn("Failed to send command " + command, e);
             }
         }
 

@@ -169,6 +169,7 @@ public class DestinationView implements DestinationViewMBean {
     /**
      * @return the average size of a message (bytes)
      */
+    @Override
     public long getAverageMessageSize() {
         // we are okay with the size without decimals so cast to long
         return (long) destination.getDestinationStatistics().getMessageSize().getAverageSize();
@@ -177,6 +178,7 @@ public class DestinationView implements DestinationViewMBean {
     /**
      * @return the max size of a message (bytes)
      */
+    @Override
     public long getMaxMessageSize() {
         return destination.getDestinationStatistics().getMessageSize().getMaxSize();
     }
@@ -184,6 +186,7 @@ public class DestinationView implements DestinationViewMBean {
     /**
      * @return the min size of a message (bytes)
      */
+    @Override
     public long getMinMessageSize() {
         return destination.getDestinationStatistics().getMessageSize().getMinSize();
     }
@@ -226,10 +229,6 @@ public class DestinationView implements DestinationViewMBean {
                 }
 
             } catch (Throwable e) {
-                // TODO DELETE ME
-                System.out.println(e);
-                e.printStackTrace();
-                // TODO DELETE ME
                 LOG.warn("exception browsing destination", e);
             }
         }

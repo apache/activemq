@@ -19,8 +19,11 @@ package org.apache.activemq.store.kahadb.disk.journal;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.activemq.store.kahadb.AbstractKahaDBStore;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Optimized Store reader and updater. Single threaded and synchronous. Use in
@@ -30,6 +33,7 @@ import org.apache.activemq.util.RecoverableRandomAccessFile;
  */
 final class DataFileAccessor {
 
+    private static final Logger LOG = LoggerFactory.getLogger(DataFileAccessor.class);
     private final DataFile dataFile;
     private final Map<Journal.WriteKey, Journal.WriteCommand> inflightWrites;
     private final RecoverableRandomAccessFile file;
@@ -58,7 +62,7 @@ final class DataFileAccessor {
         try {
             dataFile.closeRandomAccessFile(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("Failed to close file", e);
         }
     }
 

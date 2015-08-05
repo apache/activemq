@@ -57,10 +57,10 @@ import static javax.xml.bind.DatatypeConverter.printBase64Binary;
  * <ul>
  * <li></li>
  * </ul>
- * 
+ *
  * @org.apache.xbean.XBean element="defaultJDBCAdapter"
- * 
- * 
+ *
+ *
  */
 public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultJDBCAdapter.class);
@@ -81,6 +81,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return rs.getBytes(index);
     }
 
+    @Override
     public void doCreateTables(TransactionContext c) throws SQLException, IOException {
         Statement s = null;
         cleanupExclusiveLock.writeLock().lock();
@@ -136,6 +137,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public void doDropTables(TransactionContext c) throws SQLException, IOException {
         Statement s = null;
         cleanupExclusiveLock.writeLock().lock();
@@ -168,6 +170,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public long doGetLastMessageStoreSequenceId(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -195,7 +198,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             close(s);
         }
     }
-    
+
+    @Override
     public byte[] doGetMessageById(TransactionContext c, long storeSequenceId) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -220,6 +224,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     /**
      * A non null xid indicated the op is part of 2pc prepare, so ops are flagged pending outcome
      */
+    @Override
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
                              long expiration, byte priority, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
@@ -281,6 +286,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
 
+    @Override
     public void doAddMessageReference(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination,
             long expirationTime, String messageRef) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
@@ -311,6 +317,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public long[] getStoreSequenceId(TransactionContext c, ActiveMQDestination destination, MessageId messageID) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -332,6 +339,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public byte[] doGetMessage(TransactionContext c, MessageId id) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -352,6 +360,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public String doGetMessageReference(TransactionContext c, long seq) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -374,6 +383,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     /**
      * A non null xid indicated the op is part of 2pc prepare, so ops are flagged pending outcome
      */
+    @Override
     public void doRemoveMessage(TransactionContext c, long seq, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getRemovedMessageStatement();
         cleanupExclusiveLock.readLock().lock();
@@ -407,6 +417,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener)
             throws Exception {
         PreparedStatement s = null;
@@ -436,7 +447,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public void doMessageIdScan(TransactionContext c, int limit, 
+    @Override
+    public void doMessageIdScan(TransactionContext c, int limit,
             JDBCMessageIdScanListener listener) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -462,7 +474,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             close(s);
         }
     }
-    
+
+    @Override
     public void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
                                          String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
@@ -501,6 +514,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
 
+    @Override
     public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
                              String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
@@ -535,7 +549,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 close(s);
-            }            
+            }
         }
     }
 
@@ -568,6 +582,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public void doRecoverSubscription(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, JDBCMessageRecoveryListener listener) throws Exception {
         // dumpTables(c,
@@ -601,9 +616,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, long seq, long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
-        
+
         PreparedStatement s = null;
         ResultSet rs = null;
         cleanupExclusiveLock.readLock().lock();
@@ -636,6 +652,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public void doRecoverNextMessagesWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, long seq, long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
 
@@ -672,6 +689,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public int doGetDurableSubscriberMessageCount(TransactionContext c, ActiveMQDestination destination,
             String clientId, String subscriptionName, boolean isPrioritizedMessages) throws SQLException, IOException {
         PreparedStatement s = null;
@@ -682,7 +700,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             if (isPrioritizedMessages) {
                 s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatementWithPriority());
             } else {
-                s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatement());    
+                s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatement());
             }
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
@@ -700,12 +718,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     /**
-     * @param c 
-     * @param info 
-     * @param retroactive 
-     * @throws SQLException 
-     * @throws IOException 
+     * @param c
+     * @param info
+     * @param retroactive
+     * @throws SQLException
+     * @throws IOException
      */
+    @Override
     public void doSetSubscriberEntry(TransactionContext c, SubscriptionInfo info, boolean retroactive, boolean isPrioritizedMessages)
             throws SQLException, IOException {
         // dumpTables(c, destination.getQualifiedName(), clientId,
@@ -753,6 +772,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public SubscriptionInfo doGetSubscriberEntry(TransactionContext c, ActiveMQDestination destination,
             String clientId, String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
@@ -782,6 +802,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public SubscriptionInfo[] doGetAllSubscriptions(TransactionContext c, ActiveMQDestination destination)
             throws SQLException, IOException {
         PreparedStatement s = null;
@@ -810,6 +831,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public void doRemoveAllMessages(TransactionContext c, ActiveMQDestination destinationName) throws SQLException,
             IOException {
         PreparedStatement s = null;
@@ -828,6 +850,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public void doDeleteSubscription(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
@@ -845,6 +868,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     char priorityIterator = 0; // unsigned
+    @Override
     public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         cleanupExclusiveLock.writeLock().lock();
@@ -862,6 +886,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public long doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination,
             String clientId, String subscriberName) throws SQLException, IOException {
         PreparedStatement s = null;
@@ -902,6 +927,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public Set<ActiveMQDestination> doGetDestinations(TransactionContext c) throws SQLException, IOException {
         HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
         PreparedStatement s = null;
@@ -958,6 +984,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         this.batchStatments = batchStatments;
     }
 
+    @Override
     public void setUseExternalMessageReferences(boolean useExternalMessageReferences) {
         this.statements.setUseExternalMessageReferences(useExternalMessageReferences);
     }
@@ -969,10 +996,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return this.statements;
     }
 
+    @Override
     public void setStatements(Statements statements) {
         this.statements = statements;
     }
 
+    @Override
     public int getMaxRows() {
         return maxRows;
     }
@@ -980,6 +1009,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     /**
      * the max value for statement maxRows, used to limit jdbc queries
      */
+    @Override
     public void setMaxRows(int maxRows) {
         this.maxRows = maxRows;
     }
@@ -1066,6 +1096,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
 
+    @Override
     public int doGetMessageCount(TransactionContext c, ActiveMQDestination destination) throws SQLException,
             IOException {
         PreparedStatement s = null;
@@ -1087,6 +1118,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return result;
     }
 
+    @Override
     public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long[] lastRecoveredEntries,
             long maxSeq, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
@@ -1131,7 +1163,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.warn("Exception recovering next messages", e);
         } finally {
             cleanupExclusiveLock.readLock().unlock();
             close(rs);
@@ -1139,6 +1171,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public long doGetLastProducerSequenceId(TransactionContext c, ProducerId id)
             throws SQLException, IOException {
         PreparedStatement s = null;
@@ -1161,13 +1194,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     public static void dumpTables(Connection c, String destinationName, String clientId, String
-      subscriptionName) throws SQLException { 
-        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out); 
-        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out); 
-        PreparedStatement s = c.prepareStatement("SELECT M.ID, D.LAST_ACKED_ID FROM " 
-                + "ACTIVEMQ_MSGS M, " +"ACTIVEMQ_ACKS D " 
-                + "WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?" 
-                + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID" 
+      subscriptionName) throws SQLException {
+        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out);
+        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
+        PreparedStatement s = c.prepareStatement("SELECT M.ID, D.LAST_ACKED_ID FROM "
+                + "ACTIVEMQ_MSGS M, " +"ACTIVEMQ_ACKS D "
+                + "WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
                 + " ORDER BY M.ID");
       s.setString(1,destinationName); s.setString(2,clientId); s.setString(3,subscriptionName);
       printQuery(s,System.out); }
