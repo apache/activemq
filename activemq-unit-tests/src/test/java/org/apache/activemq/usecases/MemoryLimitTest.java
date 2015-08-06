@@ -97,7 +97,7 @@ public class MemoryLimitTest extends TestSupport {
         }
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 640000)
     public void testCursorBatch() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?jms.prefetchPolicy.all=10");
@@ -150,7 +150,7 @@ public class MemoryLimitTest extends TestSupport {
         for (int i = 1; i < 2000; i++) {
             msg = consumer.receive(5000);
             if (msg == null) {
-               dumpAllThreads("NoMessage");
+                dumpAllThreads("NoMessage");
             }
             assertNotNull("Didn't receive message " + i, msg);
             msg.acknowledge();
