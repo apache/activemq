@@ -42,6 +42,7 @@ public class VirtualTopic implements VirtualDestination {
     private String name = ">";
     private boolean selectorAware = false;
     private boolean local = false;
+    private boolean concurrentSend = false;
 
     @Override
     public ActiveMQDestination getVirtualDestination() {
@@ -50,8 +51,8 @@ public class VirtualTopic implements VirtualDestination {
 
     @Override
     public Destination intercept(Destination destination) {
-        return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, getPrefix(), getPostfix(), isLocal()) : new VirtualTopicInterceptor(
-            destination, getPrefix(), getPostfix(), isLocal());
+        return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, this) :
+                new VirtualTopicInterceptor(destination, this);
     }
 
     @Override
@@ -167,5 +168,17 @@ public class VirtualTopic implements VirtualDestination {
         return new StringBuilder("VirtualTopic:").append(prefix).append(',').append(name).append(',').
                                                   append(postfix).append(',').append(selectorAware).
                                                   append(',').append(local).toString();
+    }
+
+    public boolean isConcurrentSend() {
+        return concurrentSend;
+    }
+
+    /**
+     * When true, dispatch to matching destinations in parallel (in multiple threads)
+     * @param concurrentSend
+     */
+    public void setConcurrentSend(boolean concurrentSend) {
+        this.concurrentSend = concurrentSend;
     }
 }

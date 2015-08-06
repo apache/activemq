@@ -40,8 +40,8 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
     LRUCache<String,BooleanExpression> expressionCache = new LRUCache<String,BooleanExpression>();
     private SubQueueSelectorCacheBroker selectorCachePlugin;
 
-    public SelectorAwareVirtualTopicInterceptor(Destination next, String prefix, String postfix, boolean local) {
-        super(next, prefix, postfix, local);
+    public SelectorAwareVirtualTopicInterceptor(Destination next, VirtualTopic virtualTopic) {
+        super(next, virtualTopic);
     }
 
     /**
@@ -49,18 +49,7 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
      * the virtual queues, hence there is no build up of unmatched messages on these destinations
      */
     @Override
-    protected void send(ProducerBrokerExchange context, Message message, ActiveMQDestination destination) throws Exception {
-        Broker broker = context.getConnectionContext().getBroker();
-        Set<Destination> destinations = broker.getDestinations(destination);
-
-        for (Destination dest : destinations) {
-            if (matchesSomeConsumer(broker, message, dest)) {
-                dest.send(context, message.copy());
-            }
-        }
-    }
-
-    private boolean matchesSomeConsumer(final Broker broker, Message message, Destination dest) throws IOException {
+    protected boolean shouldDispatch(final Broker broker, Message message, Destination dest) throws IOException {
         boolean matches = false;
         MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
         msgContext.setDestination(dest.getActiveMQDestination());

@@ -74,7 +74,9 @@ public abstract class Transaction {
     }
 
     public void addSynchronization(Synchronization r) {
-        synchronizations.add(r);
+        synchronized (synchronizations) {
+            synchronizations.add(r);
+        }
         if (state == START_STATE) {
             state = IN_USE_STATE;
         }
