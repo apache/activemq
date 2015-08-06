@@ -1139,6 +1139,7 @@
             <goals>deploy</goals>
             <remoteTagging>false</remoteTagging>
             <suppressCommitBeforeTag>false</suppressCommitBeforeTag>
+            <tagNameFormat>activemq-@{project.version}</tagNameFormat>
           </configuration>
           <dependencies>
             <dependency>
