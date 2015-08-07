@@ -347,7 +347,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         try {
             remoteBrokerInfo = futureRemoteBrokerInfo.get();
             if (remoteBrokerInfo == null) {
-                fireBridgeFailed(new Throwable("remoteBrokerInfo is null"));
+                serviceLocalException(new Throwable("remoteBrokerInfo is null"));
                 return;
             }
         } catch (Exception e) {
@@ -358,7 +358,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         try {
             localBrokerInfo = futureLocalBrokerInfo.get();
             if (localBrokerInfo == null) {
-                fireBridgeFailed(new Throwable("localBrokerInfo is null"));
+                serviceLocalException(new Throwable("localBrokerInfo is null"));
                 return;
             }
 
