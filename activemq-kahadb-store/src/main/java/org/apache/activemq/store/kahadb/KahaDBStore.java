@@ -1004,16 +1004,32 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
     @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        MessageStore store = this.transactionStore.proxy(new KahaDBMessageStore(destination));
-        storeCache.put(key(convert(destination)), store);
+        String key = key(convert(destination));
+        MessageStore store = storeCache.get(key(convert(destination)));
+        if (store == null) {
+            final MessageStore queueStore = this.transactionStore.proxy(new KahaDBMessageStore(destination));
+            store = storeCache.putIfAbsent(key, queueStore);
+            if (store == null) {
+                store = queueStore;
+            }
+        }
+
         return store;
     }
 
     @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
-        TopicMessageStore store = this.transactionStore.proxy(new KahaDBTopicMessageStore(destination));
-        storeCache.put(key(convert(destination)), store);
-        return store;
+        String key = key(convert(destination));
+        MessageStore store = storeCache.get(key(convert(destination)));
+        if (store == null) {
+            final TopicMessageStore topicStore = this.transactionStore.proxy(new KahaDBTopicMessageStore(destination));
+            store = storeCache.putIfAbsent(key, topicStore);
+            if (store == null) {
+                store = topicStore;
+            }
+        }
+
+        return (TopicMessageStore) store;
     }
 
     /**

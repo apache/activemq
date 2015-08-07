@@ -17,6 +17,7 @@
 package org.apache.activemq.store;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -34,10 +35,14 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSession;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -247,6 +252,12 @@ public abstract class AbstractMessageStoreSizeStatTest {
         Topic topic = session.createTopic("test.topic");
         session.createDurableSubscriber(topic, "sub1");
 
+        // browse the durable sub - this test is to verify that browsing (which calls createTopicMessageStore)
+        //in KahaDBStore will not create a brand new store (ie uses the cache) If the cache is not used,
+        //then the statistics won't be updated properly because a new store would overwrite the old store
+        //which is still in use
+        ObjectName[] subs = broker.getAdminView().getDurableTopicSubscribers();
+
         try {
             // publish a bunch of non-persistent messages to fill up the temp
             // store
@@ -255,6 +266,15 @@ public abstract class AbstractMessageStoreSizeStatTest {
             for (int i = 0; i < 200; i++) {
                 prod.send(createMessage(session));
             }
+
+            //verify the view has 200 messages
+            assertEquals(1, subs.length);
+            ObjectName subName = subs[0];
+            DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)
+                    broker.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
+            CompositeData[] data  = sub.browse();
+            assertNotNull(data);
+            assertEquals(200, data.length);
 
         } finally {
             connection.stop();
