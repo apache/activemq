@@ -47,6 +47,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -2281,7 +2282,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * This is a map to cache DestinationStatistics for a specific
      * KahaDestination key
      */
-    protected final Map<String, MessageStore> storeCache =
+    protected final ConcurrentMap<String, MessageStore> storeCache =
             new ConcurrentHashMap<String, MessageStore>();
 
     /**
