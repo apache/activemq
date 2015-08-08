@@ -57,8 +57,7 @@ public class MemoryMessageStore extends AbstractMessageStore {
     public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
         synchronized (messageTable) {
             messageTable.put(message.getMessageId(), message);
-            getMessageStoreStatistics().getMessageCount().increment();
-            getMessageStoreStatistics().getMessageSize().addSize(message.getSize());
+            incMessageStoreStatistics(message);
         }
         message.incrementReferenceCount();
         message.getMessageId().setFutureOrSequenceLong(sequenceId++);
@@ -94,8 +93,7 @@ public class MemoryMessageStore extends AbstractMessageStore {
             Message removed = messageTable.remove(msgId);
             if( removed !=null ) {
                 removed.decrementReferenceCount();
-                getMessageStoreStatistics().getMessageCount().decrement();
-                getMessageStoreStatistics().getMessageSize().addSize(-removed.getSize());
+                decMessageStoreStatistics(removed);
             }
             if ((lastBatchId != null && lastBatchId.equals(msgId)) || messageTable.isEmpty()) {
                 lastBatchId = null;
@@ -198,6 +196,16 @@ public class MemoryMessageStore extends AbstractMessageStore {
             getMessageStoreStatistics().getMessageCount().setCount(count);
             getMessageStoreStatistics().getMessageSize().setTotalSize(size);
         }
+    }
+
+    protected final void incMessageStoreStatistics(Message message) {
+        getMessageStoreStatistics().getMessageCount().increment();
+        getMessageStoreStatistics().getMessageSize().addSize(message.getSize());
+    }
+
+    protected final void decMessageStoreStatistics(Message message) {
+        getMessageStoreStatistics().getMessageCount().decrement();
+        getMessageStoreStatistics().getMessageSize().addSize(-message.getSize());
     }
 
 }

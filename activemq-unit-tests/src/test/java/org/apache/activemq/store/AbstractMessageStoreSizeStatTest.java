@@ -35,6 +35,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSession;
+import javax.jms.TopicSubscriber;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
@@ -47,6 +48,8 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,6 +70,7 @@ public abstract class AbstractMessageStoreSizeStatTest {
     protected BrokerService broker;
     protected URI brokerConnectURI;
     protected String defaultQueueName = "test.queue";
+    protected String defaultTopicName = "test.topic";
     protected static int messageSize = 1000;
 
     @Before
@@ -100,34 +104,67 @@ public abstract class AbstractMessageStoreSizeStatTest {
 
     @Test
     public void testMessageSize() throws Exception {
-        Destination dest = publishTestMessages(200);
+        Destination dest = publishTestQueueMessages(200);
         verifyStats(dest, 200, 200 * messageSize);
     }
 
     @Test
     public void testMessageSizeAfterConsumption() throws Exception {
 
-        Destination dest = publishTestMessages(200);
+        Destination dest = publishTestQueueMessages(200);
         verifyStats(dest, 200, 200 * messageSize);
 
-        consumeTestMessages();
-        Thread.sleep(3000);
+        consumeTestQueueMessages();
+
         verifyStats(dest, 0, 0);
     }
 
     @Test
-    public void testMessageSizeDurable() throws Exception {
+    public void testMessageSizeOneDurable() throws Exception {
 
-        Destination dest = publishTestMessagesDurable();
+        Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
+        connection.setClientID("clientId");
+        connection.start();
+
+        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1"}, 200, 200);
 
         //verify the count and size
         verifyStats(dest, 200, 200 * messageSize);
+
+        //consume all messages
+        consumeDurableTestMessages(connection, "sub1", 200);
+
+        //All messages should now be gone
+        verifyStats(dest, 0, 0);
+
+        connection.close();
+    }
+
+    @Test(timeout=10000)
+    public void testMessageSizeTwoDurables() throws Exception {
+
+        Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
+        connection.setClientID("clientId");
+        connection.start();
+
+        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1", "sub2"}, 200, 200);
+
+        //verify the count and size
+        verifyStats(dest, 200, 200 * messageSize);
+
+        //consume messages just for sub1
+        consumeDurableTestMessages(connection, "sub1", 200);
+
+        //There is still a durable that hasn't consumed so the messages should exist
+        verifyStats(dest, 200, 200 * messageSize);
+
+        connection.stop();
 
     }
 
     @Test
     public void testMessageSizeAfterDestinationDeletion() throws Exception {
-        Destination dest = publishTestMessages(200);
+        Destination dest = publishTestQueueMessages(200);
         verifyStats(dest, 200, 200 * messageSize);
 
         //check that the size is 0 after deletion
@@ -135,18 +172,34 @@ public abstract class AbstractMessageStoreSizeStatTest {
         verifyStats(dest, 0, 0);
     }
 
-    protected void verifyStats(Destination dest, int count, long minimumSize) throws Exception {
-        MessageStore messageStore = dest.getMessageStore();
-        MessageStoreStatistics storeStats = dest.getMessageStore().getMessageStoreStatistics();
-        assertEquals(messageStore.getMessageCount(), count);
-        assertEquals(messageStore.getMessageCount(),
-                storeStats.getMessageCount().getCount());
-        assertEquals(messageStore.getMessageSize(),
+    protected void verifyStats(Destination dest, final int count, final long minimumSize) throws Exception {
+        final MessageStore messageStore = dest.getMessageStore();
+        final MessageStoreStatistics storeStats = dest.getMessageStore().getMessageStoreStatistics();
+
+        Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return (count == messageStore.getMessageCount()) && (messageStore.getMessageCount() ==
+                        storeStats.getMessageCount().getCount()) && (messageStore.getMessageSize() ==
                 messageStore.getMessageStoreStatistics().getMessageSize().getTotalSize());
+            }
+        });
+
         if (count > 0) {
             assertTrue(storeStats.getMessageSize().getTotalSize() > minimumSize);
+            Wait.waitFor(new Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return storeStats.getMessageSize().getTotalSize() > minimumSize;
+                }
+            });
         } else {
-            assertEquals(storeStats.getMessageSize().getTotalSize(), 0);
+            Wait.waitFor(new Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return storeStats.getMessageSize().getTotalSize() == 0;
+                }
+            });
         }
     }
 
@@ -166,11 +219,11 @@ public abstract class AbstractMessageStoreSizeStatTest {
     }
 
 
-    protected Destination publishTestMessages(int count) throws Exception {
-        return publishTestMessages(count, defaultQueueName);
+    protected Destination publishTestQueueMessages(int count) throws Exception {
+        return publishTestQueueMessages(count, defaultQueueName);
     }
 
-    protected Destination publishTestMessages(int count, String queueName) throws Exception {
+    protected Destination publishTestQueueMessages(int count, String queueName) throws Exception {
         // create a new queue
         final ActiveMQDestination activeMqQueue = new ActiveMQQueue(
                 queueName);
@@ -196,17 +249,21 @@ public abstract class AbstractMessageStoreSizeStatTest {
             }
 
         } finally {
-            connection.stop();
+            connection.close();
         }
 
         return dest;
     }
 
-    protected Destination consumeTestMessages() throws Exception {
-        return consumeTestMessages(defaultQueueName);
+    protected Destination consumeTestQueueMessages() throws Exception {
+        return consumeTestQueueMessages(defaultQueueName);
     }
 
-    protected Destination consumeTestMessages(String queueName) throws Exception {
+    protected Destination consumeDurableTestMessages(Connection connection, String sub, int size) throws Exception {
+        return consumeDurableTestMessages(connection, sub, size, defaultTopicName);
+    }
+
+    protected Destination consumeTestQueueMessages(String queueName) throws Exception {
         // create a new queue
         final ActiveMQDestination activeMqQueue = new ActiveMQQueue(
                 queueName);
@@ -235,22 +292,45 @@ public abstract class AbstractMessageStoreSizeStatTest {
         return dest;
     }
 
-    protected Destination publishTestMessagesDurable() throws Exception {
+    protected Destination consumeDurableTestMessages(Connection connection, String sub, int size, String topicName) throws Exception {
         // create a new queue
         final ActiveMQDestination activeMqTopic = new ActiveMQTopic(
-                "test.topic");
+                topicName);
+
+        Destination dest = broker.getDestination(activeMqTopic);
+
+        Session session = connection.createSession(false,
+                QueueSession.AUTO_ACKNOWLEDGE);
+        Topic topic = session.createTopic(topicName);
+
+        try {
+            TopicSubscriber consumer = session.createDurableSubscriber(topic, sub);
+            for (int i = 0; i < size; i++) {
+                consumer.receive();
+            }
+
+        } finally {
+            session.close();
+        }
+
+        return dest;
+    }
+
+    protected Destination publishTestMessagesDurable(Connection connection, String[] subNames, int publishSize, int expectedSize) throws Exception {
+        // create a new queue
+        final ActiveMQDestination activeMqTopic = new ActiveMQTopic(
+                defaultTopicName);
 
         Destination dest = broker.getDestination(activeMqTopic);
 
         // Start the connection
-        Connection connection = new ActiveMQConnectionFactory(brokerConnectURI)
-        .createConnection();
-        connection.setClientID("clientId");
-        connection.start();
+
         Session session = connection.createSession(false,
                 TopicSession.AUTO_ACKNOWLEDGE);
-        Topic topic = session.createTopic("test.topic");
-        session.createDurableSubscriber(topic, "sub1");
+        Topic topic = session.createTopic(defaultTopicName);
+        for (String subName : subNames) {
+            session.createDurableSubscriber(topic, subName);
+        }
 
         // browse the durable sub - this test is to verify that browsing (which calls createTopicMessageStore)
         //in KahaDBStore will not create a brand new store (ie uses the cache) If the cache is not used,
@@ -263,21 +343,21 @@ public abstract class AbstractMessageStoreSizeStatTest {
             // store
             MessageProducer prod = session.createProducer(topic);
             prod.setDeliveryMode(DeliveryMode.PERSISTENT);
-            for (int i = 0; i < 200; i++) {
+            for (int i = 0; i < publishSize; i++) {
                 prod.send(createMessage(session));
             }
 
-            //verify the view has 200 messages
-            assertEquals(1, subs.length);
+            //verify the view has expected messages
+            assertEquals(subNames.length, subs.length);
             ObjectName subName = subs[0];
             DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)
                     broker.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
             CompositeData[] data  = sub.browse();
             assertNotNull(data);
-            assertEquals(200, data.length);
+            assertEquals(expectedSize, data.length);
 
         } finally {
-            connection.stop();
+            session.close();
         }
 
         return dest;

@@ -64,7 +64,7 @@ public class KahaDBMessageStoreSizeStatTest extends
     @Test
     public void testMessageSizeAfterRestartAndPublish() throws Exception {
 
-        Destination dest = publishTestMessages(200);
+        Destination dest = publishTestQueueMessages(200);
 
         // verify the count and size
         verifyStats(dest, 200, 200 * messageSize);
@@ -72,7 +72,7 @@ public class KahaDBMessageStoreSizeStatTest extends
         // stop, restart broker and publish more messages
         stopBroker();
         this.setUpBroker(false);
-        dest = publishTestMessages(200);
+        dest = publishTestQueueMessages(200);
 
         // verify the count and size
         verifyStats(dest, 400, 400 * messageSize);

@@ -84,7 +84,7 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
     @Test
     public void testMessageSizeAfterRestartAndPublish() throws Exception {
 
-        Destination dest = publishTestMessages(200);
+        Destination dest = publishTestQueueMessages(200);
 
         // verify the count and size
         verifyStats(dest, 200, 200 * messageSize);
@@ -92,7 +92,7 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
         // stop, restart broker and publish more messages
         stopBroker();
         this.setUpBroker(false);
-        dest = publishTestMessages(200);
+        dest = publishTestQueueMessages(200);
 
         // verify the count and size
         verifyStats(dest, 400, 400 * messageSize);
@@ -102,13 +102,13 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
     @Test
     public void testMessageSizeAfterRestartAndPublishMultiQueue() throws Exception {
 
-        Destination dest = publishTestMessages(200);
+        Destination dest = publishTestQueueMessages(200);
 
         // verify the count and size
         verifyStats(dest, 200, 200 * messageSize);
         assertTrue(broker.getPersistenceAdapter().size() > 200 * messageSize);
 
-        Destination dest2 = publishTestMessages(200, "test.queue2");
+        Destination dest2 = publishTestQueueMessages(200, "test.queue2");
 
         // verify the count and size
         verifyStats(dest2, 200, 200 * messageSize);
@@ -117,8 +117,8 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
         // stop, restart broker and publish more messages
         stopBroker();
         this.setUpBroker(false);
-        dest = publishTestMessages(200);
-        dest2 = publishTestMessages(200, "test.queue2");
+        dest = publishTestQueueMessages(200);
+        dest2 = publishTestQueueMessages(200, "test.queue2");
 
         // verify the count and size after publishing messages
         verifyStats(dest, 400, 400 * messageSize);
