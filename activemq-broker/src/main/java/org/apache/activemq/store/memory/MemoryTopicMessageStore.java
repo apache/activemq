@@ -182,10 +182,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
 
         @Override
         protected void onCacheEviction(Map.Entry<MessageId, Message> eldest) {
-            if (messageStoreStatistics != null) {
-                messageStoreStatistics.getMessageCount().decrement();
-                messageStoreStatistics.getMessageSize().addSize(-eldest.getValue().getSize());
-            }
+            decMessageStoreStatistics(messageStoreStatistics, eldest.getValue());
         }
     }
 }
