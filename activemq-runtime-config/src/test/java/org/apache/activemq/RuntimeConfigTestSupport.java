@@ -37,7 +37,7 @@ public class RuntimeConfigTestSupport {
 
     public static final int SLEEP = 4; // seconds
     public static final String EMPTY_UPDATABLE_CONFIG = "emptyUpdatableConfig1000" ;
-    BrokerService brokerService;
+    protected BrokerService brokerService;
 
     @Rule
     public TestWatcher watchman = new TestWatcher() {
