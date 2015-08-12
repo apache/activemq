@@ -172,17 +172,11 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
 
             while (true) {
                 if (!plain.hasRemaining()) {
-
                     int readCount = secureRead(plain);
-
-                    if (readCount == 0) {
-                        break;
-                    }
 
                     // channel is closed, cleanup
                     if (readCount == -1) {
                         onException(new EOFException());
-                        selection.close();
                         break;
                     }
 
@@ -191,8 +185,11 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
 
                 if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
                     processCommand(plain);
-                    //Break when command is found
-                    break;
+                    //we have received enough bytes to detect the protocol
+                    if (receiveCounter >= 8) {
+                        readSize = receiveCounter;
+                        break;
+                    }
                 }
             }
         } catch (IOException e) {
@@ -204,8 +201,13 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
 
     @Override
     protected void processCommand(ByteBuffer plain) throws Exception {
-        read = plain.array();
-        readSize = receiveCounter;
+        ByteBuffer newBuffer = ByteBuffer.allocate(receiveCounter);
+        if (read != null) {
+            newBuffer.put(read);
+        }
+        newBuffer.put(plain);
+        newBuffer.flip();
+        read = newBuffer.array();
     }
 
 
@@ -214,7 +216,6 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
         taskRunnerFactory = new TaskRunnerFactory("ActiveMQ NIOSSLTransport Task");
         // no need to init as we can delay that until demand (eg in doHandshake)
         connect();
-        //super.doStart();
     }
 
 
@@ -224,10 +225,6 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
             taskRunnerFactory.shutdownNow();
             taskRunnerFactory = null;
         }
-//        if (selection != null) {
-//            selection.close();
-//            selection = null;
-//        }
     }
 
 

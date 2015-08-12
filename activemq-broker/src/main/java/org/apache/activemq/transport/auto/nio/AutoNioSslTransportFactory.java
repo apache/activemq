@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.transport.auto.nio;
+package org.apache.activemq.transport.auto.nio;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -31,11 +31,11 @@ import javax.net.ssl.SSLEngine;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.broker.transport.auto.AutoTcpTransportServer;
-import org.apache.activemq.broker.transport.auto.AutoTransportUtils;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.auto.AutoTcpTransportServer;
+import org.apache.activemq.transport.auto.AutoTransportUtils;
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.transport.nio.NIOSSLTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;

@@ -73,8 +73,9 @@ public class NIOSSLTransport extends NIOTransport {
             ByteBuffer inputBuffer) throws IOException {
         super(wireFormat, socket, initBuffer);
         this.sslEngine = engine;
-        if (engine != null)
+        if (engine != null) {
             this.sslSession = engine.getSession();
+        }
         this.inputBuffer = inputBuffer;
     }
 
@@ -146,11 +147,13 @@ public class NIOSSLTransport extends NIOTransport {
             this.buffOut = outputStream;
 
             //If the sslEngine was not passed in, then handshake
-            if (!hasSslEngine)
+            if (!hasSslEngine) {
                 sslEngine.beginHandshake();
+            }
             handshakeStatus = sslEngine.getHandshakeStatus();
-            if (!hasSslEngine)
+            if (!hasSslEngine) {
                 doHandshake();
+            }
 
            // if (hasSslEngine) {
             selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
@@ -328,27 +331,28 @@ public class NIOSSLTransport extends NIOTransport {
             currentBuffer.putInt(nextFrameSize);
 
         } else {
-
             // If its all in one read then we can just take it all, otherwise take only
             // the current frame size and the next iteration starts a new command.
-            if (currentBuffer.remaining() >= plain.remaining()) {
-                currentBuffer.put(plain);
-            } else {
-                byte[] fill = new byte[currentBuffer.remaining()];
-                plain.get(fill);
-                currentBuffer.put(fill);
-            }
+            if (currentBuffer != null) {
+                if (currentBuffer.remaining() >= plain.remaining()) {
+                    currentBuffer.put(plain);
+                } else {
+                    byte[] fill = new byte[currentBuffer.remaining()];
+                    plain.get(fill);
+                    currentBuffer.put(fill);
+                }
 
-            // Either we have enough data for a new command or we have to wait for some more.
-            if (currentBuffer.hasRemaining()) {
-                return;
-            } else {
-                currentBuffer.flip();
-                Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
-                doConsume(command);
-                nextFrameSize = -1;
-                currentBuffer = null;
-           }
+                // Either we have enough data for a new command or we have to wait for some more.
+                if (currentBuffer.hasRemaining()) {
+                    return;
+                } else {
+                    currentBuffer.flip();
+                    Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
+                    doConsume(command);
+                    nextFrameSize = -1;
+                    currentBuffer = null;
+               }
+            }
         }
     }
 

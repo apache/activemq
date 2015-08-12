@@ -481,47 +481,60 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     final protected void doHandleSocket(Socket socket) {
         boolean closeSocket = true;
+        boolean countIncremented = false;
         try {
-            if (this.currentTransportCount.get() >= this.maximumConnections) {
-                throw new ExceededMaximumConnectionsException(
-                    "Exceeded the maximum number of allowed client connections. See the '" +
-                    "maximumConnections' property on the TCP transport configuration URI " +
-                    "in the ActiveMQ configuration file (e.g., activemq.xml)");
-            } else {
-                currentTransportCount.incrementAndGet();
+            int currentCount;
+            do {
+                currentCount = currentTransportCount.get();
+                if (currentCount >= this.maximumConnections) {
+                     throw new ExceededMaximumConnectionsException(
+                         "Exceeded the maximum number of allowed client connections. See the '" +
+                         "maximumConnections' property on the TCP transport configuration URI " +
+                         "in the ActiveMQ configuration file (e.g., activemq.xml)");
+                 }
 
-                HashMap<String, Object> options = new HashMap<String, Object>();
-                options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
-                options.put("maxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
-                options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
-                options.put("trace", Boolean.valueOf(trace));
-                options.put("soTimeout", Integer.valueOf(soTimeout));
-                options.put("socketBufferSize", Integer.valueOf(socketBufferSize));
-                options.put("connectionTimeout", Integer.valueOf(connectionTimeout));
-                options.put("logWriterName", logWriterName);
-                options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
-                options.put("startLogging", Boolean.valueOf(startLogging));
-                options.putAll(transportOptions);
+            //Increment this value before configuring the transport
+            //This is necessary because some of the transport servers must read from the
+            //socket during configureTransport() so we want to make sure this value is
+            //accurate as the transport server could pause here waiting for data to be sent from a client
+            } while(!currentTransportCount.compareAndSet(currentCount, currentCount + 1));
+            countIncremented = true;
 
-                TransportInfo transportInfo = configureTransport(this, socket);
-                closeSocket = false;
+            HashMap<String, Object> options = new HashMap<String, Object>();
+            options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
+            options.put("maxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
+            options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
+            options.put("trace", Boolean.valueOf(trace));
+            options.put("soTimeout", Integer.valueOf(soTimeout));
+            options.put("socketBufferSize", Integer.valueOf(socketBufferSize));
+            options.put("connectionTimeout", Integer.valueOf(connectionTimeout));
+            options.put("logWriterName", logWriterName);
+            options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
+            options.put("startLogging", Boolean.valueOf(startLogging));
+            options.putAll(transportOptions);
 
-                if (transportInfo.transport instanceof ServiceSupport) {
-                    ((ServiceSupport) transportInfo.transport).addServiceListener(this);
-                }
+            TransportInfo transportInfo = configureTransport(this, socket);
+            closeSocket = false;
 
-                Transport configuredTransport = transportInfo.transportFactory.serverConfigure(
-                        transportInfo.transport, transportInfo.format, options);
-
-                getAcceptListener().onAccept(configuredTransport);
+            if (transportInfo.transport instanceof ServiceSupport) {
+                ((ServiceSupport) transportInfo.transport).addServiceListener(this);
             }
+
+            Transport configuredTransport = transportInfo.transportFactory.serverConfigure(
+                    transportInfo.transport, transportInfo.format, options);
+
+            getAcceptListener().onAccept(configuredTransport);
+
         } catch (SocketTimeoutException ste) {
             // expect this to happen
-            currentTransportCount.decrementAndGet();
         } catch (Exception e) {
-            currentTransportCount.decrementAndGet();
             if (closeSocket) {
                 try {
+                    //if closing the socket, only decrement the count it was actually incremented
+                    //where it was incremented
+                    if (countIncremented) {
+                        currentTransportCount.decrementAndGet();
+                    }
                     socket.close();
                 } catch (Exception ignore) {
                 }

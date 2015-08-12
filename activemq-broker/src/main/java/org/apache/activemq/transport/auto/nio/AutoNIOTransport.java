@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.transport.auto.nio;
+package org.apache.activemq.transport.auto.nio;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -58,8 +58,8 @@ public class AutoNIOTransport extends NIOTransport {
     protected int readFromBuffer() throws IOException {
         int readSize = 0;
         if (!doneInitBuffer) {
-            if (initBuffer == null) {
-                throw new IOException("Null initBuffer");
+            if (initBuffer == null || initBuffer.readSize < 8) {
+                throw new IOException("Protocol type could not be determined.");
             }
             if (nextFrameSize == -1) {
                 readSize = 4;

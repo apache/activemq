@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.transport.auto;
+package org.apache.activemq.transport.auto;
 
 import java.util.Arrays;
 import java.util.HashMap;

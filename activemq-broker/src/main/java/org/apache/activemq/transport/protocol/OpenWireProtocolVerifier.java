@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.transport.protocol;
+package org.apache.activemq.transport.protocol;
 
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;

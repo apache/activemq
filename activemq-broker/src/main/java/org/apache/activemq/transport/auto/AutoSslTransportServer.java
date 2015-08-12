@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.broker.transport.auto;
+package org.apache.activemq.transport.auto;
 
 import java.io.IOException;
 import java.net.Socket;

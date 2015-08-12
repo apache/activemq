@@ -14,23 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.transport.protocol;
+package org.apache.activemq.transport.protocol;
 
+import java.nio.charset.StandardCharsets;
 
 /**
  *
  *
  */
-public class AmqpProtocolVerifier implements ProtocolVerifier {
+public class StompProtocolVerifier implements ProtocolVerifier {
 
-    static final byte[] PREFIX = new byte[] { 'A', 'M', 'Q', 'P' };
-
+    /* (non-Javadoc)
+     * @see org.apache.activemq.broker.transport.protocol.ProtocolVerifier#isProtocol(byte[])
+     */
     @Override
     public boolean isProtocol(byte[] value) {
-        for (int i = 0; i < PREFIX.length; i++) {
-            if (value[i] != PREFIX[i])
-                return false;
-        }
-        return true;
+        String frameStart = new String(value, StandardCharsets.US_ASCII);
+        return frameStart.startsWith("CONNECT") || frameStart.startsWith("STOMP");
     }
+
+
+
+
 }

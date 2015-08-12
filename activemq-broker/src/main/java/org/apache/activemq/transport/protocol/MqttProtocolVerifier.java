@@ -14,25 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.transport.protocol;
-
-import java.nio.charset.StandardCharsets;
+package org.apache.activemq.transport.protocol;
 
 /**
  *
  *
  */
-public class StompProtocolVerifier implements ProtocolVerifier {
+public class MqttProtocolVerifier implements ProtocolVerifier {
 
     /* (non-Javadoc)
      * @see org.apache.activemq.broker.transport.protocol.ProtocolVerifier#isProtocol(byte[])
      */
     @Override
     public boolean isProtocol(byte[] value) {
-        String frameStart = new String(value, StandardCharsets.US_ASCII);
-        return frameStart.startsWith("CONNECT") || frameStart.startsWith("STOMP");
-    }
+        boolean mqtt311 = value[4] == 77 && // M
+                value[5] == 81 && // Q
+                value[6] == 84 && // T
+                value[7] == 84;   // T
 
+        boolean mqtt31  = value[4] == 77  && // M
+                        value[5] == 81  && // Q
+                        value[6] == 73  && // I
+                        value[7] == 115;   // s
+
+        return mqtt311 || mqtt31;
+    }
 
 
 

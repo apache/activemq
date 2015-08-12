@@ -14,37 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp.auto;
+package org.apache.activemq.transport.protocol;
 
-import java.net.URI;
-
-import org.apache.activemq.transport.amqp.JMSClientSslTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Test the JMS client when connected to the NIO+SSL transport.
+ *
+ *
  */
-public class JMSClientAutoNioPlusSslTest extends JMSClientSslTest {
-    protected static final Logger LOG = LoggerFactory.getLogger(JMSClientAutoNioPlusSslTest.class);
+public class AmqpProtocolVerifier implements ProtocolVerifier {
+
+    static final byte[] PREFIX = new byte[] { 'A', 'M', 'Q', 'P' };
 
     @Override
-    protected URI getBrokerURI() {
-        return autoNioPlusSslURI;
-    }
-
-    @Override
-    protected boolean isUseTcpConnector() {
-        return false;
-    }
-
-    @Override
-    protected boolean isUseAutoNioPlusSslConnector() {
+    public boolean isProtocol(byte[] value) {
+        for (int i = 0; i < PREFIX.length; i++) {
+            if (value[i] != PREFIX[i]) {
+                return false;
+            }
+        }
         return true;
-    }
-
-    @Override
-    protected String getTargetConnectorName() {
-        return "auto+nio+ssl";
     }
 }
