@@ -89,7 +89,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                         @Override
                         public void run() {
                             onException(new InactivityIOException(
-                                "Channel was inactive for too (>" + (connectAttemptTimeout) + ") long: " + next.getRemoteAddress()));
+                                "Channel was inactive (no connection attempt made) for too (>" + (connectAttemptTimeout) + ") long: " + next.getRemoteAddress()));
                         }
                     });
                 } catch (RejectedExecutionException ex) {
