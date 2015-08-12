@@ -46,7 +46,9 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
 
     @Override
     public void start() throws Exception {
-        startConnectCheckTask();
+        if (!isMonitorStarted()) {
+            startConnectCheckTask();
+        }
         super.start();
     }
 
