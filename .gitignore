@@ -23,6 +23,7 @@ activemq-data
 activemq-leveldb-store/.cache
 activemq-leveldb-store/.cache-main
 activemq-leveldb-store/.cache-tests
+activemq-leveldb-store/.tmpBin
 activemq-runtime-config/src/main/resources/activemq.xsd
 activemq-amqp/amqp-trace.txt
 data/
