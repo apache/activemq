@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.console.command;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +24,6 @@ import java.util.Set;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class ListCommand extends AbstractJmxCommand {
-
     protected String[] helpFile = new String[] {
         "Task Usage: Main list [list-options]",
         "Description:  Lists all available broker in the specified JMX context.",
@@ -56,10 +56,13 @@ public class ListCommand extends AbstractJmxCommand {
      */
     protected void runTask(List tokens) throws Exception {
         try {
-            Set<String> propsView = new HashSet<String>();
-            propsView.add("brokerName");
-            context.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(createJmxConnection()), propsView));
-        } catch (Exception e) {
+        	Set<String> propsView = new HashSet<String>();
+            propsView.add("BrokerName");
+            propsView.add("TransportConnectors");
+            List<String> queryAddObjects = new ArrayList<String>(10);
+            List addMBeans = JmxMBeansUtil.queryMBeans(createJmxConnection(), queryAddObjects, propsView);
+            context.printMBean(JmxMBeansUtil.filterMBeansView(addMBeans, propsView));
+            } catch (Exception e) {
             context.printException(new RuntimeException("Failed to execute list task. Reason: " + e));
             throw new Exception(e);
         }
