@@ -250,7 +250,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
                     do {
                         int read = is.read();
                         if (read == -1) {
-                            throw new IOException("Connection faild, stream is closed.");
+                            throw new IOException("Connection failed, stream is closed.");
                         }
                         data.put((byte) read);
                         readBytes.incrementAndGet();
@@ -261,19 +261,8 @@ public class AutoTcpTransportServer extends TcpTransportServer {
             }
         });
 
-        try {
-            //Wait for protocolDetectionTimeOut if defined
-            if (protocolDetectionTimeOut > 0) {
-                future.get(protocolDetectionTimeOut, TimeUnit.MILLISECONDS);
-            } else {
-                future.get();
-            }
-            data.flip();
-        } catch (TimeoutException e) {
-            throw new InactivityIOException("Client timed out before wire format could be detected. " +
-                    " 8 bytes are required to detect the protocol but only: " + readBytes + " were sent.");
-        }
-
+        waitForProtocolDetectionFinish(future, readBytes);
+        data.flip();
         ProtocolInfo protocolInfo = detectProtocol(data.array());
 
         initBuffer = new InitBuffer(readBytes.get(), ByteBuffer.allocate(readBytes.get()));
@@ -287,6 +276,20 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         Transport transport = createTransport(socket, format,protocolInfo.detectedTransportFactory);
 
         return new TransportInfo(format, transport, protocolInfo.detectedTransportFactory);
+    }
+
+    protected void waitForProtocolDetectionFinish(final Future<?> future, final AtomicInteger readBytes) throws Exception {
+        try {
+            //Wait for protocolDetectionTimeOut if defined
+            if (protocolDetectionTimeOut > 0) {
+                future.get(protocolDetectionTimeOut, TimeUnit.MILLISECONDS);
+            } else {
+                future.get();
+            }
+        } catch (TimeoutException e) {
+            throw new InactivityIOException("Client timed out before wire format could be detected. " +
+                    " 8 bytes are required to detect the protocol but only: " + readBytes.get() + " byte(s) were sent.");
+        }
     }
 
     @Override
@@ -334,7 +337,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         boolean found = false;
         for (String scheme : protocolVerifiers.keySet()) {
             if (protocolVerifiers.get(scheme).isProtocol(buffer)) {
-                LOG.debug("Detected " + scheme);
+                LOG.debug("Detected protocol " + scheme);
                 detectedWireFormatFactory = findWireFormatFactory(scheme, wireFormatOptions);
 
                 if (scheme.equals("default")) {
@@ -348,7 +351,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         }
 
         if (!found) {
-            throw new IllegalStateException("Could not detect wire format");
+            throw new IllegalStateException("Could not detect the wire format");
         }
 
         return new ProtocolInfo(detectedTransportFactory, detectedWireFormatFactory);

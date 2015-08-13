@@ -24,6 +24,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
@@ -34,8 +35,6 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This transport initializes the SSLEngine and reads the first command before
@@ -43,8 +42,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class AutoInitNioSSLTransport extends NIOSSLTransport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AutoInitNioSSLTransport.class);
 
     public AutoInitNioSSLTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -157,8 +154,17 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
         return this.sslEngine;
     }
 
-    public volatile byte[] read;
-    public volatile int readSize;
+    private volatile byte[] readData;
+
+    private final AtomicInteger readSize = new AtomicInteger();
+
+    public byte[] getReadData() {
+        return readData != null ? readData : new byte[0];
+    }
+
+    public AtomicInteger getReadSize() {
+        return readSize;
+    }
 
     @Override
     public void serviceRead() {
@@ -181,13 +187,13 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
                     }
 
                     receiveCounter += readCount;
+                    readSize.addAndGet(readCount);
                 }
 
                 if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
                     processCommand(plain);
                     //we have received enough bytes to detect the protocol
                     if (receiveCounter >= 8) {
-                        readSize = receiveCounter;
                         break;
                     }
                 }
@@ -202,12 +208,12 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
     @Override
     protected void processCommand(ByteBuffer plain) throws Exception {
         ByteBuffer newBuffer = ByteBuffer.allocate(receiveCounter);
-        if (read != null) {
-            newBuffer.put(read);
+        if (readData != null) {
+            newBuffer.put(readData);
         }
         newBuffer.put(plain);
         newBuffer.flip();
-        read = newBuffer.array();
+        readData = newBuffer.array();
     }
 
 

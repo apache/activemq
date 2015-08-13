@@ -6,12 +6,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLContext;
@@ -19,7 +17,6 @@ import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.auto.AutoTcpTransportServer;
 import org.apache.activemq.transport.nio.AutoInitNioSSLTransport;
@@ -117,31 +114,23 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         in.start();
         SSLEngine engine = in.getSslSession();
 
-        Future<Integer> future = executor.submit(new Callable<Integer>() {
+        Future<?> future = executor.submit(new Runnable() {
             @Override
-            public Integer call() throws Exception {
+            public void run() {
                 //Wait for handshake to finish initializing
                 do {
                     in.serviceRead();
-                } while(in.readSize < 8);
-
-                return in.readSize;
+                } while(in.getReadSize().get() < 8);
             }
         });
 
-        try {
-            future.get(protocolDetectionTimeOut, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            throw new InactivityIOException("Client timed out before wire format could be detected. " +
-                    " 8 bytes are required to detect the protocol but only: " + in.readSize + " were sent.");
-        }
-
+        waitForProtocolDetectionFinish(future, in.getReadSize());
         in.stop();
 
-        initBuffer = new InitBuffer(in.readSize, ByteBuffer.allocate(in.read.length));
-        initBuffer.buffer.put(in.read);
+        initBuffer = new InitBuffer(in.getReadSize().get(), ByteBuffer.allocate(in.getReadData().length));
+        initBuffer.buffer.put(in.getReadData());
 
-        ProtocolInfo protocolInfo = detectProtocol(in.read);
+        ProtocolInfo protocolInfo = detectProtocol(in.getReadData());
 
         if (protocolInfo.detectedTransportFactory instanceof BrokerServiceAware) {
             ((BrokerServiceAware) protocolInfo.detectedTransportFactory).setBrokerService(brokerService);
