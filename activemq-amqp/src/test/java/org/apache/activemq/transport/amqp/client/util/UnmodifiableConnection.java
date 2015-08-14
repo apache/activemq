@@ -26,8 +26,10 @@ import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Link;
+import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.reactor.Reactor;
 
 /**
  * Unmodifiable Connection wrapper used to prevent test code from accidentally
@@ -186,5 +188,15 @@ public class UnmodifiableConnection implements Connection {
     @Override
     public Transport getTransport() {
         return new UnmodifiableTransport(connection.getTransport());
+    }
+
+    @Override
+    public Record attachments() {
+        return connection.attachments();
+    }
+
+    @Override
+    public Reactor getReactor() {
+        return connection.getReactor();
     }
 }

@@ -20,6 +20,7 @@ import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sender;
 
 /**
@@ -143,5 +144,20 @@ public class UnmodifiableDelivery implements Delivery {
     @Override
     public boolean isBuffered() {
         return delivery.isBuffered();
+    }
+
+    @Override
+    public Record attachments() {
+        return delivery.attachments();
+    }
+
+    @Override
+    public DeliveryState getDefaultDeliveryState() {
+        return delivery.getDefaultDeliveryState();
+    }
+
+    @Override
+    public void setDefaultDeliveryState(DeliveryState state) {
+        throw new UnsupportedOperationException("Cannot alter the Delivery");
     }
 }

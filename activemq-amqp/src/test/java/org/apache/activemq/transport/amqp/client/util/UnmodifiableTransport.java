@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
+import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Ssl;
 import org.apache.qpid.proton.engine.SslDomain;
@@ -244,5 +245,20 @@ public class UnmodifiableTransport implements Transport {
     @Override
     public void unbind() {
         throw new UnsupportedOperationException("Cannot alter the Transport");
+    }
+
+    @Override
+    public Record attachments() {
+        return transport.attachments();
+    }
+
+    @Override
+    public long getFramesInput() {
+        return transport.getFramesInput();
+    }
+
+    @Override
+    public long getFramesOutput() {
+        return transport.getFramesOutput();
     }
 }
