@@ -22,6 +22,7 @@ import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
@@ -130,5 +131,20 @@ public class UnmodifiableSession implements Session {
     @Override
     public int getOutgoingBytes() {
         return session.getOutgoingBytes();
+    }
+
+    @Override
+    public Record attachments() {
+        return session.attachments();
+    }
+
+    @Override
+    public long getOutgoingWindow() {
+        return session.getOutgoingWindow();
+    }
+
+    @Override
+    public void setOutgoingWindow(long outgoingWindowSize) {
+        throw new UnsupportedOperationException("Cannot alter the Session");
     }
 }

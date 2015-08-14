@@ -27,6 +27,7 @@ import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
@@ -244,5 +245,14 @@ public class UnmodifiableLink implements Link {
     @Override
     public void detach() {
         throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
+
+    @Override
+    public boolean detached() {
+        return link.detached();
+    }
+
+    public Record attachments() {
+        return link.attachments();
     }
 }
