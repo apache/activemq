@@ -43,6 +43,8 @@ public class VirtualTopicInterceptor extends DestinationFilter {
     private final String postfix;
     private final boolean local;
     private final boolean concurrentSend;
+    private final boolean transactedSend;
+
     private final LRUCache<ActiveMQDestination, ActiveMQQueue> cache = new LRUCache<ActiveMQDestination, ActiveMQQueue>();
 
     public VirtualTopicInterceptor(Destination next, VirtualTopic virtualTopic) {
@@ -51,6 +53,7 @@ public class VirtualTopicInterceptor extends DestinationFilter {
         this.postfix = virtualTopic.getPostfix();
         this.local = virtualTopic.isLocal();
         this.concurrentSend = virtualTopic.isConcurrentSend();
+        this.transactedSend = virtualTopic.isTransactedSend();
     }
 
     public Topic getTopic() {
@@ -120,7 +123,7 @@ public class VirtualTopicInterceptor extends DestinationFilter {
 
     private LocalTransactionId beginLocalTransaction(int numDestinations, ConnectionContext connectionContext, Message message) throws Exception {
         LocalTransactionId result = null;
-        if (numDestinations > 1 && message.isPersistent() && message.getTransactionId() == null) {
+        if (transactedSend && numDestinations > 1 && message.isPersistent() && message.getTransactionId() == null) {
             result = new LocalTransactionId(new ConnectionId(message.getMessageId().getProducerId().toString()), message.getMessageId().getProducerSequenceId());
             connectionContext.getBroker().beginTransaction(connectionContext, result);
             connectionContext.setTransaction(connectionContext.getTransactions().get(result));

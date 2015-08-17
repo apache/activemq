@@ -55,6 +55,7 @@ public class VirtualTopicFanoutPerfTest {
                 for (VirtualDestination virtualDestination : ((VirtualDestinationInterceptor) destinationInterceptor).getVirtualDestinations()) {
                     if (virtualDestination instanceof VirtualTopic) {
                         ((VirtualTopic) virtualDestination).setConcurrentSend(true);
+                        ((VirtualTopic) virtualDestination).setTransactedSend(true);
                 }
             }
         }
