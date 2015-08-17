@@ -43,6 +43,7 @@ public class VirtualTopic implements VirtualDestination {
     private boolean selectorAware = false;
     private boolean local = false;
     private boolean concurrentSend = false;
+    private boolean transactedSend = false;
 
     @Override
     public ActiveMQDestination getVirtualDestination() {
@@ -180,5 +181,17 @@ public class VirtualTopic implements VirtualDestination {
      */
     public void setConcurrentSend(boolean concurrentSend) {
         this.concurrentSend = concurrentSend;
+    }
+
+    public boolean isTransactedSend() {
+        return transactedSend;
+    }
+
+    /**
+     * When true, dispatch to matching destinations always uses a transaction.
+     * @param transactedSend
+     */
+    public void setTransactedSend(boolean transactedSend) {
+        this.transactedSend = transactedSend;
     }
 }
