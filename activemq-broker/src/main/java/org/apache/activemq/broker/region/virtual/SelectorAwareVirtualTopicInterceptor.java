@@ -76,15 +76,17 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
 
         if (cache != null) {
             final Set<String> selectors = cache.getSelector(dest.getActiveMQDestination().getQualifiedName());
-            for (String selector : selectors) {
-                try {
-                    final BooleanExpression expression = getExpression(selector);
-                    matches = expression.matches(msgContext);
-                    if (matches) {
-                        return true;
+            if (selectors != null) {
+                for (String selector : selectors) {
+                    try {
+                        final BooleanExpression expression = getExpression(selector);
+                        matches = expression.matches(msgContext);
+                        if (matches) {
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        LOG.error(e.getMessage(), e);
                     }
-                } catch (Exception e) {
-                    LOG.error(e.getMessage(), e);
                 }
             }
         }
