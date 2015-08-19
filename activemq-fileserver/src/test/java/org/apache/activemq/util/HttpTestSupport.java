@@ -30,9 +30,7 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +49,8 @@ public abstract class HttpTestSupport extends TestCase {
     protected boolean createBroker = true;
 
     final File homeDir = new File("src/main/webapp/uploads/");
+    int port;
 
-    
     private int getPort(Object o) throws Exception {
         return (Integer)o.getClass().getMethod("getLocalPort").invoke(o);
     }
@@ -68,7 +66,7 @@ public abstract class HttpTestSupport extends TestCase {
         server.setHandler(context);
         server.start();
 
-        int port = getPort(server.getConnectors()[0]);
+        port = getPort(server.getConnectors()[0]);
 
         waitForJettySocketToAccept("http://localhost:" + port);
 
@@ -92,6 +90,8 @@ public abstract class HttpTestSupport extends TestCase {
             homeDir.mkdir();
         }
     }
+
+
 
     @Override
     protected void tearDown() throws Exception {

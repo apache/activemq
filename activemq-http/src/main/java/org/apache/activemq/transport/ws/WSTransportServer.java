@@ -26,6 +26,7 @@ import javax.servlet.Servlet;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.WebTransportServerSupport;
+import org.apache.activemq.transport.ws.jetty9.WSServlet;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
@@ -81,7 +82,7 @@ public class WSTransportServer extends WebTransportServerSupport {
         // Update the Connect To URI with our actual location in case the configured port
         // was set to zero so that we report the actual port we are listening on.
 
-        int port = getConnectorLocalPort(); 
+        int port = getConnectorLocalPort();
         if (port == -1) {
             port = boundTo.getPort();
         }
@@ -98,18 +99,13 @@ public class WSTransportServer extends WebTransportServerSupport {
     }
 
     private Servlet createWSServlet() throws Exception {
-        if (Server.getVersion().startsWith("9")) {
-            return (Servlet)Class.forName("org.apache.activemq.transport.ws.jetty9.WSServlet", true,
-                                          getClass().getClassLoader()).newInstance();
-        }
-        return (Servlet)Class.forName("org.apache.activemq.transport.ws.jetty8.WSServlet", true,
-                                      getClass().getClassLoader()).newInstance();
+        return new WSServlet();
     }
 
     private int getConnectorLocalPort() throws Exception {
         return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
     }
-    
+
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         Server temp = server;

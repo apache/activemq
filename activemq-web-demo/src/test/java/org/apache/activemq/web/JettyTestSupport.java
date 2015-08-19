@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.web;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -33,14 +35,12 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.junit.Assert.assertTrue;
 
 public class JettyTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JettyTestSupport.class);
@@ -74,9 +74,8 @@ public class JettyTestSupport {
 
         int port = getPort();
         server = new Server();
-        SelectChannelConnector connector = new SelectChannelConnector();
+        ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
-        connector.setServer(server);
         WebAppContext context = new WebAppContext();
 
         context.setResourceBase("src/main/webapp");
@@ -129,6 +128,7 @@ public class JettyTestSupport {
         final URL url = new URL(bindLocation);
         assertTrue("Jetty endpoint is available", Wait.waitFor(new Wait.Condition() {
 
+            @Override
             public boolean isSatisified() throws Exception {
                 boolean canConnect = false;
                 try {

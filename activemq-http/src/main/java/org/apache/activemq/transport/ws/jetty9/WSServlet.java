@@ -62,7 +62,12 @@ public class WSServlet extends WebSocketServlet {
             @Override
             public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
                 WebSocketListener socket;
-                if (req.getSubProtocols().contains("mqtt")) {
+                boolean isMqtt = false;
+                for (String subProtocol : req.getSubProtocols()) {
+                    subProtocol.startsWith("mqtt");
+                    isMqtt = true;
+                }
+                if (isMqtt) {
                     socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
                     resp.setAcceptedSubProtocol("mqtt");
                 } else {

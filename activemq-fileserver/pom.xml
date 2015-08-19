@@ -33,12 +33,11 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.mortbay.jetty</groupId>
+        <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
-        <version>${jetty-version}</version>
         <configuration>
           <connectors>
-            <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+            <connector implementation="org.eclipse.jetty.server.ServerConnector">
               <port>${jetty.port}</port>
               <maxIdleTime>60000</maxIdleTime>
             </connector>
@@ -63,12 +62,13 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <!-- web container -->
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-servlet_3.0_spec</artifactId>
-      <scope>provided</scope>
-    </dependency>
+	<!-- web container -->
+	<dependency>
+		<groupId>org.apache.tomcat</groupId>
+		<artifactId>tomcat-servlet-api</artifactId>
+		<scope>provided</scope>
+	</dependency>
+
 
     <!-- used for testing -->
     <dependency>

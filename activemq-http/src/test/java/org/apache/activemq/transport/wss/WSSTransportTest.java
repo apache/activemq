@@ -20,6 +20,7 @@ import org.apache.activemq.transport.SecureSocketConnectorFactory;
 import org.apache.activemq.transport.ws.WSTransportTest;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 
 public class WSSTransportTest extends WSTransportTest {
     @Override
@@ -29,9 +30,9 @@ public class WSSTransportTest extends WSTransportTest {
         sscf.setKeyStorePassword("password");
         sscf.setTrustStore("src/test/resources/client.keystore");
         sscf.setTrustStorePassword("password");
-        
-        Connector c = sscf.createConnector(server);
-        c.getClass().getMethod("setPort", Integer.TYPE).invoke(c, getProxyPort());
+
+        ServerConnector c = (ServerConnector) sscf.createConnector(server);
+        c.setPort(getProxyPort());
         return c;
     }
 

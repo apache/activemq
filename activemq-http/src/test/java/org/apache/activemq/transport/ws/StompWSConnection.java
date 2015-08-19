@@ -23,18 +23,20 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.stomp.StompFrame;
-import org.eclipse.jetty.websocket.WebSocket;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * STOMP over WS based Connection class
  */
-public class StompWSConnection implements WebSocket, WebSocket.OnTextMessage {
+public class StompWSConnection extends WebSocketAdapter implements WebSocketListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompWSConnection.class);
 
-    private Connection connection;
+    private Session connection;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
 
     private final BlockingQueue<String> prefetch = new LinkedBlockingDeque<String>();
@@ -42,6 +44,7 @@ public class StompWSConnection implements WebSocket, WebSocket.OnTextMessage {
     private int closeCode = -1;
     private String closeMessage;
 
+    @Override
     public boolean isConnected() {
         return connection != null ? connection.isOpen() : false;
     }
@@ -56,17 +59,17 @@ public class StompWSConnection implements WebSocket, WebSocket.OnTextMessage {
 
     public void sendRawFrame(String rawFrame) throws Exception {
         checkConnected();
-        connection.sendMessage(rawFrame);
+        connection.getRemote().sendString(rawFrame);
     }
 
     public void sendFrame(StompFrame frame) throws Exception {
         checkConnected();
-        connection.sendMessage(frame.format());
+        connection.getRemote().sendString(frame.format());
     }
 
     public void keepAlive() throws Exception {
         checkConnected();
-        connection.sendMessage("\n");
+        connection.getRemote().sendString("\n");
     }
 
     //----- Receive methods --------------------------------------------------//
@@ -109,7 +112,7 @@ public class StompWSConnection implements WebSocket, WebSocket.OnTextMessage {
     //----- WebSocket callback handlers --------------------------------------//
 
     @Override
-    public void onMessage(String data) {
+    public void onWebSocketText(String data) {
         if (data == null) {
             return;
         }
@@ -122,19 +125,28 @@ public class StompWSConnection implements WebSocket, WebSocket.OnTextMessage {
         }
     }
 
-    @Override
-    public void onOpen(Connection connection) {
-        this.connection = connection;
-        this.connectLatch.countDown();
-    }
 
+    /* (non-Javadoc)
+     * @see org.eclipse.jetty.websocket.api.WebSocketListener#onWebSocketClose(int, java.lang.String)
+     */
     @Override
-    public void onClose(int closeCode, String message) {
-        LOG.trace("STOMP WS Connection closed, code:{} message:{}", closeCode, message);
+    public void onWebSocketClose(int statusCode, String reason) {
+        LOG.trace("STOMP WS Connection closed, code:{} message:{}", statusCode, reason);
 
         this.connection = null;
-        this.closeCode = closeCode;
-        this.closeMessage = message;
+        this.closeCode = statusCode;
+        this.closeMessage = reason;
+
+    }
+
+    /* (non-Javadoc)
+     * @see org.eclipse.jetty.websocket.api.WebSocketListener#onWebSocketConnect(org.eclipse.jetty.websocket.api.Session)
+     */
+    @Override
+    public void onWebSocketConnect(
+            org.eclipse.jetty.websocket.api.Session session) {
+        this.connection = session;
+        this.connectLatch.countDown();
     }
 
     //----- Internal implementation ------------------------------------------//

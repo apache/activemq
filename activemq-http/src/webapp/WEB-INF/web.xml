@@ -16,11 +16,10 @@
     limitations under the License.
 -->
 
-<!DOCTYPE web-app
-    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
-    "http://java.sun.com/dtd/web-app_2_3.dtd">
-
-<web-app>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+      version="3.0"> 
 
     <display-name>ActiveMQ Message Broker Web Application</display-name>
     <description>
@@ -29,9 +28,9 @@
 
     <!-- context config -->
     <context-param>
+    	<description>The URL that the embedded broker should listen on in addition to HTTP</description>
         <param-name>org.apache.activemq.brokerURL</param-name>
-        <param-value>tcp://localhost:61616</param-value>
-        <description>The URL that the embedded broker should listen on in addition to HTTP</description>
+        <param-value>tcp://localhost:61616</param-value>     
     </context-param>
 
 

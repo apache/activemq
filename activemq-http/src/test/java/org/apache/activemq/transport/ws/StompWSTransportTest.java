@@ -27,8 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.util.Wait;
-import org.eclipse.jetty.websocket.WebSocketClient;
-import org.eclipse.jetty.websocket.WebSocketClientFactory;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,14 +48,12 @@ public class StompWSTransportTest extends WSTransportTestSupport {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-
-        WebSocketClientFactory clientFactory = new WebSocketClientFactory();
-        clientFactory.start();
-
-        wsClient = clientFactory.newWebSocketClient();
         wsStompConnection = new StompWSConnection();
 
-        wsClient.open(wsConnectUri, wsStompConnection);
+        wsClient = new WebSocketClient();
+        wsClient.start();
+
+        wsClient.connect(wsStompConnection, wsConnectUri);
         if (!wsStompConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to STOMP WS endpoint");
         }

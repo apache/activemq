@@ -65,6 +65,8 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
             }
         }
 
+        receiveCounter += length;
+
         try {
             MQTTFrame frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(bytes, offset, length));
             getProtocolConverter().onMQTTCommand(frame);

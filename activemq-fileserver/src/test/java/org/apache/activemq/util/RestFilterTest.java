@@ -28,12 +28,12 @@ import org.eclipse.jetty.util.IO;
 public class RestFilterTest extends HttpTestSupport {
 
     protected boolean createBroker = false;
-    
+
     public void testFilter() throws Exception {
         byte[] fileContents = new byte[] {
             'a', 'b', 'c'
         };
-        URL url = new URL("http://localhost:8080/uploads/file.txt");
+        URL url = new URL("http://localhost:" + port + "/uploads/file.txt");
 
         // 1. upload
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();

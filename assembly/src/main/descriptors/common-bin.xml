@@ -247,12 +247,24 @@
         <include>org.springframework:spring-web</include>
         <include>org.springframework:spring-webmvc</include>
         <include>org.eclipse.jetty.aggregate:jetty-all</include>
-        <include>org.apache.geronimo.specs:geronimo-servlet_3.0_spec</include>
-
+        <include>org.apache.tomcat:tomcat-servlet-api</include>
+        <include>org.apache.tomcat:tomcat-websocket-api</include>
+        
         <!-- JSP support -->
-        <include>org.mortbay.jetty:jsp-2.1-glassfish</include>
-        <include>org.mortbay.jetty:jsp-api-2.1-glassfish</include>
-        <include>org.eclipse.jdt:core</include>
+        <!-- Jetty JSP api-->
+        <include>org.eclipse.jetty:apache-jsp</include>
+        <!-- Jetty JSP impl-->
+        <include>org.mortbay.jasper:apache-jsp</include>
+        <!-- jstl and el api -->
+        <include>org.eclipse.jetty:apache-jstl</include>
+        <include>org.apache.taglibs:taglibs-standard-spec</include>
+        <!-- jstl and el impl -->
+        <include>org.mortbay.jasper:apache-el</include>       
+        <include>org.apache.taglibs:taglibs-standard-impl</include>
+        
+		<include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
+        <include>org.ow2.asm:asm</include>
+        <include>org.eclipse.jetty.orbit:org.eclipse.jdt.core</include>
 
         <!-- Atom/RSS support -->
         <include>rome:rome</include>
