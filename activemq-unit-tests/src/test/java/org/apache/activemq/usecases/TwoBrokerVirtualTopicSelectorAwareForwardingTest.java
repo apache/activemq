@@ -578,6 +578,23 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
     }
 
+    public void testSelectorNoMatchInCache() throws Exception {
+        clearSelectorCacheFiles();
+
+        // have the cache ignoreWildcardSelectors
+        final BrokerService brokerA = brokers.get("BrokerA").broker;
+        ((SubQueueSelectorCacheBrokerPlugin)brokerA.getPlugins()[0]).setIgnoreWildcardSelectors(true);
+
+        startAllBrokers();
+
+        ActiveMQDestination consumerBQueue = createDestination("Consumer.B.VirtualTopic.tempTopic", false);
+
+        MessageConsumer nonMatchingConsumer = createConsumer("BrokerA", consumerBQueue, "foo = 'bar%'");
+
+        ActiveMQTopic virtualTopic = new ActiveMQTopic("VirtualTopic.tempTopic");
+        sendMessages("BrokerA", virtualTopic, 1, asMap("foo", "notBar"));
+    }
+
     private HashMap<String, Object> asMap(String key, Object value) {
         HashMap<String, Object> rc = new HashMap<String, Object>(1);
         rc.put(key, value);
