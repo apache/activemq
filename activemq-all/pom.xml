@@ -126,7 +126,14 @@
                   <include>org.springframework:spring-beans</include>
                   <include>org.springframework:spring-context</include>
                   <include>org.springframework:spring-expression</include>
+                  <include>org.springframework:spring-jms</include>
+                  <include>org.springframework:spring-tx</include>
                   <include>org.apache.xbean:xbean-spring</include>
+                  <include>org.apache.camel:camel-jms</include>
+                  <include>org.apache.camel:camel-core</include>
+                  <include>org.apache.camel:camel-spring</include>
+                  <include>com.sun.xml.bind:jaxb-core</include>
+                  <include>com.sun.xml.bind:jaxb-impl</include>
                 </includes>
               </artifactSet>
 
