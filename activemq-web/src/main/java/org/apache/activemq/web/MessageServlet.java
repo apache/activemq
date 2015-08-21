@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,29 +17,23 @@
 
 package org.apache.activemq.web;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.ObjectMessage;
-import javax.jms.TextMessage;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.*;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * A servlet for sending and receiving messages to/from JMS destinations using
@@ -250,7 +244,7 @@ public class MessageServlet extends MessageServletSupport {
     }
 
     protected void handleContinuation(HttpServletRequest request, HttpServletResponse response, WebClient client, Destination destination,
-        MessageAvailableConsumer consumer, long deadline) {
+                                      MessageAvailableConsumer consumer, long deadline) {
         // Get an existing Continuation or create a new one if there are no events.
         Continuation continuation = ContinuationSupport.getContinuation(request);
 
@@ -287,9 +281,24 @@ public class MessageServlet extends MessageServletSupport {
         int messages = 0;
         try {
             response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP
-                                                                                        // 1.1
+            // 1.1
             response.setHeader("Pragma", "no-cache"); // HTTP 1.0
             response.setDateHeader("Expires", 0);
+
+
+            // Set content type as in request. This should be done before calling getWriter by specification
+            String type = request.getContentType();
+
+            if (type != null) {
+                response.setContentType(type);
+            } else {
+                if (isXmlContent(message)) {
+                    response.setContentType(defaultContentType);
+                } else {
+                    response.setContentType("text/plain");
+                }
+            }
+
             // write a responds
             PrintWriter writer = response.getWriter();
 
@@ -301,16 +310,6 @@ public class MessageServlet extends MessageServletSupport {
                 // We have at least one message so set up the response
                 messages = 1;
 
-                String type = getContentType(request);
-                if (type != null) {
-                    response.setContentType(type);
-                } else {
-                    if (isXmlContent(message)) {
-                        response.setContentType(defaultContentType);
-                    } else {
-                        response.setContentType("text/plain");
-                    }
-                }
                 response.setStatus(HttpServletResponse.SC_OK);
 
                 setResponseHeaders(response, message);
@@ -395,7 +394,7 @@ public class MessageServlet extends MessageServletSupport {
         response.setHeader("id", message.getJMSMessageID());
 
         // Return JMS properties as header values.
-        for (Enumeration names = message.getPropertyNames(); names.hasMoreElements();) {
+        for (Enumeration names = message.getPropertyNames(); names.hasMoreElements(); ) {
             String name = (String) names.nextElement();
             response.setHeader(name, message.getObjectProperty(name).toString());
         }
