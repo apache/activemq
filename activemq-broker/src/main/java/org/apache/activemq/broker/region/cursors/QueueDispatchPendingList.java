@@ -97,6 +97,11 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     @Override
+    public long messageSize() {
+        return pagedInPendingDispatch.messageSize() + redeliveredWaitingDispatch.messageSize();
+    }
+
+    @Override
     public Iterator<MessageReference> iterator() {
         return new Iterator<MessageReference>() {
 

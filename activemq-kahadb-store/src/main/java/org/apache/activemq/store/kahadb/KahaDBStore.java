@@ -892,6 +892,30 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             }
         }
 
+
+        @Override
+        public long getMessageSize(String clientId, String subscriptionName) throws IOException {
+            final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
+            indexLock.writeLock().lock();
+            try {
+                return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
+                    @Override
+                    public Integer execute(Transaction tx) throws IOException {
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
+                        if (cursorPos == null) {
+                            // The subscription might not exist.
+                            return 0;
+                        }
+
+                        return (int) getStoredMessageSize(tx, sd, subscriptionKey);
+                    }
+                });
+            } finally {
+                indexLock.writeLock().unlock();
+            }
+        }
+
         @Override
         public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener)
                 throws Exception {

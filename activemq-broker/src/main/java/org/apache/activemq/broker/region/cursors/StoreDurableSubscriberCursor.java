@@ -303,6 +303,15 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
+    public synchronized long messageSize() {
+        long pendingSize=0;
+        for (PendingMessageCursor tsp : storePrefetches) {
+            pendingSize += tsp.messageSize();
+        }
+        return pendingSize;
+    }
+
+    @Override
     public void setMaxBatchSize(int newMaxBatchSize) {
         for (PendingMessageCursor storePrefetch : storePrefetches) {
             storePrefetch.setMaxBatchSize(newMaxBatchSize);

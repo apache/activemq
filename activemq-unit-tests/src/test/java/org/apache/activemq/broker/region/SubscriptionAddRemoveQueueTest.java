@@ -102,6 +102,7 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
     public void testNoDispatchToRemovedConsumers() throws Exception {
         final AtomicInteger producerId = new AtomicInteger();
         Runnable sender = new Runnable() {
+            @Override
             public void run() {
                 AtomicInteger id = new AtomicInteger();
                 int producerIdAndIncrement = producerId.getAndIncrement();
@@ -120,6 +121,7 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
         };
 
         Runnable subRemover = new Runnable() {
+            @Override
             public void run() {
                 for (Subscription sub : subs) {
                     try {
@@ -177,10 +179,12 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
         List<MessageReference> dispatched =
                 Collections.synchronizedList(new ArrayList<MessageReference>());
 
+        @Override
         public void acknowledge(ConnectionContext context, MessageAck ack)
                 throws Exception {
         }
 
+        @Override
         public void add(MessageReference node) throws Exception {
             // immediate dispatch
             QueueMessageReference  qmr = (QueueMessageReference)node;
@@ -188,6 +192,7 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
             dispatched.add(qmr);
         }
 
+        @Override
         public ConnectionContext getContext() {
             return null;
         }
@@ -228,76 +233,100 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
         public void resetConsumedCount() {
         }
 
+        @Override
         public void add(ConnectionContext context, Destination destination)
                 throws Exception {
         }
 
+        @Override
         public void destroy() {
         }
 
+        @Override
         public void gc() {
         }
 
+        @Override
         public ConsumerInfo getConsumerInfo() {
             return info;
         }
 
+        @Override
         public long getDequeueCounter() {
             return 0;
         }
 
+        @Override
         public long getDispatchedCounter() {
             return 0;
         }
 
+        @Override
         public int getDispatchedQueueSize() {
             return 0;
         }
 
+        @Override
         public long getEnqueueCounter() {
             return 0;
         }
 
+        @Override
         public int getInFlightSize() {
             return 0;
         }
 
+        @Override
         public int getInFlightUsage() {
             return 0;
         }
 
+        @Override
         public ObjectName getObjectName() {
             return null;
         }
 
+        @Override
         public int getPendingQueueSize() {
             return 0;
         }
 
+        @Override
+        public long getPendingMessageSize() {
+            return 0;
+        }
+
+        @Override
         public int getPrefetchSize() {
             return 0;
         }
 
+        @Override
         public String getSelector() {
             return null;
         }
 
+        @Override
         public boolean isBrowser() {
             return false;
         }
 
+        @Override
         public boolean isFull() {
             return false;
         }
 
+        @Override
         public boolean isHighWaterMark() {
             return false;
         }
 
+        @Override
         public boolean isLowWaterMark() {
             return false;
         }
 
+        @Override
         public boolean isRecoveryRequired() {
             return false;
         }
@@ -306,19 +335,23 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
             return false;
         }
 
+        @Override
         public boolean matches(MessageReference node,
                 MessageEvaluationContext context) throws IOException {
             return true;
         }
 
+        @Override
         public boolean matches(ActiveMQDestination destination) {
             return false;
         }
 
+        @Override
         public void processMessageDispatchNotification(
                 MessageDispatchNotification mdn) throws Exception {
         }
 
+        @Override
         public Response pullMessage(ConnectionContext context, MessagePull pull)
                 throws Exception {
             return null;
@@ -329,34 +362,42 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
             return false;
         }
 
+        @Override
         public List<MessageReference> remove(ConnectionContext context,
                 Destination destination) throws Exception {
             return new ArrayList<MessageReference>(dispatched);
         }
 
+        @Override
         public void setObjectName(ObjectName objectName) {
         }
 
+        @Override
         public void setSelector(String selector)
                 throws InvalidSelectorException, UnsupportedOperationException {
         }
 
+        @Override
         public void updateConsumerPrefetch(int newPrefetch) {
         }
 
+        @Override
         public boolean addRecoveredMessage(ConnectionContext context,
                 MessageReference message) throws Exception {
             return false;
         }
 
+        @Override
         public ActiveMQDestination getActiveMQDestination() {
             return null;
         }
 
+        @Override
         public int getLockPriority() {
             return 0;
         }
 
+        @Override
         public boolean isLockExclusive() {
             return false;
         }
@@ -367,6 +408,7 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
         public void removeDestination(Destination destination) {
         }
 
+        @Override
         public int countBeforeFull() {
             return 10;
         }

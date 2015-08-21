@@ -927,6 +927,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         return msg;
     }
 
+    public long getPendingMessageSize() {
+        messagesLock.readLock().lock();
+        try{
+            return messages.messageSize();
+        } finally {
+            messagesLock.readLock().unlock();
+        }
+    }
+
+    public long getPendingMessageCount() {
+         return this.destinationStatistics.getMessages().getCount();
+    }
+
     @Override
     public String toString() {
         return destination.getQualifiedName() + ", subscriptions=" + consumers.size()

@@ -1008,6 +1008,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         case None => 0
       }
     }
+    
+    def getMessageSize(clientId: String, subscriptionName: String): Long = {
+      check_running
+      return 0
+    }
 
   }
   class LevelDBPList(val name: String, val key: Long) extends PList {
@@ -1066,6 +1071,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def isEmpty = size()==0
     def size(): Long = listSize.get()
+    def messageSize(): Long = 0
 
     def iterator() = new PListIterator() {
       check_running

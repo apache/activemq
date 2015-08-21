@@ -419,6 +419,13 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     @Override
+    public long getPendingMessageSize() {
+        synchronized (matchedListMutex) {
+            return matched.messageSize();
+        }
+    }
+
+    @Override
     public int getDispatchedQueueSize() {
         return (int)(getSubscriptionStatistics().getDispatched().getCount() -
                 prefetchExtension.get() - getSubscriptionStatistics().getDequeues().getCount());

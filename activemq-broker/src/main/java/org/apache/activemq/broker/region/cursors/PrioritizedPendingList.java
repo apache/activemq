@@ -25,50 +25,64 @@ import java.util.Map;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.management.SizeStatisticImpl;
 
 public class PrioritizedPendingList implements PendingList {
 
     private static final Integer MAX_PRIORITY = 10;
     private final OrderedPendingList[] lists = new OrderedPendingList[MAX_PRIORITY];
     private final Map<MessageId, PendingNode> map = new HashMap<MessageId, PendingNode>();
+    private final SizeStatisticImpl messageSize;
+    private final PendingMessageHelper pendingMessageHelper;
+
 
     public PrioritizedPendingList() {
         for (int i = 0; i < MAX_PRIORITY; i++) {
             this.lists[i] = new OrderedPendingList();
         }
+        messageSize = new SizeStatisticImpl("messageSize", "The size in bytes of the pending messages");
+        messageSize.setEnabled(true);
+        pendingMessageHelper = new PendingMessageHelper(map, messageSize);
     }
 
+    @Override
     public PendingNode addMessageFirst(MessageReference message) {
         PendingNode node = getList(message).addMessageFirst(message);
-        this.map.put(message.getMessageId(), node);
+        this.pendingMessageHelper.addToMap(message, node);
         return node;
     }
 
+    @Override
     public PendingNode addMessageLast(MessageReference message) {
         PendingNode node = getList(message).addMessageLast(message);
-        this.map.put(message.getMessageId(), node);
+        this.pendingMessageHelper.addToMap(message, node);
         return node;
     }
 
+    @Override
     public void clear() {
         for (int i = 0; i < MAX_PRIORITY; i++) {
             this.lists[i].clear();
         }
         this.map.clear();
+        this.messageSize.reset();
     }
 
+    @Override
     public boolean isEmpty() {
         return this.map.isEmpty();
     }
 
+    @Override
     public Iterator<MessageReference> iterator() {
         return new PrioritizedPendingListIterator();
     }
 
+    @Override
     public PendingNode remove(MessageReference message) {
         PendingNode node = null;
         if (message != null) {
-            node = this.map.remove(message.getMessageId());
+            node = this.pendingMessageHelper.removeFromMap(message);
             if (node != null) {
                 node.getList().removeNode(node);
             }
@@ -76,8 +90,14 @@ public class PrioritizedPendingList implements PendingList {
         return node;
     }
 
+    @Override
     public int size() {
         return this.map.size();
+    }
+
+    @Override
+    public long messageSize() {
+        return this.messageSize.getTotalSize();
     }
 
     @Override
@@ -111,10 +131,12 @@ public class PrioritizedPendingList implements PendingList {
                 }
             }
         }
+        @Override
         public boolean hasNext() {
             return list.size() > index;
         }
 
+        @Override
         public MessageReference next() {
             PendingNode node = list.get(this.index);
             this.currentIndex = this.index;
@@ -122,10 +144,11 @@ public class PrioritizedPendingList implements PendingList {
             return node.getMessage();
         }
 
+        @Override
         public void remove() {
             PendingNode node = list.get(this.currentIndex);
             if (node != null) {
-                map.remove(node.getMessage().getMessageId());
+                pendingMessageHelper.removeFromMap(node.getMessage());
                 node.getList().removeNode(node);
             }
         }

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -59,6 +60,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         this(pageFile, page.getPageId());
     }
 
+    @Override
     synchronized public void load(Transaction tx) throws IOException {
         if (loaded.compareAndSet(false, true)) {
             LOG.debug("loading");
@@ -81,15 +83,22 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
                 ListNode<Key, Value> node = loadNode(tx, getHeadPageId());
                 setTailPageId(getHeadPageId());
                 size.addAndGet(node.size(tx));
+                onLoad(node, tx);
                 while (node.getNext() != NOT_SET ) {
                     node = loadNode(tx, node.getNext());
                     size.addAndGet(node.size(tx));
+                    onLoad(node, tx);
                     setTailPageId(node.getPageId());
                 }
             }
         }
     }
 
+    protected void onLoad(ListNode<Key, Value> node, Transaction tx) {
+
+    }
+
+    @Override
     synchronized public void unload(Transaction tx) {
         if (loaded.compareAndSet(true, false)) {
         }
@@ -103,6 +112,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         return loadNode(tx, getTailPageId());
     }
 
+    @Override
     synchronized public boolean containsKey(Transaction tx, Key key) throws IOException {
         assertLoaded();
 
@@ -123,6 +133,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     private Map.Entry<Key, Value> lastGetEntryCache = null;
     private WeakReference<Transaction> lastCacheTxSrc = new WeakReference<Transaction>(null);
 
+    @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     synchronized public Value get(Transaction tx, Key key) throws IOException {
         assertLoaded();
@@ -144,6 +155,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
      *
      * @return the old value contained in the list if one exists or null.
      */
+    @Override
     @SuppressWarnings({ "rawtypes" })
     synchronized public Value put(Transaction tx, Key key, Value value) throws IOException {
 
@@ -211,6 +223,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         return null;
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     synchronized public Value remove(Transaction tx, Key key) throws IOException {
         assertLoaded();
@@ -252,15 +265,17 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         return null;
     }
 
-    public void onRemove() {
+    public void onRemove(Entry<Key, Value> removed) {
         size.decrementAndGet();
         flushCache();
     }
 
+    @Override
     public boolean isTransient() {
         return false;
     }
 
+    @Override
     synchronized public void clear(Transaction tx) throws IOException {
         for (Iterator<ListNode<Key,Value>> iterator = listNodeIterator(tx); iterator.hasNext(); ) {
             ListNode<Key,Value>candidate = iterator.next();
@@ -280,6 +295,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         return getHead(tx).isEmpty(tx);
     }
 
+    @Override
     synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx) throws IOException {
         return getHead(tx).iterator(tx);
     }
@@ -346,6 +362,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     public Marshaller<Key> getKeyMarshaller() {
         return keyMarshaller;
     }
+    @Override
     public void setKeyMarshaller(Marshaller<Key> keyMarshaller) {
         this.keyMarshaller = keyMarshaller;
     }
@@ -353,6 +370,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     public Marshaller<Value> getValueMarshaller() {
         return valueMarshaller;
     }
+    @Override
     public void setValueMarshaller(Marshaller<Value> valueMarshaller) {
         this.valueMarshaller = valueMarshaller;
     }

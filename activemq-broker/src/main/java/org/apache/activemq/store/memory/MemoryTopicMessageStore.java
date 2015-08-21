@@ -146,6 +146,16 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     }
 
     @Override
+    public synchronized long getMessageSize(String clientId, String subscriberName) throws IOException {
+        long result = 0;
+        MemoryTopicSub sub = topicSubMap.get(new SubscriptionKey(clientId, subscriberName));
+        if (sub != null) {
+            result = sub.messageSize();
+        }
+        return result;
+    }
+
+    @Override
     public synchronized void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception {
         MemoryTopicSub sub = this.topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
         if (sub != null) {

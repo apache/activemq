@@ -119,6 +119,11 @@ public interface Subscription extends SubscriptionRecovery {
     int getPendingQueueSize();
 
     /**
+     * @return size of the messages pending delivery
+     */
+    long getPendingMessageSize();
+
+    /**
      * @return number of messages dispatched to the client
      */
     int getDispatchedQueueSize();

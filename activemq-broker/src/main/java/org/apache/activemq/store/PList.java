@@ -41,6 +41,8 @@ public interface PList {
 
     long size();
 
+    long messageSize();
+
     public interface PListIterator extends Iterator<PListEntry> {
         void release();
     }

@@ -582,6 +582,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     @Override
+    public long getPendingMessageSize() {
+        synchronized (pendingLock) {
+            return pending.messageSize();
+        }
+    }
+
+    @Override
     public int getDispatchedQueueSize() {
         return dispatched.size();
     }

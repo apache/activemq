@@ -309,6 +309,16 @@ public class OrderPendingListTest {
         }
 
         @Override
+        public long messageSize() {
+            long size = 0;
+            Iterator<MessageReference> i = theList.iterator();
+            while (i.hasNext()) {
+                size += i.next().getMessage().getSize();
+            }
+            return size;
+        }
+
+        @Override
         public Iterator<MessageReference> iterator() {
             return theList.iterator();
         }

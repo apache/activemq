@@ -26,8 +26,8 @@ import org.apache.activemq.store.MessageRecoveryListener;
 
 /**
  * A holder for a durable subscriber
- * 
- * 
+ *
+ *
  */
 class MemoryTopicSub {
 
@@ -58,9 +58,20 @@ class MemoryTopicSub {
         return map.size();
     }
 
+    synchronized long messageSize() {
+        long messageSize = 0;
+
+        for (Iterator<Entry<MessageId, Message>> iter = map.entrySet().iterator(); iter.hasNext();) {
+            Entry<MessageId, Message> entry = iter.next();
+            messageSize += entry.getValue().getSize();
+        }
+
+        return messageSize;
+    }
+
     synchronized void recoverSubscription(MessageRecoveryListener listener) throws Exception {
-        for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Entry)iter.next();
+        for (Iterator<Entry<MessageId, Message>> iter = map.entrySet().iterator(); iter.hasNext();) {
+            Entry<MessageId, Message> entry = iter.next();
             Object msg = entry.getValue();
             if (msg.getClass() == MessageId.class) {
                 listener.recoverMessageReference((MessageId)msg);
@@ -76,8 +87,8 @@ class MemoryTopicSub {
         // the message table is a synchronizedMap - so just have to synchronize
         // here
         int count = 0;
-        for (Iterator iter = map.entrySet().iterator(); iter.hasNext() && count < maxReturned;) {
-            Map.Entry entry = (Entry)iter.next();
+        for (Iterator<Entry<MessageId, Message>> iter = map.entrySet().iterator(); iter.hasNext() && count < maxReturned;) {
+            Entry<MessageId, Message> entry = iter.next();
             if (pastLackBatch) {
                 count++;
                 Object msg = entry.getValue();

@@ -2536,6 +2536,32 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return 0;
     }
 
+    public long getStoredMessageSize(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
+        SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
+        long locationSize = 0;
+        if (messageSequences != null) {
+            Iterator<Long> sequences = messageSequences.iterator();
+
+            while (sequences.hasNext()) {
+                Long sequenceId = sequences.next();
+                //the last item is the next marker
+                if (!sequences.hasNext()) {
+                    break;
+                }
+                Iterator<Entry<Location, Long>> iterator = sd.locationIndex.iterator(tx);
+                while (iterator.hasNext()) {
+                    Entry<Location, Long> entry = iterator.next();
+                    if (entry.getValue() == sequenceId - 1) {
+                        locationSize += entry.getKey().getSize();
+                        break;
+                    }
+
+                }
+            }
+        }
+
+        return locationSize;
+    }
     protected String key(KahaDestination destination) {
         return destination.getType().getNumber() + ":" + destination.getName();
     }

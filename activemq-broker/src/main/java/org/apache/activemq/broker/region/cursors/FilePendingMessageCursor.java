@@ -44,8 +44,8 @@ import org.apache.activemq.util.ByteSequence;
 /**
  * persist pending messages pending message (messages awaiting dispatch to a
  * consumer) cursor
- * 
- * 
+ *
+ *
  */
 public class FilePendingMessageCursor extends AbstractPendingMessageCursor implements UsageListener {
     static final Logger LOG = LoggerFactory.getLogger(FilePendingMessageCursor.class);
@@ -198,15 +198,15 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     /**
      * add message to await dispatch
-     * 
+     *
      * @param node
-     * @throws Exception 
+     * @throws Exception
      */
     @Override
     public synchronized boolean addMessageLast(MessageReference node) throws Exception {
         return tryAddMessageLast(node, 0);
     }
-    
+
     @Override
     public synchronized boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
         if (!node.isExpired()) {
@@ -252,7 +252,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     /**
      * add message to await dispatch
-     * 
+     *
      * @param node
      */
     @Override
@@ -356,6 +356,11 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         return memoryList.size() + (isDiskListEmpty() ? 0 : (int)getDiskList().size());
     }
 
+    @Override
+    public synchronized long messageSize() {
+        return memoryList.messageSize() + (isDiskListEmpty() ? 0 : (int)getDiskList().messageSize());
+    }
+
     /**
      * clear all pending messages
      */
@@ -389,6 +394,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         super.setSystemUsage(usageManager);
     }
 
+    @Override
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (newPercentUsage >= getMemoryUsageHighWaterMark()) {
             synchronized (this) {
@@ -497,10 +503,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             }
         }
 
+        @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
+        @Override
         public MessageReference next() {
             try {
                 PListEntry entry = iterator.next();
@@ -513,6 +521,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             }
         }
 
+        @Override
         public void remove() {
             iterator.remove();
         }

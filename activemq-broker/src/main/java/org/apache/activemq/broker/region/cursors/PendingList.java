@@ -73,6 +73,8 @@ public interface PendingList extends Iterable<MessageReference> {
      */
     public int size();
 
+    public long messageSize();
+
     /**
      * Returns an iterator over the pending Messages.  The subclass controls how
      * the returned iterator actually traverses the list of pending messages allowing
@@ -81,6 +83,7 @@ public interface PendingList extends Iterable<MessageReference> {
      *
      * @return an Iterator that returns MessageReferences contained in this list.
      */
+    @Override
     public Iterator<MessageReference> iterator();
 
     /**

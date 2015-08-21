@@ -38,8 +38,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A MessageStore that uses a Journal to store it's messages.
- * 
- * 
+ *
+ *
  */
 public class JournalTopicMessageStore extends JournalMessageStore implements TopicMessageStore {
 
@@ -54,12 +54,14 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         this.longTermStore = checkpointStore;
     }
 
+    @Override
     public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
         throws Exception {
         this.peristenceAdapter.checkpoint(true, true);
         longTermStore.recoverSubscription(clientId, subscriptionName, listener);
     }
 
+    @Override
     public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
                                     MessageRecoveryListener listener) throws Exception {
         this.peristenceAdapter.checkpoint(true, true);
@@ -67,21 +69,25 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
 
     }
 
+    @Override
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
         return longTermStore.lookupSubscription(clientId, subscriptionName);
     }
 
+    @Override
     public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         this.peristenceAdapter.checkpoint(true, true);
         longTermStore.addSubscription(subscriptionInfo, retroactive);
     }
 
+    @Override
     public void addMessage(ConnectionContext context, Message message) throws IOException {
         super.addMessage(context, message);
     }
 
     /**
      */
+    @Override
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
                             final MessageId messageId, MessageAck originalAck) throws IOException {
         final boolean debug = LOG.isDebugEnabled();
@@ -111,6 +117,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
             }
             transactionStore.acknowledge(this, ack, location);
             context.getTransaction().addSynchronization(new Synchronization() {
+                @Override
                 public void afterCommit() throws Exception {
                     if (debug) {
                         LOG.debug("Transacted acknowledge commit for: " + messageId + ", at: " + location);
@@ -121,6 +128,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
                     }
                 }
 
+                @Override
                 public void afterRollback() throws Exception {
                     if (debug) {
                         LOG.debug("Transacted acknowledge rollback for: " + messageId + ", at: " + location);
@@ -159,6 +167,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         }
     }
 
+    @Override
     public RecordLocation checkpoint() throws IOException {
 
         final HashMap<SubscriptionKey, MessageId> cpAckedLastAckLocations;
@@ -170,6 +179,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         }
 
         return super.checkpoint(new Callback() {
+            @Override
             public void execute() throws Exception {
 
                 // Checkpoint the acknowledged messages.
@@ -193,19 +203,29 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         return longTermStore;
     }
 
+    @Override
     public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
         longTermStore.deleteSubscription(clientId, subscriptionName);
     }
 
+    @Override
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return longTermStore.getAllSubscriptions();
     }
 
+    @Override
     public int getMessageCount(String clientId, String subscriberName) throws IOException {
         this.peristenceAdapter.checkpoint(true, true);
         return longTermStore.getMessageCount(clientId, subscriberName);
     }
 
+    @Override
+    public long getMessageSize(String clientId, String subscriberName) throws IOException {
+        this.peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getMessageSize(clientId, subscriberName);
+    }
+
+    @Override
     public void resetBatching(String clientId, String subscriptionName) {
         longTermStore.resetBatching(clientId, subscriptionName);
     }
