@@ -22,9 +22,9 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 
 /**
- * Only used by the {@link QueueMessageReference#NULL_MESSAGE}
+ * Used by the {@link QueueMessageReference#NULL_MESSAGE}
  */
-final class NullMessageReference implements QueueMessageReference {
+public final class NullMessageReference implements QueueMessageReference {
 
     private final ActiveMQMessage message = new ActiveMQMessage();
     private volatile int references;

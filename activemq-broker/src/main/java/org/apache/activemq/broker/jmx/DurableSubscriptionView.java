@@ -105,6 +105,10 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         return 0;
     }
 
+    @Override
+    public void removeMessage(@MBeanInfo("messageId") String messageId) throws Exception {
+        throw new IllegalStateException("Subscription must be inactive");
+    }
 
     public boolean doesCursorHaveMessagesBuffered() {
         if (durableSub != null && durableSub.getPending() != null) {

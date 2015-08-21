@@ -58,7 +58,7 @@ public interface SubscriptionViewMBean {
     /**
      * @return the destination name
      */
-    @MBeanInfo("The name of the destionation the subscription is on.")
+    @MBeanInfo("The name of the destination the subscription is on.")
     String getDestinationName();
 
     /**
@@ -158,13 +158,13 @@ public interface SubscriptionViewMBean {
     /**
      * @return whether or not the subscriber is durable (persistent)
      */
-    @MBeanInfo("The subsription is persistent.")
+    @MBeanInfo("The subscription is persistent.")
     boolean isDurable();
 
     /**
      * @return whether or not the subscriber ignores local messages
      */
-    @MBeanInfo("The subsription ignores local messages.")
+    @MBeanInfo("The subscription ignores local messages.")
     boolean isNoLocal();
 
     /**

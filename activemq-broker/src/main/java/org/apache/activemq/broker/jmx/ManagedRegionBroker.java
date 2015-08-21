@@ -17,10 +17,8 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -29,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import javax.jms.IllegalStateException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -47,8 +46,10 @@ import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
-import org.apache.activemq.broker.region.DestinationFactoryImpl;
 import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.NullMessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -64,12 +65,10 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SubscriptionInfo;
-import org.apache.activemq.store.MessageRecoveryListener;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.XATransaction;
@@ -539,11 +538,11 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     public CompositeData[] browse(SubscriptionView view) throws OpenDataException {
-        List<Message> messages = getSubscriberMessages(view);
-        CompositeData c[] = new CompositeData[messages.size()];
+        Message[] messages = getSubscriberMessages(view);
+        CompositeData c[] = new CompositeData[messages.length];
         for (int i = 0; i < c.length; i++) {
             try {
-                c[i] = OpenTypeSupport.convert(messages.get(i));
+                c[i] = OpenTypeSupport.convert(messages[i]);
             } catch (Throwable e) {
                 LOG.error("Failed to browse: {}", view, e);
             }
@@ -553,53 +552,59 @@ public class ManagedRegionBroker extends RegionBroker {
 
     public TabularData browseAsTable(SubscriptionView view) throws OpenDataException {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(ActiveMQMessage.class);
-        List<Message> messages = getSubscriberMessages(view);
+        Message[] messages = getSubscriberMessages(view);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] {"JMSMessageID"});
         TabularDataSupport rc = new TabularDataSupport(tt);
-        for (int i = 0; i < messages.size(); i++) {
-            rc.put(new CompositeDataSupport(ct, factory.getFields(messages.get(i))));
+        for (int i = 0; i < messages.length; i++) {
+            rc.put(new CompositeDataSupport(ct, factory.getFields(messages[i])));
         }
         return rc;
     }
 
-    protected List<Message> getSubscriberMessages(SubscriptionView view) {
-        // TODO It is very dangerous operation for big backlogs
-        if (!(destinationFactory instanceof DestinationFactoryImpl)) {
-            throw new RuntimeException("unsupported by " + destinationFactory);
+    public void remove(SubscriptionView view, String messageId)  throws Exception {
+        ActiveMQDestination destination = getTopicDestination(view);
+        if (destination != null) {
+            final Topic topic = (Topic) getTopicRegion().getDestinationMap().get(destination);
+            final MessageAck messageAck = new MessageAck();
+            messageAck.setMessageID(new MessageId(messageId));
+            messageAck.setDestination(destination);
+
+            topic.getMessageStore().removeMessage(brokerService.getAdminConnectionContext(), messageAck);
+
+            // if sub is active, remove from cursor
+            if (view.subscription instanceof DurableTopicSubscription) {
+                final DurableTopicSubscription durableTopicSubscription = (DurableTopicSubscription) view.subscription;
+                final MessageReference messageReference = new NullMessageReference();
+                messageReference.getMessage().setMessageId(messageAck.getFirstMessageId());
+                durableTopicSubscription.getPending().remove(messageReference);
+            }
+
+        } else {
+            throw new IllegalStateException("can't determine topic for sub:" + view);
         }
-        PersistenceAdapter adapter = ((DestinationFactoryImpl)destinationFactory).getPersistenceAdapter();
-        final List<Message> result = new ArrayList<Message>();
-        try {
-            ActiveMQTopic topic = new ActiveMQTopic(view.getDestinationName());
-            TopicMessageStore store = adapter.createTopicMessageStore(topic);
-            store.recover(new MessageRecoveryListener() {
-                @Override
-                public boolean recoverMessage(Message message) throws Exception {
-                    result.add(message);
-                    return true;
-                }
+    }
 
-                @Override
-                public boolean recoverMessageReference(MessageId messageReference) throws Exception {
-                    throw new RuntimeException("Should not be called.");
-                }
+    protected Message[] getSubscriberMessages(SubscriptionView view) {
+        ActiveMQDestination destination = getTopicDestination(view);
+        if (destination != null) {
+            Topic topic = (Topic) getTopicRegion().getDestinationMap().get(destination);
+            return topic.browse();
 
-                @Override
-                public boolean hasSpace() {
-                    return true;
-                }
-
-                @Override
-                public boolean isDuplicate(MessageId id) {
-                    return false;
-                }
-            });
-        } catch (Throwable e) {
-            LOG.error("Failed to browse messages for Subscription {}", view, e);
+        } else {
+            LOG.warn("can't determine topic to browse for sub:" + view);
+            return new Message[]{};
         }
-        return result;
+    }
 
+    private ActiveMQDestination getTopicDestination(SubscriptionView view) {
+        ActiveMQDestination destination = null;
+        if (view.subscription instanceof DurableTopicSubscription) {
+            destination = new ActiveMQTopic(view.getDestinationName());
+        } else if (view instanceof InactiveDurableSubscriptionView) {
+            destination = ((InactiveDurableSubscriptionView)view).subscriptionInfo.getDestination();
+        }
+        return destination;
     }
 
     protected ObjectName[] getTopics() {

@@ -157,4 +157,10 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     public String getSelector() {
         return subscriptionInfo.getSelector();
     }
+
+    @Override
+    public void removeMessage(@MBeanInfo("messageId") String messageId) throws Exception {
+        broker.remove(this, messageId);
+    }
+
 }
