@@ -27,7 +27,6 @@ import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.transport.tcp.SslTransportServer;
 
 /**
  * A JAAS Authentication Broker that uses different JAAS domain configurations
@@ -89,14 +88,7 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         if (context.getSecurityContext() == null) {
-            boolean isSSL = false;
-            Connector connector = context.getConnector();
-            if (connector instanceof TransportConnector) {
-                TransportConnector transportConnector = (TransportConnector) connector;
-                isSSL = transportConnector.getServer().isSslServer();
-            }
-
-            if (isSSL) {
+            if (isSSL(context, info)) {
                 this.sslBroker.addConnection(context, info);
             } else {
                 this.nonSslBroker.addConnection(context, info);
@@ -110,20 +102,26 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
      */
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-        boolean isSSL;
-        Connector connector = context.getConnector();
-        if (connector instanceof TransportConnector) {
-            TransportConnector transportConnector = (TransportConnector) connector;
-            isSSL = (transportConnector.getServer() instanceof SslTransportServer);
-        } else {
-            isSSL = false;
-        }
         super.removeConnection(context, info, error);
-        if (isSSL) {
+        if (isSSL(context, info)) {
             this.sslBroker.removeConnection(context, info, error);
         } else {
             this.nonSslBroker.removeConnection(context, info, error);
         }
+    }
+
+    private boolean isSSL(ConnectionContext context, ConnectionInfo info) throws Exception {
+        boolean sslCapable = false;
+        Connector connector = context.getConnector();
+        if (connector instanceof TransportConnector) {
+            TransportConnector transportConnector = (TransportConnector) connector;
+            sslCapable = transportConnector.getServer().isSslServer();
+        }
+        // AMQ-5943, also check if transport context carries X509 cert
+        if (!sslCapable && info.getTransportContext() instanceof X509Certificate[]) {
+            sslCapable = true;
+        }
+        return sslCapable;
     }
 
     @Override
