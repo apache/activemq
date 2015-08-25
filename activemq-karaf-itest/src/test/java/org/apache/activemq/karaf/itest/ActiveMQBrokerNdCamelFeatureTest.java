@@ -19,6 +19,8 @@ package org.apache.activemq.karaf.itest;
 import java.io.File;
 import java.util.Date;
 import java.util.concurrent.Callable;
+
+import org.apache.karaf.features.Feature;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,7 +28,6 @@ import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.junit.PaxExam;
-
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -41,17 +42,16 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
     public static Option[] configure() {
         return append(
                 editConfigurationFilePut("etc/system.properties", "camel.version", MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")),
-                configure("activemq"));
+                configure("activemq", "activemq-camel"));
     }
 
     @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
-        System.err.println(executeCommand("osgi:list").trim());
+        System.err.println(executeCommand("feature:list").trim());
 
         assertFeatureInstalled("activemq");
 
-        executeCommand("features:addurl " + getCamelFeatureUrl());
-        installAndAssertFeature("activemq-camel");
+        assertTrue("activemq-camel bundle installed", verifyBundleInstalled("org.apache.activemq.activemq-camel"));
 
         withinReason(new Callable<Boolean>() {
             @Override

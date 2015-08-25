@@ -88,7 +88,7 @@
     <junit-version>4.12</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>2.4.1</karaf-version>
+    <karaf-version>4.0.1</karaf-version>
     <leveldb-api-version>0.6</leveldb-api-version>
     <leveldb-version>0.6</leveldb-version>
     <leveldbjni-version>1.8</leveldbjni-version>
@@ -130,12 +130,12 @@
     <jaxb-basics-version>0.6.4</jaxb-basics-version>
     <stompjms-version>1.19</stompjms-version>
 
-    <pax-exam-version>4.3.0</pax-exam-version>
+    <pax-exam-version>4.6.0</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
     <pax-runner-version>1.6.1</pax-runner-version>
-    <pax-url-version>2.3.0</pax-url-version>
+    <pax-url-version>2.4.1</pax-url-version>
     <felix-configadmin-version>1.8.0</felix-configadmin-version>
-    <felix-framework-version>4.4.1</felix-framework-version>
+    <felix-framework-version>5.0.1</felix-framework-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
     <source-version>1.7</source-version>
@@ -537,11 +537,11 @@
         <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
         <version>2.0.0</version>
       </dependency>
-		<dependency>
-			<groupId>org.ow2.asm</groupId>
-			<artifactId>asm</artifactId>
-			<version>5.0.3</version>
-		</dependency>
+     <dependency>
+       <groupId>org.ow2.asm</groupId>
+       <artifactId>asm</artifactId>
+       <version>5.0.3</version>
+     </dependency>
 	
       <!-- Servlet 3.1 and JSP -->
       <dependency>
@@ -944,26 +944,26 @@
         <version>${jetty-version}</version>
       </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all</artifactId>
-      <version>${jetty-version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>javax.servlet-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.websocket</groupId>
-          <artifactId>javax.websocket-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-	<dependency>
-		<groupId>org.eclipse.jetty.websocket</groupId>
-		<artifactId>websocket-server</artifactId>
-		<version>${jetty-version}</version>
-	</dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty.aggregate</groupId>
+        <artifactId>jetty-all</artifactId>
+        <version>${jetty-version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.websocket</groupId>
+            <artifactId>javax.websocket-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty.websocket</groupId>
+        <artifactId>websocket-server</artifactId>
+        <version>${jetty-version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
@@ -1086,16 +1086,6 @@
         <artifactId>jcl-over-slf4j</artifactId>
         <version>${slf4j-version}</version>
       </dependency>
-      <!-- >dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>jstl</artifactId>
-        <version>${jstl-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>taglibs</groupId>
-        <artifactId>standard</artifactId>
-        <version>1.1.2</version>
-      </dependency -->
 
       <dependency>
         <groupId>org.apache.geronimo.components</groupId>

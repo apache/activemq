@@ -31,6 +31,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.gzip.GzipHandler;
 
 public class HttpTransportServer extends WebTransportServerSupport {
 
@@ -118,12 +119,7 @@ public class HttpTransportServer extends WebTransportServerSupport {
         return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
     }
     private void addGzipHandler(ServletContextHandler contextHandler) throws Exception {
-        Handler handler = null;
-        try {
-            handler = (Handler)Class.forName("org.eclipse.jetty.server.handler.GzipHandler", true, Handler.class.getClassLoader()).newInstance();
-        } catch (Throwable t) {
-            handler = (Handler)Class.forName("org.eclipse.jetty.servlets.gzip.GzipHandler", true, Handler.class.getClassLoader()).newInstance();
-        }
+        Handler handler = new GzipHandler();
         contextHandler.setHandler(handler);
     }
 

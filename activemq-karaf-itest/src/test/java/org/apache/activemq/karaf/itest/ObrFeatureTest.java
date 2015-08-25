@@ -85,7 +85,7 @@ public class ObrFeatureTest extends AbstractFeatureTest {
 
     @Test(timeout=5 * 60 * 1000)
     public void testCamel() throws Throwable {
-        executeCommand("features:addurl " + getCamelFeatureUrl());
+        executeCommand("feature:repo-add " + getCamelFeatureUrl());
         installAndAssertFeature("activemq-camel");
     }
 }
