@@ -19,9 +19,16 @@ package org.apache.activemq.transport.xstream;
 import java.io.IOException;
 import java.io.Reader;
 
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.ConverterLookup;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.activemq.command.MarshallAware;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.transport.util.TextWireFormat;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
 
 import com.thoughtworks.xstream.XStream;
@@ -110,8 +117,27 @@ public class XStreamWireFormat extends TextWireFormat {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected XStream createXStream() {
-        XStream xstream = new XStream();
+        final XStream xstream = new XStream();
         xstream.ignoreUnknownElements();
+        xstream.registerConverter(new Converter() {
+            final Converter delegate = xstream.getConverterLookup().lookupConverterForType(ByteSequence.class);
+            @Override
+            public void marshal(Object o, HierarchicalStreamWriter hierarchicalStreamWriter, MarshallingContext marshallingContext) {
+                ByteSequence byteSequence = (ByteSequence)o;
+                byteSequence.compact();
+                delegate.marshal(byteSequence, hierarchicalStreamWriter, marshallingContext);
+            }
+
+            @Override
+            public Object unmarshal(HierarchicalStreamReader hierarchicalStreamReader, UnmarshallingContext unmarshallingContext) {
+                return delegate.unmarshal(hierarchicalStreamReader, unmarshallingContext);
+            }
+
+            @Override
+            public boolean canConvert(Class aClass) {
+                return aClass == ByteSequence.class;
+            }
+        });
         return xstream;
     }
 

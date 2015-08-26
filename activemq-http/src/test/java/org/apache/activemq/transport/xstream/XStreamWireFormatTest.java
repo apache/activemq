@@ -18,6 +18,8 @@ package org.apache.activemq.transport.xstream;
 
 import java.io.IOException;
 
+import junit.framework.Test;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.MessageTest;
 import org.apache.activemq.wireformat.WireFormat;
@@ -33,7 +35,7 @@ public class XStreamWireFormatTest extends MessageTest {
     public void assertBeanMarshalls(Object original) throws IOException {
         super.assertBeanMarshalls(original);
 
-        String xml = getXStreamWireFormat().marshalText((Command) original);
+        String xml = getXStreamWireFormat().marshalText(original);
         LOG.info(original.getClass().getName() + " as XML is:");
         LOG.info(xml);
     }
@@ -44,5 +46,17 @@ public class XStreamWireFormatTest extends MessageTest {
 
     protected WireFormat createWireFormat() {
         return new XStreamWireFormat();
+    }
+
+    public static Test suite() {
+        return suite(XStreamWireFormatTest.class);
+    }
+
+    public void testXmlPayload() throws Exception {
+        ActiveMQTextMessage message = new ActiveMQTextMessage();
+        message.setText("<body val=\"Hi\"/>");
+        message.setStringProperty("body","Hi");
+
+        assertBeanMarshalls(message);
     }
 }
