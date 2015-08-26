@@ -119,7 +119,7 @@ public class DurableSubscriptionOffline2Test extends DurableSubscriptionOfflineT
         ObjectName destinationName = broker.getAdminView().getTopics()[0];
         TopicViewMBean topicView = (TopicViewMBean) broker.getManagementContext().newProxyInstance(destinationName, TopicViewMBean.class, true);
         assertEquals("correct enqueue", 10, topicView.getEnqueueCount());
-        assertEquals("still zero dequeue, we don't decrement on each sub ack to stop exceeding the enqueue count with multiple subs", 0, topicView.getDequeueCount());
+        assertEquals("topic view dequeue not updated", 5, topicView.getDequeueCount());
         assertEquals("inflight", 5, topicView.getInFlightCount());
 
         session.close();
@@ -138,7 +138,7 @@ public class DurableSubscriptionOffline2Test extends DurableSubscriptionOfflineT
 
         // destination view
         assertEquals("correct enqueue", 10, topicView.getEnqueueCount());
-        assertEquals("still zero dequeue, we don't decrement on each sub ack to stop exceeding the enqueue count with multiple subs", 0, topicView.getDequeueCount());
+        assertEquals("topic view dequeue not updated", 5, topicView.getDequeueCount());
         assertEquals("inflight back to 0 after deactivate", 0, topicView.getInFlightCount());
 
         // consume the rest

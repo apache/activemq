@@ -322,6 +322,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         regionDestination.acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
+        ((Destination)node.getRegionDestination()).getDestinationStatistics().getDequeues().increment();
     }
 
     @Override

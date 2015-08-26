@@ -20,21 +20,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
+import javax.jms.*;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
@@ -59,6 +51,7 @@ import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
+import org.apache.activemq.memory.list.MessageList;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.Wait;
@@ -1620,5 +1613,92 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         for (int i = 0; i < compdatalist.length; i++) {
             assertNotNull("Message: " + i, consumer.receive(5000));
         }
+    }
+
+    public void testTopicView() throws Exception {
+        connection = connectionFactory.createConnection();
+        connection.setClientID("test");
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        connection.start();
+
+        Topic singleTopic = session.createTopic("test.topic");
+        Topic wildcardTopic = session.createTopic("test.>");
+
+        TopicSubscriber durable1 = session.createDurableSubscriber(singleTopic, "single");
+        TopicSubscriber durable2 = session.createDurableSubscriber(wildcardTopic, "wildcard");
+
+        MessageConsumer consumer1 = session.createConsumer(singleTopic);
+        MessageConsumer consumer2 = session.createConsumer(wildcardTopic);
+
+        final ArrayList<Message> messages = new ArrayList<>();
+
+        MessageListener listener = new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                messages.add(message);
+            }
+        };
+
+        durable1.setMessageListener(listener);
+        durable2.setMessageListener(listener);
+        consumer1.setMessageListener(listener);
+        consumer2.setMessageListener(listener);
+
+        MessageProducer producer = session.createProducer(singleTopic);
+        producer.send(session.createTextMessage("test"));
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return messages.size() == 4;
+            }
+        });
+
+        ObjectName topicObjName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test.topic");
+        final TopicViewMBean topicView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+
+        assertEquals(1, topicView.getEnqueueCount());
+        assertEquals(4, topicView.getDispatchCount());
+        assertEquals(4, topicView.getInFlightCount());
+        assertEquals(0, topicView.getDequeueCount());
+
+        ArrayList<SubscriptionViewMBean> subscriberViews = new ArrayList();
+        for (ObjectName name : topicView.getSubscriptions()) {
+            subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
+        }
+
+        assertEquals(4, subscriberViews.size());
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(1, subscriberView.getEnqueueCounter());
+            assertEquals(1, subscriberView.getDispatchedCounter());
+            assertEquals(0, subscriberView.getDequeueCounter());
+        }
+
+        for (Message message : messages) {
+            try {
+                message.acknowledge();
+            } catch (JMSException ignore) {}
+        }
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return topicView.getDequeueCount() == 4;
+            }
+        });
+
+        assertEquals(1, topicView.getEnqueueCount());
+        assertEquals(4, topicView.getDispatchCount());
+        assertEquals(0, topicView.getInFlightCount());
+        assertEquals(4, topicView.getDequeueCount());
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(1, subscriberView.getEnqueueCounter());
+            assertEquals(1, subscriberView.getDispatchedCounter());
+            assertEquals(1, subscriberView.getDequeueCounter());
+        }
+
+
     }
 }
