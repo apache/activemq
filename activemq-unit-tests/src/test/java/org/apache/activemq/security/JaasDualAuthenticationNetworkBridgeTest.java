@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * - ssl-domain-JaasDualAuthenticationNetworkBridgeTest.properties
  */
 public class JaasDualAuthenticationNetworkBridgeTest {
-    protected final static String CONFIG_FILE="org/apache/activemq/security/JaasDualAuthenticationNetworkBridgeTest.xml";
+    protected final static String CONFIG_FILE="org/apache/activemq/security/JaasDualAuthenticationNetworkBridge.xml";
     protected static Logger LOG = LoggerFactory.getLogger(JaasDualAuthenticationNetworkBridgeTest.class);
     private BrokerService broker1 = null;
     private BrokerService broker2 = null;
@@ -62,7 +62,7 @@ public class JaasDualAuthenticationNetworkBridgeTest {
     public void setUp() throws Exception {
         LOG.info("Starting up");
         String path = null;
-        URL resource = JaasDualAuthenticationNetworkBridgeTest.class.getClassLoader().getResource("login-JaasDualAuthenticationNetworkBridgeTest.config");
+        URL resource = JaasDualAuthenticationNetworkBridgeTest.class.getClassLoader().getResource("login-JaasDualAuthenticationNetworkBridge.config");
         if (resource != null) {
             path = resource.getFile();
             System.setProperty("java.security.auth.login.config", path);
