@@ -674,7 +674,7 @@ public class FailoverTransport implements CompositeTransport {
 
                             // If the command was not tracked.. we will retry in
                             // this method
-                            if (tracked == null) {
+                            if (tracked == null && canReconnect()) {
 
                                 // since we will retry in this method.. take it
                                 // out of the request
