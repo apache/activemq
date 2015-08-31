@@ -20,9 +20,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.net.Socket;
 import java.net.URI;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -31,6 +37,7 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.MessageAck;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +56,7 @@ public class FailoverTimeoutTest {
     public void setUp() throws Exception {
         bs = new BrokerService();
         bs.setUseJmx(false);
-        bs.addConnector("tcp://localhost:0");
+        bs.addConnector(getTransportUri());
         bs.start();
         tcpUri = bs.getTransportConnectors().get(0).getConnectUri();
     }
@@ -115,8 +122,62 @@ public class FailoverTimeoutTest {
         bs.waitUntilStarted();
 
         producer.send(message);
-
         bs.stop();
+        connection.close();
+    }
+
+    @Test
+    public void testInterleaveSendAndException() throws Exception {
+
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + tcpUri + ")?maxReconnectAttempts=0");
+        final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        connection.start();
+
+        connection.setExceptionListener(new ExceptionListener() {
+            @Override
+            public void onException(JMSException exception) {
+                try {
+                    LOG.info("Deal with exception - invoke op that may block pending outstanding oneway");
+                    // try and invoke on connection as part of handling exception
+                    connection.asyncSendPacket(new MessageAck());
+                } catch (Exception e) {
+                }
+            }
+        });
+
+        final ExecutorService executorService = Executors.newCachedThreadPool();
+
+        final int NUM_TASKS = 200;
+        final CountDownLatch enqueueOnExecutorDone = new CountDownLatch(NUM_TASKS);
+
+        for (int i=0; i < NUM_TASKS; i++) {
+
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        connection.asyncSendPacket(new MessageAck());
+                    } catch (JMSException e) {
+                        e.printStackTrace();
+                    } finally {
+                        enqueueOnExecutorDone.countDown();
+                    }
+
+                }
+            });
+        }
+
+        while (enqueueOnExecutorDone.getCount() > (NUM_TASKS - 20)) {
+            enqueueOnExecutorDone.await(20, TimeUnit.MILLISECONDS);
+        }
+
+        // force IOException
+        final Socket socket = connection.getTransport().narrow(Socket.class);
+        socket.close();
+
+        executorService.shutdown();
+
+        assertTrue("all ops finish", enqueueOnExecutorDone.await(15, TimeUnit.SECONDS));
     }
 
     @Test
