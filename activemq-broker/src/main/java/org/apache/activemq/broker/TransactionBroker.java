@@ -336,11 +336,14 @@ public class TransactionBroker extends BrokerFilter {
     //
     // ////////////////////////////////////////////////////////////////////////////
     public Transaction getTransaction(ConnectionContext context, TransactionId xid, boolean mightBePrepared) throws JMSException, XAException {
-        Map transactionMap = null;
-        synchronized (xaTransactions) {
-            transactionMap = xid.isXATransaction() ? xaTransactions : context.getTransactions();
+        Transaction transaction = null;
+        if (xid.isXATransaction()) {
+            synchronized (xaTransactions) {
+                transaction = xaTransactions.get(xid);
+            }
+        } else {
+            transaction = context.getTransactions().get(xid);
         }
-        Transaction transaction = (Transaction)transactionMap.get(xid);
         if (transaction != null) {
             return transaction;
         }
