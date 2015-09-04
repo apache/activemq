@@ -55,14 +55,9 @@ public class ListCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     protected void runTask(List tokens) throws Exception {
-        try {
-            Set<String> propsView = new HashSet<String>();
-            propsView.add("brokerName");
-            context.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(createJmxConnection()), propsView));
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute list task. Reason: " + e));
-            throw new Exception(e);
-        }
+        Set<String> propsView = new HashSet<String>();
+        propsView.add("brokerName");
+        context.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(createJmxConnection()), propsView));
     }
     
     /**

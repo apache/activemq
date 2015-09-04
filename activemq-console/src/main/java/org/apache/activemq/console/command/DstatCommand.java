@@ -66,20 +66,12 @@ public class DstatCommand extends AbstractJmxCommand {
      */
     @Override
     protected void runTask(List<String> tokens) throws Exception {
-        try {
-
-            if (tokens.contains("topics")) {
-                displayTopicStats();
-            } else if (tokens.contains("queues")) {
-                displayQueueStats();
-            } else {
-                displayAllDestinations();
-            }
-
-            // Iterate through the queue names
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute dstat task. Reason: " + e.getMessage(), e));
-            throw new Exception(e);
+        if (tokens.contains("topics")) {
+            displayTopicStats();
+        } else if (tokens.contains("queues")) {
+            displayQueueStats();
+        } else {
+            displayAllDestinations();
         }
     }
 

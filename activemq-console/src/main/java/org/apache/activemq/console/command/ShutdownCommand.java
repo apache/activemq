@@ -69,53 +69,48 @@ public class ShutdownCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     protected void runTask(List brokerNames) throws Exception {
-        try {
-            Collection mbeans;
+        Collection mbeans;
 
-            // Stop all brokers
-            if (isStopAllBrokers) {
-                mbeans = JmxMBeansUtil.getAllBrokers(createJmxConnection());
-                brokerNames.clear();
-            } else if (brokerNames.isEmpty()) {
-                // Stop the default broker
-                mbeans = JmxMBeansUtil.getAllBrokers(createJmxConnection());
-                // If there is no broker to stop
-                if (mbeans.isEmpty()) {
-                    context.printInfo("There are no brokers to stop.");
-                    return;
+        // Stop all brokers
+        if (isStopAllBrokers) {
+            mbeans = JmxMBeansUtil.getAllBrokers(createJmxConnection());
+            brokerNames.clear();
+        } else if (brokerNames.isEmpty()) {
+            // Stop the default broker
+            mbeans = JmxMBeansUtil.getAllBrokers(createJmxConnection());
+            // If there is no broker to stop
+            if (mbeans.isEmpty()) {
+                context.printInfo("There are no brokers to stop.");
+                return;
 
-                    // There should only be one broker to stop
-                } else if (mbeans.size() > 1) {
-                    context.printInfo("There are multiple brokers to stop. Please select the broker(s) to stop or use --all to stop all brokers.");
-                    return;
+                // There should only be one broker to stop
+            } else if (mbeans.size() > 1) {
+                context.printInfo("There are multiple brokers to stop. Please select the broker(s) to stop or use --all to stop all brokers.");
+                return;
 
-                    // Get the first broker only
-                } else {
-                    Object firstBroker = mbeans.iterator().next();
-                    mbeans.clear();
-                    mbeans.add(firstBroker);
-                }
+                // Get the first broker only
             } else {
-                // Stop each specified broker
-                String brokerName;
-                mbeans = new HashSet();
-                while (!brokerNames.isEmpty()) {
-                    brokerName = (String)brokerNames.remove(0);
-                    Collection matchedBrokers = JmxMBeansUtil.getBrokersByName(createJmxConnection(), brokerName);
-                    if (matchedBrokers.isEmpty()) {
-                        context.printInfo(brokerName + " did not match any running brokers.");
-                    } else {
-                        mbeans.addAll(matchedBrokers);
-                    }
+                Object firstBroker = mbeans.iterator().next();
+                mbeans.clear();
+                mbeans.add(firstBroker);
+            }
+        } else {
+            // Stop each specified broker
+            String brokerName;
+            mbeans = new HashSet();
+            while (!brokerNames.isEmpty()) {
+                brokerName = (String) brokerNames.remove(0);
+                Collection matchedBrokers = JmxMBeansUtil.getBrokersByName(createJmxConnection(), brokerName);
+                if (matchedBrokers.isEmpty()) {
+                    context.printInfo(brokerName + " did not match any running brokers.");
+                } else {
+                    mbeans.addAll(matchedBrokers);
                 }
             }
-
-            // Stop all brokers in set
-            stopBrokers(createJmxConnection(), mbeans);
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute stop task. Reason: " + e));
-            throw new Exception(e);
         }
+
+        // Stop all brokers in set
+        stopBrokers(createJmxConnection(), mbeans);
     }
 
     /**

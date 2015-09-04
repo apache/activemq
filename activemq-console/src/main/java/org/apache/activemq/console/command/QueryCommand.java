@@ -116,23 +116,18 @@ public class QueryCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     protected void runTask(List<String> tokens) throws Exception {
-        try {
-            // Query for the mbeans to add
-            Map<Object,List> addMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), queryAddObjects, queryViews);
-            // Query for the mbeans to sub
-            if (querySubObjects.size() > 0) {
-                Map<Object,List> subMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), querySubObjects, queryViews);
-                addMBeans.keySet().removeAll(subMBeans.keySet());
-            }
+        // Query for the mbeans to add
+        Map<Object, List> addMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), queryAddObjects, queryViews);
+        // Query for the mbeans to sub
+        if (querySubObjects.size() > 0) {
+            Map<Object, List> subMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), querySubObjects, queryViews);
+            addMBeans.keySet().removeAll(subMBeans.keySet());
+        }
 
-            if (opAndParams.isEmpty()) {
-                context.printMBean(JmxMBeansUtil.filterMBeansView(new ArrayList(addMBeans.values()), queryViews));
-            } else {
-                context.print(doInvoke(addMBeans.keySet(), opAndParams));
-            }
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute query task. Reason: " + e));
-            throw new Exception(e);
+        if (opAndParams.isEmpty()) {
+            context.printMBean(JmxMBeansUtil.filterMBeansView(new ArrayList(addMBeans.values()), queryViews));
+        } else {
+            context.print(doInvoke(addMBeans.keySet(), opAndParams));
         }
     }
 

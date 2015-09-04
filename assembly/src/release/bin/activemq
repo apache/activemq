@@ -657,37 +657,7 @@ case "$1" in
     invoke_kill
     exit $?
     ;;
-  decrypt|encrypt|create)
-    invoke_task checknotforrunning
-    exit $?
-    ;;
-  export)
-    invoke_task checkfornotrunning
-    exit $?
-    ;;
-  query|bstat|dstat|purge)
-    # Only check for a running broker if "--jmxurl" is part of the COMMANDLINE_ARGS
-    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--jmxurl");then
-      invoke_task checknotforrunning
-      RET="$?"
-    else
-      invoke_task checkforrunning
-      RET="$?"
-    fi
-    exit $RET
-    ;;
-  browse)
-    # Only check for a running broker if "--amqurl" is part of the COMMANDLINE_ARGS
-    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--amqurl");then
-      invoke_task checknotforrunning
-      RET="$?"
-    else
-      invoke_task checkforrunning
-      RET="$?"
-    fi
-    exit $RET
-    ;;
   *)
-    invoke_task checkforrunning
+    invoke_task checknotforrunning
     exit $?
 esac
