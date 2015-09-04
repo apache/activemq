@@ -68,6 +68,10 @@ public class FailoverTimeoutTest {
         }
     }
 
+    protected String getTransportUri() {
+        return "tcp://localhost:0";
+    }
+
     @Test
     public void testTimoutDoesNotFailConnectionAttempts() throws Exception {
         bs.stop();
