@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.jms.Connection;
 import javax.jms.InvalidSelectorException;
@@ -355,15 +356,14 @@ public class DestinationView implements DestinationViewMBean {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = null;
         try {
-
             connection = cf.createConnection(userName, password);
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer producer = session.createProducer(dest);
             ActiveMQTextMessage msg = (ActiveMQTextMessage) session.createTextMessage(body);
 
-            for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                msg.setObjectProperty((String) entry.getKey(), entry.getValue());
+            for (Iterator<Entry<String, String>> iter = headers.entrySet().iterator(); iter.hasNext();) {
+                Entry<String, String> entry = iter.next();
+                msg.setObjectProperty(entry.getKey(), entry.getValue());
             }
 
             producer.setDeliveryMode(msg.getJMSDeliveryMode());
@@ -383,9 +383,10 @@ public class DestinationView implements DestinationViewMBean {
             return msg.getJMSMessageID();
 
         } finally {
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         }
-
     }
 
     @Override
