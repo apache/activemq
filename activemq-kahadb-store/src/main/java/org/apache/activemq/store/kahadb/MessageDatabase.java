@@ -1347,6 +1347,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             // be wrong..
             sd.locationIndex.put(tx, location, previous);
             metadata.lastUpdate = location;
+            // remove ack positions
+            Iterator<Entry<String, SequenceSet>> it = sd.ackPositions.iterator(tx);
+            while (it.hasNext()) {
+                Entry<String, SequenceSet> entry = it.next();
+                entry.getValue().remove(id);
+            }
+
         }
         // record this id in any event, initial send or recovery
         metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
