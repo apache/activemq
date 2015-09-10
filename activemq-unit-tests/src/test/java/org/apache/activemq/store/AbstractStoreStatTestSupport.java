@@ -253,8 +253,7 @@ public abstract class AbstractStoreStatTestSupport {
      */
     protected BytesMessage createMessage(Session session, int messageSize, AtomicLong publishedMessageSize) throws JMSException {
         final BytesMessage message = session.createBytesMessage();
-        final Random rn = new Random();
-        int size = rn.nextInt(messageSize - 100);
+        int size = messageSize;
         if (publishedMessageSize != null) {
             publishedMessageSize.addAndGet(size);
         }
