@@ -41,7 +41,7 @@ public class MultiKahaDBPendingMessageCursorTest extends
 
         //setup multi-kaha adapter
         MultiKahaDBPersistenceAdapter persistenceAdapter = new MultiKahaDBPersistenceAdapter();
-        persistenceAdapter.setDirectory(dataFileDir.getRoot());
+        persistenceAdapter.setDirectory(dataFileDir);
 
         KahaDBPersistenceAdapter kahaStore = new KahaDBPersistenceAdapter();
         kahaStore.setJournalMaxFileLength(1024 * 512);

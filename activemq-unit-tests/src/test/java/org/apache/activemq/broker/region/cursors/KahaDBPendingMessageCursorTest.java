@@ -45,13 +45,12 @@ public class KahaDBPendingMessageCursorTest extends
     protected static final Logger LOG = LoggerFactory
             .getLogger(KahaDBPendingMessageCursorTest.class);
 
-    @Rule
-    public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
+    File dataFileDir = new File("target/test-amq-5923/pending-datadb");
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
-        if (clearDataDir && dataFileDir.getRoot().exists())
-            FileUtils.cleanDirectory(dataFileDir.getRoot());
+        if (clearDataDir && dataFileDir.exists())
+            FileUtils.cleanDirectory(dataFileDir);
         super.setUpBroker(clearDataDir);
     }
 
@@ -59,7 +58,7 @@ public class KahaDBPendingMessageCursorTest extends
     protected void initPersistence(BrokerService brokerService)
             throws IOException {
         broker.setPersistent(true);
-        broker.setDataDirectoryFile(dataFileDir.getRoot());
+        broker.setDataDirectoryFile(dataFileDir);
     }
 
     /**

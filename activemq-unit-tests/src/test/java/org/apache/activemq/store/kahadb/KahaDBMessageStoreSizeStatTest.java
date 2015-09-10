@@ -42,13 +42,12 @@ public class KahaDBMessageStoreSizeStatTest extends
     protected static final Logger LOG = LoggerFactory
             .getLogger(KahaDBMessageStoreSizeStatTest.class);
 
-    @Rule
-    public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
+    File dataFileDir = new File("target/test-amq-5748/stat-datadb");
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
-        if (clearDataDir && dataFileDir.getRoot().exists())
-            FileUtils.cleanDirectory(dataFileDir.getRoot());
+        if (clearDataDir && dataFileDir.exists())
+            FileUtils.cleanDirectory(dataFileDir);
         super.setUpBroker(clearDataDir);
     }
 
@@ -56,7 +55,7 @@ public class KahaDBMessageStoreSizeStatTest extends
     protected void initPersistence(BrokerService brokerService)
             throws IOException {
         broker.setPersistent(true);
-        broker.setDataDirectoryFile(dataFileDir.getRoot());
+        broker.setDataDirectoryFile(dataFileDir);
     }
 
     /**
