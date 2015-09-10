@@ -353,7 +353,9 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
     @Override
     public void onRemove(Entry<String, Location> removed) {
         super.onRemove(removed);
-        messageSize.addSize(-removed.getValue().getSize());
+        if (removed != null) {
+            messageSize.addSize(-removed.getValue().getSize());
+        }
     }
 
     @Override

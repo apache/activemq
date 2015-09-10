@@ -68,7 +68,7 @@ public class KahaDBPendingMessageCursorTest extends
      *
      * @throws Exception
      */
-    @Test(timeout=10000)
+    @Test(timeout=20000)
     public void testDurableMessageSizeAfterRestartAndPublish() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -107,7 +107,7 @@ public class KahaDBPendingMessageCursorTest extends
      *
      * @throws Exception
      */
-    @Test(timeout=10000)
+    @Test(timeout=20000)
     public void testNonPersistentDurableMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
