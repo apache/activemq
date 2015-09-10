@@ -1348,10 +1348,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             sd.locationIndex.put(tx, location, previous);
             metadata.lastUpdate = location;
             // remove ack positions
-            Iterator<Entry<String, SequenceSet>> it = sd.ackPositions.iterator(tx);
-            while (it.hasNext()) {
-                Entry<String, SequenceSet> entry = it.next();
-                entry.getValue().remove(id);
+            if (sd.subscriptions != null && !sd.subscriptions.isEmpty(tx)) {
+                Iterator<Entry<String, SequenceSet>> it = sd.ackPositions.iterator(tx);
+                while (it.hasNext()) {
+                    Entry<String, SequenceSet> entry = it.next();
+                    entry.getValue().remove(id);
+                }
             }
 
         }
