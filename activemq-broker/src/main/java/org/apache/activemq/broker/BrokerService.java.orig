@@ -111,9 +111,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
-import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.apache.activemq.util.IOExceptionHandler;
@@ -233,7 +231,7 @@ public class BrokerService implements Service {
     private int schedulePeriodForDestinationPurge= 0;
     private int maxPurgedDestinationsPerSweep = 0;
     private int schedulePeriodForDiskUsageCheck = 0;
-    private int diskUsageCheckRegrowThreshold = -1;
+    private boolean diskUsageCheckRegrowPercentChange = true;
     private BrokerContext brokerContext;
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
@@ -1960,6 +1958,7 @@ public class BrokerService implements Service {
         }
     }
 
+    public static int t = 0;
     /**
      * Check that the store usage limit is not greater than max usable
      * space and adjust if it is
@@ -1969,7 +1968,44 @@ public class BrokerService implements Service {
 
         if (getPersistenceAdapter() != null) {
             PersistenceAdapter adapter = getPersistenceAdapter();
-            checkUsageLimit(adapter.getDirectory(), usage.getStoreUsage(), usage.getStoreUsage().getPercentLimit());
+            File dir = adapter.getDirectory();
+
+            if (dir != null) {
+                dir = StoreUtil.findParentDirectory(dir);
+
+                int usagePercent = usage.getStoreUsage().getPercentLimit();
+                long storeLimit = usage.getStoreUsage().getLimit();
+                long storeCurrent = usage.getStoreUsage().getUsage();
+                long dirFreeSpace = dir.getUsableSpace();
+
+                if (diskUsageCheckRegrowPercentChange && usagePercent > 0 &&
+                        storeLimit < (dirFreeSpace + storeCurrent)) {
+                    LOG.info("Usable disk space has been increased, attempting to regrow store limit to " +
+                            + usagePercent + "% of the partition size.");
+
+                    //trigger the recomputation of the absolute value by
+                    //calling setPercentLimit again
+                    usage.getStoreUsage().setPercentLimit(usagePercent);
+                    storeLimit = usage.getStoreUsage().getLimit();
+                    storeCurrent = usage.getStoreUsage().getUsage();
+                }
+
+                if (storeLimit > (dirFreeSpace + storeCurrent)) {
+                    if (usagePercent > 0) {
+                        LOG.warn("Store limit has been set to "
+                                + usagePercent + "% of the partition size but "
+                                + "there is not enough usable space.");
+                    }
+
+                    LOG.warn("Store limit is " +  storeLimit / (1024 * 1024) +
+                             " mb (current store usage is " + storeCurrent / (1024 * 1024) +
+                             " mb). The data directory: " + dir.getAbsolutePath() +
+                             " only has " + dirFreeSpace / (1024 * 1024) +
+                             " mb of usable space - resetting to maximum available disk space: " +
+                            (dirFreeSpace + storeCurrent) / (1024 * 1024) + " mb");
+                    usage.getStoreUsage().setLimit(dirFreeSpace + storeCurrent);
+                }
+            }
 
             long maxJournalFileSize = 0;
             long storeLimit = usage.getStoreUsage().getLimit();
@@ -1998,7 +2034,53 @@ public class BrokerService implements Service {
         File tmpDir = getTmpDataDirectory();
 
         if (tmpDir != null) {
-            checkUsageLimit(tmpDir, usage.getTempUsage(), usage.getTempUsage().getPercentLimit());
+            tmpDir = StoreUtil.findParentDirectory(tmpDir);
+
+            long storeLimit = usage.getTempUsage().getLimit();
+<<<<<<< 4f8d56aaf60f99abe643e79c6c4940a571289a86
+            long storeCurrent = usage.getTempUsage().getUsage();
+            while (tmpDir != null && !tmpDir.isDirectory()) {
+                tmpDir = tmpDir.getParentFile();
+            }
+            long dirFreeSpace = tmpDir.getUsableSpace();
+            if (storeLimit > (dirFreeSpace + storeCurrent)) {
+                LOG.warn("Temporary Store limit is " + storeLimit / (1024 * 1024) +
+                        " mb (current temporary store usage is " + storeCurrent / (1024 * 1024) +
+                        " mb). The temporary data directory: " + tmpDir.getAbsolutePath() +
+                        " only has " + dirFreeSpace / (1024 * 1024) +
+                        " mb of usable space - resetting to maximum available disk space: " +
+                       (dirFreeSpace + storeCurrent) / (1024 * 1024) + " mb");
+               usage.getTempUsage().setLimit(dirFreeSpace + storeCurrent);
+=======
+            long dirFreeSpace = tmpDir.getUsableSpace();
+            int usagePercent = usage.getTempUsage().getPercentLimit();
+
+//            if (diskUsageCheckRegrowPercentChange && usagePercent > 0 &&
+//                    storeLimit < (dirFreeSpace + storeCurrent)) {
+//                LOG.info("Usable disk space has been increased, attempting to regrow store limit to " +
+//                        + usagePercent + "% of the partition size.");
+//
+//                //trigger the recomputation of the absolute value by
+//                //calling setPercentLimit again
+//                usage.getStoreUsage().setPercentLimit(usagePercent);
+//                storeLimit = usage.getStoreUsage().getLimit();
+//                storeCurrent = usage.getStoreUsage().getUsage();
+//            }
+
+            if (storeLimit > dirFreeSpace) {
+                if (usagePercent > 0) {
+                    LOG.warn("Temporary Store limit has been set to "
+                            + usagePercent + "% of the partition size but "
+                            + "there is not enough usable space.");
+                }
+
+                LOG.warn("Temporary Store limit is " + storeLimit / (1024 * 1024) +
+                        " mb, whilst the temporary data directory: " + tmpDir.getAbsolutePath() +
+                        " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to maximum available " +
+                        dirFreeSpace / (1024 * 1024) + " mb.");
+                usage.getTempUsage().setLimit(dirFreeSpace);
+>>>>>>> https://issues.apache.org/jira/browse/AMQ-5965
+            }
 
             if (isPersistent()) {
                 long maxJournalFileSize;
@@ -2009,7 +2091,6 @@ public class BrokerService implements Service {
                 } else {
                     maxJournalFileSize = DEFAULT_MAX_FILE_LENGTH;
                 }
-                long storeLimit = usage.getTempUsage().getLimit();
 
                 if (storeLimit < maxJournalFileSize) {
                     LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
@@ -2017,60 +2098,6 @@ public class BrokerService implements Service {
                               maxJournalFileSize / (1024 * 1024) + " mb, " +
                               "the temp store will not accept any data when used.");
                 }
-            }
-        }
-    }
-
-    protected void checkUsageLimit(File dir, Usage<?> storeUsage, int percentLimit) {
-        if (dir != null) {
-            dir = StoreUtil.findParentDirectory(dir);
-            String storeName = storeUsage instanceof StoreUsage ? "Store" : "Temporary Store";
-            long storeLimit = storeUsage.getLimit();
-            long storeCurrent = storeUsage.getUsage();
-            long usableSpace = dir.getUsableSpace();
-            long totalSpace = dir.getTotalSpace();
-            long totalUsableSpace = dir.getUsableSpace() + storeCurrent;
-            //compute byte value of the percent limit
-            long bytePercentLimit = totalSpace * percentLimit / 100;
-            int oneMeg = 1024 * 1024;
-
-            //Check if the store limit is less than the percent Limit that was set and also
-            //the usable space...this means we can grow the store larger
-            //Changes in partition size (total space) as well as changes in usable space should
-            //be detected here
-            if (diskUsageCheckRegrowThreshold > -1 && percentLimit > 0
-                    && storeLimit < bytePercentLimit && storeLimit < totalUsableSpace){
-
-                // set the limit to be bytePercentLimit or usableSpace if
-                // usableSpace is less than the percentLimit
-                long newLimit = bytePercentLimit > totalUsableSpace ? totalUsableSpace : bytePercentLimit;
-
-                //To prevent changing too often, check threshold
-                if (newLimit - storeLimit >= diskUsageCheckRegrowThreshold) {
-                    LOG.info("Usable disk space has been increased, attempting to regrow " + storeName + " limit to "
-                            + percentLimit + "% of the partition size.");
-                    storeUsage.setLimit(newLimit);
-                    LOG.info(storeName + " limit has been increased to " + newLimit * 100 / totalSpace
-                            + "% (" + newLimit / oneMeg + " mb) of the partition size.");
-                }
-
-            //check if the limit is too large for the amount of usable space
-            } else if (storeLimit > totalUsableSpace) {
-                if (percentLimit > 0) {
-                    LOG.warn(storeName + " limit has been set to "
-                            + percentLimit + "% (" + storeLimit / oneMeg + " mb)"
-                            + " of the partition size but there is not enough usable space."
-                            + " Only " + totalUsableSpace * 100 / totalSpace + "% (" + totalUsableSpace / oneMeg + " mb)"
-                            + " is available");
-                }
-
-                LOG.warn(storeName + " limit is " +  storeLimit / oneMeg +
-                         " mb (current store usage is " + storeCurrent / oneMeg +
-                         " mb). The data directory: " + dir.getAbsolutePath() +
-                         " only has " + usableSpace / oneMeg +
-                         " mb of usable space - resetting to maximum available disk space: " +
-                         totalUsableSpace / oneMeg + " mb");
-                storeUsage.setLimit(totalUsableSpace);
             }
         }
     }
@@ -2909,24 +2936,9 @@ public class BrokerService implements Service {
         this.schedulePeriodForDestinationPurge = schedulePeriodForDestinationPurge;
     }
 
-    /**
-     * @param schedulePeriodForDiskUsageCheck
-     */
     public void setSchedulePeriodForDiskUsageCheck(
             int schedulePeriodForDiskUsageCheck) {
         this.schedulePeriodForDiskUsageCheck = schedulePeriodForDiskUsageCheck;
-    }
-
-    public int getDiskUsageCheckRegrowThreshold() {
-        return diskUsageCheckRegrowThreshold;
-    }
-
-    /**
-     * @param diskUsageCheckRegrowThreshold
-     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
-     */
-    public void setDiskUsageCheckRegrowThreshold(int diskUsageCheckRegrowThreshold) {
-        this.diskUsageCheckRegrowThreshold = diskUsageCheckRegrowThreshold;
     }
 
     public int getMaxPurgedDestinationsPerSweep() {

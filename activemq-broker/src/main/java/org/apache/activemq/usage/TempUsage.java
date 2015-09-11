@@ -17,17 +17,20 @@
 package org.apache.activemq.usage;
 
 
+import java.io.File;
+
 import org.apache.activemq.store.PListStore;
+import org.apache.activemq.util.StoreUtil;
 
 /**
  * Used to keep track of how much of something is being used so that a
  * productive working set usage can be controlled. Main use case is manage
  * memory usage.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
-public class TempUsage extends Usage<TempUsage> {
+public class TempUsage extends PercentLimitUsage<TempUsage> {
 
     private PListStore store;
 
@@ -38,11 +41,13 @@ public class TempUsage extends Usage<TempUsage> {
     public TempUsage(String name, PListStore store) {
         super(null, name, 1.0f);
         this.store = store;
+        updateLimitBasedOnPercent();
     }
 
     public TempUsage(TempUsage parent, String name) {
         super(parent, name, 1.0f);
         this.store = parent.store;
+        updateLimitBasedOnPercent();
     }
 
     @Override
@@ -59,6 +64,27 @@ public class TempUsage extends Usage<TempUsage> {
 
     public void setStore(PListStore store) {
         this.store = store;
-        onLimitChange();
+        if (percentLimit > 0 && store != null) {
+            //will trigger onLimitChange
+            updateLimitBasedOnPercent();
+        } else {
+            onLimitChange();
+        }
+    }
+
+    @Override
+    protected void updateLimitBasedOnPercent() {
+        usageLock.writeLock().lock();
+        try {
+            if (percentLimit > 0 && store != null) {
+                File dir = StoreUtil.findParentDirectory(store.getDirectory());
+
+                if (dir != null) {
+                    this.setLimit(dir.getTotalSpace() * percentLimit / 100);
+                }
+            }
+        } finally {
+            usageLock.writeLock().unlock();
+        }
     }
 }

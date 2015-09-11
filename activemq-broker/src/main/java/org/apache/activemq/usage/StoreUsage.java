@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.usage;
 
+import java.io.File;
+
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.util.StoreUtil;
 
 /**
  * Used to keep track of how much of something is being used so that a
@@ -26,7 +29,7 @@ import org.apache.activemq.store.PersistenceAdapter;
  * @org.apache.xbean.XBean
  *
  */
-public class StoreUsage extends Usage<StoreUsage> {
+public class StoreUsage extends PercentLimitUsage<StoreUsage> {
 
     private PersistenceAdapter store;
 
@@ -37,11 +40,13 @@ public class StoreUsage extends Usage<StoreUsage> {
     public StoreUsage(String name, PersistenceAdapter store) {
         super(null, name, 1.0f);
         this.store = store;
+        updateLimitBasedOnPercent();
     }
 
     public StoreUsage(StoreUsage parent, String name) {
         super(parent, name, 1.0f);
         this.store = parent.store;
+        updateLimitBasedOnPercent();
     }
 
     @Override
@@ -57,7 +62,12 @@ public class StoreUsage extends Usage<StoreUsage> {
 
     public void setStore(PersistenceAdapter store) {
         this.store = store;
-        onLimitChange();
+        if (percentLimit > 0 && store != null) {
+            //will trigger onLimitChange
+            updateLimitBasedOnPercent();
+        } else {
+            onLimitChange();
+        }
     }
 
     @Override
@@ -80,5 +90,22 @@ public class StoreUsage extends Usage<StoreUsage> {
         }
 
         return super.waitForSpace(timeout, highWaterMark);
+    }
+
+    @Override
+    protected void updateLimitBasedOnPercent() {
+        usageLock.writeLock().lock();
+        try {
+
+            if (percentLimit > 0 && store != null) {
+                File dir = StoreUtil.findParentDirectory(store.getDirectory());
+
+                if (dir != null) {
+                    this.setLimit(dir.getTotalSpace() * percentLimit / 100);
+                }
+            }
+        } finally {
+            usageLock.writeLock().unlock();
+        }
     }
 }
