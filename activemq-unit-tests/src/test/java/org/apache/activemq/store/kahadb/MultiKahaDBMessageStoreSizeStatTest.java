@@ -28,7 +28,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.store.AbstractMessageStoreSizeStatTest;
 import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +46,13 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
     protected static final Logger LOG = LoggerFactory
             .getLogger(MultiKahaDBMessageStoreSizeStatTest.class);
 
-    File dataFileDir = new File("target/test-amq-5748/stat-datadb");
+    @Rule
+    public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
-        if (clearDataDir && dataFileDir.exists())
-            FileUtils.cleanDirectory(dataFileDir);
+        if (clearDataDir && dataFileDir.getRoot().exists())
+            FileUtils.cleanDirectory(dataFileDir.getRoot());
         super.setUpBroker(clearDataDir);
     }
 
@@ -60,7 +63,7 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
 
         //setup multi-kaha adapter
         MultiKahaDBPersistenceAdapter persistenceAdapter = new MultiKahaDBPersistenceAdapter();
-        persistenceAdapter.setDirectory(dataFileDir);
+        persistenceAdapter.setDirectory(dataFileDir.getRoot());
 
         KahaDBPersistenceAdapter kahaStore = new KahaDBPersistenceAdapter();
         kahaStore.setJournalMaxFileLength(1024 * 512);

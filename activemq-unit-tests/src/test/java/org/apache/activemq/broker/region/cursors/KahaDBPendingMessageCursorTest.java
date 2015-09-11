@@ -45,12 +45,13 @@ public class KahaDBPendingMessageCursorTest extends
     protected static final Logger LOG = LoggerFactory
             .getLogger(KahaDBPendingMessageCursorTest.class);
 
-    File dataFileDir = new File("target/test-amq-5923/pending-datadb");
+    @Rule
+    public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
-        if (clearDataDir && dataFileDir.exists())
-            FileUtils.cleanDirectory(dataFileDir);
+        if (clearDataDir && dataFileDir.getRoot().exists())
+            FileUtils.cleanDirectory(dataFileDir.getRoot());
         super.setUpBroker(clearDataDir);
     }
 
@@ -58,7 +59,7 @@ public class KahaDBPendingMessageCursorTest extends
     protected void initPersistence(BrokerService brokerService)
             throws IOException {
         broker.setPersistent(true);
-        broker.setDataDirectoryFile(dataFileDir);
+        broker.setDataDirectoryFile(dataFileDir.getRoot());
     }
 
     /**
@@ -67,7 +68,7 @@ public class KahaDBPendingMessageCursorTest extends
      *
      * @throws Exception
      */
-    @Test(timeout=20000)
+    @Test(timeout=10000)
     public void testDurableMessageSizeAfterRestartAndPublish() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -106,7 +107,7 @@ public class KahaDBPendingMessageCursorTest extends
      *
      * @throws Exception
      */
-    @Test(timeout=20000)
+    @Test(timeout=10000)
     public void testNonPersistentDurableMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 

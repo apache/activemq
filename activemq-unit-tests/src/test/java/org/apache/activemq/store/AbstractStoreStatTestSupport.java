@@ -45,16 +45,22 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.cursors.AbstractPendingMessageCursorTest;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  *
  */
 public abstract class AbstractStoreStatTestSupport {
+
+    protected static final Logger LOG = LoggerFactory
+            .getLogger(AbstractStoreStatTestSupport.class);
 
     protected static int defaultMessageSize = 1000;
 
@@ -173,6 +179,7 @@ public abstract class AbstractStoreStatTestSupport {
             MessageProducer prod = session.createProducer(queue);
             prod.setDeliveryMode(deliveryMode);
             for (int i = 0; i < count; i++) {
+                LOG.info("Publishing message: " + i + ", size: " + messageSize);
                 prod.send(createMessage(session, messageSize, publishedMessageSize));
             }
 
@@ -223,6 +230,7 @@ public abstract class AbstractStoreStatTestSupport {
             MessageProducer prod = session.createProducer(topic);
             prod.setDeliveryMode(deliveryMode);
             for (int i = 0; i < publishSize; i++) {
+                LOG.info("Publishing message: " + i + ", size: " + messageSize);
                 prod.send(createMessage(session, messageSize, publishedMessageSize));
             }
 
