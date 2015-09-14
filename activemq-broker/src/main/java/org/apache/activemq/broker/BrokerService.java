@@ -2023,16 +2023,19 @@ public class BrokerService implements Service {
             }
 
             long storeLimit = usage.getTempUsage().getLimit();
+            long storeCurrent = usage.getTempUsage().getUsage();
             while (tmpDir != null && !tmpDir.isDirectory()) {
                 tmpDir = tmpDir.getParentFile();
             }
             long dirFreeSpace = tmpDir.getUsableSpace();
-            if (storeLimit > dirFreeSpace) {
+            if (storeLimit > (dirFreeSpace + storeCurrent)) {
                 LOG.warn("Temporary Store limit is " + storeLimit / (1024 * 1024) +
-                        " mb, whilst the temporary data directory: " + tmpDirPath +
-                        " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to maximum available " +
-                        dirFreeSpace / (1024 * 1024) + " mb.");
-                usage.getTempUsage().setLimit(dirFreeSpace);
+                        " mb (current temporary store usage is " + storeCurrent / (1024 * 1024) +
+                        " mb). The temporary data directory: " + tmpDir.getAbsolutePath() +
+                        " only has " + dirFreeSpace / (1024 * 1024) +
+                        " mb of usable space - resetting to maximum available disk space: " +
+                       (dirFreeSpace + storeCurrent) / (1024 * 1024) + " mb");
+               usage.getTempUsage().setLimit(dirFreeSpace + storeCurrent);
             }
 
             if (isPersistent()) {
