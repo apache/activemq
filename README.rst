@@ -7,21 +7,18 @@ Getting Started
 ===============
 To help you get started, try the following links:
 
-Getting Started
-http://activemq.apache.org/version-5-getting-started.html
+`Getting Started <http://activemq.apache.org/version-5-getting-started.html>`_
 
-Building
-http://activemq.apache.org/version-5-getting-started.html#GettingStarted-WindowsSourceInstallation
-http://activemq.apache.org/version-5-getting-started.html#GettingStarted-UnixSourceInstallation
+Building:
+`Windows <http://activemq.apache.org/version-5-getting-started.html#GettingStarted-WindowsSourceInstallation>`_
+`Unix <http://activemq.apache.org/version-5-getting-started.html#GettingStarted-UnixSourceInstallation>`_
 
-Examples
-http://activemq.apache.org/examples.html
+`Examples <http://activemq.apache.org/examples.html>`_
 
-We welcome contributions of all kinds, for details of how you can help
-http://activemq.apache.org/contributing.html
+We welcome contributions of all kinds, for details of how you can help can be found `here <http://activemq.apache.org/contributing.html>`_
 
-Please refer to the website for details of finding the issue tracker, 
-email lists, wiki or IRC channel at http://activemq.apache.org/
+Please refer to the `website <http://activemq.apache.org/>`_ for details of finding the issue tracker, 
+email lists, wiki or IRC channel `here  
 
 Please help us make Apache ActiveMQ better - we appreciate any feedback 
 you may have.
@@ -31,8 +28,7 @@ Enjoy!
 Licensing
 =======================================================================
 
-   This software is licensed under the terms you may find in the file 
-   named "LICENSE.txt" in this directory.
+   This software is licensed under the terms you may find in `this <https://github.com/apache/activemq/blob/master/LICENSE>`_.
 
    This distribution includes cryptographic software.  The country in 
    which you currently reside may have restrictions on the import, 
@@ -40,7 +36,7 @@ Licensing
    encryption software.  BEFORE using any encryption software, please 
    check your country's laws, regulations and policies concerning the
    import, possession, or use, and re-export of encryption software, to 
-   see if this is permitted.  See <http://www.wassenaar.org/> for more
+   see if this is permitted.  See `this <http://www.wassenaar.org/>`_ for more
    information.
 
    The U.S. Government Department of Commerce, Bureau of Industry and
@@ -57,7 +53,6 @@ Licensing
    software:
    
    ActiveMQ supports the use of SSL TCP connections when used with 
-   with a JVM supporting the Java Cryptography extensions
-   <http://java.sun.com/javase/technologies/security/>.  ActiveMQ does 
+   with a JVM supporting the Java Cryptography extensions. See `this <http://java.sun.com/javase/technologies/security/>`_.  ActiveMQ does 
    not include these libraries itself, but is designed to use them.
 
