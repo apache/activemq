@@ -594,9 +594,6 @@ invoke_task(){
     fi
     invokeJar "$ACTIVEMQ_PIDFILE"
     RET="$?"
-    if [ "$RET" != "0" ];then
-       echo "ERROR: task failed"
-    fi
     exit $RET
 }
 

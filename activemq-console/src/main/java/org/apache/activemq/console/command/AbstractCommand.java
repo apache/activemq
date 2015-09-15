@@ -161,7 +161,7 @@ public abstract class AbstractCommand implements Command {
         }
     }
 
-    protected void handleException(Throwable exception, String serviceUrl) {
+    protected void handleException(Exception exception, String serviceUrl) throws Exception {
         Throwable cause = exception.getCause();
         while (true) {
             Throwable next = cause.getCause();
@@ -173,7 +173,8 @@ public abstract class AbstractCommand implements Command {
         if (cause instanceof ConnectException) {
             context.printInfo("Broker not available at: " + serviceUrl);
         } else {
-            context.printException(new RuntimeException("Failed to execute " + getName() + " task. Reason: " + exception));
+            context.printInfo("Failed to execute " + getName() + " task.");
+            throw exception;
         }
     }
 }

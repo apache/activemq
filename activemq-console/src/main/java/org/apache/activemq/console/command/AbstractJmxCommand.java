@@ -386,7 +386,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     public void execute(List<String> tokens) throws Exception {
         try {
             super.execute(tokens);
-        } catch (Throwable exception) {
+        } catch (Exception exception) {
             handleException(exception, jmxServiceUrl.toString());
             return;
         }finally {
