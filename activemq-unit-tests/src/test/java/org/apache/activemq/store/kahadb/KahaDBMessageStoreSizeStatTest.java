@@ -65,7 +65,7 @@ public class KahaDBMessageStoreSizeStatTest extends
      *
      * @throws Exception
      */
-    @Test
+    @Test(timeout=30000)
     public void testMessageSizeAfterRestartAndPublish() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
         Destination dest = publishTestQueueMessages(200, publishedMessageSize);

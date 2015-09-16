@@ -179,7 +179,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         verifyStoreStats(dest, 0, 0);
     }
 
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testTopicMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -205,7 +205,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testTopicNonPersistentMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -232,7 +232,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testTopicPersistentAndNonPersistentMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -261,7 +261,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testMessageSizeOneDurable() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
@@ -286,7 +286,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testMessageSizeOneDurablePartialConsumption() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -312,7 +312,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testMessageSizeTwoDurables() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -518,7 +518,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
             MessageProducer prod = session.createProducer(topic);
             prod.setDeliveryMode(deliveryMode);
             for (int i = 0; i < publishSize; i++) {
-                prod.send(createMessage(session, AbstractPendingMessageCursorTest.maxMessageSize, publishedMessageSize));
+                prod.send(createMessage(i, session, AbstractPendingMessageCursorTest.maxMessageSize, publishedMessageSize));
             }
 
         } finally {

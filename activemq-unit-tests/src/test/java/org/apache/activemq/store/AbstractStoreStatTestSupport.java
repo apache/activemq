@@ -179,8 +179,7 @@ public abstract class AbstractStoreStatTestSupport {
             MessageProducer prod = session.createProducer(queue);
             prod.setDeliveryMode(deliveryMode);
             for (int i = 0; i < count; i++) {
-                LOG.info("Publishing message: " + i + ", size: " + messageSize);
-                prod.send(createMessage(session, messageSize, publishedMessageSize));
+                prod.send(createMessage(i, session, messageSize, publishedMessageSize));
             }
 
         } finally {
@@ -230,8 +229,7 @@ public abstract class AbstractStoreStatTestSupport {
             MessageProducer prod = session.createProducer(topic);
             prod.setDeliveryMode(deliveryMode);
             for (int i = 0; i < publishSize; i++) {
-                LOG.info("Publishing message: " + i + ", size: " + messageSize);
-                prod.send(createMessage(session, messageSize, publishedMessageSize));
+                prod.send(createMessage(i, session, messageSize, publishedMessageSize));
             }
 
             //verify the view has expected messages
@@ -254,14 +252,17 @@ public abstract class AbstractStoreStatTestSupport {
     }
 
     /**
-     * Generate random messages between 100 bytes and messageSize
+     * Generate random messages between 100 bytes and maxMessageSize
      * @param session
      * @return
      * @throws JMSException
      */
-    protected BytesMessage createMessage(Session session, int messageSize, AtomicLong publishedMessageSize) throws JMSException {
+    protected BytesMessage createMessage(int count, Session session, int maxMessageSize, AtomicLong publishedMessageSize) throws JMSException {
         final BytesMessage message = session.createBytesMessage();
-        int size = messageSize;
+
+        final Random randomSize = new Random();
+        int size = randomSize.nextInt((maxMessageSize - 100) + 1) + 100;
+        LOG.info("Creating message to publish: " + count + ", size: " + size);
         if (publishedMessageSize != null) {
             publishedMessageSize.addAndGet(size);
         }

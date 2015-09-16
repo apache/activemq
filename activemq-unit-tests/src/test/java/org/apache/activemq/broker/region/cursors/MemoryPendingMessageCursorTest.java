@@ -48,7 +48,7 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
 
 
     @Override
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testMessageSizeOneDurable() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
@@ -77,7 +77,7 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
     }
 
     @Override
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testMessageSizeTwoDurables() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -109,7 +109,7 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
     }
 
     @Override
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testMessageSizeOneDurablePartialConsumption() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
