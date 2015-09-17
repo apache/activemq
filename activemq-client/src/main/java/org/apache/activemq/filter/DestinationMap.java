@@ -207,7 +207,7 @@ public class DestinationMap {
             return null;
         }
         SortedSet sortedSet = new TreeSet(set);
-        return sortedSet.last();
+        return sortedSet.first();
     }
 
     /**

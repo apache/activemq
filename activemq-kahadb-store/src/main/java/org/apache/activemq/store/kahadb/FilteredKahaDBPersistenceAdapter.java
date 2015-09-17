@@ -52,4 +52,17 @@ public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
     public void setPerDestination(boolean perDestination) {
         this.perDestination = perDestination;
     }
+
+    @Override
+    public String toString() {
+        return "FilteredKahaDBPersistenceAdapter [" + destination + "]";
+    }
+
+    @Override
+    public int compareTo(Object that) {
+        if (that instanceof FilteredKahaDBPersistenceAdapter) {
+            return this.destination.compareTo(((FilteredKahaDBPersistenceAdapter) that).destination);
+        }
+        return super.compareTo(that);
+    }
 }
