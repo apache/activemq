@@ -85,7 +85,7 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
      *
      * @throws Exception
      */
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testMessageSizeAfterRestartAndPublish() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -104,7 +104,7 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
 
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testMessageSizeAfterRestartAndPublishMultiQueue() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
         AtomicLong publishedMessageSize2 = new AtomicLong();

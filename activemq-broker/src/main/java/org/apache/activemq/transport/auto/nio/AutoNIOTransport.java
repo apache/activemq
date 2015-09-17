@@ -64,6 +64,9 @@ public class AutoNIOTransport extends NIOTransport {
             if (nextFrameSize == -1) {
                 readSize = 4;
                 this.initBuffer.buffer.flip();
+                if (this.initBuffer.buffer.remaining() < 8) {
+                    throw new IOException("Protocol type could not be determined.");
+                }
                 for (int i = 0; i < 4; i++) {
                     currentBuffer.put(initBuffer.buffer.get());
                 }

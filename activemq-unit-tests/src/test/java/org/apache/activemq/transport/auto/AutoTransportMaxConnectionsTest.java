@@ -39,7 +39,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.springframework.jms.support.JmsUtils;
 
 @RunWith(Parameterized.class)
 public class AutoTransportMaxConnectionsTest {
@@ -95,18 +94,22 @@ public class AutoTransportMaxConnectionsTest {
         return new ActiveMQConnectionFactory(connectionUri);
     }
 
-    @Test
+    @Test(timeout=60000)
     public void testMaxConnectionControl() throws Exception {
         final ConnectionFactory cf = createConnectionFactory();
         final CountDownLatch startupLatch = new CountDownLatch(1);
 
-        for(int i = 0; i < maxConnections + 20; i++) {
+        //create an extra 10 connections above max
+        for(int i = 0; i < maxConnections + 10; i++) {
+            final int count = i;
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
                     Connection conn = null;
                     try {
                         startupLatch.await();
+                        //sleep for a short period of time
+                        Thread.sleep(count * 3);
                         conn = cf.createConnection();
                         conn.start();
                     } catch (Exception e) {

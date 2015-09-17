@@ -92,7 +92,7 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
 
     protected abstract void initPersistence(BrokerService brokerService) throws IOException;
 
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -100,7 +100,7 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
         verifyStats(dest, 200, publishedMessageSize.get());
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testMessageSizeAfterConsumption() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -112,7 +112,7 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
         verifyStats(dest, 0, 0);
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testMessageSizeOneDurable() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
@@ -133,7 +133,7 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testMessageSizeTwoDurables() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
