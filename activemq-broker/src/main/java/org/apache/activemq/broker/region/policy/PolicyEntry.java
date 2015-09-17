@@ -1001,4 +1001,8 @@ public class PolicyEntry extends DestinationMapEntry {
         this.maxDestinations = maxDestinations;
     }
 
+    @Override
+    public String toString() {
+        return "PolicyEntry [" + destination + "]";
+    }
 }

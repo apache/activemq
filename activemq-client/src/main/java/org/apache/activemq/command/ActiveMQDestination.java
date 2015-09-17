@@ -37,6 +37,8 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 
+import org.apache.activemq.filter.AnyDestination;
+import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -151,13 +153,26 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         if (destination == destination2) {
             return 0;
         }
-        if (destination == null) {
+        if (destination == null || destination2 instanceof AnyDestination) {
             return -1;
-        } else if (destination2 == null) {
+        } else if (destination2 == null || destination instanceof AnyDestination) {
             return 1;
         } else {
-            if (destination.isQueue() == destination2.isQueue()) {
+            if (destination.getDestinationType() == destination2.getDestinationType()) {
+                if (destination.isPattern()) {
+                    DestinationFilter filter = DestinationFilter.parseFilter(destination);
+                    if (filter.matches(destination2)) {
+                        return 1;
+                    }
+                }
+                if (destination2.isPattern()) {
+                    DestinationFilter filter = DestinationFilter.parseFilter(destination2);
+                    if (filter.matches(destination)) {
+                        return -1;
+                    }
+                }
                 return destination.getPhysicalName().compareTo(destination2.getPhysicalName());
+
             } else {
                 return destination.isQueue() ? -1 : 1;
             }
