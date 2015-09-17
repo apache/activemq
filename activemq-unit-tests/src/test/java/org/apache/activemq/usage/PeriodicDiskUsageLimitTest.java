@@ -101,7 +101,7 @@ public class PeriodicDiskUsageLimitTest {
      * if the usage limit is now less than the store size plus remaining free space, then
      * the usage limits will adjust lower.
      */
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testDiskUsageAdjustLower() throws Exception {
         //set the limit to max space so that if a file is added to eat up free space then
         //the broker should adjust the usage limit..set time to 5 seconds for testing
@@ -137,7 +137,7 @@ public class PeriodicDiskUsageLimitTest {
      * if the usage limit is now less than the store size plus remaining free space, then
      * the usage limits will adjust lower.  Then test that size regrows when file is deleted.
      */
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testDiskUsageAdjustLowerAndHigherUsingPercent() throws Exception {
         //set the limit to max space so that if a file is added to eat up free space then
         //the broker should adjust the usage limit..add 5% above free space
@@ -197,7 +197,7 @@ public class PeriodicDiskUsageLimitTest {
      * This test shows that the usage limits will not change if the
      * schedulePeriodForDiskLimitCheck property is not set because no task will run
      */
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testDiskLimitCheckNotSet() throws Exception {
         setLimitMaxSpace();
         startBroker();
@@ -218,7 +218,7 @@ public class PeriodicDiskUsageLimitTest {
      * This test shows that the usage limits will not change if the
      * schedulePeriodForDiskLimitCheck property is not set because no task will run
      */
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testDiskLimitCheckNotSetUsingPercent() throws Exception {
         tempUsage.setPercentLimit(getFreePercentage(broker.getTempDataStore().getDirectory()) + 5);
         storeUsage.setPercentLimit(getFreePercentage(adapter.getDirectory()) + 5);
@@ -241,7 +241,7 @@ public class PeriodicDiskUsageLimitTest {
      * if the limit is greater than the store size and the remaining free space, then
      * the usage limits will not adjust.
      */
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testDiskUsageStaySame() throws Exception {
         //set a limit lower than max available space and set the period to 5 seconds
         tempUsage.setLimit(10000000);
@@ -267,7 +267,7 @@ public class PeriodicDiskUsageLimitTest {
      * if the limit is greater than the store size and the remaining free space, then
      * the usage limits will not adjust.
      */
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testDiskUsageStaySameUsingPercent() throws Exception {
         //set a limit lower than max available space and set the period to 5 seconds
         //only run if at least 4 percent disk space free
