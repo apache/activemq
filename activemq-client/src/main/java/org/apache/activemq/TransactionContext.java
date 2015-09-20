@@ -454,11 +454,15 @@ public class TransactionContext implements XAResource {
                 synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                     l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
                 }
-                // After commit may be expensive and can deadlock, do it outside synch block
-                if (l != null && !l.isEmpty()) {
-                    LOG.debug("firing afterCommit callbacks on XA_RDONLY from prepare: {}", xid);
-                    for (TransactionContext ctx : l) {
-                        ctx.afterCommit();
+                // After commit may be expensive and can deadlock, do it outside global synch block
+                if (l != null) {
+                    synchronized(l) {
+                        if(! l.isEmpty()) {
+                            LOG.debug("firing afterCommit callbacks on XA_RDONLY from prepare: {}", xid);
+                            for (TransactionContext ctx : l) {
+                                ctx.afterCommit();
+                            }
+                        }
                     }
                 }
             }
@@ -470,14 +474,16 @@ public class TransactionContext implements XAResource {
             synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                 l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             }
-            // After rollback may be expensive and can deadlock, do it outside synch block
-            if (l != null && !l.isEmpty()) {
-                for (TransactionContext ctx : l) {
-                    try {
-                        ctx.afterRollback();
-                    } catch (Throwable ignored) {
-                        LOG.debug("failed to firing afterRollback callbacks on prepare " +
-                                  "failure, txid: {}, context: {}", x, ctx, ignored);
+            // After rollback may be expensive and can deadlock, do it outside global synch block
+            if (l != null) {
+                synchronized(l) {
+                    for (TransactionContext ctx : l) {
+                        try {
+                            ctx.afterRollback();
+                        } catch (Throwable ignored) {
+                            LOG.debug("failed to firing afterRollback callbacks on prepare " +
+                                      "failure, txid: {}, context: {}", x, ctx, ignored);
+                        }
                     }
                 }
             }
@@ -518,10 +524,12 @@ public class TransactionContext implements XAResource {
             synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                 l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             }
-            // After rollback may be expensive and can deadlock, do it outside synch block
-            if (l != null && !l.isEmpty()) {
-                for (TransactionContext ctx : l) {
-                    ctx.afterRollback();
+            // After rollback may be expensive and can deadlock, do it outside global synch block
+            if (l != null) {
+                synchronized(l) {
+                    for (TransactionContext ctx : l) {
+                      ctx.afterRollback();
+                    }                  
                 }
             }
         } catch (JMSException e) {
@@ -559,13 +567,15 @@ public class TransactionContext implements XAResource {
             synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                 l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             }
-            // After commit may be expensive and can deadlock, do it outside synch block
-            if (l != null && !l.isEmpty()) {
-                for (TransactionContext ctx : l) {
-                    try {
-                        ctx.afterCommit();
-                    } catch (Exception ignored) {
-                        LOG.debug("ignoring exception from after completion on ended transaction: {}", ignored, ignored);
+            // After commit may be expensive and can deadlock, do it outside global synch block
+            if (l != null) {
+                synchronized(l) {
+                    for (TransactionContext ctx : l) {
+                        try {
+                            ctx.afterCommit();
+                        } catch (Exception ignored) {
+                            LOG.debug("ignoring exception from after completion on ended transaction: {}", ignored, ignored);
+                        }
                     }
                 }
             }
@@ -577,13 +587,15 @@ public class TransactionContext implements XAResource {
                 synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                     l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
                 }
-                // After rollback may be expensive and can deadlock, do it outside synch block
-                if (l != null && !l.isEmpty()) {
-                    for (TransactionContext ctx : l) {
-                        try {
-                            ctx.afterRollback();
-                        } catch (Throwable ignored) {
-                            LOG.debug("failed to firing afterRollback callbacks commit failure, txid: {}, context: {}", x, ctx, ignored);
+                // After rollback may be expensive and can deadlock, do it outside global synch block
+                if (l != null) {
+                    synchronized(l) {
+                        for (TransactionContext ctx : l) {
+                            try {
+                                ctx.afterRollback();
+                            } catch (Throwable ignored) {
+                                LOG.debug("failed to firing afterRollback callbacks commit failure, txid: {}, context: {}", x, ctx, ignored);
+                            }
                         }
                     }
                 }
@@ -720,15 +732,18 @@ public class TransactionContext implements XAResource {
 
                 // Add our self to the list of contexts that are interested in
                 // post commit/rollback events.
+                List<TransactionContext> l;
                 synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-                    List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.get(transactionId);
+                    l = ENDED_XA_TRANSACTION_CONTEXTS.get(transactionId);
                     if (l == null) {
                         l = new ArrayList<TransactionContext>(3);
                         ENDED_XA_TRANSACTION_CONTEXTS.put(transactionId, l);
-                        l.add(this);
-                    } else if (!l.contains(this)) {
-                        l.add(this);
                     }
+                }
+                synchronized(l) {
+                  if (!l.contains(this)) {
+                    l.add(this);
+                  }
                 }
             }
 
