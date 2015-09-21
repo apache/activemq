@@ -565,7 +565,7 @@ public class ManagedRegionBroker extends RegionBroker {
     public void remove(SubscriptionView view, String messageId)  throws Exception {
         ActiveMQDestination destination = getTopicDestination(view);
         if (destination != null) {
-            final Topic topic = (Topic) getTopicRegion().getDestinationMap().get(destination);
+            final Destination topic = getTopicRegion().getDestinationMap().get(destination);
             final MessageAck messageAck = new MessageAck();
             messageAck.setMessageID(new MessageId(messageId));
             messageAck.setDestination(destination);
@@ -588,7 +588,7 @@ public class ManagedRegionBroker extends RegionBroker {
     protected Message[] getSubscriberMessages(SubscriptionView view) {
         ActiveMQDestination destination = getTopicDestination(view);
         if (destination != null) {
-            Topic topic = (Topic) getTopicRegion().getDestinationMap().get(destination);
+            Destination topic = getTopicRegion().getDestinationMap().get(destination);
             return topic.browse();
 
         } else {

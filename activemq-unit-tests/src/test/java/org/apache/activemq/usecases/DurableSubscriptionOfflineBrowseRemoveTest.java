@@ -29,8 +29,15 @@ import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.security.AuthenticationUser;
+import org.apache.activemq.security.AuthorizationEntry;
+import org.apache.activemq.security.AuthorizationPlugin;
+import org.apache.activemq.security.DefaultAuthorizationMap;
+import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.junit.Test;
@@ -48,6 +55,7 @@ public class DurableSubscriptionOfflineBrowseRemoveTest extends DurableSubscript
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionOfflineBrowseRemoveTest.class);
 
+    public static final String IDENTITY = "milly";
     public boolean keepDurableSubsActive;
 
     @Parameterized.Parameters(name = "PA-{0}.KeepSubsActive-{1}")
@@ -70,6 +78,29 @@ public class DurableSubscriptionOfflineBrowseRemoveTest extends DurableSubscript
     }
 
     @Override
+    public void configurePlugins(BrokerService brokerService) throws Exception {
+        List<DestinationMapEntry> authorizationEntries = new ArrayList<>();
+
+        AuthorizationEntry entry = new AuthorizationEntry();
+        entry.setTopic(">");
+        entry.setRead(IDENTITY);
+        entry.setWrite(IDENTITY);
+        entry.setAdmin(IDENTITY);
+        authorizationEntries.add(entry);
+
+        DefaultAuthorizationMap authorizationMap = new DefaultAuthorizationMap(authorizationEntries);
+        AuthorizationPlugin authorizationPlugin = new AuthorizationPlugin(authorizationMap);
+
+        List<AuthenticationUser> users = new ArrayList<>();
+        users.add(new AuthenticationUser(IDENTITY, IDENTITY, IDENTITY));
+
+        SimpleAuthenticationPlugin authenticationPlugin = new SimpleAuthenticationPlugin(users);
+
+
+        broker.setPlugins(new BrokerPlugin[]{authenticationPlugin, authorizationPlugin});
+
+    }
+    @Override
     public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
         broker.setKeepDurableSubsActive(keepDurableSubsActive);
         return super.setPersistenceAdapter(broker, defaultPersistenceAdapter);
@@ -78,6 +109,8 @@ public class DurableSubscriptionOfflineBrowseRemoveTest extends DurableSubscript
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
+        connectionFactory.setUserName(IDENTITY);
+        connectionFactory.setPassword(IDENTITY);
         connectionFactory.setWatchTopicAdvisories(false);
         return connectionFactory;
     }
