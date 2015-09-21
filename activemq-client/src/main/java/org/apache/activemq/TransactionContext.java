@@ -97,11 +97,9 @@ public class TransactionContext implements XAResource {
         if (transactionId != null && transactionId.isXATransaction()) {
             return true;
         } else {
-            // This is dangerous as isEmpty may return a cached/wrong value without synchronization.
-            // Would like to use ConcurrentHashMap, but that is a bigger change.
-            if (!ENDED_XA_TRANSACTION_CONTEXTS.isEmpty()) {
-                synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-                    for(List<TransactionContext> transactions : ENDED_XA_TRANSACTION_CONTEXTS.values()) {
+            synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+                for(List<TransactionContext> transactions : ENDED_XA_TRANSACTION_CONTEXTS.values()) {
+                    synchronized(transactions) {
                         if (transactions.contains(this)) {
                             return true;
                         }
