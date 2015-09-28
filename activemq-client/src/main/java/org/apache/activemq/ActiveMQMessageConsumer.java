@@ -743,6 +743,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         inProgressClearRequiredFlag.incrementAndGet();
         // deal with delivered messages async to avoid lock contention with in progress acks
         clearDeliveredList = true;
+        // force a rollback if we will be acking in a transaction after/during failover
+        // bc acks are async they may not get there reliably on reconnect and the consumer
+        // may not be aware of the reconnect in a timely fashion if in onMessage
+        if (!deliveredMessages.isEmpty() && session.getTransactionContext().isInTransaction()) {
+            session.getTransactionContext().setRollbackOnly(true);
+        }
     }
 
     void clearMessagesInProgress() {

@@ -82,6 +82,7 @@ public class TransactionContext implements XAResource {
     private TransactionId transactionId;
     private LocalTransactionEventListener localTransactionEventListener;
     private int beforeEndIndex;
+    private volatile boolean rollbackOnly;
 
     // for RAR recovery
     public TransactionContext() {
@@ -109,6 +110,10 @@ public class TransactionContext implements XAResource {
         }
 
         return false;
+    }
+
+    public void setRollbackOnly(boolean val) {
+        rollbackOnly = val;
     }
 
     public boolean isInLocalTransaction() {
@@ -236,6 +241,7 @@ public class TransactionContext implements XAResource {
         if (transactionId == null) {
             synchronizations = null;
             beforeEndIndex = 0;
+            setRollbackOnly(false);
             this.transactionId = new LocalTransactionId(getConnectionId(), localTransactionIdGenerator.getNextSequenceId());
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.BEGIN);
             this.connection.ensureConnectionInfoSent();
@@ -307,6 +313,16 @@ public class TransactionContext implements XAResource {
             throw e;
         }
 
+        if (rollbackOnly) {
+            final String message = "Commit of " + transactionId + "  failed due to rollback only request; typically due to failover with pending acks";
+            try {
+                rollback();
+            } finally {
+                LOG.warn(message);
+                throw new TransactionRolledBackException(message);
+            }
+        }
+
         // Only send commit if the transaction was started.
         if (transactionId != null) {
             LOG.debug("Commit: {} syncCount: {}",
@@ -364,6 +380,7 @@ public class TransactionContext implements XAResource {
         // associate
         synchronizations = null;
         beforeEndIndex = 0;
+        setRollbackOnly(false);
         setXid(xid);
     }
 
@@ -439,6 +456,11 @@ public class TransactionContext implements XAResource {
         } else {
             // TODO: cache the known xids so we don't keep recreating this one??
             x = new XATransactionId(xid);
+        }
+
+        if (rollbackOnly) {
+            LOG.warn("prepare of: " + x + " failed because it was marked rollback only; typically due to failover with pending acks");
+            throw new XAException(XAException.XA_RBINTEGRITY);
         }
 
         try {
@@ -537,6 +559,11 @@ public class TransactionContext implements XAResource {
         } else {
             x = new XATransactionId(xid);
         }
+
+        if (rollbackOnly) {
+             LOG.warn("commit of: " + x + " failed because it was marked rollback only; typically due to failover with pending acks");
+             throw new XAException(XAException.XA_RBINTEGRITY);
+         }
 
         try {
             this.connection.checkClosedOrFailed();

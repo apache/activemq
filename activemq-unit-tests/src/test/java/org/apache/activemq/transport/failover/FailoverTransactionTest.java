@@ -1081,15 +1081,20 @@ public class FailoverTransactionTest extends TestSupport {
         broker.start();
 
         final CountDownLatch commitDone = new CountDownLatch(1);
+        final CountDownLatch gotException = new CountDownLatch(1);
         // will block pending re-deliveries
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
                 LOG.info("doing async commit...");
                 try {
                     consumerSession.commit();
-                    commitDone.countDown();
                 } catch (JMSException ignored) {
+                    ignored.printStackTrace();
+                    gotException.countDown();
+                } finally {
+                    commitDone.countDown();
                 }
+
             }
         });
 
@@ -1098,8 +1103,9 @@ public class FailoverTransactionTest extends TestSupport {
         broker.start();
 
         assertTrue("commit was successful", commitDone.await(30, TimeUnit.SECONDS));
+        assertTrue("got exception on commit", gotException.await(30, TimeUnit.SECONDS));
 
-        assertNull("should not get committed message", consumer.receive(5000));
+        assertNotNull("should get failed committed message", consumer.receive(5000));
         connection.close();
     }
 
