@@ -18,6 +18,9 @@ package org.apache.activemq.transport.mqtt;
 
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.Wait;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -348,6 +351,51 @@ public class PahoMQTTTest extends MQTTTestSupport {
         client4.subscribe(topic, 1);
         Thread.sleep(3 * 1000);
         assertEquals(0, listener.received);
+    }
+
+    @Test(timeout = 300000)
+    public void testVirtualTopicQueueRestore() throws Exception {
+
+        stopBroker();
+        protocolConfig = "transport.subscriptionStrategy=mqtt-virtual-topic-subscriptions";
+        startBroker();
+
+        String user10 = "user10";
+        String password10 = "user10";
+        String clientId10 = "client-10";
+        String topic10 = "user10/";
+        MqttConnectOptions options10 = new MqttConnectOptions();
+        options10.setCleanSession(false);
+        options10.setUserName(user10);
+        options10.setPassword(password10.toCharArray());
+        MqttClient client10 = createClient(false, clientId10, null);
+        client10.subscribe(topic10 + clientId10 + "/#", 1);
+        client10.subscribe(topic10 + "#", 1);
+
+        String user1 = "user1";
+        String password1 = "user1";
+        String clientId1 = "client-1";
+        String topic1 = "user1/";
+        MqttConnectOptions options1 = new MqttConnectOptions();
+        options1.setCleanSession(false);
+        options1.setUserName(user1);
+        options1.setPassword(password1.toCharArray());
+
+        MqttClient client1 = createClient(false, clientId1, null);
+        client1.subscribe(topic1 + clientId1 + "/#", 1);
+        client1.subscribe(topic1 + "#", 1);
+
+        RegionBroker regionBroker = (RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class);
+
+        String[] queues = new String[]{"Consumer.client-10:AT_LEAST_ONCE.VirtualTopic.user10.>",
+                "Consumer.client-10:AT_LEAST_ONCE.VirtualTopic.user10.client-10.>",
+                "Consumer.client-1:AT_LEAST_ONCE.VirtualTopic.user1.>",
+                "Consumer.client-1:AT_LEAST_ONCE.VirtualTopic.user1.client-1.>"};
+
+        for (String queueName : queues) {
+            Destination queue = regionBroker.getQueueRegion().getDestinations(new ActiveMQQueue(queueName)).iterator().next();
+            assertEquals("Queue " + queueName + " have more than one consumer", 1, queue.getConsumers().size());
+        }
     }
 
     protected MqttClient createClient(boolean cleanSession, String clientId, MqttCallback listener) throws Exception {
