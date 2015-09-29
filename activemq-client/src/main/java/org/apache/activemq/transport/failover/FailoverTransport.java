@@ -607,7 +607,7 @@ public class FailoverTransport implements CompositeTransport {
                         long start = System.currentTimeMillis();
                         boolean timedout = false;
                         while (transport == null && !disposed && connectionFailure == null
-                                && !Thread.currentThread().isInterrupted()) {
+                                && !Thread.currentThread().isInterrupted() && willReconnect()) {
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("Waiting for transport to reconnect..: " + command);
                             }
@@ -639,6 +639,8 @@ public class FailoverTransport implements CompositeTransport {
                                 error = connectionFailure;
                             } else if (timedout == true) {
                                 error = new IOException("Failover timeout of " + timeout + " ms reached.");
+                            } else if (!willReconnect()) {
+                                error = new IOException("Reconnect attempts of " + maxReconnectAttempts + " exceeded");
                             } else {
                                 error = new IOException("Unexpected failure.");
                             }
@@ -721,6 +723,10 @@ public class FailoverTransport implements CompositeTransport {
                 throw IOExceptionSupport.create(error);
             }
         }
+    }
+
+    private boolean willReconnect() {
+        return firstConnection || 0 != calculateReconnectAttemptLimit();
     }
 
     @Override
