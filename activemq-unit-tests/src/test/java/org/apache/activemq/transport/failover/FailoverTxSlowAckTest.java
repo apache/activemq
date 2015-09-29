@@ -57,7 +57,7 @@ public class FailoverTxSlowAckTest {
     private static final String QUEUE_OUT = "OUT";
 
     private static final String MESSAGE_TEXT = "Test message ";
-    private static final String TRANSPORT_URI = "tcp://localhost:0?transport.useKeepAlive=false&wireFormat.maxInactivityDuration=10000";
+    private static final String TRANSPORT_URI = "tcp://localhost:0";
     private String url;
     final int prefetch = 1;
     BrokerService broker;
@@ -87,8 +87,6 @@ public class FailoverTxSlowAckTest {
         defaultEntry.setOptimizedDispatch(true);
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);
-
-        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
 
         return broker;
     }
@@ -121,8 +119,9 @@ public class FailoverTxSlowAckTest {
                     }}});
 
         broker.start();
+        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
 
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + "?useKeepAlive=false&wireFormat.maxInactivityDuration=10000)");
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(false);
         cf.setDispatchAsync(false);
 
@@ -224,7 +223,7 @@ public class FailoverTxSlowAckTest {
         broker.start();
 
         assertTrue("message was recieved ", messagesReceived.await(20, TimeUnit.SECONDS));
-        assertTrue("tx complete through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
+        assertTrue("tx complete through failover", commitDoneLatch.await(40, TimeUnit.SECONDS));
         assertEquals("one delivery", 1, receivedCount.get());
 
         assertTrue("got disconnect/reconnect", gotDisconnect.get());
