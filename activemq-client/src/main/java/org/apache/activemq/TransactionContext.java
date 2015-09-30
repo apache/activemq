@@ -313,7 +313,7 @@ public class TransactionContext implements XAResource {
             throw e;
         }
 
-        if (rollbackOnly) {
+        if (transactionId != null && rollbackOnly) {
             final String message = "Commit of " + transactionId + "  failed due to rollback only request; typically due to failover with pending acks";
             try {
                 rollback();
