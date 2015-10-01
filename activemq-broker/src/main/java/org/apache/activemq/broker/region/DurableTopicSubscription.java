@@ -307,7 +307,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     public void setSelector(String selector) throws InvalidSelectorException {
-        throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
+        if (active.get()) {
+            throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
+        } else {
+            super.setSelector(getSelector());
+        }
     }
 
     @Override
@@ -347,7 +351,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     MessageReference node = pending.next();
                     node.decrementReferenceCount();
                 }
-
             } finally {
                 pending.release();
                 pending.clear();
