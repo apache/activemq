@@ -29,13 +29,11 @@ import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.KeyedObjectPool;
 import org.apache.commons.pool2.KeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +64,8 @@ public class ConnectionPool implements ExceptionListener {
     private ExceptionListener parentExceptionListener;
 
     public ConnectionPool(Connection connection) {
-
+        final GenericKeyedObjectPoolConfig poolConfig = new GenericKeyedObjectPoolConfig();
+        poolConfig.setJmxEnabled(false);
         this.connection = wrap(connection);
 
         // Create our internal Pool of session instances.
@@ -95,7 +94,7 @@ public class ConnectionPool implements ExceptionListener {
                 @Override
                 public void passivateObject(SessionKey sessionKey, PooledObject<SessionHolder> pooledObject) throws Exception {
                 }
-            }
+            }, poolConfig
         );
     }
 

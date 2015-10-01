@@ -32,6 +32,7 @@ import org.apache.commons.pool2.KeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +87,8 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
     public void initConnectionsPool() {
         if (this.connectionsPool == null) {
+            final GenericKeyedObjectPoolConfig poolConfig = new GenericKeyedObjectPoolConfig();
+            poolConfig.setJmxEnabled(false);
             this.connectionsPool = new GenericKeyedObjectPool<ConnectionKey, ConnectionPool>(
                 new KeyedPooledObjectFactory<ConnectionKey, ConnectionPool>() {
                     @Override
@@ -147,7 +150,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                     public void passivateObject(ConnectionKey connectionKey, PooledObject<ConnectionPool> pooledObject) throws Exception {
                     }
 
-                });
+                }, poolConfig);
 
             // Set max idle (not max active) since our connections always idle in the pool.
             this.connectionsPool.setMaxIdlePerKey(1);
