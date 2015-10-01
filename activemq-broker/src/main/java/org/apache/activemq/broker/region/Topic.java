@@ -212,9 +212,29 @@ public class Topic extends BaseDestination implements Task {
     }
 
     private boolean hasDurableSubChanged(SubscriptionInfo info1, ConsumerInfo info2) {
+        if (hasSelectorChanged(info1, info2)) {
+            return true;
+        }
+
+        return hasNoLocalChanged(info1, info2);
+    }
+
+    private boolean hasNoLocalChanged(SubscriptionInfo info1, ConsumerInfo info2) {
+        // Prior to V11 the broker did not store the noLocal value for durable subs.
+        if (brokerService.getStoreOpenWireVersion() >= 11) {
+            if (info1.isNoLocal() ^ info2.isNoLocal()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean hasSelectorChanged(SubscriptionInfo info1, ConsumerInfo info2) {
         if (info1.getSelector() != null ^ info2.getSelector() != null) {
             return true;
         }
+
         if (info1.getSelector() != null && !info1.getSelector().equals(info2.getSelector())) {
             return true;
         }
@@ -242,6 +262,10 @@ public class Topic extends BaseDestination implements Task {
                     // Need to delete the subscription
                     topicStore.deleteSubscription(clientId, subscriptionName);
                     info = null;
+                    // Force a rebuild of the selector chain for the subscription otherwise
+                    // the stored subscription is updated but the selector expression is not
+                    // and the subscription will not behave according to the new configuration.
+                    subscription.setSelector(subscription.getConsumerInfo().getSelector());
                     synchronized (consumers) {
                         consumers.remove(subscription);
                     }

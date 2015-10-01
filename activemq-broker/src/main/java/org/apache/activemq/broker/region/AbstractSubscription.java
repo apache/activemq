@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.management.ObjectName;
@@ -43,11 +43,13 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractSubscription implements Subscription {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSubscription.class);
+
     protected Broker broker;
     protected ConnectionContext context;
     protected ConsumerInfo info;
     protected final DestinationFilter destinationFilter;
     protected final CopyOnWriteArrayList<Destination> destinations = new CopyOnWriteArrayList<Destination>();
+
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
     private int cursorMemoryHighWaterMark = 70;
@@ -180,6 +182,7 @@ public abstract class AbstractSubscription implements Subscription {
     public int getPrefetchSize() {
         return info.getPrefetchSize();
     }
+
     public void setPrefetchSize(int newSize) {
         info.setPrefetchSize(newSize);
     }
@@ -210,7 +213,6 @@ public abstract class AbstractSubscription implements Subscription {
             if (result) {
                 doAddRecoveredMessage(message);
             }
-
         } finally {
             msgContext.clear();
         }
@@ -245,7 +247,6 @@ public abstract class AbstractSubscription implements Subscription {
      * @param destination
      */
     public void addDestination(Destination destination) {
-
     }
 
     /**
@@ -253,7 +254,6 @@ public abstract class AbstractSubscription implements Subscription {
      * @param destination
      */
     public void removeDestination(Destination destination) {
-
     }
 
     @Override
@@ -289,14 +289,17 @@ public abstract class AbstractSubscription implements Subscription {
         this.lastAckTime = value;
     }
 
+    @Override
     public long getConsumedCount(){
         return subscriptionStatistics.getConsumedCount().getCount();
     }
 
+    @Override
     public void incrementConsumedCount(){
         subscriptionStatistics.getConsumedCount().increment();
     }
 
+    @Override
     public void resetConsumedCount(){
         subscriptionStatistics.getConsumedCount().reset();
     }

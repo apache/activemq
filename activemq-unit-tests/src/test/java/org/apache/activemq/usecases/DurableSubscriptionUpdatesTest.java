@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.usecases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -32,7 +32,9 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
@@ -43,12 +45,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test for behavior of durable subscriber that changes noLocal setting
- * on reconnect.
+ * Test that the durable sub updates when the offline sub is reactivated with new values.
  */
-public class JMSDurableSubNoLocalChangedTest {
+public class DurableSubscriptionUpdatesTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JMSDurableSubNoLocalChangedTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionUpdatesTest.class);
 
     private final int MSG_COUNT = 5;
 
@@ -64,7 +65,11 @@ public class JMSDurableSubNoLocalChangedTest {
     @Rule public TestName name = new TestName();
 
     protected TopicConnection createConnection() throws JMSException {
-        TopicConnection connection = JMSClientContext.INSTANCE.createTopicConnection(connectionUri, null, null, clientId, true);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+        factory.setUseAsyncSend(true);
+
+        TopicConnection connection = factory.createTopicConnection();
+        connection.setClientID(clientId);
         connection.start();
 
         return connection;
@@ -83,6 +88,83 @@ public class JMSDurableSubNoLocalChangedTest {
         }
 
         stopBroker();
+    }
+
+    @Test(timeout = 60000)
+    public void testSelectorChange() throws Exception {
+        connection = createConnection();
+        TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Topic topic = session.createTopic(topicName);
+
+        // Create a Durable Topic Subscription with noLocal set to true.
+        TopicSubscriber durableSubscriber = session.createDurableSubscriber(topic, subscriptionName, "JMSPriority > 8", false);
+
+        // Public first set, only the non durable sub should get these.
+        publishToTopic(session, topic, 9);
+        publishToTopic(session, topic, 8);
+
+        // Standard subscriber should receive them
+        for (int i = 0; i < MSG_COUNT; ++i) {
+            Message message = durableSubscriber.receive(2000);
+            assertNotNull(message);
+            assertEquals(9, message.getJMSPriority());
+        }
+
+        // Subscriber should not receive the others.
+        {
+            Message message = durableSubscriber.receive(500);
+            assertNull(message);
+        }
+
+        // Public second set for testing durable sub changed.
+        publishToTopic(session, topic, 9);
+
+        assertEquals(1, brokerService.getAdminView().getDurableTopicSubscribers().length);
+        assertEquals(0, brokerService.getAdminView().getInactiveDurableTopicSubscribers().length);
+
+        // Durable now goes inactive.
+        durableSubscriber.close();
+
+        assertTrue("Should have no durables.", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return brokerService.getAdminView().getDurableTopicSubscribers().length == 0;
+            }
+        }));
+        assertTrue("Should have an inactive sub.", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1;
+            }
+        }));
+
+        LOG.debug("Testing that updated selector subscription does get any messages.");
+
+        // Recreate a Durable Topic Subscription with noLocal set to false.
+        durableSubscriber = session.createDurableSubscriber(topic, subscriptionName, "JMSPriority > 7", false);
+
+        assertEquals(1, brokerService.getAdminView().getDurableTopicSubscribers().length);
+        assertEquals(0, brokerService.getAdminView().getInactiveDurableTopicSubscribers().length);
+
+        // Durable subscription should not receive them as the subscriptions should
+        // have been removed and recreated to update the noLocal flag.
+        {
+            Message message = durableSubscriber.receive(500);
+            assertNull(message);
+        }
+
+        // Public third set which should get queued for the durable sub with noLocal=false
+        publishToTopic(session, topic, 8);
+
+        // Durable subscriber should receive them
+        for (int i = 0; i < MSG_COUNT; ++i) {
+            Message message = durableSubscriber.receive(5000);
+            assertNotNull("Should get messages now", message);
+            assertEquals(8, message.getJMSPriority());
+        }
     }
 
     @Test(timeout = 60000)
@@ -159,7 +241,7 @@ public class JMSDurableSubNoLocalChangedTest {
 
         // Durable subscriber should receive them
         for (int i = 0; i < MSG_COUNT; ++i) {
-            Message message = durableSubscriber.receive(2000);
+            Message message = durableSubscriber.receive(5000);
             assertNotNull("Should get local messages now", message);
         }
     }
@@ -256,9 +338,13 @@ public class JMSDurableSubNoLocalChangedTest {
     }
 
     private void publishToTopic(TopicSession session, Topic destination) throws Exception {
+        publishToTopic(session, destination, Message.DEFAULT_PRIORITY);
+    }
+
+    private void publishToTopic(TopicSession session, Topic destination, int priority) throws Exception {
         TopicPublisher publisher = session.createPublisher(destination);
         for (int i = 0; i < MSG_COUNT; ++i) {
-            publisher.send(session.createMessage());
+            publisher.send(session.createMessage(), Message.DEFAULT_DELIVERY_MODE, priority, Message.DEFAULT_TIME_TO_LIVE);
         }
 
         publisher.close();
@@ -290,11 +376,10 @@ public class JMSDurableSubNoLocalChangedTest {
         brokerService.setAdvisorySupport(false);
         brokerService.setSchedulerSupport(false);
         brokerService.setKeepDurableSubsActive(false);
-        brokerService.addConnector("amqp://0.0.0.0:0");
+        TransportConnector connector = brokerService.addConnector("tcp://0.0.0.0:0");
         brokerService.start();
 
-        connectionUri = new URI("amqp://localhost:" +
-            brokerService.getTransportConnectorByScheme("amqp").getPublishableConnectURI().getPort());
+        connectionUri = connector.getPublishableConnectURI();
 
         clientId = name.getMethodName() + "-ClientId";
         subscriptionName = name.getMethodName() + "-Subscription";
