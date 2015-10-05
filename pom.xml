@@ -133,7 +133,7 @@
     <pax-exam-version>4.6.0</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
     <pax-runner-version>1.6.1</pax-runner-version>
-    <pax-url-version>2.4.1</pax-url-version>
+    <pax-url-version>2.4.3</pax-url-version>
     <felix-configadmin-version>1.8.0</felix-configadmin-version>
     <felix-framework-version>5.0.1</felix-framework-version>
 
