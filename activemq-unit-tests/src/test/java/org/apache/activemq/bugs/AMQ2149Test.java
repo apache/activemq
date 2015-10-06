@@ -19,7 +19,6 @@ package org.apache.activemq.bugs;
 
 import java.io.File;
 import java.lang.IllegalStateException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -156,7 +155,7 @@ public class AMQ2149Test {
 
         private final MessageConsumer messageConsumer;
 
-        private volatile long nextExpectedSeqNum = 0;
+        private volatile long nextExpectedSeqNum = 1;
                 
         private final boolean transactional;
 
@@ -201,10 +200,11 @@ public class AMQ2149Test {
                     }
                 }
                 if (resumeOnNextOrPreviousIsOk) {
-                    // after an indoubt commit we need to accept what we get (within reason)
+                    // after an indoubt commit we need to accept what we get
+                    // either a batch replay or next batch
                     if (seqNum != nextExpectedSeqNum) {
-                        if (seqNum == nextExpectedSeqNum - (TRANSACITON_BATCH -1)) {
-                            nextExpectedSeqNum -= (TRANSACITON_BATCH -1);
+                        if (seqNum == nextExpectedSeqNum - TRANSACITON_BATCH) {
+                            nextExpectedSeqNum -= TRANSACITON_BATCH;
                             LOG.info("In doubt commit failed, getting replay at:" +  nextExpectedSeqNum);
                         }
                     }
@@ -223,21 +223,21 @@ public class AMQ2149Test {
                 ++nextExpectedSeqNum;
                 lastId = message.getJMSMessageID();
             } catch (TransactionRolledBackException expectedSometimesOnFailoverRecovery) {
+                ++nextExpectedSeqNum;
                 LOG.info("got rollback: " + expectedSometimesOnFailoverRecovery);
                 if (expectedSometimesOnFailoverRecovery.getMessage().contains("completion in doubt")) {
                     // in doubt - either commit command or reply missing
                     // don't know if we will get a replay
                     resumeOnNextOrPreviousIsOk = true;
-                    nextExpectedSeqNum++;
                     LOG.info("in doubt transaction completion: ok to get next or previous batch. next:" + nextExpectedSeqNum);
                 } else {
                     resumeOnNextOrPreviousIsOk = false;
                     // batch will be replayed
-                    nextExpectedSeqNum -= (TRANSACITON_BATCH -1);
+                    nextExpectedSeqNum -= TRANSACITON_BATCH;
                 }
 
             } catch (Throwable e) {
-                LOG.error(dest + " onMessage error", e);
+                LOG.error(dest + " onMessage error:" + e);
                 exceptions.add(e);
             }
         }
@@ -274,8 +274,7 @@ public class AMQ2149Test {
                     final Message message = session
                             .createTextMessage(longString);
                     message.setLongProperty(SEQ_NUM_PROPERTY,
-                            nextSequenceNumber);
-                    ++nextSequenceNumber;
+                            ++nextSequenceNumber);
                     messageProducer.send(message);
                     
                     if ((nextSequenceNumber % 500) == 0) {
