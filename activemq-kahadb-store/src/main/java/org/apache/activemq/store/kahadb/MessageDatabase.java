@@ -1063,14 +1063,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     void process(JournalCommand<?> data, final Location location, final Location inDoubtlocation) throws IOException {
         if (inDoubtlocation != null && location.compareTo(inDoubtlocation) >= 0) {
-            if (data instanceof KahaSubscriptionCommand) {
-                KahaSubscriptionCommand kahaSubscriptionCommand = (KahaSubscriptionCommand)data;
-                if (kahaSubscriptionCommand.hasSubscriptionInfo()) {
-                    // needs to be processed via activate and will be replayed on reconnect
-                    LOG.debug("ignoring add sub command during recovery replay:" + data);
-                    return;
-                }
-            }
             process(data, location, (IndexAware) null);
         } else {
             // just recover producer audit
@@ -1499,6 +1491,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         // If set then we are creating it.. otherwise we are destroying the sub
         if (command.hasSubscriptionInfo()) {
+            Location existing = sd.subLocations.get(tx, subscriptionKey);
+            if (existing != null && existing.compareTo(location) == 0) {
+                // replay on recovery, ignore
+                LOG.trace("ignoring journal replay of replay of sub from: " + location);
+                return;
+            }
+
             sd.subscriptions.put(tx, subscriptionKey, command);
             sd.subLocations.put(tx, subscriptionKey, location);
             long ackLocation=NOT_ACKED;
