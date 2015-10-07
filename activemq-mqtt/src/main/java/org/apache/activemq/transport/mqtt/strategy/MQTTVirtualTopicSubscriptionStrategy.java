@@ -84,22 +84,21 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
         ActiveMQDestination destination = null;
         int prefetch = ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH;
         ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
-
+        String converted = convertMQTTToActiveMQ(topicName);
         if (!protocol.isCleanSession() && protocol.getClientId() != null && requestedQoS.ordinal() >= QoS.AT_LEAST_ONCE.ordinal()) {
-            String converted = convertMQTTToActiveMQ(topicName);
+
             if (converted.startsWith(VIRTUALTOPIC_PREFIX)) {
                 destination = new ActiveMQTopic(converted);
                 prefetch = ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH;
                 consumerInfo.setSubscriptionName(requestedQoS + ":" + topicName);
             } else {
                 converted = VIRTUALTOPIC_CONSUMER_PREFIX +
-                            protocol.getClientId() + ":" + requestedQoS + "." +
+                            convertMQTTToActiveMQ(protocol.getClientId()) + ":" + requestedQoS + "." +
                             VIRTUALTOPIC_PREFIX + converted;
                 destination = new ActiveMQQueue(converted);
                 prefetch = ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH;
             }
         } else {
-            String converted = convertMQTTToActiveMQ(topicName);
             if (!converted.startsWith(VIRTUALTOPIC_PREFIX)) {
                 converted = VIRTUALTOPIC_PREFIX + converted;
             }
