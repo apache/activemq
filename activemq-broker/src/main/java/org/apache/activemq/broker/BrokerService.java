@@ -2027,7 +2027,6 @@ public class BrokerService implements Service {
             String storeName = storeUsage instanceof StoreUsage ? "Store" : "Temporary Store";
             long storeLimit = storeUsage.getLimit();
             long storeCurrent = storeUsage.getUsage();
-            long usableSpace = dir.getUsableSpace();
             long totalSpace = dir.getTotalSpace();
             long totalUsableSpace = dir.getUsableSpace() + storeCurrent;
             //compute byte value of the percent limit
@@ -2067,7 +2066,7 @@ public class BrokerService implements Service {
                 LOG.warn(storeName + " limit is " +  storeLimit / oneMeg +
                          " mb (current store usage is " + storeCurrent / oneMeg +
                          " mb). The data directory: " + dir.getAbsolutePath() +
-                         " only has " + usableSpace / oneMeg +
+                         " only has " + totalUsableSpace / oneMeg +
                          " mb of usable space - resetting to maximum available disk space: " +
                          totalUsableSpace / oneMeg + " mb");
                 storeUsage.setLimit(totalUsableSpace);
