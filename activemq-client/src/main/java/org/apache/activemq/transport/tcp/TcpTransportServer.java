@@ -466,6 +466,10 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             serverSocket.close();
             serverSocket = null;
         }
+        if (socketHandlerThread != null) {
+            socketHandlerThread.interrupt();
+            socketHandlerThread = null;
+        }
         super.doStop(stopper);
     }
 
