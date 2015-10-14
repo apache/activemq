@@ -101,6 +101,7 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
 
     @Override
     public void onAMQPException(IOException error) {
+        transport.sendToActiveMQ(error);
     }
 
     @Override
