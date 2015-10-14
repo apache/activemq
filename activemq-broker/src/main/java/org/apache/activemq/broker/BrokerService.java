@@ -2057,10 +2057,12 @@ public class BrokerService implements Service {
             } else if (storeLimit > totalUsableSpace) {
                 if (percentLimit > 0) {
                     LOG.warn(storeName + " limit has been set to "
-                            + percentLimit + "% (" + storeLimit / oneMeg + " mb)"
+                            + percentLimit + "% (" + bytePercentLimit / oneMeg + " mb)"
                             + " of the partition size but there is not enough usable space."
-                            + " Only " + totalUsableSpace * 100 / totalSpace + "% (" + totalUsableSpace / oneMeg + " mb)"
-                            + " is available");
+                            + " The current store limit (which may have been adjusted by a"
+                            + " previous usage limit check) is set to (" + storeLimit / oneMeg + " mb)"
+                            + " but only " + totalUsableSpace * 100 / totalSpace + "% (" + totalUsableSpace / oneMeg + " mb)"
+                            + " is available - resetting limit");
                 }
 
                 LOG.warn(storeName + " limit is " +  storeLimit / oneMeg +
