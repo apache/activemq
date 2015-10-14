@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
@@ -66,7 +68,7 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 public class JoramJmsNioTest {
 
     @Rule
-    public Timeout timeout = new Timeout(10 * 1000);
+    public Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
 
     @BeforeClass
     public static void beforeClass() throws Exception {

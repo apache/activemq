@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -73,7 +75,8 @@ public class JoramSslTest {
     protected static final Logger LOG = LoggerFactory.getLogger(JoramSslTest.class);
 
     @Rule
-    public Timeout to = new Timeout(10 * 1000);
+    public Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
+
     static SSLContext def;
 
     @BeforeClass

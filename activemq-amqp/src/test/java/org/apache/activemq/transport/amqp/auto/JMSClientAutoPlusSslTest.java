@@ -18,7 +18,6 @@ package org.apache.activemq.transport.amqp.auto;
 
 import java.net.URI;
 
-import org.apache.activemq.transport.amqp.JMSClientNioPlusSslTest;
 import org.apache.activemq.transport.amqp.JMSClientSslTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
