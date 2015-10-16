@@ -57,7 +57,6 @@ import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
@@ -1108,7 +1107,6 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Ignore("Legacy QPid client does not support creation of TemporaryTopics correctly")
     @Test(timeout=30000)
     public void testDeleteTemporaryQueue() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
