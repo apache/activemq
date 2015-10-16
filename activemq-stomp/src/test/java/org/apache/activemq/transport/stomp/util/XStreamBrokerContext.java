@@ -23,6 +23,7 @@ import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.transport.stomp.SamplePojo;
 
 import com.thoughtworks.xstream.XStream;
+import org.apache.activemq.transport.stomp.XStreamSupport;
 
 public class XStreamBrokerContext implements BrokerContext {
 
@@ -30,7 +31,7 @@ public class XStreamBrokerContext implements BrokerContext {
 
     public XStreamBrokerContext() {
 
-        XStream stream = new XStream();
+        XStream stream = XStreamSupport.createXStream();
         stream.processAnnotations(SamplePojo.class);
 
         beansMap.put("xstream", stream);

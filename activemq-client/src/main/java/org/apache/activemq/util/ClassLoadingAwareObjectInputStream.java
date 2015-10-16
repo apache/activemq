@@ -21,6 +21,9 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +34,8 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     private static final ClassLoader FALLBACK_CLASS_LOADER =
         ClassLoadingAwareObjectInputStream.class.getClassLoader();
 
+    private static String[] serializablePackages;
+
     private final ClassLoader inLoader;
 
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {
@@ -40,7 +45,9 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
 
     protected Class<?> resolveClass(ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        return load(classDesc.getName(), cl, inLoader);
+        Class clazz = load(classDesc.getName(), cl, inLoader);
+        checkSecurity(clazz);
+        return clazz;
     }
 
     protected Class<?> resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
@@ -50,21 +57,58 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
             cinterfaces[i] = load(interfaces[i], cl);
         }
 
+        Class clazz = null;
         try {
-            return Proxy.getProxyClass(cl, cinterfaces);
+            clazz = Proxy.getProxyClass(cl, cinterfaces);
         } catch (IllegalArgumentException e) {
             try {
-                return Proxy.getProxyClass(inLoader, cinterfaces);
+                clazz = Proxy.getProxyClass(inLoader, cinterfaces);
             } catch (IllegalArgumentException e1) {
                 // ignore
             }
             try {
-                return Proxy.getProxyClass(FALLBACK_CLASS_LOADER, cinterfaces);
+                clazz = Proxy.getProxyClass(FALLBACK_CLASS_LOADER, cinterfaces);
             } catch (IllegalArgumentException e2) {
                 // ignore
             }
+        }
 
-            throw new ClassNotFoundException(null, e);
+        if (clazz != null) {
+            checkSecurity(clazz);
+            return clazz;
+        } else {
+            throw new ClassNotFoundException(null);
+        }
+    }
+
+    public static String[] getSerialziablePackages() {
+       if (serializablePackages == null) {
+           serializablePackages = System.getProperty("org.apache.activemq.SERIALIZABLE_PACKAGES",
+                       "java.lang,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper").split(",");
+       }
+
+       return serializablePackages;
+    };
+
+    public static boolean isAllAllowed() {
+        return getSerialziablePackages().length == 1 && getSerialziablePackages()[0].equals("*");
+    }
+
+    private void checkSecurity(Class clazz) throws ClassNotFoundException {
+        if (!clazz.isPrimitive()) {
+            if (clazz.getPackage() != null && !isAllAllowed()) {
+               boolean found = false;
+               for (String packageName : getSerialziablePackages()) {
+                   if (clazz.getPackage().getName().equals(packageName) || clazz.getPackage().getName().startsWith(packageName + ".")) {
+                       found = true;
+                       break;
+                   }
+               }
+
+               if (!found) {
+                   throw new ClassNotFoundException("Forbidden " + clazz + "! This class is not allowed to be serialized. Add package with 'org.apache.activemq.SERIALIZABLE_PACKAGES' system property.");
+               }
+            }
         }
     }
 
