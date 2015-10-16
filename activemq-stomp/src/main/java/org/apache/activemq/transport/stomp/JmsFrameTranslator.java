@@ -91,7 +91,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
                         msg = createMapMessage(in);
                         break;
                     default:
-                        throw new Exception("Unkown transformation: " + transformation);
+                        throw new Exception("Unknown transformation: " + transformation);
                 }
             } catch (Throwable e) {
                 command.getHeaders().put(Headers.TRANSFORMATION_ERROR, e.getMessage());
@@ -254,7 +254,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
         }
 
         if (xstream == null) {
-            xstream = new XStream();
+            xstream = XStreamSupport.createXStream();
             xstream.ignoreUnknownElements();
         }
 

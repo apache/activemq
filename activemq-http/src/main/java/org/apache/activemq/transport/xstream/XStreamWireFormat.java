@@ -19,8 +19,17 @@ package org.apache.activemq.transport.xstream;
 import java.io.IOException;
 import java.io.Reader;
 
+<<<<<<< HEAD
+=======
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+>>>>>>> a7e2a44... https://issues.apache.org/jira/browse/AMQ-6013 - restrict classes which can be serialized inside the broker
 import org.apache.activemq.command.MarshallAware;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.transport.stomp.XStreamSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -93,8 +102,7 @@ public class XStreamWireFormat extends TextWireFormat {
     }
 
     // Properties
-    // -------------------------------------------------------------------------
-    public XStream getXStream() {
+    // -------------------------------------------------activemq-http/src/main/java/org/apache/activemq/transport/xstream/XStreamWireFormat.java
         if (xStream == null) {
             xStream = createXStream();
             // make it work in OSGi env
@@ -110,7 +118,7 @@ public class XStreamWireFormat extends TextWireFormat {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected XStream createXStream() {
-        XStream xstream = new XStream();
+        final XStream xstream = XStreamSupport.createXStream();
         xstream.ignoreUnknownElements();
         return xstream;
     }
