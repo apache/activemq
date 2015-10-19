@@ -689,7 +689,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         // related to remove subscription action
                         synchronized(dispatchLock) {
                             pending.remove();
-                            node.decrementReferenceCount();
                             if (!isDropped(node) && canDispatch(node)) {
 
                                 // Message may have been sitting in the pending
@@ -709,6 +708,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 count++;
                             }
                         }
+                        // decrement after dispatch has taken ownership to avoid usage jitter
+                        node.decrementReferenceCount();
                     }
                 } else if (!isSlowConsumer()) {
                     setSlowConsumer(true);
