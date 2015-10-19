@@ -157,6 +157,34 @@ public class JMSClientSimpleAuthTest {
     }
 
     @Test(timeout = 30000)
+    public void testProducerNotAuthorized() throws Exception {
+        connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "guest", "guestPassword");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue("USERS.txQueue");
+        try {
+            session.createProducer(queue);
+            fail("Should not be able to produce here.");
+        } catch (JMSSecurityException jmsSE) {
+            LOG.info("Caught expected exception");
+        }
+    }
+
+    @Test(timeout = 30000)
+    public void testAnonymousProducerNotAuthorized() throws Exception {
+        connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "guest", "guestPassword");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue("USERS.txQueue");
+        MessageProducer producer = session.createProducer(null);
+
+        try {
+            producer.send(queue, session.createTextMessage());
+            fail("Should not be able to produce here.");
+        } catch (JMSSecurityException jmsSE) {
+            LOG.info("Caught expected exception");
+        }
+    }
+
+    @Test(timeout = 30000)
     public void testCreateTemporaryQueueNotAuthorized() throws JMSException {
         connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "userPassword");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
