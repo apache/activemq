@@ -21,6 +21,7 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.toLong;
 import java.io.IOException;
 
 import javax.jms.Destination;
+import javax.jms.ResourceAllocationException;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -45,6 +46,7 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.transaction.TransactionalState;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Delivery;
@@ -219,11 +221,19 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
                     @Override
                     public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
                         if (response.isException()) {
-                            ExceptionResponse er = (ExceptionResponse) response;
+                            ExceptionResponse error = (ExceptionResponse) response;
                             Rejected rejected = new Rejected();
                             ErrorCondition condition = new ErrorCondition();
-                            condition.setCondition(Symbol.valueOf("failed"));
-                            condition.setDescription(er.getException().getMessage());
+
+                            if (error.getException() instanceof SecurityException) {
+                                condition.setCondition(AmqpError.UNAUTHORIZED_ACCESS);
+                            } else if (error.getException() instanceof ResourceAllocationException) {
+                                condition.setCondition(AmqpError.RESOURCE_LIMIT_EXCEEDED);
+                            } else {
+                                condition.setCondition(Symbol.valueOf("failed"));
+                            }
+
+                            condition.setDescription(error.getException().getMessage());
                             rejected.setError(condition);
                             delivery.disposition(rejected);
                         } else {
