@@ -99,8 +99,10 @@ public class SharedFileLocker extends AbstractLocker {
 
     @Override
     public void doStop(ServiceStopper stopper) throws Exception {
-        lockFile.unlock();
-        lockFile=null;
+        if (lockFile != null) {
+            lockFile.unlock();
+            lockFile = null;
+        }
     }
 
     public File getDirectory() {

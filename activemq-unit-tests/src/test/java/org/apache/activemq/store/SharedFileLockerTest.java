@@ -60,6 +60,13 @@ public class SharedFileLockerTest {
     }
 
     @Test
+    public void testStopNoStart() throws Exception {
+        SharedFileLocker locker1 = new SharedFileLocker();
+        locker1.setDirectory(testFolder.getRoot());
+        locker1.stop();
+    }
+
+    @Test
     public void testLoop() throws Exception {
         // Increase the number of iterations if you are debugging races
         for (int i = 0; i < 100; i++) {
