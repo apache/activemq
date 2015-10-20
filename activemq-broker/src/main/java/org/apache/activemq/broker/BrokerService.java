@@ -1978,7 +1978,7 @@ public class BrokerService implements Service {
                 maxJournalFileSize = ((JournaledStore) adapter).getJournalMaxFileLength();
             }
 
-            if (storeLimit < maxJournalFileSize) {
+            if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
                 LOG.error("Store limit is " + storeLimit / (1024 * 1024) +
                           " mb, whilst the max journal file size for the store is: " +
                           maxJournalFileSize / (1024 * 1024) + " mb, " +
@@ -2011,7 +2011,7 @@ public class BrokerService implements Service {
                 }
                 long storeLimit = usage.getTempUsage().getLimit();
 
-                if (storeLimit < maxJournalFileSize) {
+                if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
                     LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
                               " mb, whilst the max journal file size for the temporary store is: " +
                               maxJournalFileSize / (1024 * 1024) + " mb, " +
