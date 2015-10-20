@@ -34,9 +34,14 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     private static final ClassLoader FALLBACK_CLASS_LOADER =
         ClassLoadingAwareObjectInputStream.class.getClassLoader();
 
-    private static String[] serializablePackages;
+    public static final String[] serializablePackages;
 
     private final ClassLoader inLoader;
+
+    static {
+        serializablePackages = System.getProperty("org.apache.activemq.SERIALIZABLE_PACKAGES",
+                    "java.lang,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper").split(",");
+    }
 
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {
         super(in);
@@ -81,24 +86,15 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
         }
     }
 
-    public static String[] getSerialziablePackages() {
-       if (serializablePackages == null) {
-           serializablePackages = System.getProperty("org.apache.activemq.SERIALIZABLE_PACKAGES",
-                       "java.lang,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper").split(",");
-       }
-
-       return serializablePackages;
-    };
-
     public static boolean isAllAllowed() {
-        return getSerialziablePackages().length == 1 && getSerialziablePackages()[0].equals("*");
+        return serializablePackages.length == 1 && serializablePackages[0].equals("*");
     }
 
     private void checkSecurity(Class clazz) throws ClassNotFoundException {
         if (!clazz.isPrimitive()) {
             if (clazz.getPackage() != null && !isAllAllowed()) {
                boolean found = false;
-               for (String packageName : getSerialziablePackages()) {
+               for (String packageName : serializablePackages) {
                    if (clazz.getPackage().getName().equals(packageName) || clazz.getPackage().getName().startsWith(packageName + ".")) {
                        found = true;
                        break;
