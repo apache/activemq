@@ -41,4 +41,9 @@ public class CompositeTopic extends CompositeDestination {
         }
         return destination;
     }
+
+    @Override
+    public String toString() {
+        return "CompositeTopic [" + getName() + "]";
+    }
 }

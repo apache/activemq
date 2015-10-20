@@ -203,6 +203,15 @@ public class BrokerService implements Service {
     private boolean useVirtualTopics = true;
     private boolean useMirroredQueues = false;
     private boolean useTempMirroredQueues = true;
+    /**
+     * Whether or not virtual destination subscriptions should cause network demand
+     */
+    private boolean useVirtualDestSubs = false;
+    /**
+     * Whether or no the creation of destinations that match virtual destinations
+     * should cause network demand
+     */
+    private boolean useVirtualDestSubsOnCreation = false;
     private BrokerId brokerId;
     private volatile DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
@@ -2699,6 +2708,14 @@ public class BrokerService implements Service {
                             if (virtualDestination instanceof VirtualTopic) {
                                 consumerDestinations.add(new ActiveMQQueue(((VirtualTopic) virtualDestination).getPrefix() + DestinationFilter.ANY_DESCENDENT));
                             }
+                            if (isUseVirtualDestSubs()) {
+                                try {
+                                    broker.virtualDestinationAdded(getAdminConnectionContext(), virtualDestination);
+                                    LOG.debug("Adding virtual destination: {}", virtualDestination);
+                                } catch (Exception e) {
+                                    LOG.warn("Could not fire virtual destination consumer advisory", e);
+                                }
+                            }
                         }
                     }
                 }
@@ -3132,5 +3149,23 @@ public class BrokerService implements Service {
 
     public void setRejectDurableConsumers(boolean rejectDurableConsumers) {
         this.rejectDurableConsumers = rejectDurableConsumers;
+    }
+
+    public boolean isUseVirtualDestSubs() {
+        return useVirtualDestSubs;
+    }
+
+    public void setUseVirtualDestSubs(
+            boolean useVirtualDestSubs) {
+        this.useVirtualDestSubs = useVirtualDestSubs;
+    }
+
+    public boolean isUseVirtualDestSubsOnCreation() {
+        return useVirtualDestSubsOnCreation;
+    }
+
+    public void setUseVirtualDestSubsOnCreation(
+            boolean useVirtualDestSubsOnCreation) {
+        this.useVirtualDestSubsOnCreation = useVirtualDestSubsOnCreation;
     }
 }

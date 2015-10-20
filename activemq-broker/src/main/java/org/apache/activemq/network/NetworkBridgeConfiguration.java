@@ -29,6 +29,7 @@ import org.apache.activemq.command.ConsumerInfo;
 public class NetworkBridgeConfiguration {
 
     private boolean conduitSubscriptions = true;
+    private boolean useVirtualDestSubs;
     private boolean dynamicOnly;
     private boolean dispatchAsync = true;
     private boolean decreaseNetworkConsumerPriority;
@@ -237,11 +238,27 @@ public class NetworkBridgeConfiguration {
                         filter.append(".");
                         filter.append(destination.getPhysicalName());
                         delimiter = ",";
+
+                        if (useVirtualDestSubs) {
+                            filter.append(delimiter);
+                            filter.append(AdvisorySupport.VIRTUAL_DESTINATION_CONSUMER_ADVISORY_TOPIC_PREFIX);
+                            filter.append(destination.getDestinationTypeAsString());
+                            filter.append(".");
+                            filter.append(destination.getPhysicalName());
+                        }
                     }
                 }
                 return filter.toString();
             }   else {
-                return AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX + ">";
+                StringBuffer filter = new StringBuffer();
+                filter.append(AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX);
+                filter.append(">");
+                if (useVirtualDestSubs) {
+                    filter.append(",");
+                    filter.append(AdvisorySupport.VIRTUAL_DESTINATION_CONSUMER_ADVISORY_TOPIC_PREFIX);
+                    filter.append(">");
+                }
+                return filter.toString();
             }
         } else {
             // prepend consumer advisory prefix
@@ -447,6 +464,15 @@ public class NetworkBridgeConfiguration {
 
     public void setCheckDuplicateMessagesOnDuplex(boolean checkDuplicateMessagesOnDuplex) {
         this.checkDuplicateMessagesOnDuplex = checkDuplicateMessagesOnDuplex;
+    }
+
+    public boolean isUseVirtualDestSus() {
+        return useVirtualDestSubs;
+    }
+
+    public void setUseVirtualDestSubs(
+            boolean useVirtualDestSubs) {
+        this.useVirtualDestSubs = useVirtualDestSubs;
     }
 
 }

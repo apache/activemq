@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -368,6 +369,18 @@ public class MutableBrokerFilter implements Broker {
     @Override
     public void slowConsumer(ConnectionContext context, Destination dest, Subscription subs) {
         getNext().slowConsumer(context, dest,subs);
+    }
+
+    @Override
+    public void virtualDestinationAdded(ConnectionContext context,
+            VirtualDestination virtualDestination) {
+        getNext().virtualDestinationAdded(context, virtualDestination);
+    }
+
+    @Override
+    public void virtualDestinationRemoved(ConnectionContext context,
+            VirtualDestination virtualDestination) {
+        getNext().virtualDestinationRemoved(context, virtualDestination);
     }
 
     @Override

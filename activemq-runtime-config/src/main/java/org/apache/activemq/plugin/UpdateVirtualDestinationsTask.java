@@ -18,16 +18,23 @@ package org.apache.activemq.plugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class UpdateVirtualDestinationsTask implements Runnable {
 
+    public static final Logger LOG = LoggerFactory.getLogger(UpdateVirtualDestinationsTask.class);
     private final AbstractRuntimeConfigurationBroker plugin;
 
     public UpdateVirtualDestinationsTask(
@@ -49,11 +56,52 @@ public abstract class UpdateVirtualDestinationsTask implements Runnable {
                 // update existing interceptor
                 final VirtualDestinationInterceptor virtualDestinationInterceptor = (VirtualDestinationInterceptor) destinationInterceptor;
 
+                Set<VirtualDestination> existingVirtualDests = new HashSet<>();
+                Collections.addAll(existingVirtualDests, virtualDestinationInterceptor.getVirtualDestinations());
+
+                Set<VirtualDestination> newVirtualDests = new HashSet<>();
+                Collections.addAll(newVirtualDests, getVirtualDestinations());
+
+                Set<VirtualDestination> addedVirtualDests = new HashSet<>();
+                Set<VirtualDestination> removedVirtualDests = new HashSet<>();
+                //detect new virtual destinations
+                for (VirtualDestination newVirtualDest : newVirtualDests) {
+                    if (!existingVirtualDests.contains(newVirtualDest)) {
+                        addedVirtualDests.add(newVirtualDest);
+                    }
+                }
+                //detect removed virtual destinations
+                for (VirtualDestination existingVirtualDest : existingVirtualDests) {
+                    if (!newVirtualDests.contains(existingVirtualDest)) {
+                        removedVirtualDests.add(existingVirtualDest);
+                    }
+                }
+
                 virtualDestinationInterceptor
                         .setVirtualDestinations(getVirtualDestinations());
                 plugin.info("applied updates to: "
                         + virtualDestinationInterceptor);
                 updatedExistingInterceptor = true;
+
+                ConnectionContext connectionContext;
+                try {
+                    connectionContext = plugin.getBrokerService().getAdminConnectionContext();
+                    //signal updates
+                    if (plugin.getBrokerService().isUseVirtualDestSubs()) {
+                        for (VirtualDestination removedVirtualDest : removedVirtualDests) {
+                            plugin.virtualDestinationRemoved(connectionContext, removedVirtualDest);
+                            LOG.info("Removing virtual destination: {}", removedVirtualDest);
+                        }
+
+                        for (VirtualDestination addedVirtualDest : addedVirtualDests) {
+                            plugin.virtualDestinationAdded(connectionContext, addedVirtualDest);
+                            LOG.info("Adding virtual destination: {}", addedVirtualDest);
+                        }
+                    }
+
+                } catch (Exception e) {
+                    LOG.warn("Could not process virtual destination advisories", e);
+                }
             }
         }
 

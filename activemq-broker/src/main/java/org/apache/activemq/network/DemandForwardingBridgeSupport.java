@@ -1352,7 +1352,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void configureDemandSubscription(ConsumerInfo info, DemandSubscription sub) throws IOException {
-        if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination())) {
+        if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination()) ||
+                AdvisorySupport.isVirtualDestinationConsumerAdvisoryTopic(info.getDestination())) {
             sub.getLocalInfo().setDispatchAsync(true);
         } else {
             sub.getLocalInfo().setDispatchAsync(configuration.isDispatchAsync());

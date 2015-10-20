@@ -51,14 +51,17 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         this.consumerInfo = consumerInfo;
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public boolean isMarshallAware() {
         return false;
     }
 
+    @Override
     public boolean matches(MessageEvaluationContext mec) throws JMSException {
         try {
             // for Queues - the message can be acknowledged and dropped whilst
@@ -72,6 +75,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         }
     }
 
+    @Override
     public Object evaluate(MessageEvaluationContext message) throws JMSException {
         return matches(message) ? Boolean.TRUE : Boolean.FALSE;
     }
@@ -125,7 +129,9 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     }
 
     public static boolean isAdvisoryInterpretedByNetworkBridge(Message message) {
-        return AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination()) || AdvisorySupport.isTempDestinationAdvisoryTopic(message.getDestination());
+        return AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination()) ||
+                AdvisorySupport.isVirtualDestinationConsumerAdvisoryTopic(message.getDestination()) ||
+                AdvisorySupport.isTempDestinationAdvisoryTopic(message.getDestination());
     }
 
     public static boolean contains(BrokerId[] brokerPath, BrokerId brokerId) {

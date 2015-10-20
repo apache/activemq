@@ -14,33 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.region.virtual;
+package org.apache.activemq.advisory;
 
-import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 
 /**
- * Represents a virtual queue which forwards to a number of other destinations.
  *
- * @org.apache.xbean.XBean
  *
  */
-public class CompositeQueue extends CompositeDestination {
+public interface VirtualDestinationMatcher {
 
-    @Override
-    public ActiveMQDestination getVirtualDestination() {
-        return new ActiveMQQueue(getName());
-    }
-
-    @Override
-    public Destination interceptMappedDestination(Destination destination) {
-        // nothing to do for mapped destinations
-        return destination;
-    }
-
-    @Override
-    public String toString() {
-        return "CompositeQueue [" + getName() + "]";
-    }
+    public boolean matches(VirtualDestination virtualDestination, ActiveMQDestination activeMQDest);
 }
