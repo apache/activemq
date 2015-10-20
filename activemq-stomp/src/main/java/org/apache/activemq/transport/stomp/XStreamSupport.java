@@ -37,7 +37,7 @@ public class XStreamSupport {
         if (ClassLoadingAwareObjectInputStream.isAllAllowed()) {
             stream.addPermission(AnyTypePermission.ANY);
         } else {
-            for (String packageName : ClassLoadingAwareObjectInputStream.getSerialziablePackages()) {
+            for (String packageName : ClassLoadingAwareObjectInputStream.serializablePackages) {
                 stream.allowTypesByWildcard(new String[]{packageName + ".**"});
             }
         }
