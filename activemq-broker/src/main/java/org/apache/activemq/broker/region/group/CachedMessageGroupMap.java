@@ -44,7 +44,7 @@ public class CachedMessageGroupMap implements MessageGroupMap {
                   if (destination != null) {
                       for (Subscription s : destination.getConsumers()) {
                         if (s.getConsumerInfo().getConsumerId().equals(eldest.getValue())) {
-                            s.getConsumerInfo().decrementAssignedGroupCount();
+                            s.getConsumerInfo().decrementAssignedGroupCount(destination.getActiveMQDestination());
                             break;
                           }
                       }
@@ -90,7 +90,7 @@ public class CachedMessageGroupMap implements MessageGroupMap {
         cache.clear();
         if (destination != null) {
             for (Subscription s : destination.getConsumers()) {
-                s.getConsumerInfo().clearAssignedGroupCount();
+                s.getConsumerInfo().clearAssignedGroupCount(destination.getActiveMQDestination());
             }
         }
     }
