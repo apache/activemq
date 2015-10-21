@@ -227,8 +227,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             if (val == 0 && messageGroupOwners != null) {
                 // then ascending order of assigned message groups to favour less loaded consumers
                 // Long.compare in jdk7
-                long x = s1.getConsumerInfo().getAssignedGroupCount();
-                long y = s2.getConsumerInfo().getAssignedGroupCount();
+                long x = s1.getConsumerInfo().getAssignedGroupCount(destination);
+                long y = s2.getConsumerInfo().getAssignedGroupCount(destination);
                 val = (x < y) ? -1 : ((x == y) ? 0 : 1);
             }
             return val;
@@ -504,7 +504,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     getDestinationStatistics().getDequeues().getCount(),
                     getDestinationStatistics().getDispatched().getCount(),
                     getDestinationStatistics().getInflight().getCount(),
-                    sub.getConsumerInfo().getAssignedGroupCount()
+                    sub.getConsumerInfo().getAssignedGroupCount(destination)
             });
             consumersLock.writeLock().lock();
             try {
@@ -2093,7 +2093,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         // A group sequence < 1 is an end of group signal.
                         if (sequence < 0) {
                             messageGroupOwners.removeGroup(groupId);
-                            subscription.getConsumerInfo().decrementAssignedGroupCount();
+                            subscription.getConsumerInfo().decrementAssignedGroupCount(destination);
                         }
                     } else {
                         result = false;
@@ -2109,7 +2109,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         messageGroupOwners.put(groupId, subs.getConsumerInfo().getConsumerId());
         Message message = n.getMessage();
         message.setJMSXGroupFirstForConsumer(true);
-        subs.getConsumerInfo().incrementAssignedGroupCount();
+        subs.getConsumerInfo().incrementAssignedGroupCount(destination);
     }
 
     protected void pageInMessages(boolean force) throws Exception {

@@ -17,7 +17,11 @@
 package org.apache.activemq.command;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.state.CommandVisitor;
@@ -63,7 +67,7 @@ public class ConsumerInfo extends BaseCommand {
     // not marshalled, populated from RemoveInfo, the last message delivered, used
     // to suppress redelivery on prefetched messages after close
     private transient long lastDeliveredSequenceId = RemoveInfo.LAST_DELIVERED_UNSET;
-    private transient long assignedGroupCount;
+    private transient Map<ActiveMQDestination, AtomicLong> assignedGroupCount = new ConcurrentHashMap<>();
     // originated from a
     // network connection
 
@@ -494,20 +498,33 @@ public class ConsumerInfo extends BaseCommand {
         return lastDeliveredSequenceId;
     }
 
-    public void incrementAssignedGroupCount() {
-        this.assignedGroupCount++;
+    public void incrementAssignedGroupCount(final ActiveMQDestination dest) {
+        AtomicLong value = assignedGroupCount.get(dest);
+        if (value == null) {
+            value = new AtomicLong(0);
+            assignedGroupCount.put(dest, value);
+        }
+        value.incrementAndGet();
     }
 
-    public void clearAssignedGroupCount() {
-        this.assignedGroupCount=0;
+    public void clearAssignedGroupCount(final ActiveMQDestination dest) {
+        assignedGroupCount.remove(dest);
     }
 
-    public void decrementAssignedGroupCount() {
-        this.assignedGroupCount--;
+    public void decrementAssignedGroupCount(final ActiveMQDestination dest) {
+        AtomicLong value = assignedGroupCount.get(dest);
+        if (value != null) {
+            value.decrementAndGet();
+        }
     }
 
-    public long getAssignedGroupCount() {
-        return assignedGroupCount;
+    public long getAssignedGroupCount(final ActiveMQDestination dest) {
+        long result = 0l;
+        AtomicLong value = assignedGroupCount.get(dest);
+        if (value != null) {
+            result = value.longValue();
+        }
+        return result;
     }
 
 }
