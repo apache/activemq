@@ -172,7 +172,7 @@ public class TopicProducerDurableSubFlowControlTest extends TestCase implements 
                 return !producingThread.isAlive();
 
             }
-        }, 5 * 60 * 1000));
+        }, 10 * 60 * 1000));
 
         for (DurableSubscriptionViewMBean sub : subViews) {
             LOG.info("name: " + sub.getSubscriptionName());
