@@ -88,7 +88,7 @@
     <junit-version>4.12</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>4.0.1</karaf-version>
+    <karaf-version>4.0.2</karaf-version>
     <leveldb-api-version>0.6</leveldb-api-version>
     <leveldb-version>0.6</leveldb-version>
     <leveldbjni-version>1.8</leveldbjni-version>
