@@ -92,11 +92,11 @@ public class NIOTransport extends TcpTransport {
 
         // Send the data via the channel
         // inputBuffer = ByteBuffer.allocateDirect(8*1024);
-        inputBuffer = ByteBuffer.allocate(8 * 1024);
+        inputBuffer = ByteBuffer.allocate(getIoBufferSize());
         currentBuffer = inputBuffer;
         nextFrameSize = -1;
         currentBuffer.limit(4);
-        NIOOutputStream outPutStream = new NIOOutputStream(channel, 16 * 1024);
+        NIOOutputStream outPutStream = new NIOOutputStream(channel, getIoBufferSize());
         this.dataOut = new DataOutputStream(outPutStream);
         this.buffOut = outPutStream;
     }
