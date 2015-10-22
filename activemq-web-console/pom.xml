@@ -128,6 +128,7 @@
             <Embed-Directory>WEB-INF/lib</Embed-Directory>
             <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
+            <Export-Package>!*</Export-Package>
             <Import-Package>
               org.xml.sax,
               org.xml.sax.helpers,
