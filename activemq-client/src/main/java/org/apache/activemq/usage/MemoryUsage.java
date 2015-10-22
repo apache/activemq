@@ -74,9 +74,9 @@ public class MemoryUsage extends Usage<MemoryUsage> {
                     while (percentUsage >= 100 && isStarted()) {
                         waitForSpaceCondition.await();
                     }
-                    usageLock.readLock().lock();
                 } finally {
                     usageLock.writeLock().unlock();
+                    usageLock.readLock().lock();
                 }
             }
 
