@@ -512,17 +512,29 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
     @Override
     protected void doOpenInspection() {
-        getStateInspector().inspectOpenedResource(getReceiver());
+        try {
+            getStateInspector().inspectOpenedResource(getReceiver());
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
+        }
     }
 
     @Override
     protected void doClosedInspection() {
-        getStateInspector().inspectClosedResource(getReceiver());
+        try {
+            getStateInspector().inspectClosedResource(getReceiver());
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
+        }
     }
 
     @Override
     protected void doDetachedInspection() {
-        getStateInspector().inspectDetachedResource(getReceiver());
+        try {
+            getStateInspector().inspectDetachedResource(getReceiver());
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
+        }
     }
 
     protected void configureSource(Source source) {

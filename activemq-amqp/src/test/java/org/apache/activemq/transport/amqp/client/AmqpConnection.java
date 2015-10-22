@@ -507,12 +507,20 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
 
     @Override
     protected void doOpenInspection() {
-        getStateInspector().inspectOpenedResource(getConnection());
+        try {
+            getStateInspector().inspectOpenedResource(getConnection());
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
+        }
     }
 
     @Override
     protected void doClosedInspection() {
-        getStateInspector().inspectClosedResource(getConnection());
+        try {
+            getStateInspector().inspectClosedResource(getConnection());
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
+        }
     }
 
     protected void fireClientException(Throwable ex) {
