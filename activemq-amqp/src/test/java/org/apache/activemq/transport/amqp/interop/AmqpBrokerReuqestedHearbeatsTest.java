@@ -54,13 +54,37 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
 
             @Override
             public void inspectOpenedResource(Connection connection) {
-                assertEquals(TEST_IDLE_TIMEOUT / 2, connection.getTransport().getRemoteIdleTimeout());
+                assertEquals("Broker did not send half the idle timeout",
+                    TEST_IDLE_TIMEOUT / 2, connection.getTransport().getRemoteIdleTimeout());
             }
         });
 
         AmqpConnection connection = client.connect();
         assertNotNull(connection);
 
+        connection.getStateInspector().assertValid();
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testBrokerSendsHalfConfiguredIdleTimeoutWhenClientSendsTimeout() throws Exception {
+        AmqpClient client = createAmqpClient();
+        assertNotNull(client);
+
+        client.setValidator(new AmqpValidator() {
+
+            @Override
+            public void inspectOpenedResource(Connection connection) {
+                assertEquals("Broker did not send half the idle timeout",
+                    TEST_IDLE_TIMEOUT / 2, connection.getTransport().getRemoteIdleTimeout());
+            }
+        });
+
+        AmqpConnection connection = client.createConnection();
+        connection.setIdleTimeout(TEST_IDLE_TIMEOUT * 4);
+        assertNotNull(connection);
+
+        connection.connect();
         connection.getStateInspector().assertValid();
         connection.close();
     }

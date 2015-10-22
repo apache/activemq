@@ -381,12 +381,20 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
 
     @Override
     protected void doOpenInspection() {
-        getStateInspector().inspectOpenedResource(getSession());
+        try {
+            getStateInspector().inspectOpenedResource(getSession());
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
+        }
     }
 
     @Override
     protected void doClosedInspection() {
-        getStateInspector().inspectClosedResource(getSession());
+        try {
+            getStateInspector().inspectClosedResource(getSession());
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
+        }
     }
 
     private String getNextSenderId() {
