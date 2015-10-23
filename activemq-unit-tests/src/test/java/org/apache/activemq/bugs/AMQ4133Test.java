@@ -16,21 +16,22 @@
  */
 package org.apache.activemq.bugs;
 
-import java.net.Socket;
-
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.transport.stomp.StompFrame;
+import org.fusesource.mqtt.client.MQTT;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import java.net.Socket;
 
 public class AMQ4133Test {
 
@@ -53,6 +54,13 @@ public class AMQ4133Test {
 
         broker.start();
         broker.waitUntilStarted();
+
+        System.setProperty("javax.net.ssl.trustStore", certBase + "/" + "broker1.ks");
+        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+        System.setProperty("javax.net.ssl.trustStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStore", certBase + "/" + "client.ks");
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");
     }
 
     @After
@@ -83,14 +91,17 @@ public class AMQ4133Test {
         stompConnectTo("localhost", broker.getConnectorByName("stomp+nio+ssl+special").getConnectUri().getPort());
     }
 
-    public Socket createSocket(String host, int port) throws Exception {
-        System.setProperty("javax.net.ssl.trustStore", certBase + "/" + "broker1.ks");
-        System.setProperty("javax.net.ssl.trustStorePassword", "password");
-        System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", certBase + "/" + "client.ks");
-        System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");
+    @Test
+    public void mqttSSLNeedClientAuthTrue() throws Exception {
+        mqttConnectTo("localhost", broker.getConnectorByName("mqtt+ssl").getConnectUri().getPort());
+    }
 
+    @Test
+    public void mqttNIOSSLNeedClientAuthTrue() throws Exception {
+        mqttConnectTo("localhost", broker.getConnectorByName("mqtt+nio+ssl").getConnectUri().getPort());
+    }
+
+    public Socket createSocket(String host, int port) throws Exception {
         SocketFactory factory = SSLSocketFactory.getDefault();
         return factory.createSocket(host, port);
     }
@@ -102,6 +113,25 @@ public class AMQ4133Test {
         StompFrame f = stompConnection.receive();
         TestCase.assertEquals(f.getBody(), "CONNECTED", f.getAction());
         stompConnection.close();
+    }
+
+    public void mqttConnectTo(String host, int port) throws Exception {
+        MQTT mqtt = new MQTT();
+        mqtt.setConnectAttemptsMax(1);
+        mqtt.setReconnectAttemptsMax(0);
+        mqtt.setHost("tls://" + host + ":" + port);
+        mqtt.setClientId("test");
+        mqtt.setCleanSession(true);
+
+        SpringSslContext context = new SpringSslContext();
+        context.setKeyStore(certBase + "/" + "client.ks");
+        context.setKeyStorePassword("password");
+        context.setTrustStore(certBase + "/" + "broker1.ks");
+        context.setTrustStorePassword("password");
+        context.afterPropertiesSet();
+
+        mqtt.setSslContext(SSLContext.getDefault());
+        mqtt.blockingConnection().connect();
     }
 
 }

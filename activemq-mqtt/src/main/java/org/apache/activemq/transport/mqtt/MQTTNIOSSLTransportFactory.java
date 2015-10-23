@@ -31,9 +31,11 @@ import javax.net.ssl.SSLEngine;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.nio.NIOSSLTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
@@ -42,13 +44,17 @@ public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
 
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        TcpTransportServer result = new TcpTransportServer(this, location, serverSocketFactory) {
+        NIOSSLTransportServer result = new NIOSSLTransportServer(context, this, location, serverSocketFactory) {
             @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
                 MQTTNIOSSLTransport transport = new MQTTNIOSSLTransport(format, socket);
                 if (context != null) {
                     transport.setSslContext(context);
                 }
+
+                transport.setNeedClientAuth(isNeedClientAuth());
+                transport.setWantClientAuth(isWantClientAuth());
+
                 return transport;
             }
         };
