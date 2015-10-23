@@ -128,6 +128,7 @@
             <Embed-Directory>WEB-INF/lib</Embed-Directory>
             <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
+            <Export-Package>!*</Export-Package>
             <Import-Package>
               org.xml.sax,
               org.xml.sax.helpers,
@@ -137,6 +138,7 @@
               javax.xml.transform,
               javax.xml.transform.dom,
               javax.xml.transform.sax,
+              javax.xml.transform.stax,
               javax.xml.transform.stream,
               javax.management.remote,
               javax.naming,
