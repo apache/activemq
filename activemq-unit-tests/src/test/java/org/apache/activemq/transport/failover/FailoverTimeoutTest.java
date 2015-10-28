@@ -67,7 +67,7 @@ public class FailoverTimeoutTest {
             bs.stop();
         }
     }
-
+    
     protected String getTransportUri() {
         return "tcp://localhost:0";
     }
