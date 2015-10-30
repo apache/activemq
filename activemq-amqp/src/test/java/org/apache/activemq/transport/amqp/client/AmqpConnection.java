@@ -472,8 +472,10 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         if (!getEndpoint().getRemoteProperties().containsKey(CONNECTION_OPEN_FAILED)) {
 
             if (!isIdleProcessingDisabled()) {
-                long nextKeepAliveTime = protonTransport.tick(System.currentTimeMillis());
-                if (nextKeepAliveTime > 0) {
+                // Using nano time since it is not related to the wall clock, which may change
+                long initialNow = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
+                long initialKeepAliveDeadline = protonTransport.tick(initialNow);
+                if (initialKeepAliveDeadline > 0) {
 
                     getScheduler().schedule(new Runnable() {
 
@@ -482,7 +484,9 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                             try {
                                 if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
                                     LOG.debug("Client performing next idle check");
-                                    long rescheduleAt = protonTransport.tick(System.currentTimeMillis()) - System.currentTimeMillis();
+                                    // Using nano time since it is not related to the wall clock, which may change
+                                    long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
+                                    long rescheduleAt = protonTransport.tick(now) - now;
                                     pumpToProtonTransport();
                                     if (protonTransport.isClosed()) {
                                         LOG.debug("Transport closed after inactivity check.");
@@ -498,7 +502,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                                 fireClientException(e);
                             }
                         }
-                    }, nextKeepAliveTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+                    }, initialKeepAliveDeadline - initialNow, TimeUnit.MILLISECONDS);
                 }
             }
             super.doOpenCompletion();
