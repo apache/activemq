@@ -600,7 +600,7 @@ public class ProtocolConverter {
             throw new ProtocolException("Invalid Subscription: cannot durably subscribe to a Queue destination!");
         }
 
-        consumerInfo.setDestination(translator.convertDestination(this, destination, true));
+        consumerInfo.setDestination(actualDest);
 
         StompSubscription stompSubscription;
         if (!consumerInfo.isBrowser()) {
