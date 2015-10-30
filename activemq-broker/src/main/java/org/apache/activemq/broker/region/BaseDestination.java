@@ -789,7 +789,7 @@ public abstract class BaseDestination implements Destination {
         this.reduceMemoryFootprint = reduceMemoryFootprint;
     }
 
-    protected boolean isReduceMemoryFootprint() {
+    public boolean isReduceMemoryFootprint() {
         return this.reduceMemoryFootprint;
     }
 
