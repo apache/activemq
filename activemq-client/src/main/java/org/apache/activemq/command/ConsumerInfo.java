@@ -527,4 +527,9 @@ public class ConsumerInfo extends BaseCommand {
         return result;
     }
 
+    public void initTransients() {
+        assignedGroupCount = new ConcurrentHashMap<>();
+        lastDeliveredSequenceId = RemoveInfo.LAST_DELIVERED_UNSET;
+    }
+
 }
