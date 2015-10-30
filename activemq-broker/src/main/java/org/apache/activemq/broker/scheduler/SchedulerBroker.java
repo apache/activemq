@@ -228,7 +228,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     public void scheduledJob(String id, ByteSequence job) {
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job.getOffset(), job.getLength());
         try {
-            Message messageSend = (Message) this.wireFormat.unmarshal(packet);
+            Message messageSend = (Message) wireFormat.unmarshal(packet);
             messageSend.setOriginalTransactionId(null);
             Object repeatValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
             Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
@@ -241,7 +241,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             if (repeat != 0 || cronStr != null && cronStr.length() > 0) {
                 // create a unique id - the original message could be sent
                 // lots of times
-                messageSend.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+                messageSend.setMessageId(new MessageId(producerId, messageIdGenerator.getNextSequenceId()));
             }
 
             // Add the jobId as a property
@@ -274,6 +274,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                     LOG.debug("Set message {} timestamp from {} to {}", new Object[]{ messageSend.getMessageId(), oldTimestamp, newTimeStamp });
                 }
             }
+
+            // Repackage the message contents prior to send now that all updates are complete.
+            messageSend.beforeMarshall(wireFormat);
 
             final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
             producerExchange.setConnectionContext(context);
