@@ -41,6 +41,7 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
     protected BrokerService brokerService;
     protected volatile int receiveCounter;
     protected final String remoteAddress;
+    protected X509Certificate[] peerCertificates;
 
     public AbstractMQTTSocket(String remoteAddress) {
         super();
@@ -111,7 +112,12 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
 
     @Override
     public X509Certificate[] getPeerCertificates() {
-        return new X509Certificate[0];
+        return peerCertificates;
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
+        this.peerCertificates = certificates;
     }
 
     @Override

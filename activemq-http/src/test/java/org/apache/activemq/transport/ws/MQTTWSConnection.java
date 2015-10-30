@@ -94,8 +94,14 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
 
         MQTTFrame incoming = receive(15, TimeUnit.SECONDS);
+
         if (incoming == null || incoming.messageType() != CONNACK.TYPE) {
             throw new IOException("Failed to connect to remote service.");
+        } else {
+            CONNACK connack = new CONNACK().decode(incoming);
+            if (!connack.code().equals(CONNACK.Code.CONNECTION_ACCEPTED)) {
+                throw new IOException("Failed to connect to remote service: " + connack.code());
+            }
         }
     }
 

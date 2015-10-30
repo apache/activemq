@@ -64,14 +64,17 @@ public class WSServlet extends WebSocketServlet {
                 WebSocketListener socket;
                 boolean isMqtt = false;
                 for (String subProtocol : req.getSubProtocols()) {
-                    subProtocol.startsWith("mqtt");
-                    isMqtt = true;
+                    if (subProtocol.startsWith("mqtt")) {
+                        isMqtt = true;
+                    }
                 }
                 if (isMqtt) {
                     socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
                     resp.setAcceptedSubProtocol("mqtt");
+                    ((MQTTSocket)socket).setPeerCertificates(req.getCertificates());
                 } else {
                     socket = new StompSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
+                    ((StompSocket)socket).setCertificates(req.getCertificates());
                     resp.setAcceptedSubProtocol("stomp");
                 }
                 listener.onAccept((Transport) socket);

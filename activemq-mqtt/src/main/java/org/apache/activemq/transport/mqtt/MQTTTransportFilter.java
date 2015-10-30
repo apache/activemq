@@ -279,4 +279,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     public void setMaxFrameSize(int maxFrameSize) {
         wireFormat.setMaxFrameSize(maxFrameSize);
     }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {}
 }

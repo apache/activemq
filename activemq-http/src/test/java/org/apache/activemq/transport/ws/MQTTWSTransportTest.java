@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.util.Wait;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.fusesource.hawtbuf.UTF8Buffer;
@@ -47,7 +48,7 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
     public void setUp() throws Exception {
         super.setUp();
 
-        wsClient = new WebSocketClient();
+        wsClient = new WebSocketClient(new SslContextFactory(true));
         wsClient.start();
 
         request = new ClientUpgradeRequest();

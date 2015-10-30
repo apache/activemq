@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.command.Command;
@@ -46,6 +47,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     protected final StompInactivityMonitor stompInactivityMonitor = new StompInactivityMonitor(this, wireFormat);
     protected volatile int receiveCounter;
     protected final String remoteAddress;
+    protected X509Certificate[] certificates;
 
 
     public AbstractStompSocket(String remoteAddress) {
@@ -118,7 +120,6 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     //----- Internal implementation ------------------------------------------//
 
     protected void processStompFrame(String data) {
-
         if (!transportStartedAtLeastOnce()) {
             LOG.debug("Waiting for StompSocket to be properly started...");
             try {
@@ -135,7 +136,9 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
                 if (data.equals("\n")) {
                     stompInactivityMonitor.onCommand(new KeepAliveInfo());
                 } else {
-                    protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
+                    StompFrame frame = (StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8")));
+                    frame.setTransportContext(getCertificates());
+                    protocolConverter.onStompCommand(frame);
                 }
             }
         } catch (Exception e) {
@@ -145,5 +148,13 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
 
     private boolean transportStartedAtLeastOnce() {
         return socketTransportStarted.getCount() == 0;
+    }
+
+    public X509Certificate[] getCertificates() {
+        return certificates;
+    }
+
+    public void setCertificates(X509Certificate[] certificates) {
+        this.certificates = certificates;
     }
 }

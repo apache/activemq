@@ -14,23 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.wss;
+package org.apache.activemq.transport.ws;
 
-import java.net.URI;
-
-import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.transport.SecureSocketConnectorFactory;
-import org.apache.activemq.transport.ws.WSTransportServer;
-
-public class WSSTransportServer extends WSTransportServer {
-
-    public WSSTransportServer(URI location, SslContext context) {
-        super(location);
-        this.socketConnectorFactory = new SecureSocketConnectorFactory(context);
-    }
+public class StompWSSTransportTest extends StompWSTransportTest {
 
     @Override
-    public boolean isSslServer() {
-        return true;
+    protected String getWSConnectorURI() {
+        return "wss://localhost:61623";
     }
+
 }
