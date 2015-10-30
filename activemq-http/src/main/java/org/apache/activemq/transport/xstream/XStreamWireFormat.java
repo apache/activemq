@@ -24,6 +24,7 @@ import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MarshallAware;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.transport.stomp.XStreamSupport;
@@ -64,7 +65,11 @@ public class XStreamWireFormat extends TextWireFormat {
 
     @Override
     public Object unmarshalText(Reader reader) {
-        return getXStream().fromXML(reader);
+        Object val = getXStream().fromXML(reader);
+        if (val instanceof ConsumerInfo) {
+            ((ConsumerInfo)val).initTransients();
+        }
+        return val;
     }
 
     @Override
