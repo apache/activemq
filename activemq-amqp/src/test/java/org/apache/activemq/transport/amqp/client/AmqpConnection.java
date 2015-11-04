@@ -17,6 +17,9 @@
 package org.apache.activemq.transport.amqp.client;
 
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.util.ReferenceCountUtil;
 
 import java.io.IOException;
 import java.net.URI;
@@ -34,10 +37,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.amqp.client.sasl.SaslAuthenticator;
+import org.apache.activemq.transport.amqp.client.transport.NettyTransport;
+import org.apache.activemq.transport.amqp.client.transport.NettyTransportListener;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
-import org.apache.activemq.transport.amqp.client.util.ClientTcpTransport;
+import org.apache.activemq.transport.amqp.client.util.IdGenerator;
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableConnection;
-import org.apache.activemq.util.IdGenerator;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
@@ -47,11 +51,10 @@ import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.impl.CollectorImpl;
-import org.fusesource.hawtbuf.Buffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AmqpConnection extends AmqpAbstractResource<Connection> implements ClientTcpTransport.TransportListener {
+public class AmqpConnection extends AmqpAbstractResource<Connection> implements NettyTransportListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpConnection.class);
 
@@ -69,7 +72,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private final AtomicBoolean connected = new AtomicBoolean();
     private final AtomicLong sessionIdGenerator = new AtomicLong();
     private final Collector protonCollector = new CollectorImpl();
-    private final ClientTcpTransport transport;
+    private final NettyTransport transport;
     private final Transport protonTransport = Transport.Factory.create();
 
     private final String username;
@@ -90,7 +93,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private long connectTimeout = DEFAULT_CONNECT_TIMEOUT;
     private long closeTimeout = DEFAULT_CLOSE_TIMEOUT;
 
-    public AmqpConnection(ClientTcpTransport transport, String username, String password) {
+    public AmqpConnection(NettyTransport transport, String username, String password) {
         setEndpoint(Connection.Factory.create());
         getEndpoint().collect(protonCollector);
 
@@ -98,7 +101,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         this.username = username;
         this.password = password;
         this.connectionId = CONNECTION_ID_GENERATOR.generateId();
-        this.remoteURI = transport.getRemoteURI();
+        this.remoteURI = transport.getRemoteLocation();
 
         this.serializer = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
 
@@ -257,7 +260,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
             public void run() {
                 checkClosed();
                 try {
-                    transport.send(ByteBuffer.wrap(rawData));
+                    transport.send(Unpooled.wrappedBuffer(rawData));
                 } catch (IOException e) {
                     fireClientException(e);
                 } finally {
@@ -409,7 +412,9 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
             while (!done) {
                 ByteBuffer toWrite = protonTransport.getOutputBuffer();
                 if (toWrite != null && toWrite.hasRemaining()) {
-                    transport.send(toWrite);
+                    ByteBuf outbound = transport.allocateSendBuffer(toWrite.remaining());
+                    outbound.writeBytes(toWrite);
+                    transport.send(outbound);
                     protonTransport.outputConsumed();
                 } else {
                     done = true;
@@ -423,12 +428,16 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     //----- Transport listener event hooks -----------------------------------//
 
     @Override
-    public void onData(final Buffer input) {
+    public void onData(final ByteBuf incoming) {
+
+        // We need to retain until the serializer gets around to processing it.
+        ReferenceCountUtil.retain(incoming);
+
         serializer.execute(new Runnable() {
 
             @Override
             public void run() {
-                ByteBuffer source = input.toByteBuffer();
+                ByteBuffer source = incoming.nioBuffer();
                 LOG.trace("Received from Broker {} bytes:", source.remaining());
 
                 if (protonTransport.isClosed()) {
@@ -445,6 +454,8 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                     protonTransport.processInput();
                     source.position(source.position() + limit);
                 } while (source.hasRemaining());
+
+                ReferenceCountUtil.release(incoming);
 
                 // Process the state changes from the latest data and then answer back
                 // any pending updates to the Broker.
@@ -498,7 +509,10 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                                     }
                                 }
                             } catch (Exception e) {
-                                transport.close();
+                                try {
+                                    transport.close();
+                                } catch (IOException e1) {
+                                }
                                 fireClientException(e);
                             }
                         }

@@ -32,8 +32,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.InvalidDestinationException;
 
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
+import org.apache.activemq.transport.amqp.client.util.IOExceptionSupport;
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableReceiver;
-import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
