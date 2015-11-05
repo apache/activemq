@@ -61,6 +61,21 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
         });
     }
 
+    /**
+     * Set the virtual destinations and apply immediately, instead of waiting for a new
+     * destination or connection to trigger the work.
+     *
+     * @param virtualDestinations
+     * @param applyImmediately
+     * @throws Exception
+     */
+    public void setVirtualDestinations(final VirtualDestination[] virtualDestinations, boolean applyImmediately) throws Exception {
+        setVirtualDestinations(virtualDestinations);
+        if (applyImmediately) {
+            this.applyDestinationWork();
+        }
+    }
+
     //New Destinations
     public void setDestinations(final ActiveMQDestination[] destinations) {
         for (ActiveMQDestination destination : destinations) {

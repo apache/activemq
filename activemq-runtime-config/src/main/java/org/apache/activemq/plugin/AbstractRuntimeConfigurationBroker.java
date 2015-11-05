@@ -122,6 +122,27 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
+    /**
+     * Apply the destination work immediately instead of waiting for
+     * a connection add or destination add
+     *
+     * @throws Exception
+     */
+    protected void applyDestinationWork() throws Exception {
+        Runnable work = addDestinationWork.poll();
+        if (work != null) {
+            try {
+                addDestinationBarrier.writeLock().lockInterruptibly();
+                do {
+                    work.run();
+                    work = addDestinationWork.poll();
+                } while (work != null);
+            } finally {
+                addDestinationBarrier.writeLock().unlock();
+            }
+        }
+    }
+
     protected void debug(String s) {
         LOG.debug(s);
     }

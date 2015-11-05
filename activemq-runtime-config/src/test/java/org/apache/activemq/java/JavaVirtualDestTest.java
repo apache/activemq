@@ -90,6 +90,7 @@ public class JavaVirtualDestTest extends AbstractVirtualDestTest {
         TimeUnit.SECONDS.sleep(SLEEP);
         assertSame("same instance", newValue, brokerService.getDestinationInterceptors()[0]);
     }
+
     @Test
     public void testNewComposite() throws Exception {
         startBroker(new BrokerService());
@@ -100,6 +101,21 @@ public class JavaVirtualDestTest extends AbstractVirtualDestTest {
                 new ActiveMQTopic("VirtualDestination.TopicConsumer")));
 
         javaConfigBroker.setVirtualDestinations(new VirtualDestination[]{queue});
+        TimeUnit.SECONDS.sleep(SLEEP);
+
+        exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.QueueConsumer");
+    }
+
+    @Test
+    public void testNewCompositeApplyImmediately() throws Exception {
+        startBroker(new BrokerService());
+        assertTrue("broker alive", brokerService.isStarted());
+
+        CompositeQueue queue = buildCompositeQueue("VirtualDestination.CompositeQueue",
+                Arrays.asList(new ActiveMQQueue("VirtualDestination.QueueConsumer"),
+                new ActiveMQTopic("VirtualDestination.TopicConsumer")));
+
+        javaConfigBroker.setVirtualDestinations(new VirtualDestination[]{queue}, true);
         TimeUnit.SECONDS.sleep(SLEEP);
 
         exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.QueueConsumer");
@@ -266,6 +282,26 @@ public class JavaVirtualDestTest extends AbstractVirtualDestTest {
 
         //apply new config
         javaConfigBroker.setVirtualDestinations(new VirtualDestination[]{buildVirtualTopic("B.>", false)});
+        TimeUnit.SECONDS.sleep(SLEEP);
+        exerciseVirtualTopic("B.Default");
+
+        assertEquals("still one interceptor", 1, brokerService.getDestinationInterceptors().length);
+    }
+
+    @Test
+    public void testModApplyImmediately() throws Exception {
+        final BrokerService brokerService = new BrokerService();
+        brokerService.setDestinationInterceptors(new DestinationInterceptor[] {
+                buildInterceptor(new VirtualDestination[]{buildVirtualTopic("A.>", false)})});
+
+        startBroker(brokerService);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        assertEquals("one interceptor", 1, brokerService.getDestinationInterceptors().length);
+        exerciseVirtualTopic("A.Default");
+
+        //apply new config
+        javaConfigBroker.setVirtualDestinations(new VirtualDestination[]{buildVirtualTopic("B.>", false)}, true);
         TimeUnit.SECONDS.sleep(SLEEP);
         exerciseVirtualTopic("B.Default");
 
