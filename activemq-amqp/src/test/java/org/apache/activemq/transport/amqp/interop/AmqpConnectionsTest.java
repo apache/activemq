@@ -23,6 +23,7 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.VERSION;
 import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.Map;
 
@@ -193,7 +194,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
         try {
             connection2.connect();
-            //fail("Should not be able to connect with same container Id.");
+            fail("Should not be able to connect with same container Id.");
         } catch (Exception ex) {
             LOG.info("Second connection with same container Id failed as expected.");
         }
