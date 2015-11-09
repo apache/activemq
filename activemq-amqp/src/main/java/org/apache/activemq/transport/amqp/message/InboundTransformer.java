@@ -23,6 +23,7 @@ import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
+import org.apache.activemq.ScheduledMessage;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Decimal128;
 import org.apache.qpid.proton.amqp.Decimal32;
@@ -136,6 +137,13 @@ public abstract class InboundTransformer {
                 if ("x-opt-jms-type".equals(key) && entry.getValue() != null) {
                     // Legacy annotation, JMSType value will be replaced by Subject further down if also present.
                     jms.setJMSType(entry.getValue().toString());
+                }
+                if ("x-opt-delivery-time".equals(key) && entry.getValue() != null) {
+                    long deliveryTime = ((Number) entry.getValue()).longValue();
+                    long delay = deliveryTime - System.currentTimeMillis();
+                    if (delay > 0) {
+                        jms.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delay);
+                    }
                 }
 
                 setProperty(jms, prefixVendor + prefixMessageAnnotations + key, entry.getValue());
