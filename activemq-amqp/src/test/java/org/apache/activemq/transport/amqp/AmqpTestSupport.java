@@ -111,7 +111,7 @@ public class AmqpTestSupport {
             kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
             brokerService.setPersistenceAdapter(kaha);
         }
-        brokerService.setSchedulerSupport(false);
+        brokerService.setSchedulerSupport(isSchedulerEnabled());
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(isUseJmx());
         brokerService.getManagementContext().setCreateConnector(false);
@@ -221,6 +221,10 @@ public class AmqpTestSupport {
 
     protected boolean isUseJmx() {
         return true;
+    }
+
+    protected boolean isSchedulerEnabled() {
+        return false;
     }
 
     protected boolean isUseOpenWireConnector() {
