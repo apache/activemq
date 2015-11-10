@@ -266,7 +266,7 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -307,7 +307,7 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic("include.test.bar2",
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         Thread.sleep(2000);
 
@@ -315,10 +315,11 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic2 = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic, compositeTopic2});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic, compositeTopic2}, true);
+
+        Thread.sleep(2000);
 
         MessageProducer includedProducer = localSession.createProducer(included);
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
@@ -357,7 +358,7 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -399,7 +400,7 @@ public class VirtualConsumerDemandTest {
                 new ActiveMQQueue("include.test.bar.bridge"),
                 new ActiveMQQueue("include.test.bar.bridge2"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -466,11 +467,11 @@ public class VirtualConsumerDemandTest {
                 new ActiveMQQueue("include.test.bar.bridge"),
                 new ActiveMQQueue("include.test.bar.bridge2"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
+        Thread.sleep(2000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
         final DestinationStatistics remoteDestStatistics = remoteBroker.getDestination(
@@ -526,11 +527,11 @@ public class VirtualConsumerDemandTest {
                 new ActiveMQQueue("include.test.bar.bridge"),
                 new ActiveMQQueue("include.test.bar.bridge2"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
+        Thread.sleep(2000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
         final DestinationStatistics remoteDestStatistics = remoteBroker.getDestination(
@@ -592,8 +593,8 @@ public class VirtualConsumerDemandTest {
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
+        Thread.sleep(2000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -627,11 +628,11 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
+        Thread.sleep(2000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -681,11 +682,11 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
+        Thread.sleep(2000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -739,11 +740,11 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
+        Thread.sleep(2000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -793,13 +794,11 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic("excluded.test.bar",
                 new ActiveMQQueue("excluded.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(excluded);
-        // allow for consumer infos to perculate arround
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
-
+        Thread.sleep(2000);
 
         MessageConsumer bridgeConsumer = remoteSession.createConsumer(new ActiveMQQueue("excluded.test.bar.bridge"));
         Thread.sleep(2000);
@@ -836,11 +835,11 @@ public class VirtualConsumerDemandTest {
         CompositeQueue compositeQueue = createCompositeQueue(testQueueName,
                 new ActiveMQQueue("include.test.foo.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeQueue});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeQueue}, true);
 
         MessageProducer includedProducer = localSession.createProducer(new ActiveMQQueue(testQueueName));
-        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
+        Thread.sleep(2000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(new ActiveMQQueue(testQueueName)).getDestinationStatistics();
         MessageConsumer bridgeConsumer = remoteSession.createConsumer(new ActiveMQQueue("include.test.foo.bridge"));
@@ -1009,7 +1008,7 @@ public class VirtualConsumerDemandTest {
         assertAdvisoryBrokerCounts(1,1,1);
 
         //remove the virtual destinations after startup, will trigger a remove advisory
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -1042,7 +1041,7 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQTopic("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -1075,7 +1074,7 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQTopic("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -1105,7 +1104,7 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQTopic("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
@@ -1150,7 +1149,7 @@ public class VirtualConsumerDemandTest {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQTopic("include.test.bar.bridge"));
 
-        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic});
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Thread.sleep(2000);
