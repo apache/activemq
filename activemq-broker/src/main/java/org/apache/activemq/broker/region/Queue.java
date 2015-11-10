@@ -49,7 +49,13 @@ import javax.jms.ResourceAllocationException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.broker.region.cursors.*;
+import org.apache.activemq.broker.region.cursors.OrderedPendingList;
+import org.apache.activemq.broker.region.cursors.PendingList;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.PrioritizedPendingList;
+import org.apache.activemq.broker.region.cursors.QueueDispatchPendingList;
+import org.apache.activemq.broker.region.cursors.StoreQueueCursor;
+import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.group.CachedMessageGroupMapFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
@@ -1644,6 +1650,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     public void resumeDispatch() {
         dispatchSelector.resume();
+        wakeup();
     }
 
     public boolean isDispatchPaused() {
