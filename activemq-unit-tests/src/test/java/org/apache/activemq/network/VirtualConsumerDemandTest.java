@@ -290,7 +290,7 @@ public class VirtualConsumerDemandTest {
 
     /**
      * Test that dynamic flow works for virtual destinations when a second composite
-     * topic is included that forwards to the same queue, but is excluded from
+     * topic is included, but is excluded from
      * being forwarded from the remote broker
      *
      * @throws Exception
@@ -305,7 +305,7 @@ public class VirtualConsumerDemandTest {
 
         //configure a composite topic that isn't included
         CompositeTopic compositeTopic = createCompositeTopic("include.test.bar2",
-                new ActiveMQQueue("include.test.bar.bridge"));
+                new ActiveMQQueue("include.test.bar.bridge2"));
 
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
 
@@ -318,7 +318,6 @@ public class VirtualConsumerDemandTest {
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic, compositeTopic2}, true);
 
         Thread.sleep(2000);
-
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
 
@@ -335,7 +334,7 @@ public class VirtualConsumerDemandTest {
         assertEquals("remote dest messages", 1, remoteDestStatistics.getMessages().getCount());
 
         assertRemoteAdvisoryCount(advisoryConsumer, 1);
-        assertAdvisoryBrokerCounts(2,2,2);
+        assertAdvisoryBrokerCounts(2,1,1);
 
     }
 
@@ -471,7 +470,7 @@ public class VirtualConsumerDemandTest {
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
         final DestinationStatistics remoteDestStatistics = remoteBroker.getDestination(
@@ -531,7 +530,7 @@ public class VirtualConsumerDemandTest {
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
         final DestinationStatistics remoteDestStatistics = remoteBroker.getDestination(
@@ -594,7 +593,7 @@ public class VirtualConsumerDemandTest {
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -632,7 +631,7 @@ public class VirtualConsumerDemandTest {
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -686,7 +685,7 @@ public class VirtualConsumerDemandTest {
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -744,7 +743,7 @@ public class VirtualConsumerDemandTest {
 
         MessageProducer includedProducer = localSession.createProducer(included);
         Message test = localSession.createTextMessage("test");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
@@ -798,7 +797,7 @@ public class VirtualConsumerDemandTest {
 
         MessageProducer includedProducer = localSession.createProducer(excluded);
         Message test = localSession.createTextMessage("test");
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         MessageConsumer bridgeConsumer = remoteSession.createConsumer(new ActiveMQQueue("excluded.test.bar.bridge"));
         Thread.sleep(2000);
@@ -838,8 +837,9 @@ public class VirtualConsumerDemandTest {
         runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeQueue}, true);
 
         MessageProducer includedProducer = localSession.createProducer(new ActiveMQQueue(testQueueName));
-        Message test = localSession.createTextMessage("test");
         Thread.sleep(2000);
+        Message test = localSession.createTextMessage("test");
+
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(new ActiveMQQueue(testQueueName)).getDestinationStatistics();
         MessageConsumer bridgeConsumer = remoteSession.createConsumer(new ActiveMQQueue("include.test.foo.bridge"));
