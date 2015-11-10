@@ -137,12 +137,31 @@ public abstract class InboundTransformer {
                 if ("x-opt-jms-type".equals(key) && entry.getValue() != null) {
                     // Legacy annotation, JMSType value will be replaced by Subject further down if also present.
                     jms.setJMSType(entry.getValue().toString());
-                }
-                if ("x-opt-delivery-time".equals(key) && entry.getValue() != null) {
+                } else if ("x-opt-delivery-time".equals(key) && entry.getValue() != null) {
                     long deliveryTime = ((Number) entry.getValue()).longValue();
                     long delay = deliveryTime - System.currentTimeMillis();
                     if (delay > 0) {
                         jms.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delay);
+                    }
+                } else if ("x-opt-delivery-delay".equals(key) && entry.getValue() != null) {
+                    long delay = ((Number) entry.getValue()).longValue();
+                    if (delay > 0) {
+                        jms.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delay);
+                    }
+                } else if ("x-opt-delivery-repeat".equals(key) && entry.getValue() != null) {
+                    int repeat = ((Number) entry.getValue()).intValue();
+                    if (repeat > 0) {
+                        jms.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, repeat);
+                    }
+                } else if ("x-opt-delivery-period".equals(key) && entry.getValue() != null) {
+                    long period = ((Number) entry.getValue()).longValue();
+                    if (period > 0) {
+                        jms.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, period);
+                    }
+                } else if ("x-opt-delivery-cron".equals(key) && entry.getValue() != null) {
+                    String cronEntry = (String) entry.getValue();
+                    if (cronEntry != null) {
+                        jms.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, cronEntry);
                     }
                 }
 
