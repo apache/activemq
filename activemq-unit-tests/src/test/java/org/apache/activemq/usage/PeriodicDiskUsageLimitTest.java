@@ -112,8 +112,8 @@ public class PeriodicDiskUsageLimitTest {
         final long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
         final long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
 
-        //write a 2 meg file to the file system
-        writeTestFile(2 * 1024 * 1024);
+        //write a 5 meg file to the file system
+        writeTestFile(5 * 1024 * 1024);
 
         //Assert that the usage limits have been decreased because some free space was used
         //up by a file
@@ -152,8 +152,8 @@ public class PeriodicDiskUsageLimitTest {
         final long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
         final long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
 
-        //write a 2 meg file to the file system
-        writeTestFile(2 * 1024 * 1024);
+        //write a 5 meg file to the file system
+        writeTestFile(5 * 1024 * 1024);
 
         //Assert that the usage limits have been decreased because some free space was used
         //up by a file
@@ -227,8 +227,8 @@ public class PeriodicDiskUsageLimitTest {
         long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
         long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
 
-        //write a 2 meg file to the file system
-        writeTestFile(2 * 1024 * 1024);
+        //write a 5 meg file to the file system
+        writeTestFile(5 * 1024 * 1024);
         Thread.sleep(3000);
 
         //assert that the usage limits have not changed because a task should not have run
@@ -283,8 +283,8 @@ public class PeriodicDiskUsageLimitTest {
             long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
             long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
 
-            //write a 2 meg file to the file system
-            writeTestFile(2 * 1024 * 1024);
+            //write a 5 meg file to the file system
+            writeTestFile(5 * 1024 * 1024);
             Thread.sleep(5000);
 
             //Assert that the usage limits have not changed because writing a 2 meg file
