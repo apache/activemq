@@ -69,9 +69,7 @@ public class PeriodicDiskUsageLimitTest {
         broker.setDeleteAllMessagesOnStartup(true);
         adapter = broker.getPersistenceAdapter();
 
-        TransportConnector connector = broker
-                .addConnector(new TransportConnector());
-        connector.setUri(new URI("tcp://0.0.0.0:8000"));
+        TransportConnector connector = broker.addConnector("tcp://0.0.0.0:0");
         connector.setName("tcp");
 
         brokerConnectURI = broker.getConnectorByName("tcp").getConnectUri();
