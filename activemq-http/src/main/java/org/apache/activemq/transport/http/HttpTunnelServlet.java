@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -140,6 +141,9 @@ public class HttpTunnelServlet extends HttpServlet {
                 return;
             }
 
+            if (command instanceof ConnectionInfo) {
+                ((ConnectionInfo) command).setTransportContext(request.getAttribute("javax.servlet.request.X509Certificate"));
+            }
             transport.doConsume(command);
         }
     }
