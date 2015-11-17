@@ -19,6 +19,7 @@ package org.apache.activemq.transport.ws;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.KeepAliveInfo;
@@ -41,6 +42,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractStompSocket.class);
 
+    protected ReentrantLock protocolLock = new ReentrantLock();
     protected ProtocolConverter protocolConverter = new ProtocolConverter(this, null);
     protected StompWireFormat wireFormat = new StompWireFormat();
     protected final CountDownLatch socketTransportStarted = new CountDownLatch(1);
@@ -49,7 +51,6 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     protected final String remoteAddress;
     protected X509Certificate[] certificates;
 
-
     public AbstractStompSocket(String remoteAddress) {
         super();
         this.remoteAddress = remoteAddress;
@@ -57,16 +58,24 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
 
     @Override
     public void oneway(Object command) throws IOException {
+        protocolLock.lock();
         try {
             protocolConverter.onActiveMQCommand((Command)command);
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
+        } finally {
+            protocolLock.unlock();
         }
     }
 
     @Override
     public void sendToActiveMQ(Command command) {
-        doConsume(command);
+        protocolLock.lock();
+        try {
+            doConsume(command);
+        } finally {
+            protocolLock.unlock();
+        }
     }
 
     @Override
@@ -129,6 +138,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
             }
         }
 
+        protocolLock.lock();
         try {
             if (data != null) {
                 receiveCounter += data.length();
@@ -143,6 +153,8 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
             }
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
+        } finally {
+            protocolLock.unlock();
         }
     }
 
