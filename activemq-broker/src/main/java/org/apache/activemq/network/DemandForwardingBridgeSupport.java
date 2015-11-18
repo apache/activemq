@@ -833,6 +833,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         sending.setSubscriptionName(ds.getLocalDurableSubscriber().getSubscriptionName());
                         sending.setConnectionId(this.localConnectionInfo.getConnectionId());
                         localBroker.oneway(sending);
+
+                        //remove subscriber from map
+                        i.remove();
                     }
                 }
             }
