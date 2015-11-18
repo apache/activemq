@@ -47,6 +47,7 @@ import javax.jms.JMSException;
 import javax.jms.ResourceAllocationException;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.cursors.OrderedPendingList;
@@ -1132,6 +1133,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
             // we need a store iterator to walk messages on disk, independent of the cursor which is tracking
             // the next message batch
+        } catch (BrokerStoppedException ignored) {
         } catch (Exception e) {
             LOG.error("Problem retrieving message for browse", e);
         }

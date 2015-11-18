@@ -441,8 +441,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                         }
 
                     } catch (InterruptedException e) {
-                        LOG.info("socketQueue interuppted - stopping");
-                        if (!isStopping()) {
+                        if (!isStopped() || !isStopping()) {
+                            LOG.info("socketQueue interrupted - stopping");
                             onAcceptError(e);
                         }
                     }
