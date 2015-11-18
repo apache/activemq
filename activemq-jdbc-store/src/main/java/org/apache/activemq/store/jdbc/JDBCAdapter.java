@@ -110,4 +110,6 @@ public interface JDBCAdapter {
     void doClearLastAck(TransactionContext c, ActiveMQDestination destination, byte priority, String subId, String subName) throws SQLException, IOException;
 
     void doUpdateMessage(TransactionContext c, ActiveMQDestination destination, MessageId id, byte[] data) throws SQLException, IOException;
+
+    String limitQuery(String query);
 }

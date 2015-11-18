@@ -43,4 +43,9 @@ public class OracleJDBCAdapter extends DefaultJDBCAdapter {
         statements.setSequenceDataType("NUMBER");
         super.setStatements(statements);
     }
+
+    @Override
+    public String limitQuery(String query) {
+        return "SELECT * FROM (" + query + ") WHERE ROWNUM <= " + getMaxRows();
+    }
 }
