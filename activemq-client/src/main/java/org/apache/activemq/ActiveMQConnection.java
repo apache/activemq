@@ -678,34 +678,36 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
                     this.activeTempDestinations.clear();
 
-                    if (isConnectionInfoSentToBroker) {
-                        // If we announced ourselves to the broker.. Try to let the broker
-                        // know that the connection is being shutdown.
-                        RemoveInfo removeCommand = info.createRemoveCommand();
-                        removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-                        try {
-                            doSyncSendPacket(removeCommand, closeTimeout);
-                        } catch (JMSException e) {
-                            if (e.getCause() instanceof RequestTimedOutIOException) {
-                                // expected
-                            } else {
-                                throw e;
+                    try {
+                        if (isConnectionInfoSentToBroker) {
+                            // If we announced ourselves to the broker.. Try to let the broker
+                            // know that the connection is being shutdown.
+                            RemoveInfo removeCommand = info.createRemoveCommand();
+                            removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
+                            try {
+                                doSyncSendPacket(removeCommand, closeTimeout);
+                            } catch (JMSException e) {
+                                if (e.getCause() instanceof RequestTimedOutIOException) {
+                                    // expected
+                                } else {
+                                    throw e;
+                                }
                             }
+                            doAsyncSendPacket(new ShutdownInfo());
                         }
-                        doAsyncSendPacket(new ShutdownInfo());
-                    }
+                    } finally { // release anyway even if previous communication fails
+                        started.set(false);
 
-                    started.set(false);
-
-                    // TODO if we move the TaskRunnerFactory to the connection
-                    // factory
-                    // then we may need to call
-                    // factory.onConnectionClose(this);
-                    if (sessionTaskRunner != null) {
-                        sessionTaskRunner.shutdown();
+                        // TODO if we move the TaskRunnerFactory to the connection
+                        // factory
+                        // then we may need to call
+                        // factory.onConnectionClose(this);
+                        if (sessionTaskRunner != null) {
+                            sessionTaskRunner.shutdown();
+                        }
+                        closed.set(true);
+                        closing.set(false);
                     }
-                    closed.set(true);
-                    closing.set(false);
                 }
             }
         } finally {
