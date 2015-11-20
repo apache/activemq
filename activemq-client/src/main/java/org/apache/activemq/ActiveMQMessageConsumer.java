@@ -1401,13 +1401,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 afterMessageIsConsumed(md, expired);
                             } catch (RuntimeException e) {
                                 LOG.error("{} Exception while processing message: {}", getConsumerId(), md.getMessage().getMessageId(), e);
+                                md.setRollbackCause(e);
                                 if (isAutoAcknowledgeBatch() || isAutoAcknowledgeEach() || session.isIndividualAcknowledge()) {
                                     // schedual redelivery and possible dlq processing
-                                    md.setRollbackCause(e);
                                     rollback();
                                 } else {
-                                    // Transacted or Client ack: Deliver the
-                                    // next message.
+                                    // Transacted or Client ack: Deliver the next message.
                                     afterMessageIsConsumed(md, false);
                                 }
                             }
