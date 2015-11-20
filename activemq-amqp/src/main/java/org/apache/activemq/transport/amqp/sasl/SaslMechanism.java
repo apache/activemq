@@ -48,4 +48,14 @@ public interface SaslMechanism {
      */
     String getMechanismName();
 
+    /**
+     * @return true if the SASL processing failed during a step.
+     */
+    boolean isFailed();
+
+    /**
+     * @return a failure error to explain why the mechanism failed.
+     */
+    String getFailureReason();
+
 }

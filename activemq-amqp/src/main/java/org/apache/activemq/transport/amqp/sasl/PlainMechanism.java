@@ -28,14 +28,25 @@ public class PlainMechanism extends AbstractSaslMechanism {
     public void processSaslStep(Sasl sasl) {
         byte[] data = new byte[sasl.pending()];
         sasl.recv(data, 0, data.length);
+
         Buffer[] parts = new Buffer(data).split((byte) 0);
-
-        if (parts.length > 0) {
-            username = parts[0].utf8().toString();
-        }
-
-        if (parts.length > 1) {
-            password = parts[1].utf8().toString();
+        switch (parts.length) {
+            case 0:
+                // Treat this as anonymous connect to support legacy behavior
+                // which allowed this.  Connection will fail if broker is not
+                // configured to allow anonymous connections.
+                break;
+            case 2:
+                username = parts[0].utf8().toString();
+                password = parts[1].utf8().toString();
+                break;
+            case 3:
+                username = parts[1].utf8().toString();
+                password = parts[2].utf8().toString();
+                break;
+            default:
+                setFailed("Invalid encoding of Authentication credentials");
+                break;
         }
     }
 

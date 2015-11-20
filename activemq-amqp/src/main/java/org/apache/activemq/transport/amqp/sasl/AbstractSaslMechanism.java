@@ -23,6 +23,8 @@ public abstract class AbstractSaslMechanism implements SaslMechanism {
 
     protected String username;
     protected String password;
+    protected boolean failed;
+    protected String failureReason;
 
     @Override
     public String getUsername() {
@@ -32,5 +34,20 @@ public abstract class AbstractSaslMechanism implements SaslMechanism {
     @Override
     public String getPassword() {
         return password;
+    }
+
+    @Override
+    public boolean isFailed() {
+        return failed;
+    }
+
+    @Override
+    public String getFailureReason() {
+        return failureReason;
+    }
+
+    void setFailed(String failureReason) {
+        this.failed = true;
+        this.failureReason = failureReason;
     }
 }

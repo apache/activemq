@@ -131,14 +131,20 @@ public class SaslAuthenticator {
                 continue;
             }
 
+            Mechanism mechanism = null;
             if (remoteMechanism.equalsIgnoreCase("PLAIN")) {
-                found.add(new PlainMechanism());
+                mechanism = new PlainMechanism();
             } else if (remoteMechanism.equalsIgnoreCase("ANONYMOUS")) {
-                found.add(new AnonymousMechanism());
+                mechanism = new AnonymousMechanism();
             } else if (remoteMechanism.equalsIgnoreCase("CRAM-MD5")) {
-                found.add(new CramMD5Mechanism());
+                mechanism = new CramMD5Mechanism();
             } else {
                 LOG.debug("Unknown remote mechanism {}, skipping", remoteMechanism);
+                continue;
+            }
+
+            if (mechanism.isApplicable(username, password)) {
+                found.add(mechanism);
             }
         }
 

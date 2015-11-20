@@ -88,4 +88,9 @@ public abstract class AbstractMechanism implements Mechanism {
     public void setAuthzid(String authzid) {
         this.authzid = authzid;
     }
+
+    @Override
+    public boolean isApplicable(String username, String password) {
+        return true;
+    }
 }
