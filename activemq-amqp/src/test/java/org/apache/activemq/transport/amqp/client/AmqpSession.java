@@ -36,6 +36,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
 
     private final AmqpConnection connection;
     private final String sessionId;
+    private final AmqpTransactionContext txContext;
 
     /**
      * Create a new session instance.
@@ -48,6 +49,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     public AmqpSession(AmqpConnection connection, String sessionId) {
         this.connection = connection;
         this.sessionId = sessionId;
+        this.txContext = new AmqpTransactionContext(this);
     }
 
     /**
@@ -363,7 +365,59 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         return new UnmodifiableSession(getEndpoint());
     }
 
-    //----- Internal getters used from the child AmqpResource classes --------//
+    public boolean isInTransaction() {
+        return txContext.isInTransaction();
+    }
+
+    @Override
+    public String toString() {
+        return "AmqpSession { " + sessionId + " }";
+    }
+
+    //----- Session Transaction Methods --------------------------------------//
+
+    /**
+     * Starts a new transaction associated with this session.
+     *
+     * @throws Exception if an error occurs starting a new Transaction.
+     */
+    public void begin() throws Exception {
+        if (txContext.isInTransaction()) {
+            throw new javax.jms.IllegalStateException("Session already has an active transaction");
+        }
+
+        txContext.begin();
+    }
+
+    /**
+     * Commit the current transaction associated with this session.
+     *
+     * @throws Exception if an error occurs committing the Transaction.
+     */
+    public void commit() throws Exception {
+        if (!txContext.isInTransaction()) {
+            throw new javax.jms.IllegalStateException(
+                "Commit called on Session that does not have an active transaction");
+        }
+
+        txContext.commit();
+    }
+
+    /**
+     * Roll back the current transaction associated with this session.
+     *
+     * @throws Exception if an error occurs rolling back the Transaction.
+     */
+    public void rollback() throws Exception {
+        if (!txContext.isInTransaction()) {
+            throw new javax.jms.IllegalStateException(
+                "Rollback called on Session that does not have an active transaction");
+        }
+
+        txContext.rollback();
+    }
+
+    //----- Internal access used to manage resources -------------------------//
 
     ScheduledExecutorService getScheduler() {
         return connection.getScheduler();
@@ -375,6 +429,14 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
 
     void pumpToProtonTransport() {
         connection.pumpToProtonTransport();
+    }
+
+    AmqpTransactionId getTransactionId() {
+        return txContext.getTransactionId();
+    }
+
+    AmqpTransactionContext getTransactionContext() {
+        return txContext;
     }
 
     //----- Private implementation details -----------------------------------//
@@ -409,10 +471,5 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         if (isClosed() || connection.isClosed()) {
             throw new IllegalStateException("Session is already closed");
         }
-    }
-
-    @Override
-    public String toString() {
-        return "AmqpSession { " + sessionId + " }";
     }
 }

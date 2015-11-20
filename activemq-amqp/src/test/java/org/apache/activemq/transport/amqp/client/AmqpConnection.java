@@ -71,6 +71,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private final AtomicBoolean closed = new AtomicBoolean();
     private final AtomicBoolean connected = new AtomicBoolean();
     private final AtomicLong sessionIdGenerator = new AtomicLong();
+    private final AtomicLong txIdGenerator = new AtomicLong();
     private final Collector protonCollector = new CollectorImpl();
     private final NettyTransport transport;
     private final Transport protonTransport = Transport.Factory.create();
@@ -427,6 +428,14 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
 
     Connection getProtonConnection() {
         return getEndpoint();
+    }
+
+    String getConnectionId() {
+        return this.connectionId;
+    }
+
+    AmqpTransactionId getNextTransactionId() {
+        return new AmqpTransactionId(connectionId + ":" + txIdGenerator.incrementAndGet());
     }
 
     void pumpToProtonTransport() {
