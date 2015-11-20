@@ -37,7 +37,9 @@ public class SaslAuthenticator {
     private final Sasl sasl;
     private final String username;
     private final String password;
+    private final String authzid;
     private Mechanism mechanism;
+    private String mechanismRestriction;
 
     /**
      * Create the authenticator and initialize it.
@@ -48,11 +50,17 @@ public class SaslAuthenticator {
      *        The user name that will be used to authenticate.
      * @param password
      *        The password that will be used to authenticate.
+     * @param authzid
+     *        The authzid used when authenticating (currently only with PLAIN)
+     * @param mechanismRestriction
+     *        A particular mechanism to use (if offered by the server) or null to allow selection.
      */
-    public SaslAuthenticator(Sasl sasl, String username, String password) {
+    public SaslAuthenticator(Sasl sasl, String username, String password, String authzid, String mechanismRestriction) {
         this.sasl = sasl;
         this.username = username;
         this.password = password;
+        this.authzid = authzid;
+        this.mechanismRestriction = mechanismRestriction;
     }
 
     /**
@@ -90,6 +98,7 @@ public class SaslAuthenticator {
                 if (mechanism != null) {
                     mechanism.setUsername(username);
                     mechanism.setPassword(password);
+                    mechanism.setAuthzid(authzid);
                     // TODO - set additional options from URI.
                     // TODO - set a host value.
 
@@ -117,6 +126,11 @@ public class SaslAuthenticator {
         List<Mechanism> found = new ArrayList<Mechanism>();
 
         for (String remoteMechanism : remoteMechanisms) {
+            if(mechanismRestriction != null && !mechanismRestriction.equals(remoteMechanism)) {
+                LOG.debug("Skipping {} mechanism because it is not the configured mechanism restriction {}", remoteMechanism, mechanismRestriction);
+                continue;
+            }
+
             if (remoteMechanism.equalsIgnoreCase("PLAIN")) {
                 found.add(new PlainMechanism());
             } else if (remoteMechanism.equalsIgnoreCase("ANONYMOUS")) {

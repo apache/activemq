@@ -23,6 +23,8 @@ package org.apache.activemq.transport.amqp.client.sasl;
  */
 public class PlainMechanism extends AbstractMechanism {
 
+    public static final String MECH_NAME = "PLAIN";
+
     @Override
     public int getPriority() {
         return PRIORITY.MEDIUM.getValue();
@@ -30,14 +32,19 @@ public class PlainMechanism extends AbstractMechanism {
 
     @Override
     public String getName() {
-        return "PLAIN";
+        return MECH_NAME;
     }
 
     @Override
     public byte[] getInitialResponse() {
 
+        String authzid = getAuthzid();
         String username = getUsername();
         String password = getPassword();
+
+        if (authzid == null) {
+            authzid = "";
+        }
 
         if (username == null) {
             username = "";
@@ -47,10 +54,12 @@ public class PlainMechanism extends AbstractMechanism {
             password = "";
         }
 
+        byte[] authzidBytes = authzid.getBytes();
         byte[] usernameBytes = username.getBytes();
         byte[] passwordBytes = password.getBytes();
-        byte[] data = new byte[usernameBytes.length + passwordBytes.length + 2];
-        System.arraycopy(usernameBytes, 0, data, 1, usernameBytes.length);
+        byte[] data = new byte[authzidBytes.length + 1 + usernameBytes.length + 1 + passwordBytes.length];
+        System.arraycopy(authzidBytes, 0, data, 0, authzidBytes.length);
+        System.arraycopy(usernameBytes, 0, data, 1 + authzidBytes.length, usernameBytes.length);
         System.arraycopy(passwordBytes, 0, data, 2 + usernameBytes.length, passwordBytes.length);
         return data;
     }

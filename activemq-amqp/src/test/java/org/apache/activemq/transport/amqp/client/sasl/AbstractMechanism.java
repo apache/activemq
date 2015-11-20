@@ -29,6 +29,7 @@ public abstract class AbstractMechanism implements Mechanism {
 
     private String username;
     private String password;
+    private String authzid;
     private Map<String, Object> properties = new HashMap<String, Object>();
 
     @Override
@@ -76,5 +77,15 @@ public abstract class AbstractMechanism implements Mechanism {
     @Override
     public String toString() {
         return "SASL-" + getName();
+    }
+
+    @Override
+    public String getAuthzid() {
+        return authzid;
+    }
+
+    @Override
+    public void setAuthzid(String authzid) {
+        this.authzid = authzid;
     }
 }
