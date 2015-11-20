@@ -183,7 +183,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public synchronized boolean addMessageLast(MessageReference node) throws Exception {
+    public synchronized boolean tryAddMessageLast(MessageReference node, long wait) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
             if (isStarted()) {

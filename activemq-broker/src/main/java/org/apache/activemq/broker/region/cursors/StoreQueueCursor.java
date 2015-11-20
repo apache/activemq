@@ -90,14 +90,14 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public synchronized boolean addMessageLast(MessageReference node) throws Exception {
+    public synchronized boolean tryAddMessageLast(MessageReference node, long maxWait) throws Exception {
         boolean result = true;
         if (node != null) {
             Message msg = node.getMessage();
             if (started) {
                 pendingCount++;
                 if (!msg.isPersistent()) {
-                    nonPersistent.addMessageLast(node);
+                    result = nonPersistent.tryAddMessageLast(node, maxWait);
                 }
             }
             if (msg.isPersistent()) {

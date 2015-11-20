@@ -203,11 +203,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @throws Exception
      */
     @Override
-    public synchronized boolean addMessageLast(MessageReference node) throws Exception {
-        return tryAddMessageLast(node, 0);
-    }
-
-    @Override
     public synchronized boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
         if (!node.isExpired()) {
             try {

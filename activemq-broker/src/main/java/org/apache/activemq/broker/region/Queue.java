@@ -827,33 +827,38 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         ListenableFuture<Object> result = null;
 
         producerExchange.incrementSend();
-        checkUsage(context, producerExchange, message);
-        sendLock.lockInterruptibly();
-        try {
-            message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
-            if (store != null && message.isPersistent()) {
-                message.getMessageId().setFutureOrSequenceLong(null);
-                try {
-                    if (messages.isCacheEnabled()) {
-                        result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
-                        result.addListener(new PendingMarshalUsageTracker(message));
-                    } else {
-                        store.addMessage(context, message);
+        do {
+            checkUsage(context, producerExchange, message);
+            sendLock.lockInterruptibly();
+            try {
+                message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+                if (store != null && message.isPersistent()) {
+                    message.getMessageId().setFutureOrSequenceLong(null);
+                    try {
+                        if (messages.isCacheEnabled()) {
+                            result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
+                            result.addListener(new PendingMarshalUsageTracker(message));
+                        } else {
+                            store.addMessage(context, message);
+                        }
+                        if (isReduceMemoryFootprint()) {
+                            message.clearMarshalledState();
+                        }
+                    } catch (Exception e) {
+                        // we may have a store in inconsistent state, so reset the cursor
+                        // before restarting normal broker operations
+                        resetNeeded = true;
+                        throw e;
                     }
-                    if (isReduceMemoryFootprint()) {
-                        message.clearMarshalledState();
-                    }
-                } catch (Exception e) {
-                    // we may have a store in inconsistent state, so reset the cursor
-                    // before restarting normal broker operations
-                    resetNeeded = true;
-                    throw e;
                 }
+                if(tryOrderedCursorAdd(message, context)) {
+                    break;
+                }
+            } finally {
+                sendLock.unlock();
             }
-            orderedCursorAdd(message, context);
-        } finally {
-            sendLock.unlock();
-        }
+        } while (started.get());
+
         if (store == null || (!context.isInTransaction() && !message.isPersistent())) {
             messageSent(context, message);
         }
@@ -867,15 +872,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    private void orderedCursorAdd(Message message, ConnectionContext context) throws Exception {
+    private boolean tryOrderedCursorAdd(Message message, ConnectionContext context) throws Exception {
+        boolean result = true;
+
         if (context.isInTransaction()) {
             context.getTransaction().addSynchronization(new CursorAddSync(new MessageContext(context, message, null)));
         } else if (store != null && message.isPersistent()) {
             doPendingCursorAdditions();
         } else {
             // no ordering issue with non persistent messages
-            cursorAdd(message);
+            result = tryCursorAdd(message);
         }
+
+        return result;
     }
 
     private void checkUsage(ConnectionContext context,ProducerBrokerExchange producerBrokerExchange, Message message) throws ResourceAllocationException, IOException, InterruptedException {
@@ -1813,10 +1822,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    final boolean cursorAdd(final Message msg) throws Exception {
+    private final boolean cursorAdd(final Message msg) throws Exception {
         messagesLock.writeLock().lock();
         try {
             return messages.addMessageLast(msg);
+        } finally {
+            messagesLock.writeLock().unlock();
+        }
+    }
+
+    private final boolean tryCursorAdd(final Message msg) throws Exception {
+        messagesLock.writeLock().lock();
+        try {
+            return messages.tryAddMessageLast(msg, 50);
         } finally {
             messagesLock.writeLock().unlock();
         }

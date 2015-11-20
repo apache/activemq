@@ -35,6 +35,8 @@ import org.apache.activemq.usage.SystemUsage;
  */
 public interface PendingMessageCursor extends Service {
 
+    static final long INFINITE_WAIT = 0;
+
     /**
      * Add a destination
      *

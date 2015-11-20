@@ -102,7 +102,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
      */
 
     @Override
-    public synchronized boolean addMessageLast(MessageReference node) {
+    public synchronized boolean tryAddMessageLast(MessageReference node, long maxWait) {
         node.incrementReferenceCount();
         list.addMessageLast(node);
         return true;
