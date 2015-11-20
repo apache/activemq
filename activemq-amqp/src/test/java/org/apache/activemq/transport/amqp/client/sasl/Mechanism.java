@@ -122,4 +122,7 @@ public interface Mechanism extends Comparable<Mechanism> {
      */
     Map<String, Object> getProperties();
 
+    String getAuthzid();
+
+    void setAuthzid(String authzid);
 }

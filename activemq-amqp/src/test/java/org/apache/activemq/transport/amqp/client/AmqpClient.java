@@ -37,6 +37,8 @@ public class AmqpClient {
     private final String username;
     private final String password;
     private final URI remoteURI;
+    private String authzid;
+    private String mechanismRestriction;
 
     private AmqpValidator stateInspector = new AmqpValidator();
     private List<Symbol> offeredCapabilities = Collections.emptyList();
@@ -94,6 +96,9 @@ public class AmqpClient {
         ClientTcpTransport transport = new ClientTcpTransport(remoteURI);
         AmqpConnection connection = new AmqpConnection(transport, username, password);
 
+        connection.setMechanismRestriction(mechanismRestriction);
+        connection.setAuthzid(authzid);
+
         connection.setOfferedCapabilities(getOfferedCapabilities());
         connection.setOfferedProperties(getOfferedProperties());
         connection.setStateInspector(getStateInspector());
@@ -102,17 +107,41 @@ public class AmqpClient {
     }
 
     /**
-     * @return the user name value given when connect was called, always null before connect.
+     * @return the user name value given when constructed.
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * @return the password value given when connect was called, always null before connect.
+     * @return the password value given when constructed.
      */
     public String getPassword() {
         return password;
+    }
+
+    /**
+     * @param authzid
+     *        The authzid used when authenticating (currently only with PLAIN)
+     */
+    public void setAuthzid(String authzid) {
+        this.authzid = authzid;
+    }
+
+    public String getAuthzid() {
+        return authzid;
+    }
+
+    /**
+     * @param mechanismRestriction
+     *        The mechanism to use when authenticating (if offered by the server)
+     */
+    public void setMechanismRestriction(String mechanismRestriction) {
+        this.mechanismRestriction = mechanismRestriction;
+    }
+
+    public String getMechanismRestriction() {
+        return mechanismRestriction;
     }
 
     /**

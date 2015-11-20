@@ -81,6 +81,8 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
 
     private AmqpConnectionListener listener;
     private SaslAuthenticator authenticator;
+    private String mechanismRestriction;
+    private String authzid;
 
     private int idleTimeout = 0;
     private boolean idleProcessingDisabled;
@@ -141,7 +143,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                     if (sasl != null) {
                         sasl.client();
                     }
-                    authenticator = new SaslAuthenticator(sasl, username, password);
+                    authenticator = new SaslAuthenticator(sasl, username, password, authzid, mechanismRestriction);
                     open(future);
 
                     pumpToProtonTransport();
@@ -285,6 +287,14 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         return password;
     }
 
+    public void setAuthzid(String authzid) {
+        this.authzid = authzid;
+    }
+
+    public String getAuthzid() {
+        return authzid;
+    }
+
     /**
      * @return the URI of the remote peer this connection attached to.
      */
@@ -391,6 +401,19 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
 
     public boolean isIdleProcessingDisabled() {
         return idleProcessingDisabled;
+    }
+
+    /**
+     * Sets a restriction on the SASL mechanism to use (if offered by the server).
+     *
+     * @param mechanismRestriction the mechanism to use
+     */
+    public void setMechanismRestriction(String mechanismRestriction) {
+        this.mechanismRestriction = mechanismRestriction;
+    }
+
+    public String getMechanismRestriction() {
+        return mechanismRestriction;
     }
 
     //----- Internal getters used from the child AmqpResource classes --------//
