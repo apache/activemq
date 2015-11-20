@@ -33,7 +33,6 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.transport.amqp.client.sasl.PlainMechanism;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -63,11 +62,18 @@ public class AmqpSaslPlainTest extends AmqpClientTestSupport {
         doSucessfullConnectionTestImpl(client);
     }
 
-    @Ignore //TODO: fix broker to handle authzid
     @Test(timeout = 30000)
-    public void testSaslPlainWithValidUsernameAndPasswordAndAuthzid() throws Exception {
+    public void testSaslPlainWithValidUsernameAndPasswordAndAuthzidAsUser() throws Exception {
         AmqpClient client = createAmqpClient(USER, USER_PASSWORD);
         client.setAuthzid(USER);
+
+        doSucessfullConnectionTestImpl(client);
+    }
+
+    @Test(timeout = 30000)
+    public void testSaslPlainWithValidUsernameAndPasswordAndAuthzidAsUnkown() throws Exception {
+        AmqpClient client = createAmqpClient(USER, USER_PASSWORD);
+        client.setAuthzid("unknown");
 
         doSucessfullConnectionTestImpl(client);
     }
@@ -107,6 +113,20 @@ public class AmqpSaslPlainTest extends AmqpClientTestSupport {
     @Test(timeout = 30000)
     public void testSaslPlainWithInvalidPassword() throws Exception {
         AmqpClient client = createAmqpClient(USER, "not-user-password");
+        doFailedConnectionTestImpl(client);
+    }
+
+    @Test(timeout = 30000)
+    public void testSaslPlainWithInvalidUsernameAndAuthzid() throws Exception {
+        AmqpClient client = createAmqpClient("not-user", USER_PASSWORD);
+        client.setAuthzid(USER);
+        doFailedConnectionTestImpl(client);
+    }
+
+    @Test(timeout = 30000)
+    public void testSaslPlainWithInvalidPasswordAndAuthzid() throws Exception {
+        AmqpClient client = createAmqpClient(USER, "not-user-password");
+        client.setAuthzid(USER);
         doFailedConnectionTestImpl(client);
     }
 

@@ -68,4 +68,9 @@ public class PlainMechanism extends AbstractMechanism {
     public byte[] getChallengeResponse(byte[] challenge) {
         return EMPTY;
     }
+
+    @Override
+    public boolean isApplicable(String username, String password) {
+        return username != null && username.length() > 0 && password != null && password.length() > 0;
+    }
 }

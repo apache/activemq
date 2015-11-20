@@ -83,4 +83,9 @@ public class CramMD5Mechanism extends AbstractMechanism {
             return EMPTY;
         }
     }
+
+    @Override
+    public boolean isApplicable(String username, String password) {
+        return username != null && username.length() > 0 && password != null && password.length() > 0;
+    }
 }

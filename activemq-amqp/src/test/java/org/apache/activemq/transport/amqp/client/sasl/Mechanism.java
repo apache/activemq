@@ -122,7 +122,32 @@ public interface Mechanism extends Comparable<Mechanism> {
      */
     Map<String, Object> getProperties();
 
+    /**
+     * Using the configured credentials, check if the mechanism applies or not.
+     *
+     * @param username
+     *      The user name that will be used with this mechanism
+     * @param password
+     *      The password that will be used with this mechanism
+     *
+     * @return true if the mechanism works with the provided credentials or not.
+     */
+    boolean isApplicable(String username, String password);
+
+    /**
+     * Get the currently configured Authentication ID.
+     *
+     * @return the currently set Authentication ID.
+     */
     String getAuthzid();
 
+    /**
+     * Sets an Authentication ID that some mechanism can use during the
+     * challenge response phase.
+     *
+     * @param authzid
+     *      The Authentication ID to use.
+     */
     void setAuthzid(String authzid);
+
 }

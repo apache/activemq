@@ -21,7 +21,7 @@ import org.apache.qpid.proton.engine.Sasl;
 /**
  * SASL Anonymous mechanism implementation.
  */
-public class AnonymousMechanism implements SaslMechanism {
+public class AnonymousMechanism extends AbstractSaslMechanism {
 
     @Override
     public void processSaslStep(Sasl sasl) {
@@ -30,15 +30,5 @@ public class AnonymousMechanism implements SaslMechanism {
     @Override
     public String getMechanismName() {
         return "ANONYMOUS";
-    }
-
-    @Override
-    public String getUsername() {
-        return null;
-    }
-
-    @Override
-    public String getPassword() {
-        return null;
     }
 }
