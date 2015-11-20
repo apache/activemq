@@ -60,7 +60,7 @@ public class PlainMechanism extends AbstractMechanism {
         byte[] data = new byte[authzidBytes.length + 1 + usernameBytes.length + 1 + passwordBytes.length];
         System.arraycopy(authzidBytes, 0, data, 0, authzidBytes.length);
         System.arraycopy(usernameBytes, 0, data, 1 + authzidBytes.length, usernameBytes.length);
-        System.arraycopy(passwordBytes, 0, data, 2 + usernameBytes.length, passwordBytes.length);
+        System.arraycopy(passwordBytes, 0, data, 2 + authzidBytes.length + usernameBytes.length, passwordBytes.length);
         return data;
     }
 
