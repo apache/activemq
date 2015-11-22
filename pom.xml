@@ -47,7 +47,7 @@
     <aries-version>1.1.0</aries-version>
     <aries-transaction-version>1.1.1</aries-transaction-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>2.16.0</camel-version>
+    <camel-version>2.16.1</camel-version>
     <camel-version-range>[2.15,3)</camel-version-range>
     <cglib-version>2.2</cglib-version>
     <commons-beanutils-version>1.8.3</commons-beanutils-version>
@@ -65,7 +65,7 @@
     <geronimo-version>1.0</geronimo-version>
     <hadoop-version>1.0.0</hadoop-version>
     <hawtbuf-version>1.11</hawtbuf-version>
-    <hawtdispatch-version>1.21</hawtdispatch-version>
+    <hawtdispatch-version>1.22</hawtdispatch-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.12</hsqldb-version>
     <httpclient-version>4.5.1</httpclient-version>
@@ -88,7 +88,7 @@
     <junit-version>4.12</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>4.0.2</karaf-version>
+    <karaf-version>4.0.3</karaf-version>
     <leveldb-api-version>0.6</leveldb-api-version>
     <leveldb-version>0.6</leveldb-version>
     <leveldbjni-version>1.8</leveldbjni-version>
@@ -112,7 +112,7 @@
     <scala-version>2.11.0</scala-version>
     <shiro-version>1.2.4</shiro-version>
     <scalatest-version>2.1.5</scalatest-version>
-    <slf4j-version>1.7.10</slf4j-version>
+    <slf4j-version>1.7.13</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
     <spring-version>4.1.8.RELEASE</spring-version>
     <spring-osgi-version>1.2.1</spring-osgi-version>
@@ -540,7 +540,7 @@
      <dependency>
        <groupId>org.ow2.asm</groupId>
        <artifactId>asm</artifactId>
-       <version>5.0.3</version>
+       <version>5.0.4</version>
      </dependency>
 
       <!-- Servlet 3.1 and JSP -->
