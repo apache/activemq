@@ -106,6 +106,7 @@ public class FailoverTxSlowAckTest {
                         if (sendCount > 1) {
                             // need new thread b/c we have the service write lock
                             executorService.execute(new Runnable() {
+                                @Override
                                 public void run() {
                                     LOG.info("Stopping broker before commit...");
                                     try {
@@ -138,6 +139,7 @@ public class FailoverTxSlowAckTest {
 
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
         final CountDownLatch messagesReceived = new CountDownLatch(1);
+        final CountDownLatch brokerDisconnectedLatch = new CountDownLatch(1);
         final AtomicInteger receivedCount = new AtomicInteger();
 
         final AtomicBoolean gotDisconnect = new AtomicBoolean();
@@ -146,6 +148,7 @@ public class FailoverTxSlowAckTest {
         final MessageConsumer testConsumer = consumerSession.createConsumer(in);
         testConsumer.setMessageListener(new MessageListener() {
 
+            @Override
             public void onMessage(Message message) {
                 LOG.info("consume one and commit");
 
@@ -178,6 +181,9 @@ public class FailoverTxSlowAckTest {
                                 }
                             }));
 
+                            //connect down to trigger reconnect
+                            brokerDisconnectedLatch.countDown();
+
                             LOG.info("got disconnect");
                             gotReconnected.set(Wait.waitFor(new Wait.Condition() {
                                 @Override
@@ -204,6 +210,7 @@ public class FailoverTxSlowAckTest {
         });
 
         executorService.execute(new Runnable() {
+            @Override
             public void run() {
                 LOG.info("producer started");
                 try {
@@ -219,6 +226,8 @@ public class FailoverTxSlowAckTest {
 
         // will be stopped by the plugin on TX ack
         broker.waitUntilStopped();
+        //await for listener to detect disconnect
+        brokerDisconnectedLatch.await();
         broker = createBroker(false, url);
         broker.start();
 
