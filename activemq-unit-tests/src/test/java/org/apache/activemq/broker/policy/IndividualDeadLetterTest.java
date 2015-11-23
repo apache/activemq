@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -35,10 +35,8 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class IndividualDeadLetterTest extends DeadLetterTest {
+
     private static final Logger LOG = LoggerFactory.getLogger(IndividualDeadLetterTest.class);
 
     @Override
@@ -99,7 +97,6 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
         Queue testQueue = new ActiveMQQueue("ActiveMQ.DLQ.Queue.ActiveMQ.DLQ.Queue." + getClass().getName() + "." + getName());
         MessageConsumer testConsumer = session.createConsumer(testQueue);
         assertNull("The message shouldn't be sent to another DLQ", testConsumer.receive(1000));
-
     }
 
     protected void browseDlq() throws Exception {
