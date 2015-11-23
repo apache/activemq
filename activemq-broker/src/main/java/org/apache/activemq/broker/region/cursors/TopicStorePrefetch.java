@@ -69,6 +69,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         batchList.addMessageFirst(node);
         size++;
+        node.incrementReferenceCount();
         //this.messageSize.addSize(node.getMessage().getSize());
     }
 
