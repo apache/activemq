@@ -50,21 +50,25 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
      */
     @Override
     protected boolean shouldDispatch(final Broker broker, Message message, Destination dest) throws IOException {
-        boolean matches = false;
-        MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
-        msgContext.setDestination(dest.getActiveMQDestination());
-        msgContext.setMessageReference(message);
-        List<Subscription> subs = dest.getConsumers();
-        for (Subscription sub : subs) {
-            if (sub.matches(message, msgContext)) {
-                matches = true;
-                break;
+        //first validate that the prefix matches in the super class
+        if (super.shouldDispatch(broker, message, dest)) {
+            boolean matches = false;
+            MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
+            msgContext.setDestination(dest.getActiveMQDestination());
+            msgContext.setMessageReference(message);
+            List<Subscription> subs = dest.getConsumers();
+            for (Subscription sub : subs) {
+                if (sub.matches(message, msgContext)) {
+                    matches = true;
+                    break;
+                }
             }
+            if (matches == false) {
+                matches = tryMatchingCachedSubs(broker, dest, msgContext);
+            }
+            return matches;
         }
-        if (matches == false) {
-            matches = tryMatchingCachedSubs(broker, dest, msgContext);
-        }
-        return matches;
+        return false;
     }
 
     private boolean tryMatchingCachedSubs(final Broker broker, Destination dest, MessageEvaluationContext msgContext) {

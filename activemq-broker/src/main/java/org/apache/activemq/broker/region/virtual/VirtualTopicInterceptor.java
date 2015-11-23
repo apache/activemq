@@ -142,11 +142,8 @@ public class VirtualTopicInterceptor extends DestinationFilter {
     }
 
     protected boolean shouldDispatch(Broker broker, Message message, Destination dest) throws IOException {
-    	//can't find .* in the prefix, so default back to old logic and return true
-    	if(prefix.indexOf(".*")>0){
-    		return dest.getName().startsWith(prefix.substring(0,prefix.indexOf(".*")));
-    	}
-    	else return true;    	
+    	//if can't find .* in the prefix, default back to old logic and return true
+    	return prefix.contains(".*") ? dest.getName().startsWith(prefix.substring(0, prefix.indexOf(".*"))) : true;
     }
 
     protected ActiveMQDestination getQueueConsumersWildcard(ActiveMQDestination original) {
