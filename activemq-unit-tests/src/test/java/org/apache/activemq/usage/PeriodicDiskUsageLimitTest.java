@@ -92,6 +92,7 @@ public class PeriodicDiskUsageLimitTest {
     public void stopBroker() throws Exception {
         broker.stop();
         broker.waitUntilStopped();
+        FileUtils.deleteQuietly(testfile);
     }
 
     /**
@@ -99,35 +100,15 @@ public class PeriodicDiskUsageLimitTest {
      * if the usage limit is now less than the store size plus remaining free space, then
      * the usage limits will adjust lower.
      */
-    @Test(timeout=60000)
+    @Test(timeout=90000)
     public void testDiskUsageAdjustLower() throws Exception {
         //set the limit to max space so that if a file is added to eat up free space then
-        //the broker should adjust the usage limit..set time to 5 seconds for testing
+        //the broker should adjust the usage limit..set time to 2 seconds for testing
         setLimitMaxSpace();
-        broker.setSchedulePeriodForDiskUsageCheck(4000);
+        broker.setSchedulePeriodForDiskUsageCheck(2000);
         startBroker();
 
-        final long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
-        final long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
-
-        //write a 5 meg file to the file system
-        writeTestFile(5 * 1024 * 1024);
-
-        //Assert that the usage limits have been decreased because some free space was used
-        //up by a file
-        assertTrue("Store Usage should ramp down.", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return broker.getSystemUsage().getStoreUsage().getLimit() <  originalDisk;
-            }
-        }));
-
-        assertTrue("Temp Usage should ramp down.", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return broker.getSystemUsage().getTempUsage().getLimit() <  originalTmp;
-            }
-        }));
+        assertRampDown();
     }
 
     /**
@@ -135,7 +116,7 @@ public class PeriodicDiskUsageLimitTest {
      * if the usage limit is now less than the store size plus remaining free space, then
      * the usage limits will adjust lower.  Then test that size regrows when file is deleted.
      */
-    @Test(timeout=60000)
+    @Test(timeout=90000)
     public void testDiskUsageAdjustLowerAndHigherUsingPercent() throws Exception {
         //set the limit to max space so that if a file is added to eat up free space then
         //the broker should adjust the usage limit..add 5% above free space
@@ -144,30 +125,10 @@ public class PeriodicDiskUsageLimitTest {
 
         //set threshold to 1 megabyte
         broker.setDiskUsageCheckRegrowThreshold(1024 * 1024);
-        broker.setSchedulePeriodForDiskUsageCheck(4000);
+        broker.setSchedulePeriodForDiskUsageCheck(2000);
         startBroker();
 
-        final long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
-        final long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
-
-        //write a 5 meg file to the file system
-        writeTestFile(5 * 1024 * 1024);
-
-        //Assert that the usage limits have been decreased because some free space was used
-        //up by a file
-        assertTrue("Store Usage should ramp down.", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return broker.getSystemUsage().getStoreUsage().getLimit() <  originalDisk;
-            }
-        }));
-
-        assertTrue("Temp Usage should ramp down.", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return broker.getSystemUsage().getTempUsage().getLimit() <  originalTmp;
-            }
-        }));
+        assertRampDown();
 
         //get the limits and then delete the test file to free up space
         final long storeLimit = broker.getSystemUsage().getStoreUsage().getLimit();
@@ -180,7 +141,7 @@ public class PeriodicDiskUsageLimitTest {
             public boolean isSatisified() throws Exception {
                 return broker.getSystemUsage().getStoreUsage().getLimit() >  storeLimit;
             }
-        }));
+        }, 15000));
 
         //regrow
         assertTrue("Temp Usage should ramp up.", Wait.waitFor(new Wait.Condition() {
@@ -188,7 +149,7 @@ public class PeriodicDiskUsageLimitTest {
             public boolean isSatisified() throws Exception {
                 return broker.getSystemUsage().getTempUsage().getLimit() >  tmpLimit;
             }
-        }));
+        }, 15000));
     }
 
     /**
@@ -203,9 +164,9 @@ public class PeriodicDiskUsageLimitTest {
         long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
         long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
 
-        //write a 1 meg file to the file system
-        writeTestFile(1024 * 1024);
-        Thread.sleep(3000);
+        //write a 5 meg file to the file system
+        writeTestFile(5 * 1024 * 1024);
+        Thread.sleep(5000);
 
         //assert that the usage limits have not changed because a task should not have run
         assertEquals(originalDisk, broker.getSystemUsage().getStoreUsage().getLimit());
@@ -227,7 +188,7 @@ public class PeriodicDiskUsageLimitTest {
 
         //write a 5 meg file to the file system
         writeTestFile(5 * 1024 * 1024);
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         //assert that the usage limits have not changed because a task should not have run
         assertEquals(originalDisk, broker.getSystemUsage().getStoreUsage().getLimit());
@@ -241,7 +202,7 @@ public class PeriodicDiskUsageLimitTest {
      */
     @Test(timeout=60000)
     public void testDiskUsageStaySame() throws Exception {
-        //set a limit lower than max available space and set the period to 5 seconds
+        //set a limit lower than max available space and set the period to 2 seconds
         tempUsage.setLimit(10000000);
         storeUsage.setLimit(100000000);
         broker.setSchedulePeriodForDiskUsageCheck(2000);
@@ -250,11 +211,11 @@ public class PeriodicDiskUsageLimitTest {
         long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
         long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
 
-        //write a 1 meg file to the file system
-        writeTestFile(1024 * 1024);
+        //write a 2 meg file to the file system
+        writeTestFile(2 * 1024 * 1024);
         Thread.sleep(5000);
 
-        //Assert that the usage limits have not changed because writing a 1 meg file
+        //Assert that the usage limits have not changed because writing a 2 meg file
         //did not decrease the the free space below the already set limit
         assertEquals(originalDisk, broker.getSystemUsage().getStoreUsage().getLimit());
         assertEquals(originalTmp, broker.getSystemUsage().getTempUsage().getLimit());
@@ -290,6 +251,44 @@ public class PeriodicDiskUsageLimitTest {
             assertEquals(originalDisk, broker.getSystemUsage().getStoreUsage().getLimit());
             assertEquals(originalTmp, broker.getSystemUsage().getTempUsage().getLimit());
         }
+    }
+
+    protected void assertRampDown() throws Exception {
+        //Try a couple of times because other processes could write/delete from disk
+        assertTrue("Store Usage should ramp down", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+
+                FileUtils.deleteQuietly(testfile);
+                final long originalDisk = broker.getSystemUsage().getStoreUsage().getLimit();
+                final long originalTmp = broker.getSystemUsage().getTempUsage().getLimit();
+
+                //write a 10 meg file to the file system
+                writeTestFile(10 * 1024 * 1024);
+
+                //Assert that the usage limits have been decreased because some free space was used
+                //up by a file
+                boolean storeUsageRampDown = Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return broker.getSystemUsage().getStoreUsage().getLimit() <  originalDisk;
+                    }
+                }, 12000);
+
+                boolean tempUsageRampDown = false;
+                if (storeUsageRampDown) {
+                    tempUsageRampDown = Wait.waitFor(new Wait.Condition() {
+                        @Override
+                        public boolean isSatisified() throws Exception {
+                            return broker.getSystemUsage().getTempUsage().getLimit() <  originalTmp;
+                        }
+                    }, 12000);
+                }
+
+                return storeUsageRampDown && tempUsageRampDown;
+            }
+        }, 60000));
     }
 
     protected void setLimitMaxSpace() {
