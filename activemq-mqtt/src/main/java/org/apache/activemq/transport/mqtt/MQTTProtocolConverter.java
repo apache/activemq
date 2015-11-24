@@ -623,6 +623,7 @@ public class MQTTProtocolConverter {
                         publish.qos(connect.willQos());
                         publish.messageId(packetIdGenerator.getNextSequenceId(getClientId()));
                         publish.payload(connect.willMessage());
+                        publish.retain(connect.willRetain());
                         ActiveMQMessage message = convertMessage(publish);
                         message.setProducerId(producerId);
                         message.onSend();
