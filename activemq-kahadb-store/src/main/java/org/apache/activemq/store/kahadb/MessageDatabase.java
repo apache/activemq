@@ -446,8 +446,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     checkpointThread.join();
                 }
             }
-            //clear the cache on shutdown of the store
+            //clear the cache and journalSize on shutdown of the store
             storeCache.clear();
+            journalSize.set(0);
         }
     }
 
