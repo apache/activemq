@@ -39,13 +39,18 @@ import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KahaDBSchedulerIndexRebuildTest {
 
     static final Logger LOG = LoggerFactory.getLogger(KahaDBSchedulerIndexRebuildTest.class);
+
+    @Rule
+    public TestName name = new TestName();
 
     private BrokerService broker = null;
     private final int NUM_JOBS = 50;
@@ -60,11 +65,12 @@ public class KahaDBSchedulerIndexRebuildTest {
         }
     }
 
-    private final File schedulerStoreDir = new File(basedir, "activemq-data/store/scheduler");
+    private File schedulerStoreDir;
     private final File storeDir = new File(basedir, "activemq-data/store/");
 
     @Before
     public void setUp() throws Exception {
+        schedulerStoreDir = new File(basedir, "activemq-data/store/scheduler/" + name.getMethodName());
         LOG.info("Test Dir = {}", schedulerStoreDir);
     }
 
