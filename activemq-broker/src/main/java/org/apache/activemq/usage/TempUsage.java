@@ -76,7 +76,7 @@ public class TempUsage extends PercentLimitUsage<TempUsage> {
     protected void updateLimitBasedOnPercent() {
         usageLock.writeLock().lock();
         try {
-            if (percentLimit >= 0 && store != null) {
+            if (percentLimit > 0 && store != null) {
                 File dir = StoreUtil.findParentDirectory(store.getDirectory());
 
                 if (dir != null) {
