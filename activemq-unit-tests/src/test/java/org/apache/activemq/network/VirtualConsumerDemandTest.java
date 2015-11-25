@@ -275,6 +275,56 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
 
     /**
      * Test that dynamic flow works for virtual destinations when a second composite
+     * topic is included that forwards to the same queue, but is excluded from
+     * being forwarded from the remote broker
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 60 * 1000)
+    public void testSecondNonIncludedCompositeTopicForwardSameQueue() throws Exception {
+        Assume.assumeTrue(isUseVirtualDestSubsOnCreation);
+
+        doSetUp(true, null);
+
+        MessageConsumer advisoryConsumer = getVirtualDestinationAdvisoryConsumer(testTopicName);
+
+        //configure a composite topic that isn't included
+        CompositeTopic compositeTopic = createCompositeTopic("include.test.bar2",
+                new ActiveMQQueue("include.test.bar.bridge"));
+
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
+
+        Thread.sleep(2000);
+
+        //add one that is included
+        CompositeTopic compositeTopic2 = createCompositeTopic(testTopicName,
+                new ActiveMQQueue("include.test.bar.bridge"));
+
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic, compositeTopic2}, true);
+
+        Thread.sleep(2000);
+        MessageProducer includedProducer = localSession.createProducer(included);
+        Message test = localSession.createTextMessage("test");
+
+        final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
+        final DestinationStatistics remoteDestStatistics = remoteBroker.getDestination(
+                new ActiveMQQueue("include.test.bar.bridge")).getDestinationStatistics();
+
+        waitForConsumerCount(destinationStatistics, 1);
+
+        includedProducer.send(test);
+
+        waitForDispatchFromLocalBroker(destinationStatistics, 1);
+        assertLocalBrokerStatistics(destinationStatistics, 1);
+        assertEquals("remote dest messages", 1, remoteDestStatistics.getMessages().getCount());
+
+        assertRemoteAdvisoryCount(advisoryConsumer, 1);
+        assertAdvisoryBrokerCounts(2,2,2);
+
+    }
+
+    /**
+     * Test that dynamic flow works for virtual destinations when a second composite
      * topic is included, but is excluded from
      * being forwarded from the remote broker
      *
