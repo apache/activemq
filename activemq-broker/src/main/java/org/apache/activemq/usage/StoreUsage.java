@@ -96,8 +96,7 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
     protected void updateLimitBasedOnPercent() {
         usageLock.writeLock().lock();
         try {
-
-            if (percentLimit > 0 && store != null) {
+            if (percentLimit >= 0 && store != null) {
                 File dir = StoreUtil.findParentDirectory(store.getDirectory());
 
                 if (dir != null) {
