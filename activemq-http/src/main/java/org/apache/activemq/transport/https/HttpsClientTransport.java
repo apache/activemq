@@ -18,25 +18,26 @@
 package org.apache.activemq.transport.https;
 
 import org.apache.activemq.transport.http.HttpClientTransport;
+import org.apache.activemq.transport.http.HttpTransportMarshaller;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.net.URI;
-import java.security.KeyStore;
 
 public class HttpsClientTransport extends HttpClientTransport {
 
-  public HttpsClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
-    super(wireFormat, remoteUrl);
-  }
+    @Deprecated
+    public HttpsClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
+        super(wireFormat, remoteUrl);
+    }
+
+    public HttpsClientTransport(final HttpTransportMarshaller marshaller, URI remoteUrl) {
+        super(marshaller, remoteUrl);
+    }
 
     @Override
     protected ClientConnectionManager createClientConnectionManager() {
