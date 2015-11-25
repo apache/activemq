@@ -762,12 +762,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             for (Long sequenceId : matches) {
                 MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
-                sd.locationIndex.remove(tx, keys.location);
-                sd.messageIdIndex.remove(tx, keys.messageId);
-                metadata.producerSequenceIdTracker.rollback(keys.messageId);
-                undoCounter++;
-                decrementAndSubSizeToStoreStat(key, keys.location.getSize());
-                // TODO: do we need to modify the ack positions for the pub sub case?
+                if (keys != null) {
+                    sd.locationIndex.remove(tx, keys.location);
+                    sd.messageIdIndex.remove(tx, keys.messageId);
+                    metadata.producerSequenceIdTracker.rollback(keys.messageId);
+                    undoCounter++;
+                    decrementAndSubSizeToStoreStat(key, keys.location.getSize());
+                    // TODO: do we need to modify the ack positions for the pub sub case?
+                }
             }
         }
 
