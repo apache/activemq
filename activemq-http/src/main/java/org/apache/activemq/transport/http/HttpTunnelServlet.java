@@ -17,10 +17,8 @@
 package org.apache.activemq.transport.http;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -31,7 +29,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
@@ -41,6 +38,7 @@ import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceListener;
+import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +53,7 @@ public class HttpTunnelServlet extends HttpServlet {
 
     private TransportAcceptListener listener;
     private HttpTransportFactory transportFactory;
-    private TextWireFormat wireFormat;
+    private HttpTransportMarshaller marshaller;
     private ConcurrentMap<String, BlockingQueueTransport> clients = new ConcurrentHashMap<String, BlockingQueueTransport>();
     private final long requestTimeout = 30000L;
     private HashMap<String, Object> transportOptions;
@@ -73,9 +71,14 @@ public class HttpTunnelServlet extends HttpServlet {
             throw new ServletException("No such attribute 'transportFactory' available in the ServletContext");
         }
         transportOptions = (HashMap<String, Object>)getServletContext().getAttribute("transportOptions");
-        wireFormat = (TextWireFormat)getServletContext().getAttribute("wireFormat");
+        WireFormat wireFormat = (WireFormat) getServletContext().getAttribute("wireFormat");
         if (wireFormat == null) {
             wireFormat = createWireFormat();
+        }
+        if (wireFormat instanceof TextWireFormat) {
+            marshaller = new HttpTextWireFormatMarshaller((TextWireFormat)wireFormat);
+        } else {
+            marshaller = new HttpWireFormatMarshaller(wireFormat);
         }
     }
 
@@ -103,8 +106,7 @@ public class HttpTunnelServlet extends HttpServlet {
 
             packet = (Command)transportChannel.getQueue().poll(requestTimeout, TimeUnit.MILLISECONDS);
 
-            DataOutputStream stream = new DataOutputStream(response.getOutputStream());
-            wireFormat.marshal(packet, stream);
+            marshaller.marshal(packet, response.getOutputStream());
             count++;
         } catch (InterruptedException ignore) {
         }
@@ -123,8 +125,7 @@ public class HttpTunnelServlet extends HttpServlet {
             stream = new GZIPInputStream(stream);
         }
 
-        // Read the command directly from the reader, assuming UTF8 encoding
-        Command command = (Command) wireFormat.unmarshalText(new InputStreamReader(stream, "UTF-8"));
+        final Command command = (Command)marshaller.unmarshal(stream);
 
         if (command instanceof WireFormatInfo) {
             WireFormatInfo info = (WireFormatInfo) command;
