@@ -122,6 +122,7 @@ public class VMTransport implements Transport, Task {
                 }
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             InterruptedIOException iioe = new InterruptedIOException(e.getMessage());
             iioe.initCause(e);
             throw iioe;

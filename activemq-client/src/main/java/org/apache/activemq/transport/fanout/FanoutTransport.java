@@ -157,7 +157,7 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
-    public FanoutTransport() throws InterruptedIOException {
+    public FanoutTransport() {
         // Setup a task that is used to reconnect the a connection async.
         reconnectTaskFactory = new TaskRunnerFactory();
         reconnectTaskFactory.init();

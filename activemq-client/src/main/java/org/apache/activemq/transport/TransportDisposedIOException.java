@@ -38,4 +38,8 @@ public class TransportDisposedIOException extends IOException {
         super(message);
     }
 
+    public TransportDisposedIOException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

@@ -629,12 +629,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public void close() throws JMSException {
-        // Store the interrupted state and clear so that cleanup happens without
-        // leaking connection resources.  Reset in finally to preserve state.
-        boolean interrupted = Thread.interrupted();
-
         try {
-
             // If we were running, lets stop first.
             if (!closed.get() && !transportFailed.get()) {
                 // do not fail if already closed as according to JMS spec we must not
@@ -722,9 +717,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             ServiceSupport.dispose(this.transport);
 
             factoryStats.removeConnection(this);
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
         }
     }
 

@@ -318,7 +318,7 @@ public class VMTransportThreadSafeTest {
         // simulate broker stop
         remote.stop();
 
-        assertTrue(Wait.waitFor(new Wait.Condition() {
+        assertTrue("got expected exception response", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("answer: " + answer[0]);

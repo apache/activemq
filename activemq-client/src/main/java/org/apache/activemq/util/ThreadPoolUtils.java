@@ -124,7 +124,11 @@ public final class ThreadPoolUtils {
                     warned = true;
                     LOG.warn("Forcing shutdown of ExecutorService: {} due interrupted.", executorService);
                     // we were interrupted during shutdown, so force shutdown
-                    executorService.shutdownNow();
+                    try {
+                        executorService.shutdownNow();
+                    } finally {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
 

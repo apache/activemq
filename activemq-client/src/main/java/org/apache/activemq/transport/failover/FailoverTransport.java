@@ -130,7 +130,7 @@ public class FailoverTransport implements CompositeTransport {
     private String nestedExtraQueryOptions;
     private boolean shuttingDown = false;
 
-    public FailoverTransport() throws InterruptedIOException {
+    public FailoverTransport() {
         brokerSslContext = SslContext.getCurrentSslContext();
         stateTracker.setTrackTransactions(true);
         // Setup a task that is used to reconnect the a connection async.
