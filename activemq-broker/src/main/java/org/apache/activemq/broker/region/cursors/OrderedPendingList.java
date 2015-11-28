@@ -162,11 +162,7 @@ public class OrderedPendingList implements PendingList {
     @Override
     public boolean contains(MessageReference message) {
         if (message != null) {
-            for (PendingNode value : map.values()) {
-                if (value.getMessage().equals(message)) {
-                    return true;
-                }
-            }
+            return this.map.containsKey(message.getMessageId());
         }
         return false;
     }
