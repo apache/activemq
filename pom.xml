@@ -117,6 +117,7 @@
     <spring-version>4.1.8.RELEASE</spring-version>
     <spring-osgi-version>1.2.1</spring-osgi-version>
     <stax2-api-version>3.0.2</stax2-api-version>
+    <system-rules-version>1.13.0</system-rules-version>
     <velocity-version>1.7</velocity-version>
     <woodstox-core-asl-version>4.2.0</woodstox-core-asl-version>
     <xalan-version>2.7.2</xalan-version>
@@ -993,6 +994,12 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit-version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.github.stefanbirkner</groupId>
+        <artifactId>system-rules</artifactId>
+        <version>${system-rules-version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

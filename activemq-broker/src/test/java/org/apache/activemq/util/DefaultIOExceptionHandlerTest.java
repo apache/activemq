@@ -17,27 +17,43 @@
 
 package org.apache.activemq.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SuppressReplyException;
+import org.junit.Rule;
 import org.junit.Test;
-
-
-import static org.junit.Assert.*;
+import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import org.junit.contrib.java.lang.system.internal.NoExitSecurityManager;
 
 public class DefaultIOExceptionHandlerTest {
 
+    @Rule
+    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
+
     DefaultIOExceptionHandler underTest = new DefaultIOExceptionHandler();
 
-    @Test
+    @Test(timeout=20000)
     public void testHandleWithShutdownOnExit() throws Exception {
+        exit.expectSystemExit();
         doTest(true);
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return ((NoExitSecurityManager)System.getSecurityManager()).isCheckExitCalled();
+            }
+        }, 10000));
+
     }
 
-    @Test
+    @Test(timeout=20000)
     public void testHandleWithOutShutdownOnExit() throws Exception {
         doTest(false);
     }
