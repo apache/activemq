@@ -33,6 +33,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.MessageDatabase;
+import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -103,6 +105,9 @@ public class TransactedStoreUsageSuspendResumeTest {
     @Before
     public void setup() throws Exception {
 
+        // investigate liner gc issue - store usage not getting released
+        org.apache.log4j.Logger.getLogger(MessageDatabase.class).setLevel(Level.TRACE);
+
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(true);
@@ -141,8 +146,13 @@ public class TransactedStoreUsageSuspendResumeTest {
         sendExecutor.shutdown();
         sendExecutor.awaitTermination(5, TimeUnit.MINUTES);
 
-        boolean allMessagesReceived = messagesReceivedCountDown.await(10, TimeUnit.MINUTES);
+        boolean allMessagesReceived = messagesReceivedCountDown.await(5, TimeUnit.MINUTES);
         if (!allMessagesReceived) {
+            LOG.info("Giving up - not all received on time...");
+            LOG.info("System Mem Usage: " + broker.getSystemUsage().getMemoryUsage());
+            LOG.info("System Store Usage: " +broker.getSystemUsage().getStoreUsage());
+            LOG.info("Producer sent: " + messagesSentCountDown.getCount());
+            LOG.info("Consumer remaining to receive: " + messagesReceivedCountDown.getCount());
             TestSupport.dumpAllThreads("StuckConsumer!");
         }
         assertTrue("Got all messages: " + messagesReceivedCountDown, allMessagesReceived);
