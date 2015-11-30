@@ -52,6 +52,8 @@ public class DefaultIOExceptionHandlerTest {
             public void stop() throws Exception {
                 shutdownOnExitSet.set(isSystemExitOnShutdown());
                 stopCalled.countDown();
+                // ensure we don't actually exit the jvm
+                setSystemExitOnShutdown(false);
                 super.stop();
             }
         });

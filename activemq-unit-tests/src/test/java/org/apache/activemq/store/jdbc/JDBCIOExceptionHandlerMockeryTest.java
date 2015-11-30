@@ -67,6 +67,7 @@ public class JDBCIOExceptionHandlerMockeryTest {
         context.checking(new Expectations() {{
             allowing(brokerService).isRestartAllowed();
             will(returnValue(false));
+            allowing(brokerService).setSystemExitOnShutdown(with(false));
             allowing(brokerService).stopAllConnectors(with(any(ServiceStopper.class)));
             allowing(brokerService).getPersistenceAdapter();
             will(returnValue(jdbcPersistenceAdapter));
