@@ -156,10 +156,9 @@ public class PrioritizedPendingList implements PendingList {
 
     @Override
     public boolean contains(MessageReference message) {
-        if (map.values().contains(message)) {
-            return true;
+        if (message != null) {
+            return this.map.containsKey(message.getMessageId());
         }
-
         return false;
     }
 
