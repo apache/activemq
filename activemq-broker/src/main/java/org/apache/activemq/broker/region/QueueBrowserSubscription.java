@@ -18,9 +18,9 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.jms.JMSException;
 
@@ -42,7 +42,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
     boolean browseDone;
     boolean destinationsAdded;
 
-    private final Map<MessageId, Object> audit = new HashMap<MessageId, Object>();
+    private final ConcurrentMap<MessageId, Object> audit = new ConcurrentHashMap<MessageId, Object>();
     private long maxMessages;
 
     public QueueBrowserSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws JMSException {
@@ -67,13 +67,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
     }
 
     public boolean isDuplicate(MessageId messageId) {
-
-        if (!audit.containsKey(messageId)) {
-            audit.put(messageId, Boolean.TRUE);
-            return false;
-        }
-
-        return true;
+        return audit.putIfAbsent(messageId, Boolean.TRUE) != null;
     }
 
     private void checkDone() throws Exception {
