@@ -152,6 +152,7 @@ public class AdvisoryTests {
         //This should always be tcp:// because that is the transport that is used to connect even though
         //the nio transport is the first one in the list
         assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
+        assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) queue).getQualifiedName());
 
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
@@ -187,6 +188,7 @@ public class AdvisoryTests {
         //This should always be tcp:// because that is the transport that is used to connect even though
         //the nio transport is the first one in the list
         assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
+        assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) queue).getQualifiedName());
 
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
@@ -259,10 +261,9 @@ public class AdvisoryTests {
         // we should get here without StackOverflow
     }
 
-    @Ignore
     @Test(timeout = 60000)
     public void testMessageDiscardedAdvisory() throws Exception {
-        Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session s = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         Topic topic = s.createTopic(getClass().getName());
         MessageConsumer consumer = s.createConsumer(topic);
         assertNotNull(consumer);
@@ -285,6 +286,7 @@ public class AdvisoryTests {
 
         //This should be set
         assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
+        assertEquals(message.getProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION), ((ActiveMQDestination) topic).getQualifiedName());
 
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
