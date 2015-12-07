@@ -74,6 +74,10 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         }
     }
 
+    protected Session getConnection() {
+        return connection;
+    }
+
     //----- Connection and Disconnection methods -----------------------------//
 
     public void connect() throws Exception {
