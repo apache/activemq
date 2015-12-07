@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.ws;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -28,6 +29,7 @@ import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.After;
 import org.junit.Before;
@@ -51,10 +53,14 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         super.setUp();
         wsStompConnection = new StompWSConnection();
 
+
+        ClientUpgradeRequest request = new ClientUpgradeRequest();
+        request.setSubProtocols("v11.stomp");
+
         wsClient = new WebSocketClient(new SslContextFactory(true));
         wsClient.start();
 
-        wsClient.connect(wsStompConnection, wsConnectUri);
+        wsClient.connect(wsStompConnection, wsConnectUri, request);
         if (!wsStompConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to STOMP WS endpoint");
         }
@@ -86,6 +92,7 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
         assertNotNull(incoming);
         assertTrue(incoming.startsWith("CONNECTED"));
+        assertEquals("v11.stomp", wsStompConnection.getConnection().getUpgradeResponse().getAcceptedSubProtocol());
 
         assertTrue("Connection should close", Wait.waitFor(new Wait.Condition() {
 

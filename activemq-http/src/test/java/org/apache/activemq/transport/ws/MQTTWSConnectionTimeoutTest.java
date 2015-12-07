@@ -41,17 +41,13 @@ public class MQTTWSConnectionTimeoutTest extends WSTransportTestSupport {
         super.setUp();
         wsMQTTConnection = new MQTTWSConnection();
 
-       // WebSocketClientFactory clientFactory = new WebSocketClientFactory();
-        //clientFactory.start();
-
         wsClient = new WebSocketClient();
         wsClient.start();
 
         ClientUpgradeRequest request = new ClientUpgradeRequest();
-        request.setSubProtocols("mqtt");
+        request.setSubProtocols("mqttv3.1");
 
         wsClient.connect(wsMQTTConnection, wsConnectUri, request);
-        //wsClient.setProtocol("mqttv3.1");
 
         if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to MQTT WS endpoint");
