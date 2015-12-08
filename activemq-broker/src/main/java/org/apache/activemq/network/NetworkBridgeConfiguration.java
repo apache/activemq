@@ -466,6 +466,14 @@ public class NetworkBridgeConfiguration {
         this.checkDuplicateMessagesOnDuplex = checkDuplicateMessagesOnDuplex;
     }
 
+    public boolean isUseVirtualDestSubs() {
+        return useVirtualDestSubs;
+    }
+
+    /**
+     * This was a typo, so this is deprecated as of 5.13.1
+     */
+    @Deprecated
     public boolean isUseVirtualDestSus() {
         return useVirtualDestSubs;
     }

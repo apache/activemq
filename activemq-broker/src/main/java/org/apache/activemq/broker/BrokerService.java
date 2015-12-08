@@ -208,7 +208,7 @@ public class BrokerService implements Service {
      */
     private boolean useVirtualDestSubs = false;
     /**
-     * Whether or no the creation of destinations that match virtual destinations
+     * Whether or not the creation of destinations that match virtual destinations
      * should cause network demand
      */
     private boolean useVirtualDestSubsOnCreation = false;
