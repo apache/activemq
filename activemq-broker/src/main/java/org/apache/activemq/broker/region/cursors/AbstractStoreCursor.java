@@ -97,9 +97,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
         boolean recovered = false;
+        message.setRegionDestination(regionDestination);
         if (recordUniqueId(message.getMessageId())) {
             if (!cached) {
-                message.setRegionDestination(regionDestination);
                 if( message.getMemoryUsage()==null ) {
                     message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
                 }
