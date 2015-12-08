@@ -66,6 +66,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionIdTransformer;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.kahadb.MessageDatabase.Metadata;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
 import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
@@ -192,8 +193,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         this.maxAsyncJobs = maxAsyncJobs;
     }
 
+
     @Override
-    public void doStart() throws Exception {
+    protected void configureMetadata() {
         if (brokerService != null) {
             metadata.openwireVersion = brokerService.getStoreOpenWireVersion();
             wireFormat.setVersion(metadata.openwireVersion);
@@ -203,6 +205,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             }
 
         }
+    }
+
+    @Override
+    public void doStart() throws Exception {
+        //configure the metadata before start, right now
+        //this is just the open wire version
+        configureMetadata();
+
         super.doStart();
 
         if (brokerService != null) {

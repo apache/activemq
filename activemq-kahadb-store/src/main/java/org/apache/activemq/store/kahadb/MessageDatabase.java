@@ -399,6 +399,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     pageFile.delete();
                 }
                 metadata = createMetadata();
+                //The metadata was recreated after a detect corruption so we need to
+                //reconfigure anything that was configured on the old metadata on startup
+                configureMetadata();
                 pageFile = null;
                 loadPageFile();
             }
@@ -2726,6 +2729,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         md.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(getMaxFailoverProducersToTrack());
         return md;
     }
+
+    protected abstract void configureMetadata();
 
     public int getJournalMaxWriteBatchSize() {
         return journalMaxWriteBatchSize;
