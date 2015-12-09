@@ -108,7 +108,7 @@ public class AMQ4212Test {
     }
 
     @Test
-    public void testDirableSubPrefetchRecovered() throws Exception {
+    public void testDurableSubPrefetchRecovered() throws Exception {
 
         ActiveMQQueue queue = new ActiveMQQueue("MyQueue");
         ActiveMQTopic topic = new ActiveMQTopic("MyDurableTopic");

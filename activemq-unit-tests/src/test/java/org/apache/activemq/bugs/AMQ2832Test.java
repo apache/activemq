@@ -20,7 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -131,35 +133,62 @@ public class AMQ2832Test {
     */
     @Test
     public void testAckChain() throws Exception {
-       startBroker();
+        startBroker();
 
-       StagedConsumer consumer = new StagedConsumer();
-       // file #1
-       produceMessagesToConsumeMultipleDataFiles(5);
-       // acknowledge first 2 messages and leave the 3rd one unacknowledged blocking db-1.log
-       consumer.receive(3);
+        makeAckChain();
 
-       // send messages by consuming and acknowledging every message right after sent in order to get KahadbAdd and Remove command to be saved together
-       // this is necessary in order to get KahaAddMessageCommand to be saved in one db file and the corresponding KahaRemoveMessageCommand in the next one
-       produceAndConsumeImmediately(20, consumer);
-       consumer.receive(2).acknowledge(); // consume and ack the last 2 unconsumed
+        broker.stop();
+        broker.waitUntilStopped();
 
-       // now we have 3 files written and started with #4
-       consumer.close();
+        recoverBroker();
 
-       broker.stop();
-       broker.waitUntilStopped();
+        StagedConsumer consumer = new StagedConsumer();
+        Message message = consumer.receive(1);
+        assertNotNull("One message stays unacked from db-1.log", message);
+        message.acknowledge();
+        message = consumer.receive(1);
+        assertNull("There should not be any unconsumed messages any more", message);
+        consumer.close();
+    }
 
-       recoverBroker();
+    private void makeAckChain() throws Exception {
+        StagedConsumer consumer = new StagedConsumer();
+        // file #1
+        produceMessagesToConsumeMultipleDataFiles(5);
+        // acknowledge first 2 messages and leave the 3rd one unacknowledged blocking db-1.log
+        consumer.receive(3);
 
-       consumer = new StagedConsumer();
-       Message message = consumer.receive(1);
-       assertNotNull("One message stays unacked from db-1.log", message);
-       message.acknowledge();
-       message = consumer.receive(1);
-       assertNull("There should not be any unconsumed messages any more", message);
-       consumer.close();
-   }
+        // send messages by consuming and acknowledging every message right after sent in order to get KahadbAdd and Remove command to be saved together
+        // this is necessary in order to get KahaAddMessageCommand to be saved in one db file and the corresponding KahaRemoveMessageCommand in the next one
+        produceAndConsumeImmediately(20, consumer);
+        consumer.receive(2).acknowledge(); // consume and ack the last 2 unconsumed
+
+        // now we have 3 files written and started with #4
+        consumer.close();
+    }
+
+    @Test
+    public void testNoRestartOnMissingAckDataFile() throws Exception {
+        startBroker();
+
+        // reuse scenario from previous test
+        makeAckChain();
+
+        File dataDir = broker.getPersistenceAdapter().getDirectory();
+        broker.stop();
+        broker.waitUntilStopped();
+
+        File secondLastDataFile = new File(dataDir, "db-3.log");
+        LOG.info("Whacking data file with acks: " + secondLastDataFile);
+        secondLastDataFile.delete();
+
+        try {
+            doStartBroker(false, false);
+            fail("Expect failure to start with corrupt journal");
+        } catch (IOException expected) {
+        }
+    }
+
 
    private void produceAndConsumeImmediately(int numOfMsgs, StagedConsumer consumer) throws Exception {
       for (int i = 0; i < numOfMsgs; i++) {
