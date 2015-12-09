@@ -18,6 +18,8 @@ package org.apache.activemq.store.kahadb;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +42,7 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +56,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
     private BrokerService broker = null;
     private String connectionUri;
     private KahaDBPersistenceAdapter adapter;
+    private boolean ignoreMissingJournalFiles = false;
 
     private final Destination destination = new ActiveMQQueue("Test");
     private final String KAHADB_DIRECTORY = "target/activemq-data/";
@@ -118,7 +122,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         adapter.setCleanupInterval(5000);
 
         adapter.setCheckForCorruptJournalFiles(true);
-        adapter.setIgnoreMissingJournalfiles(true);
+        adapter.setIgnoreMissingJournalfiles(ignoreMissingJournalFiles);
 
         adapter.setPreallocationStrategy("zeros");
         adapter.setPreallocationScope("entire_journal");
@@ -129,6 +133,32 @@ public class JournalCorruptionEofIndexRecoveryTest {
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
+        }
+    }
+
+    @Before
+    public void reset() throws Exception {
+        ignoreMissingJournalFiles = true;
+    }
+
+    @Test
+    public void testNoRestartOnCorruptJournal() throws Exception {
+        ignoreMissingJournalFiles = false;
+
+        startBroker();
+
+        produceMessagesToConsumeMultipleDataFiles(50);
+
+        int numFiles = getNumberOfJournalFiles();
+
+        assertTrue("more than x files: " + numFiles, numFiles > 2);
+
+        corruptBatchEndEof(3);
+
+        try {
+            restartBroker(true);
+            fail("Expect failure to start with corrupt journal");
+        } catch (Exception expected) {
         }
     }
 

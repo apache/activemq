@@ -825,14 +825,21 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         while (!ss.isEmpty()) {
             missingJournalFiles.add((int) ss.removeFirst());
         }
-        missingJournalFiles.removeAll(journal.getFileMap().keySet());
 
-        if (!missingJournalFiles.isEmpty()) {
-            if (LOG.isInfoEnabled()) {
-                LOG.info("Some journal files are missing: " + missingJournalFiles);
+        for (Entry<Integer, Set<Integer>> entry : metadata.ackMessageFileMap.entrySet()) {
+            missingJournalFiles.add(entry.getKey());
+            for (Integer i : entry.getValue()) {
+                missingJournalFiles.add(i);
             }
         }
 
+        missingJournalFiles.removeAll(journal.getFileMap().keySet());
+
+        if (!missingJournalFiles.isEmpty()) {
+            LOG.warn("Some journal files are missing: " + missingJournalFiles);
+        }
+
+        ArrayList<BTreeVisitor.Predicate<Location>> knownCorruption = new ArrayList<BTreeVisitor.Predicate<Location>>();
         ArrayList<BTreeVisitor.Predicate<Location>> missingPredicates = new ArrayList<BTreeVisitor.Predicate<Location>>();
         for (Integer missing : missingJournalFiles) {
             missingPredicates.add(new BTreeVisitor.BetweenVisitor<Location, Long>(new Location(missing, 0), new Location(missing + 1, 0)));
@@ -842,10 +849,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             Collection<DataFile> dataFiles = journal.getFileMap().values();
             for (DataFile dataFile : dataFiles) {
                 int id = dataFile.getDataFileId();
+                // eof to next file id
                 missingPredicates.add(new BTreeVisitor.BetweenVisitor<Location, Long>(new Location(id, dataFile.getLength()), new Location(id + 1, 0)));
                 Sequence seq = dataFile.getCorruptedBlocks().getHead();
                 while (seq != null) {
-                    missingPredicates.add(new BTreeVisitor.BetweenVisitor<Location, Long>(new Location(id, (int) seq.getFirst()), new Location(id, (int) seq.getLast() + 1)));
+                    BTreeVisitor.BetweenVisitor visitor = new BTreeVisitor.BetweenVisitor<Location, Long>(new Location(id, (int) seq.getFirst()), new Location(id, (int) seq.getLast() + 1));
+                    missingPredicates.add(visitor);
+                    knownCorruption.add(visitor);
                     seq = seq.getNext();
                 }
             }
@@ -862,7 +872,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     }
                 });
 
-                // If somes message references are affected by the missing data files...
+                // If some message references are affected by the missing data files...
                 if (!matches.isEmpty()) {
 
                     // We either 'gracefully' recover dropping the missing messages or
@@ -879,9 +889,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             // TODO: do we need to modify the ack positions for the pub sub case?
                         }
                     } else {
-                        throw new IOException("Detected missing/corrupt journal files. "+matches.size()+" messages affected.");
+                        LOG.error("[" + sdEntry.getKey() + "] references corrupt locations. " + matches.size() + " messages affected.");
+                        throw new IOException("Detected missing/corrupt journal files referenced by:[" + sdEntry.getKey() + "] " +matches.size()+" messages affected.");
                     }
                 }
+            }
+        }
+
+        if (!ignoreMissingJournalfiles) {
+            if (!knownCorruption.isEmpty()) {
+                LOG.error("Detected corrupt journal files. " + knownCorruption);
+                throw new IOException("Detected corrupt journal files. " + knownCorruption);
+            }
+
+            if (!missingJournalFiles.isEmpty()) {
+                LOG.error("Detected missing journal files. " + missingJournalFiles);
+                throw new IOException("Detected missing journal files. " + missingJournalFiles);
             }
         }
 
@@ -1714,6 +1737,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             // check we are not deleting file with ack for in-use journal files
             if (LOG.isTraceEnabled()) {
                 LOG.trace("gc candidates: " + gcCandidateSet);
+                LOG.trace("ackMessageFileMap: " +  metadata.ackMessageFileMap);
             }
             Iterator<Integer> candidates = gcCandidateSet.iterator();
             while (candidates.hasNext()) {
@@ -1743,6 +1767,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     LOG.debug("Cleanup removing the data files: " + gcCandidateSet);
                 }
                 journal.removeDataFiles(gcCandidateSet);
+                boolean ackMessageFileMapMod = false;
+                for (Integer candidate : gcCandidateSet) {
+                    for (Set<Integer> ackFiles : metadata.ackMessageFileMap.values()) {
+                        ackMessageFileMapMod |= ackFiles.remove(candidate);
+                    }
+                }
+                if (ackMessageFileMapMod) {
+                    checkpointUpdate(tx, false);
+                }
             }
         }
 
