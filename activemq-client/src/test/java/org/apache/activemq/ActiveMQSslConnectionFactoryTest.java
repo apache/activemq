@@ -63,17 +63,17 @@ public class ActiveMQSslConnectionFactoryTest {
         executeTest(SSL_TRANSPORT, TRUST_STORE_RESOURCE_PREFIX + TRUST_STORE_FILE_NAME + ".dummy");
     }
 
-    @Test(expected = ConnectException.class)
+    @Test(expected = IOException.class)
     public void validTrustStoreFileFailoverTest() throws Throwable {
         executeTest(FAILOVER_SSL_TRANSPORT, TRUST_STORE_DIRECTORY_NAME + TRUST_STORE_FILE_NAME);
     }
 
-    @Test(expected = ConnectException.class)
+    @Test(expected = IOException.class)
     public void validTrustStoreURLFailoverTest() throws Throwable {
         executeTest(FAILOVER_SSL_TRANSPORT, new File(TRUST_STORE_DIRECTORY_NAME + TRUST_STORE_FILE_NAME).toURI().toString());
     }
 
-    @Test(expected = ConnectException.class)
+    @Test(expected = IOException.class)
     public void validTrustStoreResourceFailoverTest() throws Throwable {
         executeTest(FAILOVER_SSL_TRANSPORT, TRUST_STORE_RESOURCE_PREFIX + TRUST_STORE_FILE_NAME);
     }
