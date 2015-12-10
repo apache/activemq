@@ -665,6 +665,19 @@ public class BrokerService implements Service {
         }
         getPersistenceAdapter().start();
 
+        getTempDataStore();
+        if (tempDataStore != null) {
+            try {
+                // start after we have the store lock
+                tempDataStore.start();
+            } catch (Exception e) {
+                RuntimeException exception = new RuntimeException(
+                        "Failed to start temp data store: " + tempDataStore, e);
+                LOG.error(exception.getLocalizedMessage(), e);
+                throw exception;
+            }
+        }
+
         getJobSchedulerStore();
         if (jobSchedulerStore != null) {
             try {
@@ -1717,32 +1730,11 @@ public class BrokerService implements Service {
                 throw new RuntimeException(e);
             }
 
-            boolean result = true;
-            boolean empty = true;
             try {
-                File directory = getTmpDataDirectory();
-                if (directory.exists() && directory.isDirectory()) {
-                    File[] files = directory.listFiles();
-                    if (files != null && files.length > 0) {
-                        empty = false;
-                        for (int i = 0; i < files.length; i++) {
-                            File file = files[i];
-                            if (!file.isDirectory()) {
-                                result &= file.delete();
-                            }
-                        }
-                    }
-                }
-                if (!empty) {
-                    String str = result ? "Successfully deleted" : "Failed to delete";
-                    LOG.info("{} temporary storage", str);
-                }
-
                 String clazz = "org.apache.activemq.store.kahadb.plist.PListStoreImpl";
                 this.tempDataStore = (PListStore) getClass().getClassLoader().loadClass(clazz).newInstance();
                 this.tempDataStore.setDirectory(getTmpDataDirectory());
                 configureService(tempDataStore);
-                this.tempDataStore.start();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -1757,13 +1749,6 @@ public class BrokerService implements Service {
     public void setTempDataStore(PListStore tempDataStore) {
         this.tempDataStore = tempDataStore;
         configureService(tempDataStore);
-        try {
-            tempDataStore.start();
-        } catch (Exception e) {
-            RuntimeException exception = new RuntimeException("Failed to start provided temp data store: " + tempDataStore, e);
-            LOG.error(exception.getLocalizedMessage(), e);
-            throw exception;
-        }
     }
 
     public int getPersistenceThreadPriority() {

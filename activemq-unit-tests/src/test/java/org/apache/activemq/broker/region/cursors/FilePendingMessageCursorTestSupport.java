@@ -39,7 +39,7 @@ public class FilePendingMessageCursorTestSupport {
     @After
     public void stopBroker() throws Exception {
         if (brokerService != null) {
-            brokerService.getTempDataStore().stop();
+            brokerService.stop();
         }
     }
 
@@ -48,6 +48,7 @@ public class FilePendingMessageCursorTestSupport {
         brokerService.setUseJmx(false);
         SystemUsage usage = brokerService.getSystemUsage();
         usage.getTempUsage().setLimit(1025*1024*15);
+        brokerService.start();
 
         // put something in the temp store to on demand initialise it
         PList dud = brokerService.getTempDataStore().getPList("dud");
