@@ -17,9 +17,12 @@
 package org.apache.activemq.usage;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 
 import java.io.File;
 
+import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.StoreUtil;
@@ -117,6 +120,21 @@ public class PercentDiskUsageLimitTest {
             //assert the disk limit is the same as the usable space
             //within 1 mb
             assertEquals(diskLimit, storeDir.getUsableSpace(), 1000000);
+        }
+    }
+
+    @Test(timeout=30000)
+    public void testStartFailDiskLimitOverMaxFree() throws Exception {
+        broker.setAdjustUsageLimits(false);
+        int freePercent = getFreePercentage();
+
+        if (freePercent > 1) {
+            storeUsage.setPercentLimit(freePercent + 1);
+
+            try {
+                startBroker();
+                fail("Expect ex");
+            } catch (ConfigurationException expected) {}
         }
     }
 
