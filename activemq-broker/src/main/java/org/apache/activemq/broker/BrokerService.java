@@ -243,6 +243,7 @@ public class BrokerService implements Service {
     private int maxPurgedDestinationsPerSweep = 0;
     private int schedulePeriodForDiskUsageCheck = 0;
     private int diskUsageCheckRegrowThreshold = -1;
+    private boolean adjustUsageLimits = true;
     private BrokerContext brokerContext;
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
@@ -591,6 +592,7 @@ public class BrokerService implements Service {
         MDC.put("activemq.broker", brokerName);
 
         try {
+            checkMemorySystemUsageLimits();
             if (systemExitOnShutdown && useShutdownHook) {
                 throw new ConfigurationException("'useShutdownHook' property cannot be be used with 'systemExitOnShutdown', please turn it off (useShutdownHook=false)");
             }
@@ -740,7 +742,7 @@ public class BrokerService implements Service {
         LOG.info("For help or more information please see: http://activemq.apache.org");
 
         getBroker().brokerServiceStarted();
-        checkSystemUsageLimits();
+        checkStoreSystemUsageLimits();
         startedLatch.countDown();
         getBroker().nowMasterBroker();
     }
@@ -1973,7 +1975,7 @@ public class BrokerService implements Service {
      * Check that the store usage limit is not greater than max usable
      * space and adjust if it is
      */
-    protected void checkStoreUsageLimits() throws IOException {
+    protected void checkStoreUsageLimits() throws Exception {
         final SystemUsage usage = getSystemUsage();
 
         if (getPersistenceAdapter() != null) {
@@ -2001,7 +2003,7 @@ public class BrokerService implements Service {
      * Check that temporary usage limit is not greater than max usable
      * space and adjust if it is
      */
-    protected void checkTmpStoreUsageLimits() throws IOException {
+    protected void checkTmpStoreUsageLimits() throws Exception {
         final SystemUsage usage = getSystemUsage();
 
         File tmpDir = getTmpDataDirectory();
@@ -2030,7 +2032,7 @@ public class BrokerService implements Service {
         }
     }
 
-    protected void checkUsageLimit(File dir, Usage<?> storeUsage, int percentLimit) {
+    protected void checkUsageLimit(File dir, Usage<?> storeUsage, int percentLimit) throws ConfigurationException {
         if (dir != null) {
             dir = StoreUtil.findParentDirectory(dir);
             String storeName = storeUsage instanceof StoreUsage ? "Store" : "Temporary Store";
@@ -2064,6 +2066,17 @@ public class BrokerService implements Service {
 
             //check if the limit is too large for the amount of usable space
             } else if (storeLimit > totalUsableSpace) {
+                final String message = storeName + " limit is " +  storeLimit / oneMeg
+                        + " mb (current store usage is " + storeCurrent / oneMeg
+                        + " mb). The data directory: " + dir.getAbsolutePath()
+                        + " only has " + totalUsableSpace / oneMeg
+                        + " mb of usable space.";
+
+                if (!isAdjustUsageLimits()) {
+                    LOG.error(message);
+                    throw new ConfigurationException(message);
+                }
+
                 if (percentLimit > 0) {
                     LOG.warn(storeName + " limit has been set to "
                             + percentLimit + "% (" + bytePercentLimit / oneMeg + " mb)"
@@ -2072,14 +2085,10 @@ public class BrokerService implements Service {
                             + " previous usage limit check) is set to (" + storeLimit / oneMeg + " mb)"
                             + " but only " + totalUsableSpace * 100 / totalSpace + "% (" + totalUsableSpace / oneMeg + " mb)"
                             + " is available - resetting limit");
+                } else {
+                    LOG.warn(message + " - resetting to maximum available disk space: " +
+                            totalUsableSpace / oneMeg + " mb");
                 }
-
-                LOG.warn(storeName + " limit is " +  storeLimit / oneMeg +
-                         " mb (current store usage is " + storeCurrent / oneMeg +
-                         " mb). The data directory: " + dir.getAbsolutePath() +
-                         " only has " + totalUsableSpace / oneMeg +
-                         " mb of usable space - resetting to maximum available disk space: " +
-                         totalUsableSpace / oneMeg + " mb");
                 storeUsage.setLimit(totalUsableSpace);
             }
         }
@@ -2098,13 +2107,13 @@ public class BrokerService implements Service {
                 public void run() {
                     try {
                         checkStoreUsageLimits();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         LOG.error("Failed to check persistent disk usage limits", e);
                     }
 
                     try {
                         checkTmpStoreUsageLimits();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         LOG.error("Failed to check temporary store usage limits", e);
                     }
                 }
@@ -2113,17 +2122,27 @@ public class BrokerService implements Service {
         }
     }
 
-    protected void checkSystemUsageLimits() throws IOException {
+    protected void checkMemorySystemUsageLimits() throws Exception {
         final SystemUsage usage = getSystemUsage();
         long memLimit = usage.getMemoryUsage().getLimit();
         long jvmLimit = Runtime.getRuntime().maxMemory();
 
         if (memLimit > jvmLimit) {
-            usage.getMemoryUsage().setPercentOfJvmHeap(70);
-            LOG.warn("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
-                    " mb) is more than the maximum available for the JVM: " +
-                    jvmLimit / (1024 * 1024) + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
+            final String message = "Memory Usage for the Broker (" + memLimit / (1024 * 1024)
+                    + "mb) is more than the maximum available for the JVM: " + jvmLimit / (1024 * 1024);
+
+            if (adjustUsageLimits) {
+                usage.getMemoryUsage().setPercentOfJvmHeap(70);
+                LOG.warn(message + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
+            } else {
+                LOG.error(message);
+                throw new ConfigurationException(message);
+            }
         }
+    }
+
+    protected void checkStoreSystemUsageLimits() throws Exception {
+        final SystemUsage usage = getSystemUsage();
 
         //Check the persistent store and temp store limits if they exist
         //and schedule a periodic check to update disk limits if
@@ -3167,5 +3186,13 @@ public class BrokerService implements Service {
     public void setUseVirtualDestSubsOnCreation(
             boolean useVirtualDestSubsOnCreation) {
         this.useVirtualDestSubsOnCreation = useVirtualDestSubsOnCreation;
+    }
+
+    public boolean isAdjustUsageLimits() {
+        return adjustUsageLimits;
+    }
+
+    public void setAdjustUsageLimits(boolean adjustUsageLimits) {
+        this.adjustUsageLimits = adjustUsageLimits;
     }
 }
