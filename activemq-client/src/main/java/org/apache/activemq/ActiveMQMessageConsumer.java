@@ -924,7 +924,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         registerSync();
         MessageAck ack = new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
         ack.setTransactionId(session.getTransactionContext().getTransactionId());
-        session.syncSendPacket(ack);
+        session.sendAck(ack);
     }
 
     private void afterMessageIsConsumed(MessageDispatch md, boolean messageExpired) throws JMSException {
