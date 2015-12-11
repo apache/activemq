@@ -286,12 +286,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
             // Message could have expired while it was being
             // loaded..
+            message.setRegionDestination(Queue.this);
             if (message.isExpired() && broker.isExpired(message)) {
                 toExpire.add(message);
                 return true;
             }
             if (hasSpace()) {
-                message.setRegionDestination(Queue.this);
                 messagesLock.writeLock().lock();
                 try {
                     try {
