@@ -772,7 +772,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     private void handleFireFailure(String message, Throwable cause) {
         LOG.warn("Failed to fire {} advisory, reason: {}", message, cause);
-        LOG.debug("{} detail: {}", message, cause);
+        LOG.debug("{} detail: {}", message, cause, cause);
     }
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
