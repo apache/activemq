@@ -111,7 +111,7 @@ public class LockFile {
 
     /**
      */
-    public void unlock() {
+    synchronized public void unlock() {
         if (DISABLE_FILE_LOCK) {
             return;
         }
