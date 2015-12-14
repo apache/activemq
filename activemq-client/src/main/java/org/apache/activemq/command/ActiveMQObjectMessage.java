@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -65,15 +67,18 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMessage {
 
-    // TODO: verify classloader
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_OBJECT_MESSAGE;
-    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader();
+
+    private List<String> trustedPackages = new ArrayList<String>();
+    private boolean trustAllPackages = false;
 
     protected transient Serializable object;
 
     public Message copy() {
         ActiveMQObjectMessage copy = new ActiveMQObjectMessage();
         copy(copy);
+        copy.setTrustAllPackages(trustAllPackages);
+        copy.setTrustedPackages(trustedPackages);
         return copy;
     }
 
@@ -187,6 +192,8 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                 }
                 DataInputStream dataIn = new DataInputStream(is);
                 ClassLoadingAwareObjectInputStream objIn = new ClassLoadingAwareObjectInputStream(dataIn);
+                objIn.setTrustedPackages(trustedPackages);
+                objIn.setTrustAllPackages(trustAllPackages);
                 try {
                     object = (Serializable)objIn.readObject();
                 } catch (ClassNotFoundException ce) {
@@ -233,5 +240,21 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         } catch (JMSException e) {
         }
         return super.toString();
+    }
+
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
+    public void setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+    }
+
+    public boolean isTrustAllPackages() {
+        return trustAllPackages;
+    }
+
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        this.trustAllPackages = trustAllPackages;
     }
 }

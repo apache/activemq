@@ -21,9 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.RejectedExecutionHandler;
 
 import javax.jms.Connection;
@@ -183,6 +181,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected int xaAckMode = -1; // ensure default init before setting via brokerUrl introspection in sub class
     private boolean rmIdFromConnectionId = false;
     private boolean consumerExpiryCheckEnabled = true;
+    private List<String> trustedPackages = new ArrayList<String>();
+    private boolean trustAllPackages = false;
 
     // /////////////////////////////////////////////
     //
@@ -422,6 +422,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
         connection.setRmIdFromConnectionId(isRmIdFromConnectionId());
         connection.setConsumerExpiryCheckEnabled(isConsumerExpiryCheckEnabled());
+        connection.setTrustedPackages(getTrustedPackages());
+        connection.setTrustAllPackages(isTrustAllPackages());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -1259,5 +1261,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setConsumerExpiryCheckEnabled(boolean consumerExpiryCheckEnabled) {
         this.consumerExpiryCheckEnabled = consumerExpiryCheckEnabled;
+    }
+
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
+    public void setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+    }
+
+    public boolean isTrustAllPackages() {
+        return trustAllPackages;
+    }
+
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        this.trustAllPackages = trustAllPackages;
     }
 }

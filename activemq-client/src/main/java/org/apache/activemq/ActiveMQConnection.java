@@ -19,9 +19,7 @@ package org.apache.activemq;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -205,6 +203,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     private int maxThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private RejectedExecutionHandler rejectedTaskHandler = null;
+
+    private List<String> trustedPackages = new ArrayList<String>();
+    private boolean trustAllPackages = false;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -2584,5 +2585,21 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setConsumerExpiryCheckEnabled(boolean consumerExpiryCheckEnabled) {
         this.consumerExpiryCheckEnabled = consumerExpiryCheckEnabled;
+    }
+
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
+    public void setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+    }
+
+    public boolean isTrustAllPackages() {
+        return trustAllPackages;
+    }
+
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        this.trustAllPackages = trustAllPackages;
     }
 }
