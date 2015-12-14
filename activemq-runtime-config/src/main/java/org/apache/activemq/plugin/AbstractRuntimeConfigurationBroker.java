@@ -143,11 +143,11 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
-    protected void debug(String s) {
+    public void debug(String s) {
         LOG.debug(s);
     }
 
-    protected void info(String s) {
+    public void info(String s) {
         LOG.info(filterPasswords(s));
         if (infoString != null) {
             infoString += s;
@@ -155,7 +155,7 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
-    protected void info(String s, Throwable t) {
+    public void info(String s, Throwable t) {
         LOG.info(filterPasswords(s), t);
         if (infoString != null) {
             infoString += s;

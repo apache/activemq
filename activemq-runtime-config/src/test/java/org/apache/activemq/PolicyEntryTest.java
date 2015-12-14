@@ -17,6 +17,7 @@
 package org.apache.activemq;
 
 import javax.jms.Session;
+
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.junit.Test;
@@ -60,6 +61,43 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
 
         // change to existing dest
         verifyTopicLimit("Before", 2048l);
+    }
+
+    @Test
+    public void testModParentPolicy() throws Exception {
+        final String brokerConfig = configurationSeed + "-policy-ml-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-parent");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        verifyQueueLimit("queue.test", 1024);
+        verifyQueueLimit("queue.child.test", 2048);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-parent-mod", SLEEP);
+        verifyQueueLimit("queue.test2", 4194304);
+
+        // change to existing dest
+        verifyQueueLimit("queue.test", 4194304);
+        //verify no change
+        verifyQueueLimit("queue.child.test", 2048);
+    }
+
+    @Test
+    public void testModChildPolicy() throws Exception {
+        final String brokerConfig = configurationSeed + "-policy-ml-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-parent");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        verifyQueueLimit("queue.test", 1024);
+        verifyQueueLimit("queue.child.test", 2048);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-child-mod", SLEEP);
+        //verify no change
+        verifyQueueLimit("queue.test", 1024);
+
+        // change to existing dest
+        verifyQueueLimit("queue.child.test", 4194304);
+        //new dest change
+        verifyQueueLimit("queue.child.test2", 4194304);
     }
 
     private void verifyQueueLimit(String dest, int memoryLimit) throws Exception {
