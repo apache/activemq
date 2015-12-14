@@ -46,6 +46,7 @@ import javax.management.OperationsException;
 import javax.management.QueryExp;
 import javax.management.ReflectionException;
 import javax.management.loading.ClassLoaderRepository;
+import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerStoppedException;
 import org.junit.Test;
@@ -286,6 +287,7 @@ public class StartAndConcurrentStopBrokerTest {
                     broker.getManagementContext().setMBeanServer(mBeanServer);
                     broker.start();
                 } catch (BrokerStoppedException expected) {
+                } catch (ConfigurationException expected) {
                 } catch (Exception e) {
                     e.printStackTrace();
                     error.set(e);
@@ -330,6 +332,7 @@ public class StartAndConcurrentStopBrokerTest {
                     brokerTwo.getManagementContext().setMBeanServer(mBeanServer);
                     brokerTwo.start();
                 } catch (BrokerStoppedException expected) {
+                } catch (ConfigurationException expected) {
                 } catch (Exception e) {
                     e.printStackTrace();
                     error.set(e);
