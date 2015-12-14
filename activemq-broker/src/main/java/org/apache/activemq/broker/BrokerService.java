@@ -658,13 +658,18 @@ public class BrokerService implements Service {
     }
 
     private void doStartPersistenceAdapter() throws Exception {
-        getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
-        getPersistenceAdapter().setBrokerName(getBrokerName());
-        LOG.info("Using Persistence Adapter: {}", getPersistenceAdapter());
+        PersistenceAdapter persistenceAdapterToStart = getPersistenceAdapter();
+        if (persistenceAdapterToStart == null) {
+            checkStartException();
+            throw new ConfigurationException("Cannot start null persistence adapter");
+        }
+        persistenceAdapterToStart.setUsageManager(getProducerSystemUsage());
+        persistenceAdapterToStart.setBrokerName(getBrokerName());
+        LOG.info("Using Persistence Adapter: {}", persistenceAdapterToStart);
         if (deleteAllMessagesOnStartup) {
             deleteAllMessages();
         }
-        getPersistenceAdapter().start();
+        persistenceAdapterToStart.start();
 
         getTempDataStore();
         if (tempDataStore != null) {
