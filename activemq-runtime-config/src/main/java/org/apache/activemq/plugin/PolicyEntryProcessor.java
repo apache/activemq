@@ -16,15 +16,13 @@
  */
 package org.apache.activemq.plugin;
 
-import org.apache.activemq.broker.region.*;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-
-import java.util.Set;
+import org.apache.activemq.plugin.util.PolicyEntryUtil;
 
 public class PolicyEntryProcessor extends DefaultConfigurationProcessor {
 
-    public PolicyEntryProcessor(RuntimeConfigurationBroker plugin, Class configurationClass) {
+    public PolicyEntryProcessor(RuntimeConfigurationBroker plugin, Class<?> configurationClass) {
         super(plugin, configurationClass);
     }
 
@@ -39,33 +37,22 @@ public class PolicyEntryProcessor extends DefaultConfigurationProcessor {
 
     @Override
     public void modify(Object existing, Object candidate) {
-        PolicyMap existingMap = plugin.getBrokerService().getDestinationPolicy();
-
         PolicyEntry updatedEntry = fromDto(candidate, new PolicyEntry());
 
-        Set existingEntry = existingMap.get(updatedEntry.getDestination());
-        if (existingEntry.size() == 1) {
-            updatedEntry = fromDto(candidate, (PolicyEntry) existingEntry.iterator().next());
+        //Look up an existing entry that matches the candidate
+        //First just look up by the destination type to see if anything matches
+        PolicyEntry existingEntry = PolicyEntryUtil.findEntryByDestination(plugin, updatedEntry);
+        if (existingEntry != null) {
+            //if found, update the policy and apply the updates to existing destinations
+            updatedEntry = fromDto(candidate, existingEntry);
             applyRetrospectively(updatedEntry);
             plugin.info("updated policy for: " + updatedEntry.getDestination());
         } else {
-            plugin.info("cannot modify policy matching multiple destinations: " + existingEntry + ", destination:" + updatedEntry.getDestination());
+            plugin.info("cannot find policy entry candidate to update: " + updatedEntry + ", destination:" + updatedEntry.getDestination());
         }
     }
 
     protected void applyRetrospectively(PolicyEntry updatedEntry) {
-        RegionBroker regionBroker = (RegionBroker) plugin.getBrokerService().getRegionBroker();
-        for (Destination destination : regionBroker.getDestinations(updatedEntry.getDestination())) {
-            Destination target = destination;
-            if (destination instanceof DestinationFilter) {
-                target = ((DestinationFilter)destination).getNext();
-            }
-            if (target.getActiveMQDestination().isQueue()) {
-                updatedEntry.update((Queue) target);
-            } else if (target.getActiveMQDestination().isTopic()) {
-                updatedEntry.update((Topic) target);
-            }
-            plugin.debug("applied update to:" + target);
-        }
+        PolicyEntryUtil.applyRetrospectively(plugin, updatedEntry);
     }
 }
