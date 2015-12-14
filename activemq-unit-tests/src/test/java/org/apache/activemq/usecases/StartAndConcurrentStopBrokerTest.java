@@ -23,6 +23,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
@@ -51,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -61,7 +64,11 @@ public class StartAndConcurrentStopBrokerTest {
     @Test(timeout = 30000)
     public void testConcurrentStop() throws Exception {
 
+        final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
         final CountDownLatch gotBrokerMbean = new CountDownLatch(1);
+        final CountDownLatch gotPaMBean = new CountDownLatch(1);
+        final AtomicBoolean checkPaMBean = new AtomicBoolean(false);
+
         final HashMap mbeans = new HashMap();
         final MBeanServer mBeanServer = new MBeanServer() {
             @Override
@@ -87,7 +94,7 @@ public class StartAndConcurrentStopBrokerTest {
             @Override
             public ObjectInstance registerMBean(Object object, ObjectName name) throws InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException {
                 if (mbeans.containsKey(name)) {
-                    throw new InstanceAlreadyExistsException("Got one already");
+                    throw new InstanceAlreadyExistsException("Got one already: " + name);
                 }
                 LOG.info("register:" + name);
 
@@ -95,8 +102,16 @@ public class StartAndConcurrentStopBrokerTest {
                     if (name.compareTo(new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost")) == 0) {
                         gotBrokerMbean.countDown();
                     }
+
+                    if (checkPaMBean.get()) {
+                        if (new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,service=PersistenceAdapter,instanceName=*").apply(name)) {
+                            gotPaMBean.countDown();
+                        }
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
+                    error.set(e);
                 }
                 mbeans.put(name, object);
                 return new ObjectInstance(name, object.getClass().getName());
@@ -261,6 +276,7 @@ public class StartAndConcurrentStopBrokerTest {
 
 
         final BrokerService broker = new BrokerService();
+        broker.setDeleteAllMessagesOnStartup(true);
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
         executor.execute(new Runnable() {
@@ -272,6 +288,7 @@ public class StartAndConcurrentStopBrokerTest {
                 } catch (BrokerStoppedException expected) {
                 } catch (Exception e) {
                     e.printStackTrace();
+                    error.set(e);
                 }
             }
         });
@@ -285,6 +302,7 @@ public class StartAndConcurrentStopBrokerTest {
                     broker.stop();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    error.set(e);
                 }
             }
         });
@@ -292,10 +310,57 @@ public class StartAndConcurrentStopBrokerTest {
         executor.shutdown();
         assertTrue("stop tasks done", executor.awaitTermination(20, TimeUnit.SECONDS));
 
-        BrokerService second = new BrokerService();
-        second.getManagementContext().setMBeanServer(mBeanServer);
-        second.start();
-        second.stop();
+        BrokerService sanityBroker = new BrokerService();
+        sanityBroker.getManagementContext().setMBeanServer(mBeanServer);
+        sanityBroker.start();
+        sanityBroker.stop();
+
+        assertNull("No error", error.get());
+
+        // again, after Persistence adapter mbean
+        final BrokerService brokerTwo = new BrokerService();
+        broker.setDeleteAllMessagesOnStartup(true);
+
+        checkPaMBean.set(true);
+        executor = Executors.newFixedThreadPool(4);
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    brokerTwo.getManagementContext().setMBeanServer(mBeanServer);
+                    brokerTwo.start();
+                } catch (BrokerStoppedException expected) {
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    error.set(e);
+                }
+            }
+        });
+
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    assertTrue("broker has registered persistence adapter mbean", gotPaMBean.await(10, TimeUnit.SECONDS));
+                    brokerTwo.stop();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    error.set(e);
+                }
+            }
+        });
+
+        executor.shutdown();
+        assertTrue("stop tasks done", executor.awaitTermination(20, TimeUnit.SECONDS));
+
+        assertTrue("broker has registered persistence adapter mbean", gotPaMBean.await(0, TimeUnit.SECONDS));
+
+        sanityBroker = new BrokerService();
+        sanityBroker.getManagementContext().setMBeanServer(mBeanServer);
+        sanityBroker.start();
+        sanityBroker.stop();
+
+        assertNull("No error", error.get());
 
     }
 
