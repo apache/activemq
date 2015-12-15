@@ -58,8 +58,12 @@ public class ObjectMessageTest extends CamelSpringTestSupport {
         assertCorrectObjectReceived(resultTrusted);
 
         MockEndpoint resultCamel = resolveMandatoryEndpoint("mock:result-camel", MockEndpoint.class);
-        resultCamel.expectedMessageCount(0);
-        resultCamel.assertIsSatisfied(1, TimeUnit.SECONDS);
+        resultCamel.expectedMessageCount(1);
+        resultCamel.assertIsNotSatisfied();
+
+        MockEndpoint resultEmpty = resolveMandatoryEndpoint("mock:result-empty", MockEndpoint.class);
+        resultEmpty.expectedMessageCount(1);
+        resultEmpty.assertIsNotSatisfied();
 
     }
 

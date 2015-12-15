@@ -32,6 +32,10 @@
             <to uri="mock:result-camel"/>
         </route>
         <route>
+            <from uri="activemq-empty:topic:foo"/>
+            <to uri="mock:result-empty"/>
+        </route>
+        <route>
             <from uri="activemq-trusted:topic:foo"/>
             <to uri="mock:result-trusted"/>
         </route>
@@ -73,6 +77,25 @@
 
     <bean id="activemq-activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
         <property name="configuration" ref="activemqConfig"/>
+    </bean>
+
+    <!-- configuration for activemq-empty endpoint -->
+
+    <bean id="emptyConnectionFactory" class="org.apache.activemq.spring.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="vm://localhost?broker.persistent=false"/>
+        <property name="trustedPackages">
+            <list>
+                <value></value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="emptyConfig" class="org.apache.camel.component.jms.JmsConfiguration">
+        <property name="connectionFactory" ref="emptyConnectionFactory"/>
+    </bean>
+
+    <bean id="activemq-empty" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="emptyConfig"/>
     </bean>
 
     <!-- configuration for activemq-trusted endpoint -->
