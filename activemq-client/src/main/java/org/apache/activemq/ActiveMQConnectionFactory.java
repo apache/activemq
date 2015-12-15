@@ -43,10 +43,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
-import org.apache.activemq.util.IdGenerator;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.JMSExceptionSupport;
-import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.*;
 import org.apache.activemq.util.URISupport.CompositeData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,7 +177,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected int xaAckMode = -1; // ensure default init before setting via brokerUrl introspection in sub class
     private boolean rmIdFromConnectionId = false;
     private boolean consumerExpiryCheckEnabled = true;
-    private List<String> trustedPackages = new ArrayList<String>();
+    private List<String> trustedPackages = Arrays.asList(ClassLoadingAwareObjectInputStream.serializablePackages);
     private boolean trustAllPackages = false;
 
     // /////////////////////////////////////////////

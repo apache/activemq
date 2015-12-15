@@ -25,6 +25,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -69,7 +70,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_OBJECT_MESSAGE;
 
-    private List<String> trustedPackages = new ArrayList<String>();
+    private List<String> trustedPackages = Arrays.asList(ClassLoadingAwareObjectInputStream.serializablePackages);
     private boolean trustAllPackages = false;
 
     protected transient Serializable object;
