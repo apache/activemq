@@ -17,7 +17,6 @@
 package org.apache.activemq.command;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +29,7 @@ import org.apache.activemq.state.CommandVisitor;
  * @openwire:marshaller code="5"
  *
  */
-public class ConsumerInfo extends BaseCommand {
+public class ConsumerInfo extends BaseCommand implements TransientInitializer {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.CONSUMER_INFO;
 
@@ -527,6 +526,7 @@ public class ConsumerInfo extends BaseCommand {
         return result;
     }
 
+    @Override
     public void initTransients() {
         assignedGroupCount = new ConcurrentHashMap<>();
         lastDeliveredSequenceId = RemoveInfo.LAST_DELIVERED_UNSET;
