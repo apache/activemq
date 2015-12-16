@@ -17,6 +17,8 @@
 package org.apache.activemq.plugin.java;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -133,7 +135,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
     public void addNewPolicyEntry(PolicyEntry addition) {
         PolicyMap existingMap = getBrokerService().getDestinationPolicy();
         existingMap.put(addition.getDestination(), addition);
-        applyRetrospectively(addition);
+        PolicyEntryUtil.applyRetrospectively(this, addition, null);
         info("added policy for: " + addition.getDestination());
     }
 
@@ -156,6 +158,10 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
         modifyPolicyEntry(existing, false);
     }
 
+    public void modifyPolicyEntry(PolicyEntry existing, boolean createOrReplace) {
+        modifyPolicyEntry(existing, createOrReplace, null);
+    }
+
     /**
      * This method will modify an existing policy entry that matches the destination
      * set on the PolicyEntry passed in.  If createOrReplace is true, a new policy
@@ -165,10 +171,16 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
      * If createOrReplace is false, the policy update will only be applied if
      * the PolicyEntry reference already exists in the PolicyMap.
      *
+     * includedProperties is a list of properties that will be applied retrospectively. If
+     * the list is null, then all properties on the policy will be reapplied to the destination.
+     * This allows the ability to limit which properties are applied to existing destinations.
+     *
      * @param existing
      * @param createIfAbsent
+     * @param includedProperties - optional list of properties to apply retrospectively
      */
-    public void modifyPolicyEntry(PolicyEntry existing, boolean createOrReplace) {
+    public void modifyPolicyEntry(PolicyEntry existing, boolean createOrReplace,
+            Set<String> includedProperties) {
         PolicyMap existingMap = this.getBrokerService().getDestinationPolicy();
 
         //First just look up by the destination type to see if anything matches
@@ -194,7 +206,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
         //Make sure that at this point the passed in object and the entry in
         //the map are the same
         if (existingEntry != null && existingEntry.equals(existing)) {
-            applyRetrospectively(existingEntry);
+            PolicyEntryUtil.applyRetrospectively(this, existingEntry, includedProperties);
             this.info("updated policy for: " + existingEntry.getDestination());
         } else {
             throw new IllegalArgumentException("The policy can not be updated because it either does not exist or the PolicyEntry"
@@ -202,10 +214,6 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
                     + " entry (versus modifying) or add, set createOrReplace to true. "
                     + existing + ", destination:" + existing.getDestination());
         }
-    }
-
-    protected void applyRetrospectively(PolicyEntry updatedEntry) {
-        PolicyEntryUtil.applyRetrospectively(this, updatedEntry);
     }
 
     //authentication plugin

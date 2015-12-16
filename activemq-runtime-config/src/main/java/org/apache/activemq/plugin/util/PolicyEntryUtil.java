@@ -16,8 +16,10 @@
  */
 package org.apache.activemq.plugin.util;
 
+import java.util.List;
 import java.util.Set;
 
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.Queue;
@@ -67,7 +69,27 @@ public class PolicyEntryUtil {
      * @param runtimeBroker
      * @param updatedEntry
      */
-    public static void applyRetrospectively(AbstractRuntimeConfigurationBroker runtimeBroker, PolicyEntry updatedEntry) {
+    public static void applyRetrospectively(AbstractRuntimeConfigurationBroker runtimeBroker,
+            PolicyEntry updatedEntry) {
+        PolicyEntryUtil.applyRetrospectively(runtimeBroker, updatedEntry, null);
+    }
+
+    /**
+     *
+     * Utility to properly apply an updated policy entry to all existing destinations that
+     * match this entry.  The destination will only be updated if the policy is the exact
+     * policy (most specific) that matches the destination.
+     *
+     * The includedProperties List is optional and is used to specify a list of properties
+     * to apply retrospectively to the matching destinations. This allows only certain properties
+     * to be reapplied.  If the list is null then all properties will be applied.
+     *
+     * @param runtimeBroker
+     * @param updatedEntry
+     * @param includedProperties
+     */
+    public static void applyRetrospectively(AbstractRuntimeConfigurationBroker runtimeBroker,
+            PolicyEntry updatedEntry, Set<String> includedProperties) {
         RegionBroker regionBroker = (RegionBroker) runtimeBroker.getBrokerService().getRegionBroker();
         for (Destination destination : regionBroker.getDestinations(updatedEntry.getDestination())) {
             //Look up the policy that applies to the destination
@@ -78,13 +100,15 @@ public class PolicyEntryUtil {
             //currently just an identity check which is what we want
             if (updatedEntry.equals(specificyPolicy)){
                 Destination target = destination;
-                if (destination instanceof DestinationFilter) {
-                    target = ((DestinationFilter)destination).getNext();
+                while (target instanceof DestinationFilter) {
+                    target = ((DestinationFilter)target).getNext();
                 }
+                //If we are providing a list of properties to set then use them
+                //to set eligible properties that are in the includedProperties list
                 if (target.getActiveMQDestination().isQueue()) {
-                    updatedEntry.update((Queue) target);
+                    updatedEntry.update((Queue) target, includedProperties);
                 } else if (target.getActiveMQDestination().isTopic()) {
-                    updatedEntry.update((Topic) target);
+                    updatedEntry.update((Topic) target, includedProperties);
                 }
                 runtimeBroker.debug("applied update to:" + target);
             }
