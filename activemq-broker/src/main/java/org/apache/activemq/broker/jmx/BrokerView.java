@@ -41,12 +41,12 @@ import org.apache.activemq.util.BrokerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class BrokerView implements BrokerViewMBean {
+
     private static final Logger LOG = LoggerFactory.getLogger(BrokerView.class);
+
     ManagedRegionBroker broker;
+
     private final BrokerService brokerService;
     private final AtomicInteger sessionIdCounter = new AtomicInteger(0);
     private ObjectName jmsJobScheduler;
@@ -130,8 +130,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval)
-            throws Exception {
+    public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval) throws Exception {
         brokerService.stopGracefully(connectorName, queueName, timeout, pollInterval);
     }
 
@@ -216,12 +215,12 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public long getTempLimit() {
-       return brokerService.getSystemUsage().getTempUsage().getLimit();
+        return brokerService.getSystemUsage().getTempUsage().getLimit();
     }
 
     @Override
     public int getTempPercentUsage() {
-       return brokerService.getSystemUsage().getTempUsage().getPercentUsage();
+        return brokerService.getSystemUsage().getTempUsage().getPercentUsage();
     }
 
     @Override
@@ -397,12 +396,14 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public void addTopic(String name) throws Exception {
-        safeGetBroker().getContextBroker().addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQTopic(name),true);
+        safeGetBroker().getContextBroker()
+            .addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQTopic(name), true);
     }
 
     @Override
     public void addQueue(String name) throws Exception {
-        safeGetBroker().getContextBroker().addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQQueue(name),true);
+        safeGetBroker().getContextBroker()
+            .addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQQueue(name), true);
     }
 
     @Override
@@ -416,8 +417,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName,
-                                              String selector) throws Exception {
+    public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception {
         ConnectionContext context = getConnectionContext();
         context.setBroker(safeGetBroker());
         context.setClientId(clientId);
@@ -455,7 +455,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    public  Map<String, String> getTransportConnectors() {
+    public Map<String, String> getTransportConnectors() {
         Map<String, String> answer = new HashMap<String, String>();
         try {
             for (TransportConnector connector : brokerService.getTransportConnectors()) {
@@ -473,46 +473,6 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    @Deprecated
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    public String getOpenWireURL() {
-        String answer = brokerService.getTransportConnectorURIsAsMap().get("tcp");
-        return answer != null ? answer : "";
-    }
-
-    @Override
-    @Deprecated
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    public String getStompURL() {
-        String answer = brokerService.getTransportConnectorURIsAsMap().get("stomp");
-        return answer != null ? answer : "";
-    }
-
-    @Override
-    @Deprecated
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    public String getSslURL() {
-        String answer = brokerService.getTransportConnectorURIsAsMap().get("ssl");
-        return answer != null ? answer : "";
-    }
-
-    @Override
-    @Deprecated
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    public String getStompSslURL() {
-        String answer = brokerService.getTransportConnectorURIsAsMap().get("stomp+ssl");
-        return answer != null ? answer : "";
-    }
-
-    @Override
     public String getVMURL() {
         URI answer = brokerService.getVmConnectorURI();
         return answer != null ? answer.toString() : "";
@@ -522,7 +482,7 @@ public class BrokerView implements BrokerViewMBean {
     public String getDataDirectory() {
         File file = brokerService.getDataDirectoryFile();
         try {
-            return file != null ? file.getCanonicalPath():"";
+            return file != null ? file.getCanonicalPath() : "";
         } catch (IOException e) {
             return "";
         }
@@ -534,7 +494,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public void setJMSJobScheduler(ObjectName name) {
-        this.jmsJobScheduler=name;
+        this.jmsJobScheduler = name;
     }
 
     @Override
@@ -552,15 +512,15 @@ public class BrokerView implements BrokerViewMBean {
 
     private ConnectionContext getConnectionContext() {
         ConnectionContext context;
-        if(broker == null) {
+        if (broker == null) {
             context = new ConnectionContext();
-
-        }
-        else {
+        } else {
             ConnectionContext sharedContext = BrokerSupport.getConnectionContext(broker.getContextBroker());
-            //Make a local copy of the sharedContext. We do this because we do not want to set a clientId on the
-            //global sharedContext. Taking a copy of the sharedContext is a good way to make sure that we are not
-            //messing up the shared context
+            // Make a local copy of the sharedContext. We do this because we do
+            // not want to set a clientId on the
+            // global sharedContext. Taking a copy of the sharedContext is a
+            // good way to make sure that we are not
+            // messing up the shared context
             context = sharedContext.copy();
         }
 
