@@ -20,19 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
 
-import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.store.AbstractMessageStoreSizeTest;
 import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.MessageStoreStatistics;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.kahadb.MessageDatabase.StoredDestination;
-import org.apache.activemq.store.kahadb.disk.journal.Location;
-import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.store.kahadb.disk.util.LocationMarshaller;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
