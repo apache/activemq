@@ -16,9 +16,18 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.kahadb.MessageDatabase.MessageKeys;
+import org.apache.activemq.store.kahadb.MessageDatabase.StoredDestination;
+import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.junit.Test;
 
 /**
  * This test is for AMQ-5748 to verify that {@link MessageStore} implements correctly
@@ -37,6 +46,41 @@ public class KahaDBMessageStoreSizeTest extends AbstractKahaDBMessageStoreSizeTe
         kahaDBStore.start();
         messageStore = store.createQueueMessageStore(destination);
         messageStore.start();
+    }
+
+    /**
+     * Make sure that the sizes stored in the KahaDB location index are the same as in
+     * the message order index.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testLocationIndexMatchesOrderIndex() throws Exception {
+        final KahaDBStore kahaDbStore = (KahaDBStore) store;
+        writeMessages();
+
+        //Iterate over the order index and add up the size of the messages to compare
+        //to the location index
+        kahaDbStore.indexLock.readLock().lock();
+        try {
+            long size = kahaDbStore.pageFile.tx().execute(new Transaction.CallableClosure<Long, IOException>() {
+                @Override
+                public Long execute(Transaction tx) throws IOException {
+                    long size = 0;
+
+                    // Iterate through all index entries to get the size of each message
+                    StoredDestination sd = kahaDbStore.getStoredDestination(kahaDbStore.convert(destination), tx);
+                    for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext();) {
+                        size += iterator.next().getValue().location.getSize();
+                    }
+                   return size;
+                }
+            });
+            assertEquals("Order index size values don't match message size",
+                    size, messageStore.getMessageSize());
+        } finally {
+            kahaDbStore.indexLock.readLock().unlock();
+        }
     }
 
     @Override
