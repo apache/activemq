@@ -91,7 +91,7 @@ public class VirtualTopicInterceptor extends DestinationFilter {
                             public void run() {
                                 try {
                                     if (exceptionAtomicReference.get() == null) {
-                                        dest.send(context, message.copy());
+                                        dest.send(context, copy(message, dest.getActiveMQDestination()));
                                     }
                                 } catch (Exception e) {
                                     exceptionAtomicReference.set(e);
@@ -112,13 +112,20 @@ public class VirtualTopicInterceptor extends DestinationFilter {
             } else {
                 for (final Destination dest : destinations) {
                     if (shouldDispatch(broker, message, dest)) {
-                        dest.send(context, message.copy());
+                        dest.send(context, copy(message, dest.getActiveMQDestination()));
                     }
                 }
             }
         } finally {
             commit(localBrokerTransactionToCoalesceJournalSync, context.getConnectionContext(), message);
         }
+    }
+
+    private Message copy(Message original, ActiveMQDestination target) {
+        Message msg = original.copy();
+        msg.setDestination(target);
+        msg.setOriginalDestination(original.getDestination());
+        return msg;
     }
 
     private LocalTransactionId beginLocalTransaction(int numDestinations, ConnectionContext connectionContext, Message message) throws Exception {
