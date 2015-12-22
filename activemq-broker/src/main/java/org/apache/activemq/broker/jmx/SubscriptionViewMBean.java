@@ -45,13 +45,6 @@ public interface SubscriptionViewMBean {
     /**
      * @return the id of the Subscription
      */
-    @Deprecated
-    @MBeanInfo("ID of the Subscription.")
-    long getSubcriptionId();
-
-    /**
-     * @return the id of the Subscription
-     */
     @MBeanInfo("ID of the Subscription.")
     long getSubscriptionId();
 
@@ -186,14 +179,6 @@ public interface SubscriptionViewMBean {
      * @return the name of the consumer which is only used for durable
      *         consumers.
      */
-    @Deprecated
-    @MBeanInfo("The name of the subscription (durable subscriptions only).")
-    String getSubcriptionName();
-
-    /**
-     * @return the name of the consumer which is only used for durable
-     *         consumers.
-     */
     @MBeanInfo("The name of the subscription (durable subscriptions only).")
     String getSubscriptionName();
 
@@ -240,7 +225,6 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("ObjectName of the Connection that created this Subscription")
     ObjectName getConnection();
-
 
     @MBeanInfo("Resets statistics.")
     void resetStatistics();
