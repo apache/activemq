@@ -16,10 +16,8 @@
  */
 package org.apache.activemq.plugin.util;
 
-import java.util.List;
 import java.util.Set;
 
-import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.Queue;

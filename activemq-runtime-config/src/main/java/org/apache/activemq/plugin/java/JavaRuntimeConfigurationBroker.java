@@ -17,7 +17,6 @@
 package org.apache.activemq.plugin.java;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.activemq.broker.Broker;
