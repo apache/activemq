@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.filter;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -201,12 +202,18 @@ public class DestinationMap {
      * @return the largest matching value or null if no value matches
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object chooseValue(ActiveMQDestination destination) {
+    public Object chooseValue(final ActiveMQDestination destination) {
         Set set = get(destination);
         if (set == null || set.isEmpty()) {
             return null;
         }
-        SortedSet sortedSet = new TreeSet(set);
+        SortedSet sortedSet = new TreeSet(new Comparator<DestinationMapEntry>() {
+            @Override
+            public int compare(DestinationMapEntry entry1, DestinationMapEntry entry2) {
+                return destination.equals(entry1.destination) ? -1 : (destination.equals(entry2.destination) ? 1 : entry1.compareTo(entry2));
+            }
+        });
+        sortedSet.addAll(set);
         return sortedSet.first();
     }
 

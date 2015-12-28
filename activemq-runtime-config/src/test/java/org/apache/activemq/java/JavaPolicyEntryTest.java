@@ -407,6 +407,57 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
     }
 
     @Test
+    public void testModWithMultipleChildPolicies() throws Exception {
+        BrokerService brokerService = new BrokerService();
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry entry = new PolicyEntry();
+        entry.setQueue("queue.>");
+        entry.setMemoryLimit(1024);
+        PolicyEntry entry2 = new PolicyEntry();
+        entry2.setQueue("queue.child.>");
+        entry2.setMemoryLimit(2048);
+        PolicyEntry entry3 = new PolicyEntry();
+        entry3.setQueue("queue.child.test");
+        entry3.setMemoryLimit(5000);
+        PolicyEntry entry4 = new PolicyEntry();
+        entry4.setQueue("queue.child.test.test");
+        entry4.setMemoryLimit(5100);
+        PolicyEntry entry5 = new PolicyEntry();
+        entry5.setQueue("queue.child.a");
+        entry5.setMemoryLimit(5200);
+        policyMap.setPolicyEntries(Arrays.asList(entry, entry2, entry3, entry4, entry5));
+        brokerService.setDestinationPolicy(policyMap);
+
+        startBroker(brokerService);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        brokerService.getBroker().addDestination(
+                brokerService.getAdminConnectionContext(), new ActiveMQQueue("queue.child.>"), false);
+        brokerService.getBroker().addDestination(
+                brokerService.getAdminConnectionContext(), new ActiveMQQueue("queue.test"), false);
+        brokerService.getBroker().addDestination(
+                brokerService.getAdminConnectionContext(), new ActiveMQQueue("queue.child.test2"), false);
+
+        //check destinations before policy updates
+        verifyQueueLimit("queue.test", 1024);
+        verifyQueueLimit("queue.child.test2", 2048);
+
+        //Reapply new limit to policy 2
+        entry3.setMemoryLimit(4194304);
+        javaConfigBroker.modifyPolicyEntry(entry);
+        TimeUnit.SECONDS.sleep(SLEEP);
+
+        //should be unchanged
+        verifyQueueLimit("queue.child.>", 2048);
+
+        //verify new dest and existing are changed
+        verifyQueueLimit("queue.child.test", 4194304);
+
+        //verify that destination at a higher level policy is not affected
+        verifyQueueLimit("queue.test", 1024);
+    }
+
+    @Test
     public void testModParentPolicy() throws Exception {
         BrokerService brokerService = new BrokerService();
         PolicyMap policyMap = new PolicyMap();
