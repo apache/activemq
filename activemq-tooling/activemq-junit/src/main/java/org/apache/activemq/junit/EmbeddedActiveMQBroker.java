@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,6 +50,14 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
     }
 
     /**
+     * Customize the configuration of the embedded ActiveMQ broker
+     *
+     * This method is called before the embedded ActiveMQ broker is started, and can
+     * be overridden to this method to customize the broker configuration.
+     */
+    protected void configure() {}
+
+    /**
      * Start the embedded ActiveMQ broker, blocking until the broker has successfully started.
      * <p/>
      * The broker will normally be started by JUnit using the before() method.  This method allows the broker to
@@ -57,6 +65,7 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
      */
     public void start() {
         try {
+            this.configure();
             brokerService.start();
         } catch (Exception ex) {
             throw new RuntimeException("Exception encountered starting embedded ActiveMQ broker: {}" + this.getBrokerName(), ex);
