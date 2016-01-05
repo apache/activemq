@@ -701,6 +701,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                     }
 
                                     if (!isBrowser()) {
+                                        node.decrementReferenceCount();
                                         continue;
                                     }
                                 }
