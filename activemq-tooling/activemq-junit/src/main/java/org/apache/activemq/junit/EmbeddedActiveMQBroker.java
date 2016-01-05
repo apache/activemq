@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.junit;
 
+import java.net.URI;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
@@ -39,7 +42,13 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
     BrokerService brokerService;
 
     /**
-     * Create an embedded ActiveMQ broker with the default broker name
+     * Create an embedded ActiveMQ broker using defaults
+     *
+     * The defaults are:
+     *  - the broker name is 'embedded-broker'
+     *  - JMX is disabled
+     *  - Persistence is disabled
+     *
      */
     public EmbeddedActiveMQBroker() {
         brokerService = new BrokerService();
@@ -47,6 +56,28 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
         brokerService.setUseShutdownHook(false);
         brokerService.setPersistent(false);
         brokerService.setBrokerName("embedded-broker");
+    }
+
+    /**
+     * Create an embedded ActiveMQ broker using a configuration URI
+     */
+    public EmbeddedActiveMQBroker(String configurationURI ) {
+        try {
+            brokerService = BrokerFactory.createBroker(configurationURI);
+        } catch (Exception ex) {
+            throw new RuntimeException("Exception encountered creating embedded ActiveMQ broker from configuration URI: " + configurationURI, ex);
+        }
+    }
+
+    /**
+     * Create an embedded ActiveMQ broker using a configuration URI
+     */
+    public EmbeddedActiveMQBroker(URI configurationURI ) {
+        try {
+            brokerService = BrokerFactory.createBroker(configurationURI);
+        } catch (Exception ex) {
+            throw new RuntimeException("Exception encountered creating embedded ActiveMQ broker from configuration URI: " + configurationURI, ex);
+        }
     }
 
     /**
