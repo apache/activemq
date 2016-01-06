@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +26,11 @@ import javax.jms.JMSException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 import junit.framework.Test;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.TransactionContext;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.PersistenceAdapterViewMBean;
@@ -101,6 +107,16 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNotNull(response);
         dar = (DataArrayResponse)response;
         assertEquals(4, dar.getData().length);
+
+        // verify XAResource scan loop
+        XAResource transactionContextXAResource = new TransactionContext(ActiveMQConnection.makeConnection(broker.getVmConnectorURI().toString()));
+        LinkedList<Xid> tracked = new LinkedList<Xid>();
+        Xid[] recoveryXids = transactionContextXAResource.recover(XAResource.TMSTARTRSCAN);
+        while (recoveryXids.length > 0) {
+            tracked.addAll(Arrays.asList(recoveryXids));
+            recoveryXids = transactionContextXAResource.recover(XAResource.TMNOFLAGS);
+        }
+        assertEquals("got 4 via scan loop", 4, tracked.size());
 
         // validate destination depth via jmx
         DestinationViewMBean destinationView = getProxyToDestination(destinationList(destination)[0]);

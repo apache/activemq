@@ -672,26 +672,32 @@ public class TransactionContext implements XAResource {
     @Override
     public Xid[] recover(int flag) throws XAException {
         LOG.debug("recover({})", flag);
+        XATransactionId[] answer;
 
-        TransactionInfo info = new TransactionInfo(getConnectionId(), null, TransactionInfo.RECOVER);
-        try {
-            this.connection.checkClosedOrFailed();
-            this.connection.ensureConnectionInfoSent();
+        if (XAResource.TMNOFLAGS == flag) {
+            // signal next in cursor scan, which for us is always the end b/c we don't maintain any cursor state
+            // allows looping scan to complete
+            answer = new XATransactionId[0];
+        } else {
+            TransactionInfo info = new TransactionInfo(getConnectionId(), null, TransactionInfo.RECOVER);
+            try {
+                this.connection.checkClosedOrFailed();
+                this.connection.ensureConnectionInfoSent();
 
-            DataArrayResponse receipt = (DataArrayResponse)this.connection.syncSendPacket(info);
-            DataStructure[] data = receipt.getData();
-            XATransactionId[] answer;
-            if (data instanceof XATransactionId[]) {
-                answer = (XATransactionId[])data;
-            } else {
-                answer = new XATransactionId[data.length];
-                System.arraycopy(data, 0, answer, 0, data.length);
+                DataArrayResponse receipt = (DataArrayResponse) this.connection.syncSendPacket(info);
+                DataStructure[] data = receipt.getData();
+                if (data instanceof XATransactionId[]) {
+                    answer = (XATransactionId[]) data;
+                } else {
+                    answer = new XATransactionId[data.length];
+                    System.arraycopy(data, 0, answer, 0, data.length);
+                }
+            } catch (JMSException e) {
+                throw toXAException(e);
             }
-            LOG.debug("recover({})={}", flag, answer);
-            return answer;
-        } catch (JMSException e) {
-            throw toXAException(e);
         }
+        LOG.debug("recover({})={}", flag, answer);
+        return answer;
     }
 
     @Override
