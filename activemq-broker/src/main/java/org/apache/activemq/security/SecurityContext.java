@@ -47,7 +47,6 @@ public abstract class SecurityContext {
 
     final String userName;
 
-    final ConcurrentMap<ActiveMQDestination, ActiveMQDestination> authorizedReadDests = new ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination>();
     final ConcurrentMap<ActiveMQDestination, ActiveMQDestination> authorizedWriteDests = new ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination>();
 
     public SecurityContext(String userName) {
@@ -72,10 +71,6 @@ public abstract class SecurityContext {
 
     public String getUserName() {
         return userName;
-    }
-
-    public ConcurrentMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedReadDests() {
-        return authorizedReadDests;
     }
 
     public ConcurrentMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedWriteDests() {

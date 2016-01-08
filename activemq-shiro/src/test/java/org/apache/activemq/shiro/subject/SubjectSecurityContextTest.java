@@ -42,11 +42,6 @@ public class SubjectSecurityContextTest {
     }
 
     @Test(expected=UnsupportedOperationException.class)
-    public void testGetAuthorizedReadDests() {
-        ctx.getAuthorizedReadDests();
-    }
-
-    @Test(expected=UnsupportedOperationException.class)
     public void testGetAuthorizedWriteDests() {
         ctx.getAuthorizedWriteDests();
     }

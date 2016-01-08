@@ -73,11 +73,6 @@ public class SubjectSecurityContext extends SecurityContext {
     }
 
     @Override
-    public ConcurrentMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedReadDests() {
-        throw notAllowed("getAuthorizedReadDests");
-    }
-
-    @Override
     public ConcurrentMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedWriteDests() {
         throw notAllowed("getAuthorizedWriteDests");
     }

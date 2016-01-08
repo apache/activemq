@@ -56,7 +56,6 @@ public class AuthorizationDestinationFilter extends DestinationFilter {
         if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs) ) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + destination);
         }
-        securityContext.getAuthorizedReadDests().put(destination, destination);
 
         super.addSubscription(context, sub);
     }

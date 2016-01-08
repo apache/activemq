@@ -126,6 +126,8 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + destination);
         }
 
+        securityContext.getAuthorizedWriteDests().remove(destination);
+
         super.removeDestination(context, destination, timeout);
     }
 
@@ -136,6 +138,8 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (!checkDestinationAdmin(securityContext, info.getDestination())) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + info.getDestination());
         }
+
+        securityContext.getAuthorizedWriteDests().remove(info.getDestination());
 
         super.removeDestinationInfo(context, info);
     }
@@ -154,7 +158,6 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs) ) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + info.getDestination());
         }
-        securityContext.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());
 
         /*
          * Need to think about this a little more. We could do per message
