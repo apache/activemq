@@ -133,13 +133,15 @@ public abstract class DeadLetterTestSupport extends TestSupport {
 
             @Override
             public boolean isSatisified() throws Exception {
-                QueueViewMBean dlqView = null;
+                boolean satisfied = false;
+
                 try {
-                    dlqView = getProxyToQueue(dlqQ.getQueueName());
+                    QueueViewMBean dlqView = getProxyToQueue(dlqQ.getQueueName());
+                    satisfied = dlqView != null ? dlqView.isDLQ() : false;
                 } catch (Throwable error) {
                 }
 
-                return dlqView != null ? dlqView.isDLQ() : false;
+                return satisfied;
             }
         }));
     }
