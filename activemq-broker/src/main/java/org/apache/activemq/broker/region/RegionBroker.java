@@ -775,6 +775,13 @@ public class RegionBroker extends EmptyBroker {
                     DeadLetterStrategy deadLetterStrategy = ((Destination) node.getRegionDestination()).getDeadLetterStrategy();
                     if (deadLetterStrategy != null) {
                         if (deadLetterStrategy.isSendToDeadLetterQueue(message)) {
+                            ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message, subscription);
+                            // Prevent a DLQ loop where same message is sent from a DLQ back to itself
+                            if (deadLetterDestination.equals(message.getDestination())) {
+                                LOG.debug("Not re-adding to DLQ: {}, dest: {}", message.getMessageId(), message.getDestination());
+                                return false;
+                            }
+
                             // message may be inflight to other subscriptions so do not modify
                             message = message.copy();
                             long dlqExpiration = deadLetterStrategy.getExpiration();
@@ -796,7 +803,6 @@ public class RegionBroker extends EmptyBroker {
                             // not get filled when the message is first sent,
                             // it is only populated if the message is routed to
                             // another destination like the DLQ
-                            ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message, subscription);
                             ConnectionContext adminContext = context;
                             if (context.getSecurityContext() == null || !context.getSecurityContext().isBrokerContext()) {
                                 adminContext = BrokerSupport.getConnectionContext(this);
