@@ -110,6 +110,12 @@ public class FailoverClusterTestSupport extends TestCase {
         }
     }
 
+    protected void assertBrokerInfo(String brokerName) throws Exception {
+        for (ActiveMQConnection c : connections) {
+            assertEquals(brokerName, c.getBrokerInfo().getBrokerName());
+        }
+    }
+
     protected void addBroker(String name, BrokerService brokerService) {
         brokers.put(name, brokerService);
     }
