@@ -31,24 +31,24 @@ import org.apache.activemq.state.ProducerState;
  */
 public final class BrokerSupport {
 
-    private BrokerSupport() {        
+    private BrokerSupport() {
     }
-    
+
     public static void resendNoCopy(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination) throws Exception {
         doResend(context, originalMessage, deadLetterDestination, false);
     }
-    
+
     /**
      * @param context
-     * @param originalMessage 
+     * @param originalMessage
      * @param deadLetterDestination
      * @throws Exception
      */
     public static void resend(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination) throws Exception {
         doResend(context, originalMessage, deadLetterDestination, true);
     }
-    
-    public static void doResend(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination, boolean copy) throws Exception {       
+
+    public static void doResend(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination, boolean copy) throws Exception {
         Message message = copy ? originalMessage.copy() : originalMessage;
         message.setOriginalDestination(message.getDestination());
         message.setOriginalTransactionId(message.getTransactionId());
@@ -56,6 +56,7 @@ public final class BrokerSupport {
         message.setTransactionId(null);
         message.setMemoryUsage(null);
         message.setRedeliveryCounter(0);
+        message.getMessageId().setDataLocator(null);
         boolean originalFlowControl = context.isProducerFlowControl();
         try {
             context.setProducerFlowControl(false);
