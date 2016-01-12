@@ -991,6 +991,7 @@ public class FailoverTransport implements CompositeTransport {
                             backups.remove(bt);
                             transport = bt.getTransport();
                             uri = bt.getUri();
+                            myTransportListener.onCommand(bt.getBrokerInfo());
                             if (priorityBackup && priorityBackupAvailable) {
                                 Transport old = this.connectedTransport.getAndSet(null);
                                 if (old != null) {
