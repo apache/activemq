@@ -40,7 +40,20 @@ import javax.jms.MessageListener;
 import javax.jms.TransactionRolledBackException;
 
 import org.apache.activemq.blob.BlobDownloader;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQBlobMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQTempDestination;
+import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.management.JMSConsumerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -199,6 +212,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         this.session = session;
         this.redeliveryPolicy = session.connection.getRedeliveryPolicyMap().getEntryFor(dest);
+        if (this.redeliveryPolicy == null) {
+            this.redeliveryPolicy = new RedeliveryPolicy();
+        }
         setTransformer(session.getTransformer());
 
         this.info = new ConsumerInfo(consumerId);
