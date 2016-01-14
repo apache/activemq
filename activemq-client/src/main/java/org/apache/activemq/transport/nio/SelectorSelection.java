@@ -86,8 +86,9 @@ public final class SelectorSelection {
                     try {
                         key.cancel();
                     } catch (CancelledKeyException e) {
+                    } finally {
+                        worker.release();
                     }
-                    worker.release();
                 }
             });
         }
