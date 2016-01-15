@@ -79,6 +79,11 @@ public interface NetworkBridge extends Service {
     long getDequeueCounter();
 
     /**
+     * @return the statistics for this NetworkBridge
+     */
+    NetworkBridgeStatistics getNetworkBridgeStatistics();
+
+    /**
      * @param objectName
      *      The ObjectName assigned to this bridge in the MBean server.
      */

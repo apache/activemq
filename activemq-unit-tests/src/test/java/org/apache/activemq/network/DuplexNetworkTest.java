@@ -86,4 +86,19 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
         return id;
     }
 
+    @Override
+    protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
+
+        final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+                        expectedRemoteSent == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
+            }
+        }));
+
+    }
+
 }
