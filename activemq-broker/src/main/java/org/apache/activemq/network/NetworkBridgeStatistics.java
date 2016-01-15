@@ -21,7 +21,7 @@ import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 
 /**
- * The Statistics for a NewtorkBridge.
+ * The Statistics for a NetworkBridge.
  */
 public class NetworkBridgeStatistics extends StatsImpl {
 
