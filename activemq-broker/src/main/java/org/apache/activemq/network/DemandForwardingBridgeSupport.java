@@ -34,7 +34,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.ObjectName;
 
@@ -139,8 +138,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected final BrokerId remoteBrokerPath[] = new BrokerId[]{null};
     protected BrokerId remoteBrokerId;
 
-    final AtomicLong enqueueCounter = new AtomicLong();
-    final AtomicLong dequeueCounter = new AtomicLong();
+    protected final NetworkBridgeStatistics networkBridgeStatistics = new NetworkBridgeStatistics();
 
     private NetworkBridgeListener networkBridgeListener;
     private boolean createdByDuplex;
@@ -180,6 +178,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (brokerService == null) {
                 throw new IllegalArgumentException("BrokerService is null on " + this);
             }
+
+            networkBridgeStatistics.setEnabled(brokerService.isEnableStatistics());
 
             if (isDuplex()) {
                 duplexInboundLocalBroker = NetworkBridgeFactory.createLocalTransport(brokerService.getBroker());
@@ -640,6 +640,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                                     Response reply = resp.getResult();
                                                     reply.setCorrelationId(correlationId);
                                                     remoteBroker.oneway(reply);
+                                                    //increment counter when messages are received in duplex mode
+                                                    networkBridgeStatistics.getReceivedCount().increment();
                                                 } catch (IOException error) {
                                                     LOG.error("Exception: {} on duplex forward of: {}", error, message);
                                                     serviceRemoteException(error);
@@ -648,6 +650,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         });
                                     } else {
                                         duplexInboundLocalBroker.oneway(message);
+                                        networkBridgeStatistics.getReceivedCount().increment();
                                     }
                                     serviceInboundMessage(message);
                                 } else {
@@ -968,7 +971,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             try {
                 if (command.isMessageDispatch()) {
                     safeWaitUntilStarted();
-                    enqueueCounter.incrementAndGet();
+                    networkBridgeStatistics.getEnqueues().increment();
                     final MessageDispatch md = (MessageDispatch) command;
                     final DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
                     if (sub != null && md.getMessage() != null && sub.incrementOutstandingResponses()) {
@@ -1016,7 +1019,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                             serviceLocalException(md, er.getException());
                                         } else {
                                             localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
-                                            dequeueCounter.incrementAndGet();
+                                            networkBridgeStatistics.getDequeues().increment();
                                         }
                                     } catch (IOException e) {
                                         serviceLocalException(md, e);
@@ -1033,7 +1036,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             try {
                                 remoteBroker.oneway(message);
                                 localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
-                                dequeueCounter.incrementAndGet();
+                                networkBridgeStatistics.getDequeues().increment();
                             } finally {
                                 sub.decrementOutstandingResponses();
                             }
@@ -1559,12 +1562,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public long getDequeueCounter() {
-        return dequeueCounter.get();
+        return networkBridgeStatistics.getDequeues().getCount();
     }
 
     @Override
     public long getEnqueueCounter() {
-        return enqueueCounter.get();
+        return networkBridgeStatistics.getEnqueues().getCount();
+    }
+
+    @Override
+    public NetworkBridgeStatistics getNetworkBridgeStatistics() {
+        return networkBridgeStatistics;
     }
 
     protected boolean isDuplex() {
@@ -1594,8 +1602,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public void resetStats() {
-        enqueueCounter.set(0);
-        dequeueCounter.set(0);
+        networkBridgeStatistics.reset();
     }
 
     /*
