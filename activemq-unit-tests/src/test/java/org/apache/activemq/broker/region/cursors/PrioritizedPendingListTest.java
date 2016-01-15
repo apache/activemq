@@ -191,6 +191,30 @@ public class PrioritizedPendingListTest {
         }
     }
 
+    @Test
+    public void testValuesPriority() {
+        PrioritizedPendingList list = new PrioritizedPendingList();
+
+        list.addMessageFirst(new TestMessageReference(1, 2));
+        list.addMessageFirst(new TestMessageReference(2, 1));
+        list.addMessageFirst(new TestMessageReference(3, 3));
+        list.addMessageFirst(new TestMessageReference(4, 5));
+        list.addMessageFirst(new TestMessageReference(5, 4));
+
+        assertTrue(list.size() == 5);
+
+        Iterator<MessageReference> iter = list.iterator();
+        int lastId = list.size();
+        while (iter.hasNext()) {
+            assertEquals(lastId--, iter.next().getMessage().getPriority());
+        }
+
+        lastId = list.size();
+        for (MessageReference messageReference : list.values()) {
+            assertEquals(lastId--, messageReference.getMessage().getPriority());
+        }
+    }
+
     static class TestMessageReference implements MessageReference {
 
         private static final IdGenerator id = new IdGenerator();

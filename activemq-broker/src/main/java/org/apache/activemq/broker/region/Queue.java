@@ -1619,10 +1619,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
 
             if (hasBrowsers) {
-                ArrayList<MessageReference> alreadyDispatchedMessages = null;
+                PendingList alreadyDispatchedMessages = isPrioritizedMessages() ?
+                        new PrioritizedPendingList() : new OrderedPendingList();
                 pagedInMessagesLock.readLock().lock();
                 try{
-                    alreadyDispatchedMessages = new ArrayList<MessageReference>(pagedInMessages.values());
+                    alreadyDispatchedMessages.addAll(pagedInMessages);
                 }finally {
                     pagedInMessagesLock.readLock().unlock();
                 }

@@ -27,6 +27,9 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.management.SizeStatisticImpl;
 
+
+import static org.apache.activemq.broker.region.cursors.OrderedPendingList.getValues;
+
 public class PrioritizedPendingList implements PendingList {
 
     private static final Integer MAX_PRIORITY = 10;
@@ -164,11 +167,7 @@ public class PrioritizedPendingList implements PendingList {
 
     @Override
     public Collection<MessageReference> values() {
-        List<MessageReference> messageReferences = new ArrayList<MessageReference>();
-        for (PendingNode pendingNode : map.values()) {
-            messageReferences.add(pendingNode.getMessage());
-        }
-        return messageReferences;
+        return getValues(this);
     }
 
     @Override

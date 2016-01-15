@@ -169,8 +169,12 @@ public class OrderedPendingList implements PendingList {
 
     @Override
     public Collection<MessageReference> values() {
+        return getValues(this);
+    }
+
+    public static Collection<MessageReference> getValues(final PendingList pendingList) {
         List<MessageReference> messageReferences = new ArrayList<MessageReference>();
-        Iterator<MessageReference> iterator = iterator();
+        Iterator<MessageReference> iterator = pendingList.iterator();
         while (iterator.hasNext()) {
             messageReferences.add(iterator.next());
         }
