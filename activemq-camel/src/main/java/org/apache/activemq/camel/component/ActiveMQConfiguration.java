@@ -17,7 +17,6 @@
 package org.apache.activemq.camel.component;
 
 import java.lang.reflect.Constructor;
-
 import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.Service;
@@ -32,12 +31,12 @@ import org.springframework.transaction.PlatformTransactionManager;
  *
  */
 public class ActiveMQConfiguration extends JmsConfiguration {
+    private ActiveMQComponent activeMQComponent;
     private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
     private boolean useSingleConnection = false;
     private boolean usePooledConnection = true;
     private String userName;
     private String password;
-    private ActiveMQComponent activeMQComponent;
 
     public ActiveMQConfiguration() {
     }
@@ -66,7 +65,6 @@ public class ActiveMQConfiguration extends JmsConfiguration {
 
     /**
      * Sets the username to be used to login to ActiveMQ
-     * @param userName
      */
     public void setUserName(String userName) {
         this.userName = userName;
@@ -78,8 +76,6 @@ public class ActiveMQConfiguration extends JmsConfiguration {
 
     /**
      * Sets the password/passcode used to login to ActiveMQ
-     *
-     * @param password
      */
     public void setPassword(String password) {
         this.password = password;
@@ -92,8 +88,6 @@ public class ActiveMQConfiguration extends JmsConfiguration {
      * for each message then close them all down again.
      * <p/>
      * The default value is false and a pooled connection is used by default.
-     *
-     * @param useSingleConnection
      */
     public void setUseSingleConnection(boolean useSingleConnection) {
         this.useSingleConnection = useSingleConnection;
