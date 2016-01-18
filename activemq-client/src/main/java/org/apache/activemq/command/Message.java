@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.command;
 
+import java.beans.Transient;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -628,6 +629,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     @Override
+    @Transient
 	public MessageDestination getRegionDestination() {
         return regionDestination;
     }
