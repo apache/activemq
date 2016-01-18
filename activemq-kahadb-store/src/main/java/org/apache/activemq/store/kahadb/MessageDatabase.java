@@ -853,7 +853,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 missingPredicates.add(new BTreeVisitor.BetweenVisitor<Location, Long>(new Location(id, dataFile.getLength()), new Location(id + 1, 0)));
                 Sequence seq = dataFile.getCorruptedBlocks().getHead();
                 while (seq != null) {
-                    BTreeVisitor.BetweenVisitor visitor = new BTreeVisitor.BetweenVisitor<Location, Long>(new Location(id, (int) seq.getFirst()), new Location(id, (int) seq.getLast() + 1));
+                    BTreeVisitor.BetweenVisitor<Location, Long> visitor =
+                        new BTreeVisitor.BetweenVisitor<Location, Long>(new Location(id, (int) seq.getFirst()), new Location(id, (int) seq.getLast() + 1));
                     missingPredicates.add(visitor);
                     knownCorruption.add(visitor);
                     seq = seq.getNext();
@@ -1707,7 +1708,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
                             // When pending is size one that is the next message Id meaning there
                             // are no pending messages currently.
-                            if (pendingAcks == null || pendingAcks.size() <= 1) {
+                            if (pendingAcks == null || pendingAcks.isEmpty() ||
+                                (pendingAcks.size() == 1 && pendingAcks.getTail().range() == 1)) {
+
                                 if (LOG.isTraceEnabled()) {
                                     LOG.trace("Found candidate for rewrite: {} from file {}", entry.getKey(), dataFileId);
                                 }
