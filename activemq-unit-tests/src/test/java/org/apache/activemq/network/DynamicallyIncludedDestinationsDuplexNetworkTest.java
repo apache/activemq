@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -30,6 +31,7 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
 /**
@@ -113,5 +115,20 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
         CopyOnWriteArrayList<TransportConnection> transportConnections = transportConnector.getConnections();
         TransportConnection duplexBridgeConnectionFromRemote = transportConnections.get(0);
         return duplexBridgeConnectionFromRemote;
+    }
+
+    @Override
+    protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
+
+        final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+                        expectedRemoteSent == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
+            }
+        }));
+
     }
 }
