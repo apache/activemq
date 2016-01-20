@@ -1413,7 +1413,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
             metadata.lastUpdate = location;
         } else {
-            LOG.warn("Non existent message update attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
+            //Add the message if it can't be found
+            this.updateIndex(tx, command, location);
         }
     }
 
