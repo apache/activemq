@@ -28,8 +28,10 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.http.marshallers.HttpTransportMarshaller;
+import org.apache.activemq.transport.http.marshallers.HttpWireFormatMarshaller;
+import org.apache.activemq.transport.http.marshallers.TextWireFormatMarshallers;
 import org.apache.activemq.transport.util.TextWireFormat;
-import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -40,6 +42,16 @@ import org.slf4j.LoggerFactory;
 public class HttpTransportFactory extends TransportFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpTransportFactory.class);
+    private static final String WIRE_FORMAT_XSTREAM = "xstream";
+    private final String defaultWireFormatType;
+
+    public HttpTransportFactory() {
+        defaultWireFormatType = WIRE_FORMAT_XSTREAM;
+    }
+
+    public HttpTransportFactory(final String defaultWireFormatType) {
+        this.defaultWireFormatType = defaultWireFormatType;
+    }
 
     public TransportServer doBind(URI location) throws IOException {
         try {
@@ -53,20 +65,21 @@ public class HttpTransportFactory extends TransportFactory {
         }
     }
 
-    protected TextWireFormat asTextWireFormat(WireFormat wireFormat) {
-        if (wireFormat instanceof TextWireFormat) {
-            return (TextWireFormat)wireFormat;
-        }
-        LOG.trace("Not created with a TextWireFormat: " + wireFormat);
-        return new XStreamWireFormat();
+    @Deprecated
+    protected final TextWireFormat asTextWireFormat(final WireFormat wireFormat) {
+        throw new UnsupportedOperationException("asTextWireFormat is no longer supported");
+    }
+
+    protected WireFormat processWireFormat(final WireFormat wireFormat) {
+        return wireFormat;
     }
 
     protected String getDefaultWireFormatType() {
-        return "xstream";
+        return defaultWireFormatType;
     }
 
     protected Transport createTransport(URI location, WireFormat wf) throws IOException {
-        TextWireFormat textWireFormat = asTextWireFormat(wf);
+        final WireFormat wireFormat = processWireFormat(wf);
         // need to remove options from uri
         URI uri;
         try {
@@ -76,7 +89,14 @@ public class HttpTransportFactory extends TransportFactory {
             cause.initCause(e);
             throw cause;
         }
-        return new HttpClientTransport(textWireFormat, uri);
+        return new HttpClientTransport(createMarshaller(wireFormat), uri);
+    }
+
+    protected static HttpTransportMarshaller createMarshaller(final WireFormat wireFormat)
+    {
+        return wireFormat instanceof TextWireFormat ?
+                TextWireFormatMarshallers.newTransportMarshaller((TextWireFormat)wireFormat) :
+                new HttpWireFormatMarshaller(wireFormat);
     }
 
     @SuppressWarnings("rawtypes")

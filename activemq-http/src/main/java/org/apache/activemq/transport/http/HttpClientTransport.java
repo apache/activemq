@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.transport.http;
 
-import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.URI;
 import java.util.zip.GZIPInputStream;
@@ -25,6 +25,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.http.marshallers.HttpTransportMarshaller;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -86,8 +87,13 @@ public class HttpClientTransport extends HttpTransportSupport {
     protected boolean canSendCompressed = false;
     private int minSendAsCompressedSize = 0;
 
+    @Deprecated
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
+    }
+
+    public HttpClientTransport(final HttpTransportMarshaller marshaller, URI remoteUrl) {
+        super(marshaller, remoteUrl);
     }
 
     public FutureResponse asyncRequest(Object command) throws IOException {
@@ -102,8 +108,7 @@ public class HttpClientTransport extends HttpTransportSupport {
         }
         HttpPost httpMethod = new HttpPost(getRemoteUrl().toString());
         configureMethod(httpMethod);
-        String data = getTextWireFormat().marshalText(command);
-        byte[] bytes = data.getBytes("UTF-8");
+        byte[] bytes = asBytes(command);
         if (useCompression && canSendCompressed && bytes.length > minSendAsCompressedSize) {
             ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
             GZIPOutputStream stream = new GZIPOutputStream(bytesOut);
@@ -145,17 +150,24 @@ public class HttpClientTransport extends HttpTransportSupport {
         }
     }
 
+    private byte[] asBytes(final Object command) throws IOException {
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        getMarshaller().marshal(command, outputStream);
+        return outputStream.toByteArray();
+    }
+
     @Override
     public Object request(Object command) throws IOException {
         return null;
     }
 
-    private DataInputStream createDataInputStream(HttpResponse answer) throws IOException {
-        Header encoding = answer.getEntity().getContentEncoding();
-        if (encoding != null && "gzip".equalsIgnoreCase(encoding.getValue())) {
-            return new DataInputStream(new GZIPInputStream(answer.getEntity().getContent()));
+    private InputStream createInputStream(final HttpResponse answer) throws IOException {
+        final InputStream inputStream = answer.getEntity().getContent();
+        final Header encoding = answer.getEntity().getContentEncoding();
+        if (encoding == null || !"gzip".equalsIgnoreCase(encoding.getValue())) {
+            return inputStream;
         } else {
-            return new DataInputStream(answer.getEntity().getContent());
+            return new GZIPInputStream(inputStream);
         }
     }
 
@@ -193,8 +205,8 @@ public class HttpClientTransport extends HttpTransportSupport {
                     }
                 } else {
                     receiveCounter++;
-                    DataInputStream stream = createDataInputStream(answer);
-                    Object command = getTextWireFormat().unmarshal(stream);
+                    final InputStream stream = createInputStream(answer);
+                    final Object command = getMarshaller().unmarshal(stream);
                     if (command == null) {
                         LOG.debug("Received null command from url: " + remoteUrl);
                     } else {

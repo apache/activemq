@@ -22,6 +22,7 @@ import java.net.URI;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.http.HttpClientTransport;
+import org.apache.activemq.transport.http.marshallers.HttpTransportMarshaller;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.http.conn.ClientConnectionManager;
@@ -32,8 +33,13 @@ import org.apache.http.impl.conn.PoolingClientConnectionManager;
 
 public class HttpsClientTransport extends HttpClientTransport {
 
+    @Deprecated
     public HttpsClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
+    }
+
+    public HttpsClientTransport(final HttpTransportMarshaller marshaller, URI remoteUrl) {
+        super(marshaller, remoteUrl);
     }
 
     @Override
