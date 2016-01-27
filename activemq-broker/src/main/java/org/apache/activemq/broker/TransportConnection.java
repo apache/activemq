@@ -239,7 +239,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         if (!stopping.get() && !pendingStop) {
             transportException.set(e);
-            e.printStackTrace();
             if (TRANSPORTLOG.isDebugEnabled()) {
                 TRANSPORTLOG.debug(this + " failed: " + e, e);
             } else if (TRANSPORTLOG.isWarnEnabled() && !expected(e)) {
