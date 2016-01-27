@@ -117,6 +117,7 @@
     <spring-version>4.1.9.RELEASE</spring-version>
     <spring-osgi-version>1.2.1</spring-osgi-version>
     <stax2-api-version>3.0.2</stax2-api-version>
+    <taglibs-version>1.2.3</taglibs-version>
     <velocity-version>1.7</velocity-version>
     <woodstox-core-asl-version>4.2.0</woodstox-core-asl-version>
     <xalan-version>2.7.2</xalan-version>
@@ -976,6 +977,19 @@
         <version>${httpcore-version}</version>
       </dependency>
 
+
+      <!-- Tag Libs -->
+      <dependency>
+        <groupId>org.apache.taglibs</groupId>
+        <artifactId>taglibs-standard-spec</artifactId>
+        <version>${taglibs-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.taglibs</groupId>
+        <artifactId>taglibs-standard-impl</artifactId>
+        <version>${taglibs-version}</version>
+      </dependency>
+      
       <dependency>
         <groupId>aopalliance</groupId>
         <artifactId>aopalliance</artifactId>

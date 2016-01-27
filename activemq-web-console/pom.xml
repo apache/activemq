@@ -275,6 +275,18 @@
       <scope>provided</scope>
     </dependency>
     
+     <!-- Tag Libs -->
+    <dependency>
+      <groupId>org.apache.taglibs</groupId>
+      <artifactId>taglibs-standard-spec</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.taglibs</groupId>
+      <artifactId>taglibs-standard-impl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
     <!-- used for testing -->
     <dependency>
       <groupId>junit</groupId>
