@@ -47,7 +47,6 @@ public final class Main {
             port = Integer.parseInt(text);
         }
 
-        System.setProperty("activemq.conf", "/home/clshann/dev/git/apache-activemq/assembly/target/apache-activemq-5.13-SNAPSHOT/conf");
         System.out.println("Starting Web Server on port: " + port);
         System.setProperty("jetty.port", "" + port);
         Server server = new Server(port);
