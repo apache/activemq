@@ -105,10 +105,10 @@ No connection could be found for ID <c:out value="${requestContext.connectionQue
 	<td>
 		<c:choose>
 			<c:when test="${consumer.destinationQueue}">
-				Queue <a href="browse.jsp?JMSDestination=${consumer.destinationName}"><c:out value="${consumer.destinationName}" /></a>
+				Queue <a href="browse.jsp?JMSDestination=<c:out value="${consumer.destinationName}" />"><c:out value="${consumer.destinationName}" /></a>
 			</c:when>
 			<c:when test="${consumer.destinationTopic}">
-				Topic <a href="send.jsp?JMSDestination=${consumer.destinationName}"><c:out value="${consumer.destinationName}" /></a>
+				Topic <a href="send.jsp?JMSDestination=<c:out value="${consumer.destinationName}" />"><c:out value="${consumer.destinationName}" /></a>
 			</c:when>
 			<c:otherwise>
 				<c:out value="${consumer.destinationName}" />
