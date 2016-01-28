@@ -132,7 +132,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="2"><a href="<c:url value='deleteMessage.action?JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&secret=${sessionScope["secret"]}' />" onclick="return confirm('Are you sure you want to delete the message?')" >Delete</a></td>
+                        <td colspan="2"><a href="<c:out value='deleteMessage.action?JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&secret=${sessionScope["secret"]}' />" onclick="return confirm('Are you sure you want to delete the message?')" >Delete</a></td>
                     </tr>
                     <c:set var="queueName" value="${requestContext.messageQuery.JMSDestination}"/>
                     <c:set var="queueNameSubStr" value="${fn:substring(queueName, 0, 4)}" />
@@ -158,7 +158,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                         </tr>
                     </c:if>
                     <tr class="odd">
-                    <td><a href="<c:url value="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')">Copy</a></td>
+                    <td><a href="<c:out value="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')">Copy</a></td>
                         <td rowspan="2">
                             <select id="queue">
                                 <option value=""> -- Please select --</option>
@@ -172,7 +172,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 
                     </tr>
                     <tr class="odd">
-                        <td><a href="<c:url value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')"
+                        <td><a href="<c:out value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')"
                             >Move</a></td>
                     </tr>
                 </tbody>
