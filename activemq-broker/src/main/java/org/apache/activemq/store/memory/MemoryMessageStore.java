@@ -108,12 +108,8 @@ public class MemoryMessageStore extends AbstractMessageStore {
         // here
         synchronized (messageTable) {
             for (Iterator<Message> iter = messageTable.values().iterator(); iter.hasNext();) {
-                Object msg = iter.next();
-                if (msg.getClass() == MessageId.class) {
-                    listener.recoverMessageReference((MessageId)msg);
-                } else {
-                    listener.recoverMessage((Message)msg);
-                }
+                Message msg = iter.next();
+                listener.recoverMessage(msg);
             }
         }
     }
