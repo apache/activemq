@@ -271,7 +271,7 @@ public class Main {
 
     public void addClassPathList(String fileList) {
         if (fileList != null && fileList.length() > 0) {
-            StringTokenizer tokenizer = new StringTokenizer(fileList, ";");
+            StringTokenizer tokenizer = new StringTokenizer(fileList, File.pathSeparator);
             while (tokenizer.hasMoreTokens()) {
                 addClassPath(new File(tokenizer.nextToken()));
             }
@@ -320,6 +320,7 @@ public class Main {
                             // Sort the jars so that classpath built is consistently in the same
                             // order. Also allows us to use jar names to control classpath order.
                             Arrays.sort(files, new Comparator<File>() {
+                                @Override
                                 public int compare(File f1, File f2) {
                                     return f1.getName().compareTo(f2.getName());
                                 }
