@@ -30,6 +30,15 @@
     </context-param>
 
 	<!-- filters -->
+    <filter>
+      <filter-name>XFrameOptions</filter-name>
+      <filter-class>org.apache.activemq.web.XFrameOptionsFilter</filter-class>
+    </filter>
+  
+    <filter-mapping>
+      <filter-name>XFrameOptions</filter-name>
+      <url-pattern>/*</url-pattern>
+    </filter-mapping>
 	<filter>
 		<filter-name>session</filter-name>
 		<filter-class>org.apache.activemq.web.SessionFilter</filter-class>
