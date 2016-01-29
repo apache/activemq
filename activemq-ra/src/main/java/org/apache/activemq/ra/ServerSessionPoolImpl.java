@@ -265,10 +265,6 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         ActiveMQSession session = null;
         if (s instanceof ActiveMQSession) {
             session = (ActiveMQSession) s;
-        } else if (s instanceof ActiveMQQueueSession) {
-            session = (ActiveMQSession) s;
-        } else if (s instanceof ActiveMQTopicSession) {
-            session = (ActiveMQSession) s;
         } else {
             activeMQAsfEndpointWorker.getConnection()
                     .onAsyncException(new JMSException(
