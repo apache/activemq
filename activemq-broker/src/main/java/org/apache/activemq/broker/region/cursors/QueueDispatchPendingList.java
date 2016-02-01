@@ -40,6 +40,8 @@ public class QueueDispatchPendingList implements PendingList {
 
     private PendingList pagedInPendingDispatch = new OrderedPendingList();
     private PendingList redeliveredWaitingDispatch = new OrderedPendingList();
+    // when true use one PrioritizedPendingList for everything
+    private boolean prioritized = false;
 
 
     @Override
@@ -160,6 +162,7 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
+        prioritized = prioritizedMessages;
         if (prioritizedMessages && this.pagedInPendingDispatch instanceof OrderedPendingList) {
             pagedInPendingDispatch = new PrioritizedPendingList();
             redeliveredWaitingDispatch = new PrioritizedPendingList();
@@ -170,10 +173,14 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     public void addMessageForRedelivery(QueueMessageReference qmr) {
-        redeliveredWaitingDispatch.addMessageLast(qmr);
+        if (prioritized) {
+            pagedInPendingDispatch.addMessageLast(qmr);
+        } else {
+            redeliveredWaitingDispatch.addMessageLast(qmr);
+        }
     }
 
     public boolean hasRedeliveries(){
-        return !redeliveredWaitingDispatch.isEmpty();
+        return prioritized ? !pagedInPendingDispatch.isEmpty() : !redeliveredWaitingDispatch.isEmpty();
     }
 }

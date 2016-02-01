@@ -110,6 +110,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         broker.waitUntilStarted();
 
         factory = new ActiveMQConnectionFactory("vm://priorityTest");
+        factory.setMessagePrioritySupported(true);
         ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
         prefetch.setAll(prefetchVal);
         factory.setPrefetchPolicy(prefetch);
@@ -664,6 +665,56 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             Message message = queueConsumer.receive(10000);
             assertNotNull("expect #" + i, message);
             assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+    }
+
+    public void testInterleaveHiNewConsumerGetsHi() throws Exception {
+        ActiveMQQueue queue = (ActiveMQQueue) sess.createQueue("TEST");
+        doTestInterleaveHiNewConsumerGetsHi(queue);
+    }
+
+    public void testInterleaveHiNewConsumerGetsHiPull() throws Exception {
+        ActiveMQQueue queue = (ActiveMQQueue) sess.createQueue("TEST?consumer.prefetchSize=0");
+        doTestInterleaveHiNewConsumerGetsHi(queue);
+    }
+
+    public void doTestInterleaveHiNewConsumerGetsHi(ActiveMQQueue queue) throws Exception {
+
+        // one hi sandwich
+        ProducerThread producerThread = new ProducerThread(queue, 3, LOW_PRI);
+        producerThread.run();
+        producerThread = new ProducerThread(queue, 1, HIGH_PRI);
+        producerThread.run();
+        producerThread = new ProducerThread(queue, 3, LOW_PRI);
+        producerThread.run();
+
+        // consume hi
+        MessageConsumer queueConsumer = sess.createConsumer(queue);
+        Message message = queueConsumer.receive(10000);
+        assertNotNull("expect #", message);
+        assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        queueConsumer.close();
+
+        // last hi
+        producerThread = new ProducerThread(queue, 3, LOW_PRI);
+        producerThread.run();
+        producerThread = new ProducerThread(queue, 1, HIGH_PRI);
+        producerThread.run();
+
+        // consume hi
+        queueConsumer = sess.createConsumer(queue);
+        message = queueConsumer.receive(10000);
+        assertNotNull("expect #", message);
+        assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        queueConsumer.close();
+
+        // consume the rest
+        queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 9; i++) {
+            message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", LOW_PRI, message.getJMSPriority());
         }
         queueConsumer.close();
     }
