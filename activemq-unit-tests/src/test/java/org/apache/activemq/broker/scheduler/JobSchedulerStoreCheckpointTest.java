@@ -29,6 +29,7 @@ import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
+import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +46,10 @@ public class JobSchedulerStoreCheckpointTest {
 
     @Before
     public void setUp() throws Exception {
+
+        // investigate gc issue - store usage not getting released
+        org.apache.log4j.Logger.getLogger(JobSchedulerStoreImpl.class).setLevel(Level.TRACE);
+
         File directory = new File("target/test/ScheduledJobsDB");
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
@@ -80,7 +85,7 @@ public class JobSchedulerStoreCheckpointTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void testStoreCleanupLinear() throws Exception {
         final int COUNT = 10;
         final CountDownLatch latch = new CountDownLatch(COUNT);
         scheduler.addListener(new JobListener() {
@@ -111,6 +116,41 @@ public class JobSchedulerStoreCheckpointTest {
         // need a little slack so go over 60 seconds
         assertTrue(latch.await(70, TimeUnit.SECONDS));
         assertEquals(0, latch.getCount());
+
+        assertTrue("Should be only one log left: " + getNumJournalFiles(), Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getNumJournalFiles() == 1;
+            }
+        }, TimeUnit.MINUTES.toMillis(2)));
+
+        LOG.info("Number of journal log files: {}", getNumJournalFiles());
+    }
+
+    @Test
+    public void testColocatedAddRemoveCleanup() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        scheduler.addListener(new JobListener() {
+            @Override
+            public void scheduledJob(String id, ByteSequence job) {
+                latch.countDown();
+            }
+        });
+
+        byte[] data = new byte[1024];
+        for (int i = 0; i < data.length; ++i) {
+            data[i] = (byte) (i % 256);
+        }
+
+        long time = TimeUnit.SECONDS.toMillis(2);
+        scheduler.schedule("Message-1", new ByteSequence(data), "", time, 0, 0);
+
+        assertTrue(latch.await(70, TimeUnit.SECONDS));
+        assertEquals(0, latch.getCount());
+
+        scheduler.schedule("Message-2", payload, "", time, 0, 0);
+        scheduler.schedule("Message-3", payload, "", time, 0, 0);
 
         assertTrue("Should be only one log left: " + getNumJournalFiles(), Wait.waitFor(new Wait.Condition() {
 
