@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.management.JMException;
 import javax.management.ObjectName;
@@ -165,9 +167,9 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         return super.addConsumer(context, info);
     }
 
-    // trivial check for SQL92/selector wildcards
-    private boolean hasWildcards(String selector) {
-        return selector.contains("%") || selector.contains("_");
+
+    static boolean hasWildcards(String selector) {
+        return new WildcardFinder(selector).hasWildcards();
     }
 
     @Override
@@ -305,6 +307,55 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     public void setIgnoreWildcardSelectors(boolean ignoreWildcardSelectors) {
         this.ignoreWildcardSelectors = ignoreWildcardSelectors;
+    }
+
+    // find wildcards inside like operator arguments
+    static class WildcardFinder {
+
+        private static final Pattern LIKE_PATTERN=Pattern.compile(
+                "\\bLIKE\\s+'(?<like>([^']|'')+)'(\\s+ESCAPE\\s+'(?<escape>.)')?",
+                Pattern.CASE_INSENSITIVE);
+
+        private static final String REGEX_SPECIAL = ".+?*(){}[]\\-";
+        private final Matcher matcher;
+
+        WildcardFinder(String selector) {
+            this.matcher = LIKE_PATTERN.matcher(selector);
+        }
+
+        private String getLike() {
+            return matcher.group("like");
+        }
+
+        private String getEscape() {
+            String escapeChar = matcher.group("escape");
+            if (escapeChar == null) {
+                return null;
+            } else if (REGEX_SPECIAL.contains(escapeChar)) {
+                escapeChar = "\\"+escapeChar;
+            }
+            return escapeChar;
+        }
+
+        private boolean hasLikeOperator() {
+            return matcher.find();
+        }
+
+        boolean hasWildcardInCurrentMatch() {
+            String wildcards = "[_%]";
+            if (getEscape() != null) {
+                wildcards = "(^|[^" + getEscape() + "])" + wildcards;
+            }
+            return Pattern.compile(wildcards).matcher(getLike()).find();
+        }
+
+        public boolean hasWildcards() {
+            while(hasLikeOperator()) {
+                if (hasWildcardInCurrentMatch())
+                    return true;
+            }
+            return false;
+        }
     }
 }
 
