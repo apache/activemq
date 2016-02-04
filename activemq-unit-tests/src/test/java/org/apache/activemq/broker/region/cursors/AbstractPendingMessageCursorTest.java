@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicLong;
@@ -275,6 +277,10 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         //verify the count and size - durable is offline so all 200 should be pending since none are in prefetch
         verifyPendingStats(dest, subKey, 200, publishedMessageSize.get());
         verifyStoreStats(dest, 200, publishedMessageSize.get());
+
+        //should be equal in this case
+        assertEquals(dest.getDurableTopicSubs().get(subKey).getPendingMessageSize(),
+                dest.getMessageStore().getMessageStoreStatistics().getMessageSize().getTotalSize());
 
         //consume all messages
         consumeDurableTestMessages(connection, "sub1", 200, publishedMessageSize);

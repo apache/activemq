@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -84,6 +86,10 @@ public class KahaDBPendingMessageCursorTest extends
         verifyPendingStats(topic, subKey, 200, publishedMessageSize.get());
         verifyStoreStats(topic, 200, publishedMessageSize.get());
 
+        //should be equal in this case
+        assertEquals(topic.getDurableTopicSubs().get(subKey).getPendingMessageSize(),
+                topic.getMessageStore().getMessageStoreStatistics().getMessageSize().getTotalSize());
+
         // stop, restart broker and publish more messages
         stopBroker();
         this.setUpBroker(false);
@@ -99,6 +105,36 @@ public class KahaDBPendingMessageCursorTest extends
         verifyPendingStats(topic, subKey, 400, publishedMessageSize.get());
         verifyStoreStats(topic, 400, publishedMessageSize.get());
 
+    }
+
+    @Test(timeout=60000)
+    public void testMessageSizeTwoDurablesPartialConsumption() throws Exception {
+        AtomicLong publishedMessageSize = new AtomicLong();
+
+        Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
+        connection.setClientID("clientId");
+        connection.start();
+
+        SubscriptionKey subKey = new SubscriptionKey("clientId", "sub1");
+        SubscriptionKey subKey2 = new SubscriptionKey("clientId", "sub2");
+        org.apache.activemq.broker.region.Topic dest = publishTestMessagesDurable(
+                connection, new String[] {"sub1", "sub2"}, 200, publishedMessageSize, DeliveryMode.PERSISTENT);
+
+        //verify the count and size - durable is offline so all 200 should be pending since none are in prefetch
+        verifyPendingStats(dest, subKey, 200, publishedMessageSize.get());
+        verifyStoreStats(dest, 200, publishedMessageSize.get());
+
+        //consume all messages
+        consumeDurableTestMessages(connection, "sub1", 50, publishedMessageSize);
+
+        //150 should be left
+        verifyPendingStats(dest, subKey, 150, publishedMessageSize.get());
+
+        //200 should be left
+        verifyPendingStats(dest, subKey2, 200, publishedMessageSize.get());
+        verifyStoreStats(dest, 200, publishedMessageSize.get());
+
+        connection.close();
     }
 
     /**

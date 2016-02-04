@@ -2588,31 +2588,28 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public long getStoredMessageSize(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
+        //grab the messages attached to this subscription
         SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
+
         long locationSize = 0;
         if (messageSequences != null) {
-            Iterator<Long> sequences = messageSequences.iterator();
+            Sequence head = messageSequences.getHead();
+            if (head != null) {
+                //get an iterator over the order index starting at the first unacked message
+                //and go over each message to add up the size
+                Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx,
+                        new MessageOrderCursor(head.getFirst()));
 
-            while (sequences.hasNext()) {
-                Long sequenceId = sequences.next();
-                //the last item is the next marker
-                if (!sequences.hasNext()) {
-                    break;
-                }
-                Iterator<Entry<Location, Long>> iterator = sd.locationIndex.iterator(tx);
                 while (iterator.hasNext()) {
-                    Entry<Location, Long> entry = iterator.next();
-                    if (entry.getValue() == sequenceId - 1) {
-                        locationSize += entry.getKey().getSize();
-                        break;
-                    }
-
+                    Entry<Long, MessageKeys> entry = iterator.next();
+                    locationSize += entry.getValue().location.getSize();
                 }
             }
         }
 
         return locationSize;
     }
+
     protected String key(KahaDestination destination) {
         return destination.getType().getNumber() + ":" + destination.getName();
     }
