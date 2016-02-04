@@ -273,7 +273,9 @@ public class InMemoryJobScheduler implements JobScheduler {
     private void doReschedule(InMemoryJob job, long nextExecutionTime) {
         job.setNextTime(nextExecutionTime);
         job.incrementExecutionCount();
-        job.decrementRepeatCount();
+        if (!job.isCron()) {
+            job.decrementRepeatCount();
+        }
 
         LOG.trace("JobScheduler rescheduling job[{}] to fire at: {}", job.getJobId(), JobSupport.getDateTime(nextExecutionTime));
 
@@ -291,7 +293,6 @@ public class InMemoryJobScheduler implements JobScheduler {
         } finally {
             lock.writeLock().unlock();
         }
-
     }
 
     private void doRemoveJob(String jobId) throws IOException {
