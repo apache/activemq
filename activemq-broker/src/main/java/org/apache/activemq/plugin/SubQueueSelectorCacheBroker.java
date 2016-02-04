@@ -169,7 +169,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
 
     static boolean hasWildcards(String selector) {
-        return new WildcardFinder(selector).hasWildcards();
+        return WildcardFinder.hasWildcards(selector);
     }
 
     @Override
@@ -317,17 +317,16 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 Pattern.CASE_INSENSITIVE);
 
         private static final String REGEX_SPECIAL = ".+?*(){}[]\\-";
-        private final Matcher matcher;
 
-        WildcardFinder(String selector) {
-            this.matcher = LIKE_PATTERN.matcher(selector);
-        }
-
-        private String getLike() {
+        private static String getLike(final Matcher matcher) {
             return matcher.group("like");
         }
 
-        private String getEscape() {
+        private static boolean hasLikeOperator(final Matcher matcher) {
+            return matcher.find();
+        }
+
+        private static String getEscape(final Matcher matcher) {
             String escapeChar = matcher.group("escape");
             if (escapeChar == null) {
                 return null;
@@ -337,21 +336,19 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             return escapeChar;
         }
 
-        private boolean hasLikeOperator() {
-            return matcher.find();
-        }
-
-        boolean hasWildcardInCurrentMatch() {
+        private static boolean hasWildcardInCurrentMatch(final Matcher matcher) {
             String wildcards = "[_%]";
-            if (getEscape() != null) {
-                wildcards = "(^|[^" + getEscape() + "])" + wildcards;
+            if (getEscape(matcher) != null) {
+                wildcards = "(^|[^" + getEscape(matcher) + "])" + wildcards;
             }
-            return Pattern.compile(wildcards).matcher(getLike()).find();
+            return Pattern.compile(wildcards).matcher(getLike(matcher)).find();
         }
 
-        public boolean hasWildcards() {
-            while(hasLikeOperator()) {
-                if (hasWildcardInCurrentMatch())
+        public static boolean hasWildcards(String selector) {
+            Matcher matcher = LIKE_PATTERN.matcher(selector);
+
+            while(hasLikeOperator(matcher)) {
+                if (hasWildcardInCurrentMatch(matcher))
                     return true;
             }
             return false;
