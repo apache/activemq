@@ -38,8 +38,12 @@ import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JmsSchedulerTest extends JobSchedulerTestSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JmsSchedulerTest.class);
 
     @Test
     public void testCron() throws Exception {
@@ -55,8 +59,9 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         consumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
-                latch.countDown();
                 count.incrementAndGet();
+                latch.countDown();
+                LOG.info("Received scheduled message, waiting for {} more", latch.getCount());
             }
         });
 
@@ -167,8 +172,9 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         consumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
-                latch.countDown();
                 count.incrementAndGet();
+                latch.countDown();
+                LOG.info("Received scheduled message, waiting for {} more", latch.getCount());
             }
         });
 
