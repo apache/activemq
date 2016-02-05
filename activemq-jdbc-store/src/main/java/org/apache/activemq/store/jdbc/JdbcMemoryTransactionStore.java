@@ -178,7 +178,13 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                         } else {
                             MessageId messageId = removeMessageCommand.getMessageAck().getLastMessageId();
                             // need to unset the txid flag on the existing row
-                            ((JDBCPersistenceAdapter) persistenceAdapter).commitAdd(ctx, messageId, (Long)messageId.getEntryLocator());
+                            Object entryLocator = messageId.getEntryLocator();
+                            if (entryLocator != null) {
+                                ((JDBCPersistenceAdapter) persistenceAdapter).commitAdd(ctx, messageId, (Long) entryLocator);
+                            } else {
+
+                                ((JDBCPersistenceAdapter) persistenceAdapter).commitAdd(ctx, messageId, (Long) messageId.getFutureOrSequenceLong());
+                            }
                         }
                     }
                 } catch (IOException e) {
