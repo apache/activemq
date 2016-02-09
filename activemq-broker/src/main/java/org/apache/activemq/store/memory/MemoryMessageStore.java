@@ -59,11 +59,11 @@ public class MemoryMessageStore extends AbstractMessageStore {
         synchronized (messageTable) {
             messageTable.put(message.getMessageId(), message);
             incMessageStoreStatistics(getMessageStoreStatistics(), message);
-        }
-        message.incrementReferenceCount();
-        message.getMessageId().setFutureOrSequenceLong(sequenceId++);
-        if (indexListener != null) {
-            indexListener.onAdd(new IndexListener.MessageContext(context, message, null));
+            message.incrementReferenceCount();
+            message.getMessageId().setFutureOrSequenceLong(sequenceId++);
+            if (indexListener != null) {
+                indexListener.onAdd(new IndexListener.MessageContext(context, message, null));
+            }
         }
     }
 

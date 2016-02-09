@@ -758,7 +758,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       uow.addCompleteListener({
         message.decrementReferenceCount()
       })
-      val sequence = lastSeq.synchronized {
+      lastSeq.synchronized {
         val seq = lastSeq.incrementAndGet()
         message.getMessageId.setFutureOrSequenceLong(seq);
         // null context on xa recovery, we want to bypass the cursor & pending adds as it will be reset
@@ -768,9 +768,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
             def run(): Unit = pendingCursorAdds.synchronized { pendingCursorAdds.remove(seq) }
           }))
         }
-        seq
+        uow.enqueue(key, seq, message, delay)
       }
-      uow.enqueue(key, sequence, message, delay)
     }
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message) = asyncAddQueueMessage(context, message, false)
