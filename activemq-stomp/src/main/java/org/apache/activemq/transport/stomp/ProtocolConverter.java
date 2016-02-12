@@ -266,7 +266,7 @@ public class ProtocolConverter {
             } else if (action.startsWith(Stomp.Commands.DISCONNECT)) {
                 onStompDisconnect(command);
             } else {
-                throw new ProtocolException("Unknown STOMP action: " + action);
+                throw new ProtocolException("Unknown STOMP action: " + action, true);
             }
 
         } catch (ProtocolException e) {
