@@ -129,7 +129,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 } catch (Exception e) {
                     LOG.warn("Could not connect to remote URI: {}: {}", connectUri, e.getMessage());
                     LOG.debug("Connection failure exception: ", e);
-                    activeEvents.remove(uri);
+                    try {
+                        discoveryAgent.serviceFailed(event);
+                    } catch (IOException e1) {
+                        LOG.debug("Failure while handling create remote transport failure event: {}", e1.getMessage(), e1);
+                    }
                     return;
                 }
                 try {
@@ -138,7 +142,12 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     ServiceSupport.dispose(remoteTransport);
                     LOG.warn("Could not connect to local URI: {}: {}", localURI, e.getMessage());
                     LOG.debug("Connection failure exception: ", e);
-                    activeEvents.remove(uri);
+
+                    try {
+                        discoveryAgent.serviceFailed(event);
+                    } catch (IOException e1) {
+                        LOG.debug("Failure while handling create local transport failure event: {}", e1.getMessage(), e1);
+                    }
                     return;
                 }
             } finally {
