@@ -261,4 +261,14 @@ public class UnmodifiableTransport implements Transport {
     public long getFramesOutput() {
         return transport.getFramesOutput();
     }
+
+    @Override
+    public void setEmitFlowEventOnSend(boolean emitFlowEventOnSend) {
+        throw new UnsupportedOperationException("Cannot alter the Transport");
+    }
+
+    @Override
+    public boolean isEmitFlowEventOnSend() {
+        return transport.isEmitFlowEventOnSend();
+    }
 }

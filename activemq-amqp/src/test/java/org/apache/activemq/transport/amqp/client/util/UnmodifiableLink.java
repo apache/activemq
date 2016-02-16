@@ -17,7 +17,9 @@
 package org.apache.activemq.transport.amqp.client.util;
 
 import java.util.EnumSet;
+import java.util.Map;
 
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -254,5 +256,20 @@ public class UnmodifiableLink implements Link {
 
     public Record attachments() {
         return link.attachments();
+    }
+
+    @Override
+    public Map<Symbol, Object> getProperties() {
+        return link.getProperties();
+    }
+
+    @Override
+    public void setProperties(Map<Symbol, Object> properties) {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
+
+    @Override
+    public Map<Symbol, Object> getRemoteProperties() {
+        return link.getRemoteProperties();
     }
 }
