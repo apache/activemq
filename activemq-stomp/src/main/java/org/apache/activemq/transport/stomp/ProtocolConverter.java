@@ -1010,7 +1010,7 @@ public class ProtocolConverter {
      */
     protected Object safeGetAction(StompFrame command) {
         String result = "<Unknown>";
-        if (command != null) {
+        if (command != null && command.getAction() != null) {
             String action = command.getAction().trim();
 
             if (action != null) {
