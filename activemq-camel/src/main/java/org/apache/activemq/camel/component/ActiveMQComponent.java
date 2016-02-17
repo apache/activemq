@@ -121,6 +121,12 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
         }
     }
 
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration)getConfiguration()).setTrustAllPackages(trustAllPackages);
+        }
+    }
+
     public boolean isExposeAllQueues() {
         return exposeAllQueues;
     }

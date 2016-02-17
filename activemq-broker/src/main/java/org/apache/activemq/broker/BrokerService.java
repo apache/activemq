@@ -1043,13 +1043,14 @@ public class BrokerService implements Service {
      *
      * @param brokerName
      */
+    private static final String brokerNameReplacedCharsRegExp = "[^a-zA-Z0-9\\.\\_\\-\\:]";
     public void setBrokerName(String brokerName) {
         if (brokerName == null) {
             throw new NullPointerException("The broker name cannot be null");
         }
-        String str = brokerName.replaceAll("[^a-zA-Z0-9\\.\\_\\-\\:]", "_");
+        String str = brokerName.replaceAll(brokerNameReplacedCharsRegExp, "_");
         if (!str.equals(brokerName)) {
-            LOG.error("Broker Name: {} contained illegal characters - replaced with {}", brokerName, str);
+            LOG.error("Broker Name: {} contained illegal characters matching regExp: {} - replaced with {}", brokerName, brokerNameReplacedCharsRegExp, str);
         }
         this.brokerName = str.trim();
     }
@@ -1618,7 +1619,7 @@ public class BrokerService implements Service {
     public URI getVmConnectorURI() {
         if (vmConnectorURI == null) {
             try {
-                vmConnectorURI = new URI("vm://" + getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_"));
+                vmConnectorURI = new URI("vm://" + getBrokerName());
             } catch (URISyntaxException e) {
                 LOG.error("Badly formed URI from {}", getBrokerName(), e);
             }
@@ -2603,6 +2604,7 @@ public class BrokerService implements Service {
         URI uri = getVmConnectorURI();
         Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
         map.put("async", "false");
+        map.put("create","false");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
 
         if (!stopped.get()) {

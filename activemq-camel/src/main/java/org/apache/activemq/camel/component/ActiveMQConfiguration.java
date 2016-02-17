@@ -37,6 +37,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     private boolean usePooledConnection = true;
     private String userName;
     private String password;
+    private boolean trustAllPackages;
 
     public ActiveMQConfiguration() {
     }
@@ -109,6 +110,24 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         this.usePooledConnection = usePooledConnection;
     }
 
+    public boolean isTrustAllPackages() {
+        return trustAllPackages;
+    }
+
+    /**
+     * ObjectMessage objects depend on Java serialization of marshal/unmarshal object payload.
+     * This process is generally considered unsafe as malicious payload can exploit the host system.
+     * That's why starting with versions 5.12.2 and 5.13.0, ActiveMQ enforces users to explicitly whitelist packages
+     * that can be exchanged using ObjectMessages.
+     * <br/>
+     * This option can be set to <tt>true</tt> to trust all packages (eg whitelist is *).
+     * <p/>
+     * See more details at: http://activemq.apache.org/objectmessage.html
+     */
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        this.trustAllPackages = trustAllPackages;
+    }
+
     /**
      * Factory method to create a default transaction manager if one is not specified
      */
@@ -126,6 +145,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     @Override
     protected ConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
+        answer.setTrustAllPackages(trustAllPackages);
         if (userName != null) {
             answer.setUserName(userName);
         }

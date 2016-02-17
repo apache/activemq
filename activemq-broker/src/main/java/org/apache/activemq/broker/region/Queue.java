@@ -829,33 +829,28 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         producerExchange.incrementSend();
         do {
             checkUsage(context, producerExchange, message);
-            sendLock.lockInterruptibly();
-            try {
-                message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
-                if (store != null && message.isPersistent()) {
-                    message.getMessageId().setFutureOrSequenceLong(null);
-                    try {
-                        if (messages.isCacheEnabled()) {
-                            result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
-                            result.addListener(new PendingMarshalUsageTracker(message));
-                        } else {
-                            store.addMessage(context, message);
-                        }
-                        if (isReduceMemoryFootprint()) {
-                            message.clearMarshalledState();
-                        }
-                    } catch (Exception e) {
-                        // we may have a store in inconsistent state, so reset the cursor
-                        // before restarting normal broker operations
-                        resetNeeded = true;
-                        throw e;
+            message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+            if (store != null && message.isPersistent()) {
+                message.getMessageId().setFutureOrSequenceLong(null);
+                try {
+                    if (messages.isCacheEnabled()) {
+                        result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
+                        result.addListener(new PendingMarshalUsageTracker(message));
+                    } else {
+                        store.addMessage(context, message);
                     }
+                    if (isReduceMemoryFootprint()) {
+                        message.clearMarshalledState();
+                    }
+                } catch (Exception e) {
+                    // we may have a store in inconsistent state, so reset the cursor
+                    // before restarting normal broker operations
+                    resetNeeded = true;
+                    throw e;
                 }
-                if(tryOrderedCursorAdd(message, context)) {
-                    break;
-                }
-            } finally {
-                sendLock.unlock();
+            }
+            if(tryOrderedCursorAdd(message, context)) {
+                break;
             }
         } while (started.get());
 
