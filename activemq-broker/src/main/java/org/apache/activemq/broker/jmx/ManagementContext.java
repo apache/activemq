@@ -411,7 +411,7 @@ public class ManagementContext implements Service {
         return result;
     }
 
-    private boolean isAllowedToRegister(ObjectName name) {
+    protected boolean isAllowedToRegister(ObjectName name) {
         boolean result = true;
         if (suppressMBean != null && suppressMBeanList != null) {
             for (ObjectName attr : suppressMBeanList) {
