@@ -280,77 +280,77 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public ObjectName[] getTopics() {
-        return safeGetBroker().getTopics();
+        return safeGetBroker().getTopicsNonSuppressed();
     }
 
     @Override
     public ObjectName[] getQueues() {
-        return safeGetBroker().getQueues();
+        return safeGetBroker().getQueuesNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryTopics() {
-        return safeGetBroker().getTemporaryTopics();
+        return safeGetBroker().getTemporaryTopicsNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueues() {
-        return safeGetBroker().getTemporaryQueues();
+        return safeGetBroker().getTemporaryQueuesNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTopicSubscribers() {
-        return safeGetBroker().getTopicSubscribers();
+        return safeGetBroker().getTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getDurableTopicSubscribers() {
-        return safeGetBroker().getDurableTopicSubscribers();
+        return safeGetBroker().getDurableTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getQueueSubscribers() {
-        return safeGetBroker().getQueueSubscribers();
+        return safeGetBroker().getQueueSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryTopicSubscribers() {
-        return safeGetBroker().getTemporaryTopicSubscribers();
+        return safeGetBroker().getTemporaryTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueueSubscribers() {
-        return safeGetBroker().getTemporaryQueueSubscribers();
+        return safeGetBroker().getTemporaryQueueSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getInactiveDurableTopicSubscribers() {
-        return safeGetBroker().getInactiveDurableTopicSubscribers();
+        return safeGetBroker().getInactiveDurableTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTopicProducers() {
-        return safeGetBroker().getTopicProducers();
+        return safeGetBroker().getTopicProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getQueueProducers() {
-        return safeGetBroker().getQueueProducers();
+        return safeGetBroker().getQueueProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryTopicProducers() {
-        return safeGetBroker().getTemporaryTopicProducers();
+        return safeGetBroker().getTemporaryTopicProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueueProducers() {
-        return safeGetBroker().getTemporaryQueueProducers();
+        return safeGetBroker().getTemporaryQueueProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getDynamicDestinationProducers() {
-        return safeGetBroker().getDynamicDestinationProducers();
+        return safeGetBroker().getDynamicDestinationProducersNonSuppressed();
     }
 
     @Override
