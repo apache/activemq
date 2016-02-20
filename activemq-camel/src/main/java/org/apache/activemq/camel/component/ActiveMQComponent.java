@@ -206,6 +206,11 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
             endpointLoader = new CamelEndpointLoader(getCamelContext(), source);
             endpointLoader.afterPropertiesSet();
         }
+
+        // use OriginalDestinationPropagateStrategy by default if no custom stategy has been set
+        if (getMessageCreatedStrategy() == null) {
+            setMessageCreatedStrategy(new OriginalDestinationPropagateStrategy());
+        }
     }
 
     protected void createDestinationSource() {
