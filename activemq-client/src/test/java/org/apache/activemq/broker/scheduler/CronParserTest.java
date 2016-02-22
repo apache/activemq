@@ -270,8 +270,8 @@ public class CronParserTest {
         calender.setTimeInMillis(next);
         LOG.debug("next:" + calender.getTime());
         long result = next - current;
-        if (startHours == 8 && startMinutes == 50) {
-            assertEquals(60*40*1000,result);
+        if (startHours == 20 && startMinutes == 50) {
+            assertEquals(60*40*1000,result); // allow for 30 min offset timezone
         } else {
             assertEquals(60*10*1000,result);
         }
