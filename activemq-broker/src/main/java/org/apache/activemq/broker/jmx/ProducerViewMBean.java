@@ -73,8 +73,10 @@ public interface ProducerViewMBean {
     int getProducerWindowSize();
 
     /**
+     * @deprecated This value is no longer used for producers.
      * @return if the Producer is configured for Async dispatch
      */
+    @Deprecated
     @MBeanInfo("Is the producer configured for Async Dispatch")
     boolean isDispatchAsync();
 

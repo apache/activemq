@@ -161,6 +161,12 @@ public interface SubscriptionViewMBean {
     boolean isNoLocal();
 
     /**
+     * @return if the Consumer is configured for Async dispatch
+     */
+    @MBeanInfo("Is the consumer configured for Async Dispatch")
+    boolean isDispatchAsync();
+
+    /**
      * @return the maximum number of pending messages allowed in addition to the
      *         prefetch size. If enabled to a non-zero value then this will
      *         perform eviction of messages for slow consumers on non-durable

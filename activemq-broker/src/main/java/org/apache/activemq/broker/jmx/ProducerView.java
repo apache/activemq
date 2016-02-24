@@ -124,16 +124,15 @@ public class ProducerView implements ProducerViewMBean {
     }
 
     @Override
+    @Deprecated
     public boolean isDispatchAsync() {
-        if (info != null) {
-            return info.isDispatchAsync();
-        }
         return false;
     }
 
     /**
      * @return pretty print
      */
+    @Override
     public String toString() {
         return "ProducerView: " + getClientId() + ":" + getConnectionId();
     }
