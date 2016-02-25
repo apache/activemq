@@ -19,12 +19,7 @@ package org.apache.activemq.transport.nio;
 import java.io.IOException;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.LinkedList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * The SelectorManager will manage one Selector and the thread that checks the
@@ -43,7 +38,7 @@ public final class SelectorManager {
     private int maxChannelsPerWorker = 1024;
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(getDefaultCorePoolSize(), getDefaultMaximumPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(getDefaultMaximumPoolSize(), getDefaultMaximumPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
             new ThreadFactory() {
 
                 private long i = 0;
@@ -59,12 +54,8 @@ public final class SelectorManager {
         return rc;
     }
 
-    private static int getDefaultCorePoolSize() {
-        return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.corePoolSize", 0);
-    }
-
     private static int getDefaultMaximumPoolSize() {
-        return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.maximumPoolSize", Integer.MAX_VALUE);
+        return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.maximumPoolSize", 1024);
     }
 
     private static int getDefaultKeepAliveTime() {
