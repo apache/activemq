@@ -38,7 +38,7 @@ public final class SelectorManager {
     private int maxChannelsPerWorker = 1024;
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(getDefaultMaximumPoolSize(), getDefaultMaximumPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(getDefaultCorePoolSize(), getDefaultMaximumPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
             new ThreadFactory() {
 
                 private long i = 0;
@@ -52,6 +52,10 @@ public final class SelectorManager {
             });
 
         return rc;
+    }
+
+    private static int getDefaultCorePoolSize() {
+            return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.corePoolSize", 10);
     }
 
     private static int getDefaultMaximumPoolSize() {
