@@ -72,7 +72,7 @@ public class WSTransportHttpTraceTest extends WSTransportTest {
      * This tests whether the TRACE method is enabled or not
      * @throws Exception
      */
-    @Test
+    @Test(timeout=10000)
     public void testHttpTraceEnabled() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
