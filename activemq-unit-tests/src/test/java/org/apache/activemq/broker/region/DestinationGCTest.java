@@ -17,12 +17,14 @@
 package org.apache.activemq.broker.region;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -37,7 +39,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class DestinationGCTest {
+
+    protected static final Logger logger = LoggerFactory.getLogger(DestinationGCTest.class);
 
     private final ActiveMQQueue queue = new ActiveMQQueue("TEST");
     private final ActiveMQQueue otherQueue = new ActiveMQQueue("TEST-OTHER");
@@ -136,5 +143,35 @@ public class DestinationGCTest {
                 return brokerService.getAdminView().getQueues().length == 0;
             }
         }));
+    }
+
+    @Test(timeout = 60000)
+    public void testDestinationGcAnonymousProducer() throws Exception {
+
+        final ActiveMQQueue q = new ActiveMQQueue("Q.TEST.ANONYMOUS.PRODUCER");
+
+        brokerService.getAdminView().addQueue(q.getPhysicalName());
+        assertEquals(2, brokerService.getAdminView().getQueues().length);
+
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+        final Connection connection = factory.createConnection();
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        // wait for the queue to be marked for GC
+        logger.info("Waiting for '{}' to be marked for GC...", q);
+        Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return brokerService.getDestination(q).canGC();
+            }
+        }, Wait.MAX_WAIT_MILLIS, 500L);
+
+        // create anonymous producer and send a message
+        logger.info("Sending PERSISTENT message to QUEUE '{}'", q.getPhysicalName());
+        final MessageProducer producer = session.createProducer(null);
+        producer.send(q, session.createTextMessage());
+        producer.close();
+
+        assertFalse(brokerService.getDestination(q).canGC());
     }
 }
