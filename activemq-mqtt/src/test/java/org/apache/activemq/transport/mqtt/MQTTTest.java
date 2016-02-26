@@ -331,6 +331,34 @@ public class MQTTTest extends MQTTTestSupport {
         connection.disconnect();
     }
 
+    @Test(timeout = 30 * 1000)
+    public void testConnectWithUserButNoPassword() throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("test");
+        mqtt.setUserName("foo");
+
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.disconnect();
+    }
+
+    @Test(timeout = 30 * 1000)
+    public void testConnectWithPasswordButNoUsername() throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setVersion("3.1.1"); // The V3.1 spec doesn't make the same assertion
+        mqtt.setClientId("test");
+        mqtt.setPassword("bar");
+
+        BlockingConnection connection = mqtt.blockingConnection();
+
+        try {
+            connection.connect();
+            fail("Should not be able to connect in this case.");
+        } catch (Exception ex) {
+            LOG.info("Exception expected on connect with password but no username");
+        }
+    }
+
     @Test(timeout = 2 *  60 * 1000)
     public void testMQTTWildcard() throws Exception {
         MQTT mqtt = createMQTTConnection();

@@ -248,6 +248,15 @@ public class MQTTProtocolConverter {
         }
         String passswd = null;
         if (connect.password() != null) {
+
+            if (userName == null && connect.version() != V3_1) {
+                // [MQTT-3.1.2-22]: If the user name is not present then the
+                // password must also be absent.
+                // [MQTT-3.1.4-1]: would seem to imply we don't send a CONNACK here.
+                getMQTTTransport().onException(IOExceptionSupport.create("Password given without a user name", null));
+                return;
+            }
+
             passswd = connect.password().toString();
         }
 
