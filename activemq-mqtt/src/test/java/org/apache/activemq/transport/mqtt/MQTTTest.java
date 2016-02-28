@@ -1164,6 +1164,37 @@ public class MQTTTest extends MQTTTestSupport {
     }
 
     @Test(timeout = 60 * 1000)
+    public void testPublishWildcard31() throws Exception {
+        testPublishWildcard("3.1");
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testPublishWildcard311() throws Exception {
+        testPublishWildcard("3.1.1");
+    }
+
+    private void testPublishWildcard(String version) throws Exception {
+        MQTT mqttPub = createMQTTConnection("MQTTPub-Client", true);
+        mqttPub.setVersion(version);
+        BlockingConnection blockingConnection = mqttPub.blockingConnection();
+        blockingConnection.connect();
+        String payload = "Test Message";
+        try {
+            blockingConnection.publish("foo/#", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
+            fail("Should not be able to publish with wildcard in topic.");
+        } catch (Exception ex) {
+            LOG.info("Exception expected on publish with wildcard in topic name");
+        }
+        try {
+            blockingConnection.publish("foo/+", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
+            fail("Should not be able to publish with wildcard in topic.");
+        } catch (Exception ex) {
+            LOG.info("Exception expected on publish with wildcard in topic name");
+        }
+        blockingConnection.disconnect();
+    }
+
+    @Test(timeout = 60 * 1000)
     public void testDuplicateClientId() throws Exception {
         // test link stealing enabled by default
         final String clientId = "duplicateClient";

@@ -91,6 +91,9 @@ public class MQTTProtocolConverter {
     public static final int V3_1 = 3;
     public static final int V3_1_1 = 4;
 
+    public static final String SINGLE_LEVEL_WILDCARD = "+";
+    public static final String MULTI_LEVEL_WILDCARD = "#";
+
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
     private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD = 0.5;
@@ -458,6 +461,12 @@ public class MQTTProtocolConverter {
         checkConnected();
         LOG.trace("MQTT Rcv PUBLISH message:{} client:{} connection:{}",
                   command.messageId(), clientId, connectionInfo.getConnectionId());
+        //Both version 3.1 and 3.1.1 do not allow the topic name to contain a wildcard in the publish packet
+        if (containsMqttWildcard(command.topicName().toString())) {
+            // [MQTT-3.3.2-2]: The Topic Name in the PUBLISH Packet MUST NOT contain wildcard characters
+            getMQTTTransport().onException(IOExceptionSupport.create("The topic name must not contain wildcard characters.", null));
+            return;
+        }
         ActiveMQMessage message = convertMessage(command);
         message.setProducerId(producerId);
         message.onSend();
@@ -818,6 +827,11 @@ public class MQTTProtocolConverter {
             }
         }
         return clientId;
+    }
+
+    protected boolean containsMqttWildcard(String value) {
+        return value != null && (value.contains(SINGLE_LEVEL_WILDCARD) ||
+                value.contains(MULTI_LEVEL_WILDCARD));
     }
 
     protected MQTTSubscriptionStrategy findSubscriptionStrategy() throws IOException {
