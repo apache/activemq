@@ -39,9 +39,11 @@ public class WSTransportFactory extends TransportFactory {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WSTransportServer result = new WSTransportServer(location);
+            Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "");
             IntrospectionSupport.setProperties(result, transportOptions);
             result.setTransportOption(transportOptions);
+            result.setHttpOptions(httpOptions);
             return result;
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);

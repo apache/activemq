@@ -41,12 +41,15 @@ public class HttpTransportFactory extends TransportFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpTransportFactory.class);
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             HttpTransportServer result = new HttpTransportServer(location, this);
+            Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
             result.setTransportOption(transportOptions);
+            result.setHttpOptions(httpOptions);
             return result;
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
@@ -61,10 +64,12 @@ public class HttpTransportFactory extends TransportFactory {
         return new XStreamWireFormat();
     }
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "xstream";
     }
 
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws IOException {
         TextWireFormat textWireFormat = asTextWireFormat(wf);
         // need to remove options from uri
@@ -79,11 +84,13 @@ public class HttpTransportFactory extends TransportFactory {
         return new HttpClientTransport(textWireFormat, uri);
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         return compositeConfigure(transport, format, options);
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = super.compositeConfigure(transport, format, options);
