@@ -15,38 +15,65 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.transport.ws;
+package org.apache.activemq.transport.http;
 
 import java.util.Collection;
 
-import org.apache.activemq.transport.http.HttpTraceTestSupport;
-import org.junit.Ignore;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class WSTransportHttpTraceTest extends WSTransportTest {
+public class HttpTransportHttpTraceTest {
+
+    private BrokerService broker;
+    private String uri;
 
     protected String enableTraceParam;
-    protected int expectedStatus;
+    private int expectedStatus;
+
+
+    @Before
+    public void setUp() throws Exception {
+        additionalConfig();
+
+        broker = new BrokerService();
+        TransportConnector connector = broker.addConnector(getConnectorUri());
+        broker.setPersistent(false);
+        broker.setUseJmx(false);
+        broker.deleteAllMessages();
+        broker.addConnector(connector);
+        broker.start();
+
+        uri = connector.getPublishableConnectString();
+    }
+
+    protected String getConnectorUri() {
+        return "http://localhost:0?" + enableTraceParam;
+    }
+
+    protected void additionalConfig() {
+
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        broker.stop();
+    }
 
     @Parameters
     public static Collection<Object[]> data() {
         return HttpTraceTestSupport.getTestParameters();
     }
 
-    public WSTransportHttpTraceTest(final String enableTraceParam, final int expectedStatus) {
+    public HttpTransportHttpTraceTest(final String enableTraceParam, final int expectedStatus) {
         this.enableTraceParam = enableTraceParam;
         this.expectedStatus = expectedStatus;
-    }
-
-    @Override
-    protected String getWSConnectorURI() {
-        String uri = "ws://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
-        uri = enableTraceParam != null ? uri + "&" + enableTraceParam : uri;
-        return uri;
     }
 
     /**
@@ -55,12 +82,7 @@ public class WSTransportHttpTraceTest extends WSTransportTest {
      */
     @Test(timeout=10000)
     public void testHttpTraceEnabled() throws Exception {
-        HttpTraceTestSupport.testHttpTraceEnabled("http://127.0.0.1:61623", expectedStatus, null);
+        HttpTraceTestSupport.testHttpTraceEnabled(uri, expectedStatus);
     }
 
-    @Override
-    @Ignore
-    @Test
-    public void testBrokerStart() throws Exception {
-    }
 }

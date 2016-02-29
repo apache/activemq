@@ -29,13 +29,11 @@ import org.apache.activemq.transport.WebTransportServerSupport;
 import org.apache.activemq.transport.ws.jetty9.WSServlet;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
-import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.security.Constraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +68,7 @@ public class WSTransportServer extends WebTransportServerSupport {
 
         //AMQ-6182 - disabling trace by default
         configureTraceMethod((ConstraintSecurityHandler) contextHandler.getSecurityHandler(),
-                getHttpOptions().isEnableTrace());
+                httpOptions.isEnableTrace());
 
         Map<String, Object> webSocketOptions = IntrospectionSupport.extractProperties(transportOptions, "websocket.");
         for(Map.Entry<String,Object> webSocketEntry : webSocketOptions.entrySet()) {
@@ -114,31 +112,6 @@ public class WSTransportServer extends WebTransportServerSupport {
         return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
     }
 
-    private void configureTraceMethod(ConstraintSecurityHandler securityHandler,
-            boolean enableTrace) {
-        Constraint constraint = new Constraint();
-        constraint.setName("trace-security");
-        //If enableTrace is true, then we want to set authenticate to false to allow it
-        constraint.setAuthenticate(!enableTrace);
-        ConstraintMapping mapping = new ConstraintMapping();
-        mapping.setConstraint(constraint);
-        mapping.setMethod("TRACE");
-        mapping.setPathSpec("/");
-        securityHandler.addConstraintMapping(mapping);
-    }
-
-    protected static class HttpOptions {
-        private boolean enableTrace = false;
-
-        public boolean isEnableTrace() {
-            return enableTrace;
-        }
-
-        public void setEnableTrace(boolean enableTrace) {
-            this.enableTrace = enableTrace;
-        }
-    }
-
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         Server temp = server;
@@ -161,20 +134,11 @@ public class WSTransportServer extends WebTransportServerSupport {
         this.connector = connector;
     }
 
-    protected HttpOptions getHttpOptions() {
-        HttpOptions httpOptions = new HttpOptions();
-        if (transportOptions != null) {
-            Map<String, Object> httpOptionsMap = IntrospectionSupport.extractProperties(transportOptions, "http.");
-            IntrospectionSupport.setProperties(httpOptions, httpOptionsMap);
-        }
-        return httpOptions;
-    }
-
     @Override
     public void setTransportOption(Map<String, Object> transportOptions) {
         Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(transportOptions, "transport.");
         socketConnectorFactory.setTransportOptions(socketOptions);
-        super.setTransportOption(transportOptions);
+        super.setTransportOption(socketOptions);
     }
 
     @Override

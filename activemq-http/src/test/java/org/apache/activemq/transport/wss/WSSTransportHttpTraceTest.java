@@ -15,52 +15,39 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.transport.ws;
-
-import java.util.Collection;
+package org.apache.activemq.transport.wss;
 
 import org.apache.activemq.transport.http.HttpTraceTestSupport;
-import org.junit.Ignore;
+import org.apache.activemq.transport.ws.WSTransportHttpTraceTest;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class WSTransportHttpTraceTest extends WSTransportTest {
+public class WSSTransportHttpTraceTest extends WSTransportHttpTraceTest {
 
-    protected String enableTraceParam;
-    protected int expectedStatus;
-
-    @Parameters
-    public static Collection<Object[]> data() {
-        return HttpTraceTestSupport.getTestParameters();
-    }
-
-    public WSTransportHttpTraceTest(final String enableTraceParam, final int expectedStatus) {
-        this.enableTraceParam = enableTraceParam;
-        this.expectedStatus = expectedStatus;
-    }
-
-    @Override
-    protected String getWSConnectorURI() {
-        String uri = "ws://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
-        uri = enableTraceParam != null ? uri + "&" + enableTraceParam : uri;
-        return uri;
+    public WSSTransportHttpTraceTest(String enableTraceParam, int expectedStatus) {
+        super(enableTraceParam, expectedStatus);
     }
 
     /**
      * This tests whether the TRACE method is enabled or not
      * @throws Exception
      */
+    @Override
     @Test(timeout=10000)
     public void testHttpTraceEnabled() throws Exception {
-        HttpTraceTestSupport.testHttpTraceEnabled("http://127.0.0.1:61623", expectedStatus, null);
+        SslContextFactory factory = new SslContextFactory();
+        factory.setSslContext(broker.getSslContext().getSSLContext());
+
+        HttpTraceTestSupport.testHttpTraceEnabled("https://127.0.0.1:61623", expectedStatus, factory);
     }
 
     @Override
-    @Ignore
-    @Test
-    public void testBrokerStart() throws Exception {
+    protected String getWSConnectorURI() {
+        String uri = "wss://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
+        uri = enableTraceParam != null ? uri + "&" + enableTraceParam : uri;
+        return uri;
     }
 }
