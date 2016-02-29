@@ -263,7 +263,9 @@ public class MQTTTestSupport {
     }
 
     protected String getTopicName() {
-        return getClass().getName() + "." + name.getMethodName();
+        //wildcard characters are illegal in publish
+        //replace a + with something else, like _ which is allowed
+        return (getClass().getName() + "." + name.getMethodName()).replace("+", "_");
     }
 
     protected BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {

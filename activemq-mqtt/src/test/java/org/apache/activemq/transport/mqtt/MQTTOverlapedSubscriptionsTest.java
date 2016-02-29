@@ -98,7 +98,7 @@ public class MQTTOverlapedSubscriptionsTest {
         //Unsubscribe and resubscribe
         connectionSub.unsubscribe(new String[]{subscribe});
         connectionSub.subscribe(topics);
-        connectionPub.publish(subscribe, payload.getBytes(), QoS.AT_LEAST_ONCE, false);
+        connectionPub.publish("test/1", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
         receive(connectionSub, 3000);
 
         connectionPub.disconnect();
