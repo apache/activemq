@@ -64,6 +64,7 @@ import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.fusesource.mqtt.codec.PUBLISH;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1335,6 +1336,37 @@ public class MQTTTest extends MQTTTestSupport {
         }
 
         jmsConn.close();
+    }
+
+    @Ignore("Needs fix in MQTT client for string length decode.")
+    @Test(timeout = 30 * 10000)
+    public void testSubscribeWithLargeTopicFilter() throws Exception {
+
+        byte[] payload = new byte[1024 * 32];
+        for (int i = 0; i < payload.length; i++) {
+            payload[i] = '2';
+        }
+
+        StringBuilder topicBuilder = new StringBuilder("/topic/");
+
+        for (int i = 0; i < 32800; ++i) {
+            topicBuilder.append("a");
+        }
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        Topic[] topic = { new Topic(topicBuilder.toString(), QoS.EXACTLY_ONCE) };
+        connection.subscribe(topic);
+        connection.publish(topic[0].name().toString(), payload, QoS.AT_LEAST_ONCE, false);
+
+        Message message = connection.receive();
+        assertNotNull(message);
+        message.ack();
     }
 
     @Test(timeout = 30 * 10000)
