@@ -279,6 +279,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
                 public boolean recoverMessageReference(String reference) throws Exception {
                     return listener.recoverMessageReference(new MessageId(reference));
                 }
+
+                public boolean hasSpace() {
+                    return listener.hasSpace();
+                }
             });
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
@@ -337,24 +341,25 @@ public class JDBCMessageStore extends AbstractMessageStore {
             adapter.doRecoverNextMessages(c, destination, perPriorityLastRecovered, minPendingSequeunceId(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
-                public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                        Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
-                        msg.getMessageId().setBrokerSequenceId(sequenceId);
-                        msg.getMessageId().setFutureOrSequenceLong(sequenceId);
-                        listener.recoverMessage(msg);
-                        trackLastRecovered(sequenceId, msg.getPriority());
-                        return true;
-                }
+                        public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
+                            Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
+                            msg.getMessageId().setBrokerSequenceId(sequenceId);
+                            msg.getMessageId().setFutureOrSequenceLong(sequenceId);
+                            listener.recoverMessage(msg);
+                            trackLastRecovered(sequenceId, msg.getPriority());
+                            return true;
+                        }
 
-                public boolean recoverMessageReference(String reference) throws Exception {
-                    if (listener.hasSpace()) {
-                        listener.recoverMessageReference(new MessageId(reference));
-                        return true;
-                    }
-                    return false;
-                }
+                        public boolean recoverMessageReference(String reference) throws Exception {
+                            listener.recoverMessageReference(new MessageId(reference));
+                            return true;
+                        }
 
-            });
+                        public boolean hasSpace() {
+                            return listener.hasSpace();
+                        }
+
+                    });
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
         } finally {

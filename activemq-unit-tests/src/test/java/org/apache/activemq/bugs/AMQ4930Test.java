@@ -46,7 +46,7 @@ public class AMQ4930Test extends TestCase {
     protected void configureBroker() throws Exception {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setAdvisorySupport(false);
-        broker.getSystemUsage().getMemoryUsage().setLimit(1*1024*1024);
+        broker.getSystemUsage().getMemoryUsage().setLimit(100*1024*1024);
 
         PolicyMap pMap = new PolicyMap();
         PolicyEntry policy = new PolicyEntry();

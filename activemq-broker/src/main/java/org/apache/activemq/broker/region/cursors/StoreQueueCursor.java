@@ -47,7 +47,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         super((queue != null ? queue.isPrioritizedMessages():false));
         this.broker=broker;
         this.queue = queue;
-        this.persistent = new QueueStorePrefetch(queue, broker);
+        this.persistent = new QueueStorePrefetch(queue);
         currentCursor = persistent;
     }
 

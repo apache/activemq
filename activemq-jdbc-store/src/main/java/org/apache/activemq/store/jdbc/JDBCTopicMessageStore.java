@@ -129,6 +129,10 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                     return listener.recoverMessageReference(new MessageId(reference));
                 }
 
+                public boolean hasSpace() {
+                    return listener.hasSpace();
+                }
+
             });
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
@@ -236,6 +240,10 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                 }
             }
             return false;
+        }
+
+        public boolean hasSpace() {
+            return delegate.hasSpace();
         }
 
         @Override

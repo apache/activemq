@@ -48,8 +48,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private static int SYNC_ADD = 0;
     private static int ASYNC_ADD = 1;
     final MessageId[] lastCachedIds = new MessageId[2];
-    protected boolean hadSpace = false;
-
 
 
     protected AbstractStoreCursor(Destination destination) {
@@ -401,7 +399,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             resetBatch();
             this.batchResetNeeded = false;
         }
-        if (this.batchList.isEmpty() && this.size >0) {
+        if (this.batchList.isEmpty() && this.size >0 && hasSpace()) {
             try {
                 doFillBatch();
             } catch (Exception e) {

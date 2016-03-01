@@ -89,7 +89,7 @@ public class StoreQueueCursorOrderTest {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
-        QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
+        QueueStorePrefetch underTest = new QueueStorePrefetch(queue);
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
         systemUsage.getMemoryUsage().setLimit(messageBytesSize * 1);
@@ -154,7 +154,7 @@ public class StoreQueueCursorOrderTest {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
-        QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
+        QueueStorePrefetch underTest = new QueueStorePrefetch(queue);
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
         systemUsage.getMemoryUsage().setLimit(messageBytesSize * 1);
@@ -222,7 +222,7 @@ public class StoreQueueCursorOrderTest {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
-        QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
+        QueueStorePrefetch underTest = new QueueStorePrefetch(queue);
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
         systemUsage.getMemoryUsage().setLimit(messageBytesSize * 1);
@@ -299,7 +299,7 @@ public class StoreQueueCursorOrderTest {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
-        QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
+        QueueStorePrefetch underTest = new QueueStorePrefetch(queue);
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
         systemUsage.getMemoryUsage().setLimit(messageBytesSize * (count + 6));
@@ -392,7 +392,7 @@ public class StoreQueueCursorOrderTest {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
-        QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
+        QueueStorePrefetch underTest = new QueueStorePrefetch(queue);
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
         systemUsage.getMemoryUsage().setLimit(messageBytesSize * 5);

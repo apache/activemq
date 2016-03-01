@@ -37,7 +37,6 @@ import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCMessageIdScanListener;
 import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
-import org.apache.activemq.store.jdbc.JDBCMessageStore;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.JdbcMemoryTransactionStore;
 import org.apache.activemq.store.jdbc.Statements;
@@ -633,13 +632,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {
-                while (rs.next() && count < maxReturned) {
+                while (rs.next() && count < maxReturned && listener.hasSpace()) {
                     if (listener.recoverMessageReference(rs.getString(1))) {
                         count++;
                     }
                 }
             } else {
-                while (rs.next() && count < maxReturned) {
+                while (rs.next() && count < maxReturned && listener.hasSpace()) {
                     if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
                         count++;
                     }
@@ -670,13 +669,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {
-                while (rs.next() && count < maxReturned) {
+                while (rs.next() && count < maxReturned && listener.hasSpace() ) {
                     if (listener.recoverMessageReference(rs.getString(1))) {
                         count++;
                     }
                 }
             } else {
-                while (rs.next() && count < maxReturned) {
+                while (rs.next() && count < maxReturned  && listener.hasSpace()) {
                     if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
                         count++;
                     }
@@ -1144,7 +1143,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {
-                while (rs.next() && count < maxReturned) {
+                while (rs.next() && count < maxReturned && listener.hasSpace()) {
                     if (listener.recoverMessageReference(rs.getString(1))) {
                         count++;
                     } else {
@@ -1153,7 +1152,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     }
                 }
             } else {
-                while (rs.next() && count < maxReturned) {
+                while (rs.next() && count < maxReturned && listener.hasSpace()) {
                     if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
                         count++;
                     } else {
