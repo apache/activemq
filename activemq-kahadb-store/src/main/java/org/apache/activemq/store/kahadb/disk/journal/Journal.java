@@ -275,7 +275,12 @@ public class Journal {
 
     private void doPreallocationZeros(RecoverableRandomAccessFile file) {
         ByteBuffer buffer = ByteBuffer.allocate(maxFileLength);
-        buffer.limit(maxFileLength);
+        // intentional double initialization due to interaction with the OS level
+        // file allocation mechanics.
+        for (int i = 0; i < maxFileLength; i++) {
+            buffer.put((byte) 0x00);
+        }
+        buffer.flip();
 
         try {
             FileChannel channel = file.getChannel();
