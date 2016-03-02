@@ -367,6 +367,7 @@ public class MQTTProtocolConverter {
         if (topics != null) {
             byte[] qos = new byte[topics.length];
             for (int i = 0; i < topics.length; i++) {
+                MQTTProtocolSupport.validate(topics[i].name().toString());
                 try {
                     qos[i] = findSubscriptionStrategy().onSubscribe(topics[i]);
                 } catch (IOException e) {
@@ -383,6 +384,7 @@ public class MQTTProtocolConverter {
             }
         } else {
             LOG.warn("No topics defined for Subscription " + command);
+            throw new MQTTProtocolException("SUBSCRIBE command received with no topic filter");
         }
     }
 
@@ -394,16 +396,20 @@ public class MQTTProtocolConverter {
         UTF8Buffer[] topics = command.topics();
         if (topics != null) {
             for (UTF8Buffer topic : topics) {
+                MQTTProtocolSupport.validate(topic.toString());
                 try {
                     findSubscriptionStrategy().onUnSubscribe(topic.toString());
                 } catch (IOException e) {
                     throw new MQTTProtocolException("Failed to process unsubscribe request", true, e);
                 }
             }
+            UNSUBACK ack = new UNSUBACK();
+            ack.messageId(command.messageId());
+            sendToMQTT(ack.encode());
+        } else {
+            LOG.warn("No topics defined for Subscription " + command);
+            throw new MQTTProtocolException("UNSUBSCRIBE command received with no topic filter");
         }
-        UNSUBACK ack = new UNSUBACK();
-        ack.messageId(command.messageId());
-        sendToMQTT(ack.encode());
     }
 
     /**
