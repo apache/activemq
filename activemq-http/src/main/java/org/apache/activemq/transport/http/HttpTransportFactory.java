@@ -65,11 +65,6 @@ public class HttpTransportFactory extends TransportFactory {
         }
     }
 
-    @Deprecated
-    protected final TextWireFormat asTextWireFormat(final WireFormat wireFormat) {
-        throw new UnsupportedOperationException("asTextWireFormat is no longer supported");
-    }
-
     protected WireFormat processWireFormat(final WireFormat wireFormat) {
         return wireFormat;
     }

@@ -20,9 +20,6 @@ import java.net.URI;
 
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.transport.http.marshallers.HttpTransportMarshaller;
-import org.apache.activemq.transport.http.marshallers.TextWireFormatMarshallers;
-import org.apache.activemq.transport.util.TextWireFormat;
-import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A useful base class for HTTP Transport implementations.
@@ -30,20 +27,12 @@ import org.apache.activemq.wireformat.WireFormat;
  *
  */
 public abstract class HttpTransportSupport extends TransportThreadSupport {
-    @Deprecated
-    private WireFormat textWireFormat;
     private HttpTransportMarshaller marshaller;
     private URI remoteUrl;
     private String proxyHost;
     private int proxyPort = 8080;
     private String proxyUser;
     private String proxyPassword;
-
-    @Deprecated
-    public HttpTransportSupport(final TextWireFormat textWireFormat, final URI remoteUrl) {
-        this(TextWireFormatMarshallers.newTransportMarshaller(textWireFormat), remoteUrl);
-        this.textWireFormat = textWireFormat;
-    }
 
     public HttpTransportSupport(final HttpTransportMarshaller marshaller, final URI remoteUrl) {
         this.marshaller = marshaller;
@@ -64,19 +53,8 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
         return remoteUrl;
     }
 
-    @Deprecated
-    public TextWireFormat getTextWireFormat() {
-        return (TextWireFormat) textWireFormat;
-    }
-
     public HttpTransportMarshaller getMarshaller() {
         return marshaller;
-    }
-
-    @Deprecated
-    public void setTextWireFormat(final TextWireFormat textWireFormat) {
-        this.textWireFormat = textWireFormat;
-        this.marshaller = TextWireFormatMarshallers.newTransportMarshaller(textWireFormat);
     }
 
     public String getProxyHost() {

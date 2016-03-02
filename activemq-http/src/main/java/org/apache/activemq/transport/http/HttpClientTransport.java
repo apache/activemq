@@ -87,11 +87,6 @@ public class HttpClientTransport extends HttpTransportSupport {
     protected boolean canSendCompressed = false;
     private int minSendAsCompressedSize = 0;
 
-    @Deprecated
-    public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
-        super(wireFormat, remoteUrl);
-    }
-
     public HttpClientTransport(final HttpTransportMarshaller marshaller, URI remoteUrl) {
         super(marshaller, remoteUrl);
     }
