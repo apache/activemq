@@ -293,7 +293,6 @@ public class Journal {
     }
 
     private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
-
         // create a template file that will be used to pre-allocate the journal files
         File templateFile = createJournalTemplateFile();
 
@@ -314,11 +313,10 @@ public class Journal {
 
     private File createJournalTemplateFile() {
         String fileName = "db-log.template";
-        File rc  = new File(directory, fileName);
+        File rc = new File(directory, fileName);
         if (rc.exists()) {
-            System.out.println("deleting file because it already exists...");
+            LOG.trace("deleting journal template file because it already exists...");
             rc.delete();
-
         }
         return rc;
     }
