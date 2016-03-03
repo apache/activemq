@@ -238,6 +238,21 @@ public class MQTTProtocolConverter {
         }
         this.connect = connect;
 
+        // The Server MUST respond to the CONNECT Packet with a CONNACK return code 0x01
+        // (unacceptable protocol level) and then disconnect the Client if the Protocol Level
+        // is not supported by the Server [MQTT-3.1.2-2].
+        if (connect.version() < 3 || connect.version() > 4) {
+            CONNACK ack = new CONNACK();
+            ack.code(CONNACK.Code.CONNECTION_REFUSED_UNACCEPTED_PROTOCOL_VERSION);
+            try {
+                getMQTTTransport().sendToMQTT(ack.encode());
+                getMQTTTransport().onException(IOExceptionSupport.create("Unsupported or invalid protocol version", null));
+            } catch (IOException e) {
+                getMQTTTransport().onException(IOExceptionSupport.create(e));
+            }
+            return;
+        }
+
         String clientId = "";
         if (connect.clientId() != null) {
             clientId = connect.clientId().toString();

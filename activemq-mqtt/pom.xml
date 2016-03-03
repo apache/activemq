@@ -140,7 +140,11 @@
       <artifactId>activemq-kahadb-store</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.eclipse.paho</groupId>
       <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
@@ -311,7 +315,7 @@
       </build>
     </profile>
   </profiles>
-  
+
   <repositories>
       <!-- for the paho dependency -->
       <repository>
