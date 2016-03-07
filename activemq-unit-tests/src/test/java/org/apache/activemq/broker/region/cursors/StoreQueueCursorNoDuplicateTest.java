@@ -27,7 +27,6 @@ import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -83,14 +82,10 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
         queueMessageStore.start();
         queueMessageStore.registerIndexListener(null);
 
-        QueueStorePrefetch underTest = new QueueStorePrefetch(queue);
+        QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
         SystemUsage systemUsage = new SystemUsage();
-
-        ActiveMQTextMessage sampleMessage = getMessage(0);
-        int unitSize = sampleMessage.getSize();
-
         // ensure memory limit is reached
-        systemUsage.getMemoryUsage().setLimit(unitSize * count);
+        systemUsage.getMemoryUsage().setLimit(messageBytesSize * (count + 2));
         underTest.setSystemUsage(systemUsage);
         underTest.setEnableAudit(false);
         underTest.start();
@@ -115,11 +110,8 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
             ref.decrementReferenceCount();
             underTest.remove();
             LOG.info("Received message: {} with body: {}",
-                    ref.getMessageId(), ((ActiveMQTextMessage) ref.getMessage()).getText());
+                     ref.getMessageId(), ((ActiveMQTextMessage)ref.getMessage()).getText());
             assertEquals(dequeueCount++, ref.getMessageId().getProducerSequenceId());
-
-            // memory store keeps a message ref that needs releasing to free usage
-            queueMessageStore.removeMessage(contextNotInTx, new MessageAck(ref.getMessage(), MessageAck.STANDARD_ACK_TYPE, 1));
         }
         underTest.release();
         assertEquals(count, dequeueCount);

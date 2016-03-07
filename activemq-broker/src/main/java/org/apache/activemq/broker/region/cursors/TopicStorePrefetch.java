@@ -40,6 +40,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     private final String subscriberName;
     private final Subscription subscription;
     private byte lastRecoveredPriority = 9;
+    private boolean storeHasMessages = false;
 
     /**
      * @param topic
@@ -55,6 +56,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         this.maxProducersToAudit=32;
         this.maxAuditDepth=10000;
         resetSize();
+        this.storeHasMessages=this.size > 0;
     }
 
     @Override
@@ -71,6 +73,11 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         //this.messageSize.addSize(node.getMessage().getSize());
     }
 
+    @Override
+    public final synchronized boolean addMessageLast(MessageReference node) throws Exception {
+        this.storeHasMessages = super.addMessageLast(node);
+        return this.storeHasMessages;
+    }
 
     @Override
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
@@ -83,6 +90,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
             if (recovered && !cached) {
                 lastRecoveredPriority = message.getPriority();
             }
+            storeHasMessages = true;
         }
         return recovered;
     }
@@ -126,8 +134,13 @@ class TopicStorePrefetch extends AbstractStoreCursor {
 
     @Override
     protected void doFillBatch() throws Exception {
+        // avoid repeated  trips to the store if there is nothing of interest
+        this.storeHasMessages = false;
         this.store.recoverNextMessages(clientId, subscriberName,
                 maxBatchSize, this);
+        if (!this.storeHasMessages && (!this.batchList.isEmpty() || !hadSpace)) {
+            this.storeHasMessages = true;
+        }
     }
 
     public byte getLastRecoveredPriority() {
@@ -145,6 +158,6 @@ class TopicStorePrefetch extends AbstractStoreCursor {
 
     @Override
     public String toString() {
-        return "TopicStorePrefetch(" + clientId + "," + subscriberName + ") " + this.subscription.getConsumerInfo().getConsumerId() + " - " + super.toString();
+        return "TopicStorePrefetch(" + clientId + "," + subscriberName + ",storeHasMessages=" + this.storeHasMessages +") " + this.subscription.getConsumerInfo().getConsumerId() + " - " + super.toString();
     }
 }

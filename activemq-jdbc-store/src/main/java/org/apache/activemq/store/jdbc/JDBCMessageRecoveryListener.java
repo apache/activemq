@@ -24,5 +24,4 @@ package org.apache.activemq.store.jdbc;
 public interface JDBCMessageRecoveryListener {
     boolean recoverMessage(long sequenceId, byte[] message) throws Exception;
     boolean recoverMessageReference(String reference) throws Exception;
-    boolean hasSpace();
 }

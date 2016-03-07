@@ -38,14 +38,16 @@ import org.slf4j.LoggerFactory;
 class QueueStorePrefetch extends AbstractStoreCursor {
     private static final Logger LOG = LoggerFactory.getLogger(QueueStorePrefetch.class);
     private final MessageStore store;
+    private final Broker broker;
 
     /**
      * Construct it
      * @param queue
      */
-    public QueueStorePrefetch(Queue queue) {
+    public QueueStorePrefetch(Queue queue, Broker broker) {
         super(queue);
         this.store = queue.getMessageStore();
+        this.broker = broker;
 
     }
 
@@ -113,8 +115,11 @@ class QueueStorePrefetch extends AbstractStoreCursor {
 
     @Override
     protected void doFillBatch() throws Exception {
-        this.store.recoverNextMessages(this.maxBatchSize, this);
-        dealWithDuplicates(); // without the index lock
+        hadSpace = this.hasSpace();
+        if (!broker.getBrokerService().isPersistent() || hadSpace) {
+            this.store.recoverNextMessages(this.maxBatchSize, this);
+            dealWithDuplicates(); // without the index lock
+        }
     }
 
     @Override
