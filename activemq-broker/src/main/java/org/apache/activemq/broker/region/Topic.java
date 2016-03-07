@@ -657,6 +657,7 @@ public class Topic extends BaseDestination implements Task {
                 for (Message message : toExpire) {
                     for (DurableTopicSubscription sub : durableSubscribers.values()) {
                         if (!sub.isActive()) {
+                            message.setRegionDestination(this);
                             messageExpired(connectionContext, sub, message);
                         }
                     }
