@@ -863,9 +863,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
         } while (started.get());
 
-        if (store == null || (!context.isInTransaction() && !message.isPersistent())) {
-            messageSent(context, message);
-        }
         if (result != null && message.isResponseRequired() && !result.isCancelled()) {
             try {
                 result.get();
@@ -886,6 +883,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         } else {
             // no ordering issue with non persistent messages
             result = tryCursorAdd(message);
+            messageSent(context, message);
         }
 
         return result;
