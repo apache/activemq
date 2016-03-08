@@ -62,6 +62,8 @@ public final class AdvisorySupport {
     public static final String MSG_PROPERTY_ORIGIN_BROKER_NAME = "originBrokerName";
     public static final String MSG_PROPERTY_ORIGIN_BROKER_URL = "originBrokerURL";
     public static final String MSG_PROPERTY_USAGE_NAME = "usageName";
+    public static final String MSG_PROPERTY_USAGE_COUNT = "usageCount";
+
     public static final String MSG_PROPERTY_CONSUMER_ID = "consumerId";
     public static final String MSG_PROPERTY_PRODUCER_ID = "producerId";
     public static final String MSG_PROPERTY_MESSAGE_ID = "orignalMessageId";

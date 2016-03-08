@@ -19,16 +19,13 @@ package org.apache.activemq.usecases;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -40,14 +37,14 @@ import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TopicProducerFlowControlTest extends TestCase implements MessageListener {
-    private static final Logger LOG = LoggerFactory.getLogger(TopicProducerFlowControlTest.class);
+public class TopicProducerToSubFileCursorTest extends TestCase implements MessageListener {
+    private static final Logger LOG = LoggerFactory.getLogger(TopicProducerToSubFileCursorTest.class);
     private static final String brokerName = "testBroker";
     private static final String brokerUrl = "vm://" + brokerName;
     protected static final int destinationMemLimit = 2097152; // 2MB
     private static final AtomicLong produced = new AtomicLong();
     private static final AtomicLong consumed = new AtomicLong();
-    private static final int numMessagesToSend = 50000;
+    private static final int numMessagesToSend = 20000;
 
     private BrokerService broker;
 
@@ -55,7 +52,8 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         // Setup and start the broker
         broker = new BrokerService();
         broker.setBrokerName(brokerName);
-        broker.setPersistent(false);
+        broker.setPersistent(true);
+        broker.setDeleteAllMessagesOnStartup(true);
         broker.setSchedulerSupport(false);
         broker.setUseJmx(false);
         broker.setUseShutdownHook(false);
@@ -68,6 +66,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         PolicyEntry tpe = new PolicyEntry();
         tpe.setTopic(">");
         tpe.setMemoryLimit(destinationMemLimit);
+        tpe.setCursorMemoryHighWaterMark(2); // 2% of global usage will match destMemLimit
         tpe.setProducerFlowControl(true);
         tpe.setAdvisoryWhenFull(true);
 
@@ -75,6 +74,8 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         pm.setPolicyEntries(Arrays.asList(new PolicyEntry[]{tpe}));
 
         setDestinationPolicy(broker, pm);
+
+        broker.getSystemUsage().getMemoryUsage().setLimit(100*1024*1024);
 
         // Start the broker
         broker.start();
@@ -90,7 +91,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         broker.waitUntilStopped();
     }
 
-    public void testTopicProducerFlowControl() throws Exception {
+    public void testTopicProducerFlowControlNotUsedWhenSubSpoolsToDiskOnTwoPercentSystemUsage() throws Exception {
 
         // Create the connection factory
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
@@ -106,19 +107,18 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         Session listenerSession = c.createSession(false, 1);
         Destination destination = createDestination(listenerSession);
 
-        listenerSession.createConsumer(destination).setMessageListener(new TopicProducerFlowControlTest());
+        listenerSession.createConsumer(destination).setMessageListener(new TopicProducerToSubFileCursorTest());
         final AtomicInteger blockedCounter = new AtomicInteger(0);
         listenerSession.createConsumer(new ActiveMQTopic(AdvisorySupport.FULL_TOPIC_PREFIX + ">")).setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
                 try {
-                    if (blockedCounter.get() % 100 == 0) {
-                        LOG.info("Got full advisory, usageName: " +
-                                message.getStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME) +
-                                ", usageCount: " +
-                                message.getLongProperty(AdvisorySupport.MSG_PROPERTY_USAGE_COUNT)
-                                + ", blockedCounter: " + blockedCounter.get());
-                    }
+                    LOG.error("Got full advisory, usageName: " +
+                            message.getStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME) +
+                            ", usageCount: " +
+                            message.getLongProperty(AdvisorySupport.MSG_PROPERTY_USAGE_COUNT)
+                            + ", blockedCounter: " + blockedCounter.get());
+
                     blockedCounter.incrementAndGet();
 
                 } catch (Exception error) {
@@ -166,9 +166,9 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         assertEquals("Didn't produce all messages", numMessagesToSend, produced.get());
         assertEquals("Didn't consume all messages", numMessagesToSend, consumed.get());
 
-         assertTrue("Producer got blocked", Wait.waitFor(new Wait.Condition() {
+         assertTrue("Producer did not get blocked", Wait.waitFor(new Wait.Condition() {
              public boolean isSatisified() throws Exception {
-                 return blockedCounter.get() > 0;
+                 return blockedCounter.get() == 0;
              }
          }, 5 * 1000));
     }
