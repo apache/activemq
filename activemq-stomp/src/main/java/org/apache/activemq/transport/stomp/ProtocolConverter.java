@@ -341,6 +341,7 @@ public class ProtocolConverter {
         }
 
         message.onSend();
+        message.beforeMarshall(null);
         sendToActiveMQ(message, createResponseHandler(command));
     }
 
