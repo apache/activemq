@@ -30,10 +30,10 @@ import org.apache.activemq.selector.SelectorParser;
  *
  * @org.apache.xbean.XBean
  *
- * 
+ *
  */
 public class FilteredDestination {
-    
+
     private ActiveMQDestination destination;
     private String selector;
     private BooleanExpression filter;
@@ -90,5 +90,36 @@ public class FilteredDestination {
      */
     public void setTopic(String topic) {
         setDestination(ActiveMQDestination.createDestination(topic, ActiveMQDestination.TOPIC_TYPE));
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((destination == null) ? 0 : destination.hashCode());
+        result = prime * result + ((selector == null) ? 0 : selector.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        FilteredDestination other = (FilteredDestination) obj;
+        if (destination == null) {
+            if (other.destination != null)
+                return false;
+        } else if (!destination.equals(other.destination))
+            return false;
+        if (selector == null) {
+            if (other.selector != null)
+                return false;
+        } else if (!selector.equals(other.selector))
+            return false;
+        return true;
     }
 }
