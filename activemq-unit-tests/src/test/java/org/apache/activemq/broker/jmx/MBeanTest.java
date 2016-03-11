@@ -820,6 +820,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         super.setUp();
         ManagementContext managementContext = broker.getManagementContext();
         mbeanServer = managementContext.getMBeanServer();
+
+        broker.getTransportConnectorByScheme("tcp").setUpdateClusterClientsOnRemove(true);
     }
 
     @Override
@@ -1518,7 +1520,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertNotNull(connector);
 
         assertFalse(connector.isRebalanceClusterClients());
-        assertFalse(connector.isUpdateClusterClientsOnRemove());
+        assertTrue(connector.isUpdateClusterClientsOnRemove());
         assertFalse(connector.isUpdateClusterClients());
         assertFalse(connector.isAllowLinkStealingEnabled());
     }
