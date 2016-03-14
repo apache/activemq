@@ -30,6 +30,7 @@ import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveScheduledJobCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveScheduledJobsCommand;
 import org.apache.activemq.store.kahadb.data.KahaRescheduleJobCommand;
+import org.apache.activemq.store.kahadb.data.KahaRewrittenDataFileCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
 import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
@@ -83,5 +84,8 @@ public class Visitor {
     }
 
     public void visit(KahaUpdateMessageCommand kahaUpdateMessageCommand) throws IOException {
+    }
+
+    public void visit(KahaRewrittenDataFileCommand kahaUpdateMessageCommand) throws IOException {
     }
 }

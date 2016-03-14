@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,21 +16,18 @@
  */
 package org.apache.activemq.store.kahadb.disk.util;
 
-import org.apache.activemq.store.kahadb.disk.page.PageFile;
-import org.apache.activemq.util.ByteSequence;
-
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UTFDataFormatException;
 
+import org.apache.activemq.store.kahadb.disk.page.PageFile;
+import org.apache.activemq.util.ByteSequence;
 
 /**
  * Optimized ByteArrayOutputStream
- *
- *
  */
-public class DataByteArrayOutputStream extends OutputStream implements DataOutput {
+public class DataByteArrayOutputStream extends OutputStream implements DataOutput, AutoCloseable {
     private static final int DEFAULT_SIZE = PageFile.DEFAULT_PAGE_SIZE;
     protected byte buf[];
     protected int pos;
@@ -88,6 +85,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
      * @param b the byte to be written.
      * @throws IOException
      */
+    @Override
     public void write(int b) throws IOException {
         int newcount = pos + 1;
         ensureEnoughBuffer(newcount);
@@ -105,6 +103,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
      * @param len the number of bytes to write.
      * @throws IOException
      */
+    @Override
     public void write(byte b[], int off, int len) throws IOException {
         if (len == 0) {
             return;
@@ -146,18 +145,21 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         return pos;
     }
 
+    @Override
     public void writeBoolean(boolean v) throws IOException {
         ensureEnoughBuffer(pos + 1);
         buf[pos++] = (byte)(v ? 1 : 0);
         onWrite();
     }
 
+    @Override
     public void writeByte(int v) throws IOException {
         ensureEnoughBuffer(pos + 1);
         buf[pos++] = (byte)(v >>> 0);
         onWrite();
     }
 
+    @Override
     public void writeShort(int v) throws IOException {
         ensureEnoughBuffer(pos + 2);
         buf[pos++] = (byte)(v >>> 8);
@@ -165,6 +167,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         onWrite();
     }
 
+    @Override
     public void writeChar(int v) throws IOException {
         ensureEnoughBuffer(pos + 2);
         buf[pos++] = (byte)(v >>> 8);
@@ -172,6 +175,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         onWrite();
     }
 
+    @Override
     public void writeInt(int v) throws IOException {
         ensureEnoughBuffer(pos + 4);
         buf[pos++] = (byte)(v >>> 24);
@@ -181,6 +185,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         onWrite();
     }
 
+    @Override
     public void writeLong(long v) throws IOException {
         ensureEnoughBuffer(pos + 8);
         buf[pos++] = (byte)(v >>> 56);
@@ -194,14 +199,17 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         onWrite();
     }
 
+    @Override
     public void writeFloat(float v) throws IOException {
         writeInt(Float.floatToIntBits(v));
     }
 
+    @Override
     public void writeDouble(double v) throws IOException {
         writeLong(Double.doubleToLongBits(v));
     }
 
+    @Override
     public void writeBytes(String s) throws IOException {
         int length = s.length();
         for (int i = 0; i < length; i++) {
@@ -209,6 +217,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         }
     }
 
+    @Override
     public void writeChars(String s) throws IOException {
         int length = s.length();
         for (int i = 0; i < length; i++) {
@@ -218,6 +227,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         }
     }
 
+    @Override
     public void writeUTF(String str) throws IOException {
         int strlen = str.length();
         int encodedsize = 0;

@@ -87,9 +87,7 @@ public class TransactedStoreUsageSuspendResumeTest {
                 do {
                     Message message = consumer.receive(5000);
                     if (message != null) {
-                        if ((messagesReceivedCountDown.getCount() % (MAX_MESSAGES / 5)) == 0) {
-                            session.commit();
-                        }
+                        session.commit();
                         messagesReceivedCountDown.countDown();
                     }
                     if (messagesReceivedCountDown.getCount() % 500 == 0) {

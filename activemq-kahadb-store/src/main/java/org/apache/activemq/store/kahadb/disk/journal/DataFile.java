@@ -18,29 +18,23 @@ package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * DataFile
- *
- *
  */
 public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFile> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DataFile.class);
+    public final static byte STANDARD_LOG_FILE = 0x0;
 
     protected final File file;
     protected final Integer dataFileId;
     protected volatile int length;
+    protected int typeCode = STANDARD_LOG_FILE;
     protected final SequenceSet corruptedBlocks = new SequenceSet();
 
     DataFile(File file, int number) {
@@ -57,6 +51,14 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         return dataFileId;
     }
 
+    public int getTypeCode() {
+        return typeCode;
+    }
+
+    public void setTypeCode(int typeCode) {
+        this.typeCode = typeCode;
+    }
+
     public synchronized int getLength() {
         return length;
     }
@@ -70,7 +72,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     @Override
-	public synchronized String toString() {
+    public synchronized String toString() {
         return file.getName() + " number = " + dataFileId + " , length = " + length;
     }
 
@@ -95,7 +97,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     @Override
-	public int compareTo(DataFile df) {
+    public int compareTo(DataFile df) {
         return dataFileId - df.dataFileId;
     }
 
@@ -112,5 +114,4 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     public int hashCode() {
         return dataFileId;
     }
-
 }

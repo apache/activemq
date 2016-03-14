@@ -16,11 +16,12 @@
  */
 package org.apache.activemq.store.kahadb.disk.journal;
 
-import org.apache.activemq.util.ByteSequence;
-
 import java.io.IOException;
 
-public interface FileAppender {
+import org.apache.activemq.util.ByteSequence;
+
+public interface FileAppender extends AutoCloseable {
+
     public static final String PROPERTY_LOG_WRITE_STAT_WINDOW = "org.apache.kahadb.journal.appender.WRITE_STAT_WINDOW";
     public static final int maxStat = Integer.parseInt(System.getProperty(PROPERTY_LOG_WRITE_STAT_WINDOW, "0"));
 
@@ -28,5 +29,6 @@ public interface FileAppender {
 
     Location storeItem(ByteSequence data, byte type, Runnable onComplete) throws IOException;
 
+    @Override
     void close() throws IOException;
 }
