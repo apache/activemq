@@ -141,6 +141,7 @@ public class Journal {
     protected boolean checkForCorruptionOnStartup;
     protected boolean enableAsyncDiskSync = true;
     private Timer timer;
+    private int nextDataFileId = 1;
 
     protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
     protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
@@ -163,6 +164,7 @@ public class Journal {
         appender = callerBufferAppender ? new CallerBufferingDataFileAppender(this) : new DataFileAppender(this);
 
         File[] files = directory.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String n) {
                 return dir.equals(directory) && n.startsWith(filePrefix) && n.endsWith(fileSuffix);
             }
@@ -201,7 +203,9 @@ public class Journal {
             }
         }
 
-        getCurrentWriteFile();
+        nextDataFileId = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
+
+        getOrCreateCurrentWriteFile();
 
         if (preallocationStrategy != PreallocationStrategy.SPARSE_FILE && maxFileLength != DEFAULT_MAX_FILE_LENGTH) {
             LOG.warn("You are using a preallocation strategy and journal maxFileLength which should be benchmarked accordingly to not introduce unexpected latencies.");
@@ -219,6 +223,7 @@ public class Journal {
 
 
         cleanupTask = new Runnable() {
+            @Override
             public void run() {
                 cleanup();
             }
@@ -306,6 +311,7 @@ public class Journal {
         return rc;
     }
 
+
     private static byte[] bytes(String string) {
         try {
             return string.getBytes("UTF-8");
@@ -321,16 +327,17 @@ public class Journal {
 
         DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         try {
-            while( true ) {
+            while (true) {
                 int size = checkBatchRecord(reader, location.getOffset());
-                if ( size>=0 && location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size <= dataFile.getLength()) {
-                    location.setOffset(location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size);
+                if (size >= 0 && location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size <= dataFile.getLength()) {
+                    location.setOffset(location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size);
                 } else {
 
-                    // Perhaps it's just some corruption... scan through the file to find the next valid batch record.  We
+                    // Perhaps it's just some corruption... scan through the
+                    // file to find the next valid batch record. We
                     // may have subsequent valid batch records.
-                    int nextOffset = findNextBatchRecord(reader, location.getOffset()+1);
-                    if( nextOffset >=0 ) {
+                    int nextOffset = findNextBatchRecord(reader, location.getOffset() + 1);
+                    if (nextOffset >= 0) {
                         Sequence sequence = new Sequence(location.getOffset(), nextOffset - 1);
                         LOG.warn("Corrupt journal records found in '" + dataFile.getFile() + "' between offsets: " + sequence);
                         dataFile.corruptedBlocks.add(sequence);
@@ -352,9 +359,9 @@ public class Journal {
             totalLength.addAndGet(dataFile.getLength() - existingLen);
         }
 
-        if( !dataFile.corruptedBlocks.isEmpty() ) {
+        if (!dataFile.corruptedBlocks.isEmpty()) {
             // Is the end of the data file corrupted?
-            if( dataFile.corruptedBlocks.getTail().getLast()+1 == location.getOffset() ) {
+            if (dataFile.corruptedBlocks.getTail().getLast() + 1 == location.getOffset()) {
                 dataFile.setLength((int) dataFile.corruptedBlocks.removeLastSequence().getFirst());
             }
         }
@@ -368,19 +375,19 @@ public class Journal {
         ByteSequence bs = new ByteSequence(data, 0, reader.read(offset, data));
 
         int pos = 0;
-        while( true ) {
+        while (true) {
             pos = bs.indexOf(header, pos);
-            if( pos >= 0 ) {
-                return offset+pos;
+            if (pos >= 0) {
+                return offset + pos;
             } else {
                 // need to load the next data chunck in..
-                if( bs.length != data.length ) {
+                if (bs.length != data.length) {
                     // If we had a short read then we were at EOF
                     return -1;
                 }
-                offset += bs.length-BATCH_CONTROL_RECORD_HEADER.length;
+                offset += bs.length - BATCH_CONTROL_RECORD_HEADER.length;
                 bs = new ByteSequence(data, 0, reader.read(offset, data));
-                pos=0;
+                pos = 0;
             }
         }
     }
@@ -392,34 +399,34 @@ public class Journal {
 
         reader.readFully(offset, controlRecord);
 
-        // Assert that it's  a batch record.
-        for( int i=0; i < BATCH_CONTROL_RECORD_HEADER.length; i++ ) {
-            if( controlIs.readByte() != BATCH_CONTROL_RECORD_HEADER[i] ) {
+            // Assert that it's a batch record.
+        for (int i = 0; i < BATCH_CONTROL_RECORD_HEADER.length; i++) {
+            if (controlIs.readByte() != BATCH_CONTROL_RECORD_HEADER[i]) {
                 return -1;
             }
         }
 
         int size = controlIs.readInt();
-        if( size > MAX_BATCH_SIZE ) {
+        if (size > MAX_BATCH_SIZE) {
             return -1;
         }
 
-        if( isChecksum() ) {
+        if (isChecksum()) {
 
             long expectedChecksum = controlIs.readLong();
-            if( expectedChecksum == 0 ) {
+            if (expectedChecksum == 0) {
                 // Checksuming was not enabled when the record was stored.
                 // we can't validate the record :(
                 return size;
             }
 
             byte data[] = new byte[size];
-            reader.readFully(offset+BATCH_CONTROL_RECORD_SIZE, data);
+                reader.readFully(offset + BATCH_CONTROL_RECORD_SIZE, data);
 
             Checksum checksum = new Adler32();
             checksum.update(data, 0, data.length);
 
-            if( expectedChecksum!=checksum.getValue() ) {
+            if (expectedChecksum != checksum.getValue()) {
                 return -1;
             }
 
@@ -436,21 +443,42 @@ public class Journal {
         return totalLength.get();
     }
 
-    synchronized DataFile getCurrentWriteFile() throws IOException {
+    synchronized DataFile getOrCreateCurrentWriteFile() throws IOException {
         if (dataFiles.isEmpty()) {
             rotateWriteFile();
         }
-        return dataFiles.getTail();
+
+        DataFile current = dataFiles.getTail();
+
+        if (current != null) {
+            return current;
+        } else {
+            return rotateWriteFile();
+        }
     }
 
     synchronized DataFile rotateWriteFile() {
-        int nextNum = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
+        int nextNum = nextDataFileId++;
         File file = getFile(nextNum);
         DataFile nextWriteFile = new DataFile(file, nextNum);
         fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
         fileByFileMap.put(file, nextWriteFile);
         dataFiles.addLast(nextWriteFile);
         return nextWriteFile;
+    }
+
+    public synchronized DataFile reserveDataFile() {
+        int nextNum = nextDataFileId++;
+        File file = getFile(nextNum);
+        DataFile reservedDataFile = new DataFile(file, nextNum);
+        fileMap.put(reservedDataFile.getDataFileId(), reservedDataFile);
+        fileByFileMap.put(file, reservedDataFile);
+        if (dataFiles.isEmpty()) {
+            dataFiles.addLast(reservedDataFile);
+        } else {
+            dataFiles.getTail().linkBefore(reservedDataFile);
+        }
+        return reservedDataFile;
     }
 
     public File getFile(int nextNum) {
@@ -477,10 +505,6 @@ public class Journal {
             throw new IOException("Could not locate data file " + getFile(item.getDataFileId()));
         }
         return dataFile.getFile();
-    }
-
-    private DataFile getNextDataFile(DataFile dataFile) {
-        return dataFile.getNext();
     }
 
     public void close() throws IOException {
@@ -521,6 +545,7 @@ public class Journal {
             DataFile dataFile = i.next();
             result &= dataFile.delete();
         }
+
         totalLength.set(0);
         fileMap.clear();
         fileByFileMap.clear();
@@ -536,11 +561,11 @@ public class Journal {
     public synchronized void removeDataFiles(Set<Integer> files) throws IOException {
         for (Integer key : files) {
             // Can't remove the data file (or subsequent files) that is currently being written to.
-            if( key >= lastAppendLocation.get().getDataFileId() ) {
+            if (key >= lastAppendLocation.get().getDataFileId()) {
                 continue;
             }
             DataFile dataFile = fileMap.get(key);
-            if( dataFile!=null ) {
+            if (dataFile != null) {
                 forceRemoveDataFile(dataFile);
             }
         }
@@ -569,7 +594,7 @@ public class Journal {
             LOG.debug("Successfully moved data file");
         } else {
             LOG.debug("Deleting data file: {}", dataFile);
-            if ( dataFile.delete() ) {
+            if (dataFile.delete()) {
                 LOG.debug("Discarded data file: {}", dataFile);
             } else {
                 LOG.warn("Failed to discard data file : {}", dataFile.getFile());
@@ -606,7 +631,7 @@ public class Journal {
             if (cur == null) {
                 if (location == null) {
                     DataFile head = dataFiles.getHead();
-                    if( head == null ) {
+                    if (head == null) {
                         return null;
                     }
                     cur = new Location();
@@ -629,7 +654,7 @@ public class Journal {
 
             // Did it go into the next file??
             if (dataFile.getLength() <= cur.getOffset()) {
-                dataFile = getNextDataFile(dataFile);
+                dataFile = dataFile.getNext();
                 if (dataFile == null) {
                     return null;
                 } else {
@@ -758,10 +783,35 @@ public class Journal {
         this.archiveDataLogs = archiveDataLogs;
     }
 
-    synchronized public Integer getCurrentDataFileId() {
-        if (dataFiles.isEmpty())
+    public synchronized DataFile getDataFileById(int dataFileId) {
+        if (dataFiles.isEmpty()) {
             return null;
-        return dataFiles.getTail().getDataFileId();
+        }
+
+        return fileMap.get(Integer.valueOf(dataFileId));
+    }
+
+    public synchronized DataFile getCurrentDataFile() {
+        if (dataFiles.isEmpty()) {
+            return null;
+        }
+
+        DataFile current = dataFiles.getTail();
+
+        if (current != null) {
+            return current;
+        } else {
+            return null;
+        }
+    }
+
+    public synchronized Integer getCurrentDataFileId() {
+        DataFile current = getCurrentDataFile();
+        if (current != null) {
+            return current.getDataFileId();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -869,10 +919,12 @@ public class Journal {
             hash = (int)(file ^ offset);
         }
 
+        @Override
         public int hashCode() {
             return hash;
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj instanceof WriteKey) {
                 WriteKey di = (WriteKey)obj;

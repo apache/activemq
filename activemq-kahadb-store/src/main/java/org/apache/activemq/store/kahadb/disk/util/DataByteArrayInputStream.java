@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,19 +16,18 @@
  */
 package org.apache.activemq.store.kahadb.disk.util;
 
-import org.apache.activemq.util.ByteSequence;
-
 import java.io.DataInput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UTFDataFormatException;
 
+import org.apache.activemq.util.ByteSequence;
+
 /**
  * Optimized ByteArrayInputStream that can be used more than once
- *
- *
  */
-public final class DataByteArrayInputStream extends InputStream implements DataInput {
+public final class DataByteArrayInputStream extends InputStream implements DataInput, AutoCloseable {
+
     private byte[] buf;
     private int pos;
     private int offset;
@@ -137,6 +136,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
      * @return the next byte of data, or <code>-1</code> if the end of the
      *         stream has been reached.
      */
+    @Override
     public int read() {
         return (pos < length) ? (buf[pos++] & 0xff) : -1;
     }
@@ -152,6 +152,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
      *         <code>-1</code> if there is no more data because the end of the
      *         stream has been reached.
      */
+    @Override
     public int read(byte b[], int off, int len) {
         if (b == null) {
             throw new NullPointerException();
@@ -174,18 +175,22 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
      * @return the number of bytes that can be read from the input stream
      *         without blocking.
      */
+    @Override
     public int available() {
         return length - pos;
     }
 
+    @Override
     public void readFully(byte[] b) {
         read(b, 0, b.length);
     }
 
+    @Override
     public void readFully(byte[] b, int off, int len) {
         read(b, off, len);
     }
 
+    @Override
     public int skipBytes(int n) {
         if (pos + n > length) {
             n = length - pos;
@@ -197,39 +202,47 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         return n;
     }
 
+    @Override
     public boolean readBoolean() {
         return read() != 0;
     }
 
+    @Override
     public byte readByte() {
         return (byte)read();
     }
 
+    @Override
     public int readUnsignedByte() {
         return read();
     }
 
+    @Override
     public short readShort() {
         this.read(work, 0, 2);
         return (short) (((work[0] & 0xff) << 8) | (work[1] & 0xff));
     }
 
+    @Override
     public int readUnsignedShort() {
         this.read(work, 0, 2);
-        return (int) (((work[0] & 0xff) << 8) | (work[1] & 0xff));
+        return ((work[0] & 0xff) << 8) | (work[1] & 0xff);
     }
 
+    @Override
     public char readChar() {
         this.read(work, 0, 2);
         return (char) (((work[0] & 0xff) << 8) | (work[1] & 0xff));
     }
 
+    @Override
     public int readInt() {
         this.read(work, 0, 4);
         return ((work[0] & 0xff) << 24) | ((work[1] & 0xff) << 16) |
                ((work[2] & 0xff) << 8) | (work[3] & 0xff);
     }
 
+    @Override
     public long readLong() {
         this.read(work, 0, 8);
 
@@ -241,14 +254,17 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         return ((i1 & 0xffffffffL) << 32) | (i2 & 0xffffffffL);
     }
 
+    @Override
     public float readFloat() throws IOException {
         return Float.intBitsToFloat(readInt());
     }
 
+    @Override
     public double readDouble() throws IOException {
         return Double.longBitsToDouble(readLong());
     }
 
+    @Override
     public String readLine() {
         int start = pos;
         while (pos < length) {
@@ -267,6 +283,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         return new String(buf, start, pos);
     }
 
+    @Override
     public String readUTF() throws IOException {
         int length = readUnsignedShort();
         int endPos = pos + length;

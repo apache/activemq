@@ -37,6 +37,7 @@ enum KahaEntryType {
   KAHA_REMOVE_SCHEDULED_JOB_COMMAND = 13;
   KAHA_REMOVE_SCHEDULED_JOBS_COMMAND = 14;
   KAHA_DESTROY_SCHEDULER_COMMAND = 15;
+  KAHA_REWRITTEN_DATA_FILE_COMMAND = 16;
 }
 
 message KahaTraceCommand {
@@ -238,6 +239,17 @@ message KahaDestroySchedulerCommand {
   //| option java_type_method = "KahaEntryType";
 
   required string scheduler=1;
+}
+
+message KahaRewrittenDataFileCommand {
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaRewrittenDataFileCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required int32 sourceDataFileId = 1;
+  optional int32 rewriteType = 2;
+  optional bool skipIfSourceExists = 3 [default = true];
+
 }
 
 // TODO things to ponder
