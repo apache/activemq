@@ -64,7 +64,7 @@ public final class OpenTypeSupport {
         private final List<String> itemDescriptionsList = new ArrayList<String>();
         private final List<OpenType> itemTypesList = new ArrayList<OpenType>();
 
-        public CompositeType getCompositeType() throws OpenDataException {
+        public synchronized CompositeType getCompositeType() throws OpenDataException {
             if (compositeType == null) {
                 init();
                 compositeType = createCompositeType();
