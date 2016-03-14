@@ -80,7 +80,7 @@ if "%ACTIVEMQ_TMP%" == "" set ACTIVEMQ_TMP=%ACTIVEMQ_DATA%\tmp
 if /i not "%1" == "start" goto debugOpts
 
 
-if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=%ACTIVEMQ_CONF%\login.config
+if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config="%ACTIVEMQ_CONF%\login.config"
 
 if "%ACTIVEMQ_SUNJMX_START%" == "" set ACTIVEMQ_SUNJMX_START=-Dcom.sun.management.jmxremote
 REM set ACTIVEMQ_SUNJMX_START=-Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
