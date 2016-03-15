@@ -51,7 +51,7 @@ public final class SelectorManager {
                 @Override
                 public Thread newThread(Runnable runnable) {
                     Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + (i++));
-                    t.setDaemon(false);
+                    t.setDaemon(true);
                     return t;
                 }
             });
