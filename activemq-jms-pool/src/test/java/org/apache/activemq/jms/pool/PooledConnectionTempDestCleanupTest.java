@@ -19,6 +19,8 @@ package org.apache.activemq.jms.pool;
 
 import static org.junit.Assert.assertTrue;
 
+import java.net.URI;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -27,10 +29,13 @@ import javax.jms.TemporaryQueue;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 /**
  * Test of lingering temporary destinations on pooled connections when the
@@ -41,6 +46,9 @@ import org.junit.Test;
  * jira: AMQ-3457
  */
 public class PooledConnectionTempDestCleanupTest extends JmsPoolTestSupport {
+
+    @Rule
+    public TestName testName = new TestName();
 
     protected ActiveMQConnectionFactory directConnFact;
     protected Connection directConn1;
@@ -68,7 +76,7 @@ public class PooledConnectionTempDestCleanupTest extends JmsPoolTestSupport {
         brokerService.waitUntilStarted();
 
         // Create the ActiveMQConnectionFactory and the PooledConnectionFactory.
-        directConnFact = new ActiveMQConnectionFactory(brokerService.getVmConnectorURI());
+        directConnFact = new ActiveMQConnectionFactory(getBrokerConnectionURI());
         pooledConnFact = new PooledConnectionFactory();
         pooledConnFact.setConnectionFactory(directConnFact);
 
@@ -113,6 +121,16 @@ public class PooledConnectionTempDestCleanupTest extends JmsPoolTestSupport {
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
         brokerService.setSchedulerSupport(false);
+
+        TransportConnector connector = new TransportConnector();
+        connector.setUri(new URI("tcp://localhost:0"));
+        connector.setName(testName.getMethodName());
+
+        brokerService.addConnector(connector);
+    }
+
+    protected String getBrokerConnectionURI() throws Exception {
+        return brokerService.getTransportConnectorByName(testName.getMethodName()).getPublishableConnectString();
     }
 
     /**
