@@ -19,7 +19,12 @@ package org.apache.activemq.transport.nio;
 import java.io.IOException;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.LinkedList;
-import java.util.concurrent.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The SelectorManager will manage one Selector and the thread that checks the
@@ -46,7 +51,7 @@ public final class SelectorManager {
                 @Override
                 public Thread newThread(Runnable runnable) {
                     Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + (i++));
-                    t.setDaemon(false);
+                    t.setDaemon(true);
                     return t;
                 }
             });
