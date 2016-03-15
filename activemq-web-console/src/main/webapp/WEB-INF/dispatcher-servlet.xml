@@ -39,6 +39,7 @@
   <bean name="/copyMessage.action" class="org.apache.activemq.web.controller.CopyMessage" autowire="constructor"  scope="prototype"/>	
   <bean name="/moveMessage.action" class="org.apache.activemq.web.controller.MoveMessage" autowire="constructor"  scope="prototype"/>
   <bean name="/deleteJob.action" class="org.apache.activemq.web.controller.DeleteJob" autowire="constructor"  scope="prototype"/>
+  <bean name="/retryMessage.action" class="org.apache.activemq.web.controller.RetryMessage" autowire="constructor" scope="prototype"/>
 
   <!--
     - This bean resolves specific types of exception to corresponding error views.
