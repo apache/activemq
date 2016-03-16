@@ -50,6 +50,7 @@ public class ReloadableProperties {
             try {
                 load(key.file(), props);
                 invertedProps = null;
+                invertedValueProps = null;
                 if (key.isDebug()) {
                     LOG.debug("Load of: " + key);
                 }
