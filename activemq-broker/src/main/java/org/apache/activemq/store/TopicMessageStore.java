@@ -102,7 +102,24 @@ public interface TopicMessageStore extends MessageStore {
      */
     int getMessageCount(String clientId, String subscriberName) throws IOException;
 
+    /**
+     * Get the total size of the messages ready to deliver from the store to the
+     * durable subscriber
+     *
+     * @param clientId
+     * @param subscriberName
+     * @return
+     * @throws IOException
+     */
     long getMessageSize(String clientId, String subscriberName) throws IOException;
+
+    /**
+     * The subscription metrics contained in this store
+     *
+     * @param subscriptionKey
+     * @return
+     */
+    MessageStoreSubscriptionStatistics getMessageStoreSubStatistics();
 
     /**
      * Finds the subscriber entry for the given consumer info

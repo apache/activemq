@@ -31,6 +31,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStoreStatistics;
+import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.LRUCache;
 import org.apache.activemq.util.SubscriptionKey;
@@ -169,6 +170,14 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         if (sub != null) {
             sub.resetBatching();
         }
+    }
+
+    //Disabled for the memory store, can be enabled later if necessary
+    private final MessageStoreSubscriptionStatistics stats = new MessageStoreSubscriptionStatistics(false);
+
+    @Override
+    public MessageStoreSubscriptionStatistics getMessageStoreSubStatistics() {
+        return stats;
     }
 
     /**

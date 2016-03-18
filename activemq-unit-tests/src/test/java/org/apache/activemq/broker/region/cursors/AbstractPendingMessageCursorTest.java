@@ -21,8 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Connection;
@@ -49,9 +48,11 @@ import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.rules.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,22 +72,16 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected String defaultQueueName = "test.queue";
     protected String defaultTopicName = "test.topic";
     protected static int maxMessageSize = 1000;
-    protected boolean prioritizedMessages;
+    protected final boolean prioritizedMessages;
+    protected boolean enableSubscriptionStatistics;
 
-    @Parameters(name="prioritizedMessages={0}")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                // use priority messages
-                {true},
-                // don't use priority messages
-                {false}
-        });
-    }
+    @Rule
+    public Timeout globalTimeout= new Timeout(60, TimeUnit.SECONDS);
 
     /**
      * @param prioritizedMessages
      */
-    public AbstractPendingMessageCursorTest(boolean prioritizedMessages) {
+    public AbstractPendingMessageCursorTest(final boolean prioritizedMessages) {
         super();
         this.prioritizedMessages = prioritizedMessages;
     }
@@ -144,6 +139,9 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
     @Test
     public void testQueueMessageSize() throws Exception {
+        //doesn't apply to queues, only run once
+        Assume.assumeFalse(enableSubscriptionStatistics);
+
         AtomicLong publishedMessageSize = new AtomicLong();
 
         org.apache.activemq.broker.region.Queue dest = publishTestQueueMessages(200, publishedMessageSize);
@@ -153,6 +151,9 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
     @Test
     public void testQueueBrowserMessageSize() throws Exception {
+        //doesn't apply to queues, only run once
+        Assume.assumeFalse(enableSubscriptionStatistics);
+
         AtomicLong publishedMessageSize = new AtomicLong();
 
         org.apache.activemq.broker.region.Queue dest = publishTestQueueMessages(200, publishedMessageSize);
@@ -163,6 +164,9 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
     @Test
     public void testQueueMessageSizeNonPersistent() throws Exception {
+        //doesn't apply to queues, only run once
+        Assume.assumeFalse(enableSubscriptionStatistics);
+
         AtomicLong publishedMessageSize = new AtomicLong();
 
         org.apache.activemq.broker.region.Queue dest = publishTestQueueMessages(200,
@@ -172,6 +176,9 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
     @Test
     public void testQueueMessageSizePersistentAndNonPersistent() throws Exception {
+        //doesn't apply to queues, only run once
+        Assume.assumeFalse(enableSubscriptionStatistics);
+
         AtomicLong publishedNonPersistentMessageSize = new AtomicLong();
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -185,6 +192,9 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
     @Test
     public void testQueueMessageSizeAfterConsumption() throws Exception {
+        //doesn't apply to queues, only run once
+        Assume.assumeFalse(enableSubscriptionStatistics);
+
         AtomicLong publishedMessageSize = new AtomicLong();
 
         org.apache.activemq.broker.region.Queue dest = publishTestQueueMessages(200, publishedMessageSize);
@@ -198,6 +208,9 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
     @Test
     public void testQueueMessageSizeAfterConsumptionNonPersistent() throws Exception {
+        //doesn't apply to queues, only run once
+        Assume.assumeFalse(enableSubscriptionStatistics);
+
         AtomicLong publishedMessageSize = new AtomicLong();
 
         org.apache.activemq.broker.region.Queue dest = publishTestQueueMessages(200, DeliveryMode.NON_PERSISTENT, publishedMessageSize);
@@ -209,7 +222,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         verifyStoreStats(dest, 0, 0);
     }
 
-    @Test(timeout=60000)
+    @Test
     public void testTopicMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -235,7 +248,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=60000)
+    @Test
     public void testTopicNonPersistentMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -262,7 +275,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=60000)
+    @Test
     public void testTopicPersistentAndNonPersistentMessageSize() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -291,7 +304,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=60000)
+    @Test
     public void testMessageSizeOneDurable() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
@@ -320,7 +333,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=60000)
+    @Test
     public void testMessageSizeOneDurablePartialConsumption() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -346,7 +359,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         connection.close();
     }
 
-    @Test(timeout=60000)
+    @Test
     public void testMessageSizeTwoDurables() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 

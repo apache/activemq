@@ -687,6 +687,26 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         letter.setEnableAckCompaction(enableAckCompaction);
     }
 
+    /**
+     * Whether non-blocking subscription statistics have been enabled
+     *
+     * @return
+     */
+    public boolean isEnableSubscriptionStatistics() {
+        return letter.isEnableSubscriptionStatistics();
+    }
+
+    /**
+     * Enable caching statistics for each subscription to allow non-blocking
+     * retrieval of metrics.  This could incur some overhead to compute if there are a lot
+     * of subscriptions.
+     *
+     * @param enableSubscriptionStatistics
+     */
+    public void setEnableSubscriptionStatistics(boolean enableSubscriptionStatistics) {
+        letter.setEnableSubscriptionStatistics(enableSubscriptionStatistics);
+    }
+
     public KahaDBStore getStore() {
         return letter;
     }

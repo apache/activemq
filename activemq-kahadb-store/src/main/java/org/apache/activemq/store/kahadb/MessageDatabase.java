@@ -70,6 +70,8 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.MessageStoreStatistics;
+import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
+import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.kahadb.data.KahaAckMessageFileMapCommand;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
@@ -282,6 +284,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean compactAcksIgnoresStoreGrowth = false;
     private int checkPointCyclesWithNoGC;
     private int journalLogOnLastCompactionCheck;
+    private boolean enableSubscriptionStatistics = false;
 
     @Override
     public void doStart() throws Exception {
@@ -1420,7 +1423,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 incrementAndAddSizeToStoreStat(command.getDestination(), location.getSize());
                 sd.orderIndex.put(tx, priority, id, new MessageKeys(command.getMessageId(), location));
                 if (sd.subscriptions != null && !sd.subscriptions.isEmpty(tx)) {
-                    addAckLocationForNewMessage(tx, sd, id);
+                    addAckLocationForNewMessage(tx, command.getDestination(), sd, id);
                 }
                 metadata.lastUpdate = location;
             } else {
@@ -1481,6 +1484,18 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if (previousKeys != null) {
                 //Remove the existing from the size
                 decrementAndSubSizeToStoreStat(command.getDestination(), previousKeys.location.getSize());
+
+                //update all the subscription metrics
+                if (enableSubscriptionStatistics && location.getSize() != previousKeys.location.getSize()) {
+                    Iterator<Entry<String, SequenceSet>> iter = sd.ackPositions.iterator(tx);
+                    while (iter.hasNext()) {
+                        Entry<String, SequenceSet> e = iter.next();
+                        if (e.getValue().contains(id)) {
+                            incrementAndAddSizeToStoreStat(key(command.getDestination()), e.getKey(), location.getSize());
+                            decrementAndSubSizeToStoreStat(key(command.getDestination()), e.getKey(), previousKeys.location.getSize());
+                        }
+                    }
+                }
 
                 // on first update previous is original location, on recovery/replay it may be the updated location
                 if(!previousKeys.location.equals(location)) {
@@ -1622,6 +1637,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             sd.subscriptionAcks.remove(tx, subscriptionKey);
             sd.subscriptionCache.remove(subscriptionKey);
             removeAckLocationsForSub(command, tx, sd, subscriptionKey);
+            MessageStoreSubscriptionStatistics subStats = getSubStats(key(command.getDestination()));
+            if (subStats != null) {
+                subStats.removeSubscription(subscriptionKey);
+            }
 
             if (sd.subscriptions.isEmpty(tx)) {
                 // remove the stored destination
@@ -2565,9 +2584,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @param kahaDestination
      */
     protected void clearStoreStats(KahaDestination kahaDestination) {
-        MessageStoreStatistics storeStats = getStoreStats(key(kahaDestination));
+        String key = key(kahaDestination);
+        MessageStoreStatistics storeStats = getStoreStats(key);
+        MessageStoreSubscriptionStatistics subStats = getSubStats(key);
         if (storeStats != null) {
             storeStats.reset();
+        }
+        if (subStats != null) {
+            subStats.reset();
         }
     }
 
@@ -2605,8 +2629,41 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+    protected void incrementAndAddSizeToStoreStat(KahaDestination kahaDestination, String subKey, long size) {
+        incrementAndAddSizeToStoreStat(key(kahaDestination), subKey, size);
+    }
+
+    protected void incrementAndAddSizeToStoreStat(String kahaDestKey, String subKey, long size) {
+        if (enableSubscriptionStatistics) {
+            MessageStoreSubscriptionStatistics subStats = getSubStats(kahaDestKey);
+            if (subStats != null && subKey != null) {
+                subStats.getMessageCount(subKey).increment();
+                if (size > 0) {
+                    subStats.getMessageSize(subKey).addSize(size);
+                }
+            }
+        }
+    }
+
+
+    protected void decrementAndSubSizeToStoreStat(String kahaDestKey, String subKey, long size) {
+        if (enableSubscriptionStatistics) {
+            MessageStoreSubscriptionStatistics subStats = getSubStats(kahaDestKey);
+            if (subStats != null && subKey != null) {
+                subStats.getMessageCount(subKey).decrement();
+                if (size > 0) {
+                    subStats.getMessageSize(subKey).addSize(-size);
+                }
+            }
+        }
+    }
+
+    protected void decrementAndSubSizeToStoreStat(KahaDestination kahaDestination, String subKey, long size) {
+        decrementAndSubSizeToStoreStat(key(kahaDestination), subKey, size);
+    }
+
     /**
-     * This is a map to cache DestinationStatistics for a specific
+     * This is a map to cache MessageStores for a specific
      * KahaDestination key
      */
     protected final ConcurrentMap<String, MessageStore> storeCache =
@@ -2629,6 +2686,20 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         return storeStats;
+    }
+
+    protected MessageStoreSubscriptionStatistics getSubStats(String kahaDestKey) {
+        MessageStoreSubscriptionStatistics subStats = null;
+        try {
+            MessageStore messageStore = storeCache.get(kahaDestKey);
+            if (messageStore instanceof TopicMessageStore) {
+                subStats = ((TopicMessageStore)messageStore).getMessageStoreSubStatistics();
+            }
+        } catch (Exception e1) {
+             LOG.error("Getting size counter of destination failed", e1);
+        }
+
+        return subStats;
     }
 
     /**
@@ -2736,7 +2807,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     // on a new message add, all existing subs are interested in this message
-    private void addAckLocationForNewMessage(Transaction tx, StoredDestination sd, Long messageSequence) throws IOException {
+    private void addAckLocationForNewMessage(Transaction tx, KahaDestination kahaDest,
+            StoredDestination sd, Long messageSequence) throws IOException {
         for(String subscriptionKey : sd.subscriptionCache) {
             SequenceSet sequences = sd.ackPositions.get(tx, subscriptionKey);
             if (sequences == null) {
@@ -2747,6 +2819,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 sequences.add(new Sequence(messageSequence, messageSequence + 1));
                 sd.ackPositions.put(tx, subscriptionKey, sequences);
             }
+
+            MessageKeys key = sd.orderIndex.get(tx, messageSequence);
+            incrementAndAddSizeToStoreStat(kahaDest, subscriptionKey,
+                    key.location.getSize());
 
             Long count = sd.messageReferences.get(messageSequence);
             if (count == null) {
@@ -2818,6 +2894,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 } else {
                     sd.ackPositions.remove(tx, subscriptionKey);
                 }
+
+                MessageKeys key = sd.orderIndex.get(tx, messageSequence);
+                decrementAndSubSizeToStoreStat(command.getDestination(), subscriptionKey,
+                        key.location.getSize());
 
                 // Check if the message is reference by any other subscription.
                 Long count = sd.messageReferences.get(messageSequence);
@@ -3785,5 +3865,23 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     public void setEnableAckCompaction(boolean enableAckCompaction) {
         this.enableAckCompaction = enableAckCompaction;
+    }
+
+    /**
+     * @return
+     */
+    public boolean isEnableSubscriptionStatistics() {
+        return enableSubscriptionStatistics;
+    }
+
+    /**
+     * Enable caching statistics for each subscription to allow non-blocking
+     * retrieval of metrics.  This could incur some overhead to compute if there are a lot
+     * of subscriptions.
+     *
+     * @param enableSubscriptionStatistics
+     */
+    public void setEnableSubscriptionStatistics(boolean enableSubscriptionStatistics) {
+        this.enableSubscriptionStatistics = enableSubscriptionStatistics;
     }
 }

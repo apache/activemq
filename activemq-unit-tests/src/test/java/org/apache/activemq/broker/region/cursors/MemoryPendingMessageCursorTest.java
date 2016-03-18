@@ -17,6 +17,8 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Connection;
@@ -29,6 +31,7 @@ import org.apache.activemq.util.SubscriptionKey;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +47,18 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
             .getLogger(MemoryPendingMessageCursorTest.class);
 
 
-   public MemoryPendingMessageCursorTest(boolean prioritizedMessages) {
-       super(prioritizedMessages);
-   }
+    @Parameters(name = "prioritizedMessages={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                // use priority messages
+                { true },
+                // don't use priority messages
+                { false } });
+    }
+
+    public MemoryPendingMessageCursorTest(boolean prioritizedMessages) {
+        super(prioritizedMessages);
+    }
 
     @Override
     protected void initPersistence(BrokerService brokerService) throws IOException {
@@ -56,7 +68,7 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
 
 
     @Override
-    @Test(timeout=30000)
+    @Test
     public void testMessageSizeOneDurable() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
@@ -85,7 +97,7 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
     }
 
     @Override
-    @Test(timeout=30000)
+    @Test
     public void testMessageSizeTwoDurables() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
@@ -117,7 +129,7 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
     }
 
     @Override
-    @Test(timeout=30000)
+    @Test
     public void testMessageSizeOneDurablePartialConsumption() throws Exception {
         AtomicLong publishedMessageSize = new AtomicLong();
 
