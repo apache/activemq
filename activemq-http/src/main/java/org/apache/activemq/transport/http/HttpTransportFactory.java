@@ -87,7 +87,7 @@ public class HttpTransportFactory extends TransportFactory {
         return new HttpClientTransport(createMarshaller(wireFormat), uri);
     }
 
-    protected static HttpTransportMarshaller createMarshaller(final WireFormat wireFormat)
+    protected HttpTransportMarshaller createMarshaller(final WireFormat wireFormat)
     {
         return wireFormat instanceof TextWireFormat ?
                 TextWireFormatMarshallers.newTransportMarshaller((TextWireFormat)wireFormat) :
