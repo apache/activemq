@@ -835,12 +835,26 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 try {
                     if (messages.isCacheEnabled()) {
                         result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
-                        result.addListener(new PendingMarshalUsageTracker(message));
+                        final PendingMarshalUsageTracker tracker = new PendingMarshalUsageTracker(message);
+                        result.addListener(new Runnable() {
+                            @Override
+                            public void run() {
+                                //Execute usage tracker and then check isReduceMemoryFootprint()
+                                tracker.run();
+                                if (isReduceMemoryFootprint()) {
+                                    try {
+                                        message.clearMarshalledState();
+                                    } catch (JMSException e) {
+                                        throw new IllegalStateException(e);
+                                    }
+                                }
+                            }
+                        });
                     } else {
                         store.addMessage(context, message);
-                    }
-                    if (isReduceMemoryFootprint()) {
-                        message.clearMarshalledState();
+                        if (isReduceMemoryFootprint()) {
+                            message.clearMarshalledState();
+                        }
                     }
                 } catch (Exception e) {
                     // we may have a store in inconsistent state, so reset the cursor
