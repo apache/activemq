@@ -16,51 +16,63 @@
  */
 package org.apache.activemq.broker;
 
-import junit.framework.TestCase;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ConnectionInfo;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import javax.jms.Connection;
-import javax.jms.InvalidClientIDException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class LinkStealingTest extends TestCase {
-    protected BrokerService brokerService;
-    protected int timeOutInSeconds = 10;
-    protected final AtomicReference<Throwable> removeException = new AtomicReference<Throwable>();
+import javax.jms.Connection;
+import javax.jms.InvalidClientIDException;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ConnectionInfo;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    @Override
-    protected void setUp() throws Exception {
+public class LinkStealingTest {
+
+    private BrokerService brokerService;
+    private final AtomicReference<Throwable> removeException = new AtomicReference<Throwable>();
+
+    private String stealableConnectionURI;
+    private String unstealableConnectionURI;
+
+    @SuppressWarnings("unchecked")
+    @Before
+    public void setUp() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setPlugins(new BrokerPlugin[]{
-                new BrokerPluginSupport() {
-                    @Override
-                    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-                        removeException.set(error);
-                        super.removeConnection(context, info, error);
-                    }
+            new BrokerPluginSupport() {
+                @Override
+                public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
+                    removeException.set(error);
+                    super.removeConnection(context, info, error);
                 }
+            }
         });
+
+        stealableConnectionURI = brokerService.addConnector("tcp://0.0.0.0:0?allowLinkStealing=true").getPublishableConnectString();
+        unstealableConnectionURI = brokerService.addConnector("tcp://0.0.0.0:0?allowLinkStealing=false").getPublishableConnectString();
+
+        brokerService.start();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (brokerService != null) {
             brokerService.stop();
         }
     }
 
-
+    @Test(timeout=60000)
     public void testStealLinkFails() throws Exception {
 
-        brokerService.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
-        brokerService.start();
-
         final String clientID = "ThisIsAClientId";
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(unstealableConnectionURI);
         Connection connection1 = factory.createConnection();
         connection1.setClientID(clientID);
         connection1.start();
@@ -73,17 +85,15 @@ public class LinkStealingTest extends TestCase {
         } catch (InvalidClientIDException e) {
             exceptionFlag.set(true);
         }
-        assertTrue(exceptionFlag.get());
 
+        assertTrue(exceptionFlag.get());
     }
 
+    @Test(timeout=60000)
     public void testStealLinkSuccess() throws Exception {
 
-        brokerService.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL+"?allowLinkStealing=true");
-        brokerService.start();
-
         final String clientID = "ThisIsAClientId";
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(stealableConnectionURI);
         Connection connection1 = factory.createConnection();
         connection1.setClientID(clientID);
         connection1.start();
@@ -97,8 +107,8 @@ public class LinkStealingTest extends TestCase {
             e.printStackTrace();
             exceptionFlag.set(true);
         }
+
         assertFalse(exceptionFlag.get());
         assertNotNull(removeException.get());
-
     }
 }
