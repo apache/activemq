@@ -133,7 +133,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         // don't track selectors for advisory topics
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
+        if (!ignoredConsumer(info)) {
             String destinationName = info.getDestination().getQualifiedName();
             LOG.debug("Caching consumer selector [{}] on  '{}'", info.getSelector(), destinationName);
 
@@ -167,6 +167,11 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         return super.addConsumer(context, info);
     }
 
+    
+    private boolean ignoredConsumer(ConsumerInfo info) {
+        return AdvisorySupport.isAdvisoryTopic(info.getDestination())
+                || info.getDestination().isTemporary();
+    }
 
     static boolean hasWildcards(String selector) {
         return WildcardFinder.hasWildcards(selector);
