@@ -171,8 +171,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
-
+        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
             if (singleSelectorPerDestination) {
                 String destinationName = info.getDestination().getQualifiedName();
                 Set<String> selectors = subSelectorCache.get(destinationName);
@@ -190,8 +189,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     private void readCache() {
         if (persistFile != null && persistFile.exists()) {
             try {
-                FileInputStream fis = new FileInputStream(persistFile);
-                try {
+                try (FileInputStream fis = new FileInputStream(persistFile);) {
                     ObjectInputStream in = new ObjectInputStream(fis);
                     try {
                         subSelectorCache = (ConcurrentHashMap<String, Set<String>>) in.readObject();
@@ -200,8 +198,6 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                     } finally {
                         in.close();
                     }
-                } finally {
-                    fis.close();
                 }
             } catch (IOException ex) {
                 LOG.error("Unable to read persisted selector cache...it will be ignored!", ex);
@@ -347,8 +343,9 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             Matcher matcher = LIKE_PATTERN.matcher(selector);
 
             while(hasLikeOperator(matcher)) {
-                if (hasWildcardInCurrentMatch(matcher))
+                if (hasWildcardInCurrentMatch(matcher)) {
                     return true;
+                }
             }
             return false;
         }
