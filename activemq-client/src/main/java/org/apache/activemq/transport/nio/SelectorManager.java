@@ -54,7 +54,7 @@ public final class SelectorManager {
                     t.setDaemon(true);
                     return t;
                 }
-            });
+            }, new ThreadPoolExecutor.CallerRunsPolicy());
 
         return rc;
     }

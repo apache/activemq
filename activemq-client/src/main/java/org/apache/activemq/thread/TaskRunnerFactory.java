@@ -187,11 +187,13 @@ public class TaskRunnerFactory implements Executor {
                 return thread;
             }
         });
-        
+
         if (rejectedTaskHandler != null) {
             rc.setRejectedExecutionHandler(rejectedTaskHandler);
+        } else {
+            rc.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         }
-        
+
         return rc;
     }
 
