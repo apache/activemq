@@ -105,7 +105,6 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             } catch (Exception e) {
                 LOG.warn("JMX is enabled, but when installing the VirtualDestinationSelectorCache, couldn't install the JMX mbeans. Continuing without installing the mbeans.");
             }
-
         }
     }
 
@@ -115,7 +114,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         if (persistThread != null) {
             persistThread.interrupt();
             persistThread.join();
-        } //if
+        }
         unregisterMBeans();
     }
 
@@ -132,8 +131,8 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        // don't track selectors for advisory topics
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
+        // don't track selectors for advisory topics or temp destinations
+        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
             String destinationName = info.getDestination().getQualifiedName();
             LOG.debug("Caching consumer selector [{}] on  '{}'", info.getSelector(), destinationName);
 
@@ -161,12 +160,10 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 LOG.debug("current selectors in cache: " + selectors);
                 subSelectorCache.put(destinationName, selectors);
             }
-
-
         }
+
         return super.addConsumer(context, info);
     }
-
 
     static boolean hasWildcards(String selector) {
         return WildcardFinder.hasWildcards(selector);
@@ -189,6 +186,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         super.removeConsumer(context, info);
     }
 
+    @SuppressWarnings("unchecked")
     private void readCache() {
         if (persistFile != null && persistFile.exists()) {
             try {
@@ -201,14 +199,14 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                         LOG.error("Invalid selector cache data found. Please remove file.", ex);
                     } finally {
                         in.close();
-                    } //try
+                    }
                 } finally {
                     fis.close();
-                } //try
+                }
             } catch (IOException ex) {
                 LOG.error("Unable to read persisted selector cache...it will be ignored!", ex);
-            } //try
-        } //if
+            }
+        }
     }
 
     /**
@@ -225,15 +223,15 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 } finally {
                     out.flush();
                     out.close();
-                } //try
+                }
             } catch (IOException ex) {
                 LOG.error("Unable to persist selector cache", ex);
             } finally {
                 fos.close();
-            } //try
+            }
         } catch (IOException ex) {
             LOG.error("Unable to access file[{}]", persistFile, ex);
-        } //try
+        }
     }
 
     /**
@@ -254,7 +252,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             try {
                 Thread.sleep(persistInterval);
             } catch (InterruptedException ex) {
-            } //try
+            }
 
             persistCache();
         }
@@ -268,6 +266,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         this.singleSelectorPerDestination = singleSelectorPerDestination;
     }
 
+    @SuppressWarnings("unchecked")
     public Set<String> getSelectorsForDestination(String destinationName) {
         if (subSelectorCache.containsKey(destinationName)) {
             return new HashSet<String>(subSelectorCache.get(destinationName));
@@ -355,4 +354,3 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         }
     }
 }
-
