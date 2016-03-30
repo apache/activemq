@@ -149,7 +149,7 @@ public class TransactedStoreUsageSuspendResumeTest {
         sendExecutor.shutdown();
         sendExecutor.awaitTermination(10, TimeUnit.MINUTES);
 
-        boolean allMessagesReceived = messagesReceivedCountDown.await(5, TimeUnit.MINUTES);
+        boolean allMessagesReceived = messagesReceivedCountDown.await(10, TimeUnit.MINUTES);
         if (!allMessagesReceived) {
             LOG.info("Giving up - not all received on time...");
             LOG.info("System Mem Usage: " + broker.getSystemUsage().getMemoryUsage());
