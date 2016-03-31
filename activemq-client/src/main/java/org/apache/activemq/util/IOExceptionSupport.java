@@ -17,6 +17,7 @@
 package org.apache.activemq.util;
 
 import java.io.IOException;
+import java.math.BigInteger;
 
 public final class IOExceptionSupport {
 
@@ -47,4 +48,36 @@ public final class IOExceptionSupport {
         return exception;
     }
 
+    public static IOException createFrameSizeException(int size, long maxSize) {
+        return new IOException("Frame size of " + toHumanReadableSizeString(size) +
+            " larger than max allowed " + toHumanReadableSizeString(maxSize));
+    }
+
+    private static String toHumanReadableSizeString(final int size) {
+        return toHumanReadableSizeString(BigInteger.valueOf(size));
+    }
+
+    private static String toHumanReadableSizeString(final long size) {
+        return toHumanReadableSizeString(BigInteger.valueOf(size));
+    }
+
+    private static String toHumanReadableSizeString(final BigInteger size) {
+        String displaySize;
+
+        final BigInteger ONE_KB_BI = BigInteger.valueOf(1024);
+        final BigInteger ONE_MB_BI = ONE_KB_BI.multiply(ONE_KB_BI);
+        final BigInteger ONE_GB_BI = ONE_KB_BI.multiply(ONE_MB_BI);
+
+        if (size.divide(ONE_GB_BI).compareTo(BigInteger.ZERO) > 0) {
+            displaySize = String.valueOf(size.divide(ONE_GB_BI)) + " GB";
+        } else if (size.divide(ONE_MB_BI).compareTo(BigInteger.ZERO) > 0) {
+            displaySize = String.valueOf(size.divide(ONE_MB_BI)) + " MB";
+        } else if (size.divide(ONE_KB_BI).compareTo(BigInteger.ZERO) > 0) {
+            displaySize = String.valueOf(size.divide(ONE_KB_BI)) + " KB";
+        } else {
+            displaySize = String.valueOf(size) + " bytes";
+        }
+
+        return displaySize;
+    }
 }

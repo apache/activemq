@@ -30,6 +30,7 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
@@ -193,7 +194,7 @@ public final class OpenWireFormat implements WireFormat {
             }
 
             if (size > maxFrameSize) {
-                throw new IOException("Frame size of " + (size / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+                throw IOExceptionSupport.createFrameSizeException(size, maxFrameSize);
             }
         }
 
@@ -266,7 +267,7 @@ public final class OpenWireFormat implements WireFormat {
         if (!sizePrefixDisabled) {
             int size = dis.readInt();
             if (size > maxFrameSize) {
-                throw new IOException("Frame size of " + (size / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+                throw IOExceptionSupport.createFrameSizeException(size, maxFrameSize);
             }
             // int size = dis.readInt();
             // byte[] data = new byte[size];
