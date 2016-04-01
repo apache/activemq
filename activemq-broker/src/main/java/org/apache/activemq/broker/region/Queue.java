@@ -835,7 +835,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 if (store != null && message.isPersistent()) {
                     message.getMessageId().setFutureOrSequenceLong(null);
                     try {
-                        if (messages.isCacheEnabled()) {
+                        //AMQ-6133 - don't store async if using persistJMSRedelivered
+                        //This flag causes a sync update later on dispatch which can cause a race
+                        //condition if the original add is processed after the update, which can cause
+                        //a duplicate message to be stored
+                        if (messages.isCacheEnabled() && !isPersistJMSRedelivered()) {
                             result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
                             final PendingMarshalUsageTracker tracker = new PendingMarshalUsageTracker(message);
                             result.addListener(new Runnable() {
