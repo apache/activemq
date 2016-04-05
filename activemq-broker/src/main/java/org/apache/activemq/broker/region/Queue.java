@@ -1144,17 +1144,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         final ConnectionContext connectionContext = createConnectionContext();
         try {
             int maxPageInAttempts = 1;
-            messagesLock.readLock().lock();
-            try {
-                maxPageInAttempts += (messages.size() / getMaxPageSize());
-            } finally {
-                messagesLock.readLock().unlock();
+            if (max > 0) {
+                messagesLock.readLock().lock();
+                try {
+                    maxPageInAttempts += (messages.size() / max);
+                } finally {
+                    messagesLock.readLock().unlock();
+                }
+                while (shouldPageInMoreForBrowse(max) && maxPageInAttempts-- > 0) {
+                    pageInMessages(!memoryUsage.isFull(110), max);
+                }
             }
-
-            while (shouldPageInMoreForBrowse(max) && maxPageInAttempts-- > 0) {
-                pageInMessages(!memoryUsage.isFull(110));
-            };
-
             doBrowseList(browseList, max, dispatchPendingList, pagedInPendingDispatchLock, connectionContext, "redeliveredWaitingDispatch+pagedInPendingDispatch");
             doBrowseList(browseList, max, pagedInMessages, pagedInMessagesLock, connectionContext, "pagedInMessages");
 
@@ -1262,7 +1262,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         List<MessageReference> list = null;
         long originalMessageCount = this.destinationStatistics.getMessages().getCount();
         do {
-            doPageIn(true, false);  // signal no expiry processing needed.
+            doPageIn(true, false, getMaxPageSize());  // signal no expiry processing needed.
             pagedInMessagesLock.readLock().lock();
             try {
                 list = new ArrayList<MessageReference>(pagedInMessages.values());
@@ -1630,7 +1630,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
             if (pageInMoreMessages || hasBrowsers || !dispatchPendingList.hasRedeliveries()) {
                 try {
-                    pageInMessages(hasBrowsers);
+                    pageInMessages(hasBrowsers && getMaxBrowsePageSize() > 0, getMaxPageSize());
                 } catch (Throwable e) {
                     LOG.error("Failed to page in more queue messages ", e);
                 }
@@ -1895,11 +1895,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private void doPageIn(boolean force) throws Exception {
-        doPageIn(force, true);
+        doPageIn(force, true, getMaxPageSize());
     }
 
-    private void doPageIn(boolean force, boolean processExpired) throws Exception {
-        PendingList newlyPaged = doPageInForDispatch(force, processExpired);
+    private void doPageIn(boolean force, boolean processExpired, int maxPageSize) throws Exception {
+        PendingList newlyPaged = doPageInForDispatch(force, processExpired, maxPageSize);
         pagedInPendingDispatchLock.writeLock().lock();
         try {
             if (dispatchPendingList.isEmpty()) {
@@ -1917,11 +1917,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    private PendingList doPageInForDispatch(boolean force, boolean processExpired) throws Exception {
+    private PendingList doPageInForDispatch(boolean force, boolean processExpired, int maxPageSize) throws Exception {
         List<QueueMessageReference> result = null;
         PendingList resultList = null;
 
-        int toPageIn = Math.min(getMaxPageSize(), messages.size());
+        int toPageIn = Math.min(maxPageSize, messages.size());
         int pagedInPendingSize = 0;
         pagedInPendingDispatchLock.readLock().lock();
         try {
@@ -1929,24 +1929,29 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         } finally {
             pagedInPendingDispatchLock.readLock().unlock();
         }
-
-        LOG.debug("{} toPageIn: {}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}",
-                new Object[]{
-                        this,
-                        toPageIn,
-                        destinationStatistics.getInflight().getCount(),
-                        pagedInMessages.size(),
-                        pagedInPendingSize,
-                        destinationStatistics.getEnqueues().getCount(),
-                        destinationStatistics.getDequeues().getCount(),
-                        getMemoryUsage().getUsage()
-                });
         if (isLazyDispatch() && !force) {
             // Only page in the minimum number of messages which can be
             // dispatched immediately.
             toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
         }
-        if (toPageIn > 0 && (force || (!consumers.isEmpty() && pagedInPendingSize < getMaxPageSize()))) {
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("{} toPageIn: {}, force:{}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}, maxPageSize:{}",
+                    new Object[]{
+                            this,
+                            toPageIn,
+                            force,
+                            destinationStatistics.getInflight().getCount(),
+                            pagedInMessages.size(),
+                            pagedInPendingSize,
+                            destinationStatistics.getEnqueues().getCount(),
+                            destinationStatistics.getDequeues().getCount(),
+                            getMemoryUsage().getUsage(),
+                            maxPageSize
+                    });
+        }
+
+        if (toPageIn > 0 && (force || (haveRealConsumer() && pagedInPendingSize < maxPageSize))) {
             int count = 0;
             result = new ArrayList<QueueMessageReference>(toPageIn);
             messagesLock.writeLock().lock();
@@ -1954,7 +1959,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 try {
                     messages.setMaxBatchSize(toPageIn);
                     messages.reset();
-                    while (messages.hasNext() && count < toPageIn) {
+                    while (count < toPageIn && messages.hasNext()) {
                         MessageReference node = messages.next();
                         messages.remove();
 
@@ -2011,6 +2016,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
 
         return resultList;
+    }
+
+    private final boolean haveRealConsumer() {
+        return consumers.size() - browserDispatches.size() > 0;
     }
 
     private void doDispatch(PendingList list) throws Exception {
@@ -2173,8 +2182,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         subs.getConsumerInfo().incrementAssignedGroupCount(destination);
     }
 
-    protected void pageInMessages(boolean force) throws Exception {
-        doDispatch(doPageInForDispatch(force, true));
+    protected void pageInMessages(boolean force, int maxPageSize) throws Exception {
+        doDispatch(doPageInForDispatch(force, true, maxPageSize));
     }
 
     private void addToConsumerList(Subscription sub) {
@@ -2192,19 +2201,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     private int getConsumerMessageCountBeforeFull() throws Exception {
         int total = 0;
-        boolean zeroPrefetch = false;
         consumersLock.readLock().lock();
         try {
             for (Subscription s : consumers) {
-                zeroPrefetch |= s.getPrefetchSize() == 0;
+                if (s.isBrowser()) {
+                    continue;
+                }
                 int countBeforeFull = s.countBeforeFull();
                 total += countBeforeFull;
             }
         } finally {
             consumersLock.readLock().unlock();
-        }
-        if (total == 0 && zeroPrefetch) {
-            total = 1;
         }
         return total;
     }
