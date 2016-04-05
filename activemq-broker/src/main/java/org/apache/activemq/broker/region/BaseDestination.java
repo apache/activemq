@@ -316,7 +316,7 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public int getMaxBrowsePageSize() {
-        return this.maxBrowsePageSize > 0 ? this.maxBrowsePageSize : getMaxPageSize();
+        return this.maxBrowsePageSize;
     }
 
     @Override
