@@ -40,7 +40,6 @@ public class QueueDispatchPendingList implements PendingList {
 
     private PendingList pagedInPendingDispatch = new OrderedPendingList();
     private PendingList redeliveredWaitingDispatch = new OrderedPendingList();
-    // when true use one PrioritizedPendingList for everything
     private boolean prioritized = false;
 
 
@@ -87,7 +86,7 @@ public class QueueDispatchPendingList implements PendingList {
     public PendingNode remove(MessageReference message) {
         if (pagedInPendingDispatch.contains(message)) {
             return pagedInPendingDispatch.remove(message);
-        }else if (redeliveredWaitingDispatch.contains(message)) {
+        } else if (redeliveredWaitingDispatch.contains(message)) {
             return redeliveredWaitingDispatch.remove(message);
         }
         return null;
@@ -105,31 +104,64 @@ public class QueueDispatchPendingList implements PendingList {
 
     @Override
     public Iterator<MessageReference> iterator() {
-        return new Iterator<MessageReference>() {
+        if (prioritized && hasRedeliveries()) {
+            final QueueDispatchPendingList delegate = this;
+            final PrioritizedPendingList  priorityOrderedRedeliveredAndPending = new PrioritizedPendingList();
+            priorityOrderedRedeliveredAndPending.addAll(redeliveredWaitingDispatch);
+            priorityOrderedRedeliveredAndPending.addAll(pagedInPendingDispatch);
 
-            Iterator<MessageReference> redeliveries = redeliveredWaitingDispatch.iterator();
-            Iterator<MessageReference> pendingDispatch = pagedInPendingDispatch.iterator();
-            Iterator<MessageReference> current = redeliveries;
+            return new Iterator<MessageReference>() {
 
+                Iterator<MessageReference> combinedIterator = priorityOrderedRedeliveredAndPending.iterator();
+                MessageReference current = null;
 
-            @Override
-            public boolean hasNext() {
-                if (!redeliveries.hasNext() && (current == redeliveries)) {
-                    current = pendingDispatch;
+                @Override
+                public boolean hasNext() {
+                    return combinedIterator.hasNext();
                 }
-                return current.hasNext();
-            }
 
-            @Override
-            public MessageReference next() {
-                return current.next();
-            }
+                @Override
+                public MessageReference next() {
+                    current = combinedIterator.next();
+                    return current;
+                }
 
-            @Override
-            public void remove() {
-                current.remove();
-            }
-        };
+                @Override
+                public void remove() {
+                    if (current!=null) {
+                        delegate.remove(current);
+                    }
+                }
+            };
+
+        } else {
+
+            return new Iterator<MessageReference>() {
+
+                Iterator<MessageReference> redeliveries = redeliveredWaitingDispatch.iterator();
+                Iterator<MessageReference> pendingDispatch = pagedInPendingDispatch.iterator();
+                Iterator<MessageReference> current = redeliveries;
+
+
+                @Override
+                public boolean hasNext() {
+                    if (!redeliveries.hasNext() && (current == redeliveries)) {
+                        current = pendingDispatch;
+                    }
+                    return current.hasNext();
+                }
+
+                @Override
+                public MessageReference next() {
+                    return current.next();
+                }
+
+                @Override
+                public void remove() {
+                    current.remove();
+                }
+            };
+        }
     }
 
     @Override
@@ -173,14 +205,10 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     public void addMessageForRedelivery(QueueMessageReference qmr) {
-        if (prioritized) {
-            pagedInPendingDispatch.addMessageLast(qmr);
-        } else {
-            redeliveredWaitingDispatch.addMessageLast(qmr);
-        }
+        redeliveredWaitingDispatch.addMessageLast(qmr);
     }
 
     public boolean hasRedeliveries(){
-        return prioritized ? !pagedInPendingDispatch.isEmpty() : !redeliveredWaitingDispatch.isEmpty();
+        return !redeliveredWaitingDispatch.isEmpty();
     }
 }
