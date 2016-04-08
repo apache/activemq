@@ -51,7 +51,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     class SimpleDiscoveryEvent extends DiscoveryEvent {
 
         private int connectFailures;
-        private long reconnectDelay = initialReconnectDelay;
+        private long reconnectDelay = -1;
         private long connectTime = System.currentTimeMillis();
         private final AtomicBoolean failed = new AtomicBoolean(false);
 
@@ -142,32 +142,16 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                     // We detect a failed connection attempt because the service
                     // fails right away.
                     if (event.connectTime + minConnectTime > System.currentTimeMillis()) {
-                        LOG.debug("Failure occurred soon after the discovery event was generated.  It will be classified as a connection failure: "+event);
+                        LOG.debug("Failure occurred soon after the discovery event was generated.  It will be classified as a connection failure: {}", event);
 
                         event.connectFailures++;
 
                         if (maxReconnectAttempts > 0 && event.connectFailures >= maxReconnectAttempts) {
-                            LOG.warn("Reconnect attempts exceeded "+maxReconnectAttempts+" tries.  Reconnecting has been disabled for: " + event);
+                            LOG.warn("Reconnect attempts exceeded {} tries.  Reconnecting has been disabled for: {}", maxReconnectAttempts, event);
                             return;
                         }
 
-                        synchronized (sleepMutex) {
-                            try {
-                                if (!running.get()) {
-                                    LOG.debug("Reconnecting disabled: stopped");
-                                    return;
-                                }
-
-                                LOG.debug("Waiting "+event.reconnectDelay+" ms before attempting to reconnect.");
-                                sleepMutex.wait(event.reconnectDelay);
-                            } catch (InterruptedException ie) {
-                                LOG.debug("Reconnecting disabled: " + ie);
-                                Thread.currentThread().interrupt();
-                                return;
-                            }
-                        }
-
-                        if (!useExponentialBackOff) {
+                        if (!useExponentialBackOff || event.reconnectDelay == -1) {
                             event.reconnectDelay = initialReconnectDelay;
                         } else {
                             // Exponential increment of reconnect delay.
@@ -177,9 +161,15 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                             }
                         }
 
+                        doReconnectDelay(event);
+
                     } else {
+                        LOG.trace("Failure occurred to long after the discovery event was generated.  " +
+                                  "It will not be classified as a connection failure: {}", event);
                         event.connectFailures = 0;
                         event.reconnectDelay = initialReconnectDelay;
+
+                        doReconnectDelay(event);
                     }
 
                     if (!running.get()) {
@@ -192,6 +182,24 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                     listener.onServiceAdd(event);
                 }
             }, "Simple Discovery Agent");
+        }
+    }
+
+    protected void doReconnectDelay(SimpleDiscoveryEvent event) {
+        synchronized (sleepMutex) {
+            try {
+                if (!running.get()) {
+                    LOG.debug("Reconnecting disabled: stopped");
+                    return;
+                }
+
+                LOG.debug("Waiting {}ms before attempting to reconnect.", event.reconnectDelay);
+                sleepMutex.wait(event.reconnectDelay);
+            } catch (InterruptedException ie) {
+                LOG.debug("Reconnecting disabled: ", ie);
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 
