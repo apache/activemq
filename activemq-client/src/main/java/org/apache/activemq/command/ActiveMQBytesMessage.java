@@ -890,8 +890,6 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         Inflater inflater = new Inflater();
         ByteArrayOutputStream decompressed = new ByteArrayOutputStream();
         try {
-            //copy to prevent a race condition - AMQ-6142
-            dataSequence = new ByteSequence(dataSequence.getData(), dataSequence.getOffset(), dataSequence.getLength());
             length = ByteSequenceData.readIntBig(dataSequence);
             dataSequence.offset = 0;
             byte[] data = Arrays.copyOfRange(dataSequence.getData(), 4, dataSequence.getLength());
