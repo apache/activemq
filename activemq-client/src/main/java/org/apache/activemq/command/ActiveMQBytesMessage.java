@@ -842,8 +842,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         if (this.content != null && this.content.length > 0) {
             try {
                 ByteSequence toRestore = this.content;
-                if (compressed) {
+                if (isCompressed()) {
                     toRestore = new ByteSequence(decompress(this.content));
+                    compressed = false;
                 }
 
                 this.dataOut.write(toRestore.getData(), toRestore.getOffset(), toRestore.getLength());
@@ -866,20 +867,20 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         checkWriteOnlyBody();
         if (dataIn == null) {
             try {
-            ByteSequence data = getContent();
-            if (data == null) {
-                data = new ByteSequence(new byte[] {}, 0, 0);
-            }
-            InputStream is = new ByteArrayInputStream(data);
-            if (isCompressed()) {
-                if (data.length != 0) {
-                    is = new ByteArrayInputStream(decompress(data));
+                ByteSequence data = getContent();
+                if (data == null) {
+                    data = new ByteSequence(new byte[] {}, 0, 0);
                 }
-            } else {
-                length = data.getLength();
-            }
+                InputStream is = new ByteArrayInputStream(data);
+                if (isCompressed()) {
+                    if (data.length != 0) {
+                        is = new ByteArrayInputStream(decompress(data));
+                    }
+                } else {
+                    length = data.getLength();
+                }
 
-            dataIn = new DataInputStream(is);
+                dataIn = new DataInputStream(is);
             } catch (IOException ioe) {
                 throw JMSExceptionSupport.create(ioe);
             }
