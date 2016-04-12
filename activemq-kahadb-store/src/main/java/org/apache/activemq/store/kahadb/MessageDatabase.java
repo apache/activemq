@@ -274,7 +274,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean enableIndexPageCaching = true;
     ReentrantReadWriteLock checkpointLock = new ReentrantReadWriteLock();
 
-    private boolean enableAckCompaction = true;
+    private boolean enableAckCompaction = false;
     private int compactAcksAfterNoGC = 10;
     private boolean compactAcksIgnoresStoreGrowth = false;
     private int checkPointCyclesWithNoGC;
