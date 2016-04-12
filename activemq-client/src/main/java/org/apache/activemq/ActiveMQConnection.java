@@ -1429,7 +1429,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         }
     }
 
-    private Response doSyncSendPacket(Command command, int timeout)
+    protected Response doSyncSendPacket(Command command, int timeout)
             throws JMSException {
         try {
             Response response = (Response) (timeout > 0
