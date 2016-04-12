@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Connection;
@@ -48,6 +50,7 @@ import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +70,25 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected String defaultQueueName = "test.queue";
     protected String defaultTopicName = "test.topic";
     protected static int maxMessageSize = 1000;
+    protected boolean prioritizedMessages;
+
+    @Parameters(name="prioritizedMessages={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                // use priority messages
+                {true},
+                // don't use priority messages
+                {false}
+        });
+    }
+
+    /**
+     * @param prioritizedMessages
+     */
+    public AbstractPendingMessageCursorTest(boolean prioritizedMessages) {
+        super();
+        this.prioritizedMessages = prioritizedMessages;
+    }
 
     @Before
     public void startBroker() throws Exception {
@@ -86,6 +108,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         PolicyEntry policy = new PolicyEntry();
         policy.setTopicPrefetch(100);
         policy.setDurableTopicPrefetch(100);
+        policy.setPrioritizedMessages(isPrioritizedMessages());
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         broker.setDestinationPolicy(pMap);
@@ -113,6 +136,10 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     }
 
     protected abstract void initPersistence(BrokerService brokerService) throws IOException;
+
+    protected boolean isPrioritizedMessages() {
+        return prioritizedMessages;
+    }
 
     @Test
     public void testQueueMessageSize() throws Exception {

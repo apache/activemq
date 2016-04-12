@@ -33,6 +33,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,7 @@ import org.slf4j.LoggerFactory;
  * AMQ-5923
  *
  */
+@RunWith(Parameterized.class)
 public class KahaDBPendingMessageCursorTest extends
         AbstractPendingMessageCursorTest {
     protected static final Logger LOG = LoggerFactory
@@ -49,6 +52,13 @@ public class KahaDBPendingMessageCursorTest extends
 
     @Rule
     public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
+
+    /**
+     * @param prioritizedMessages
+     */
+    public KahaDBPendingMessageCursorTest(boolean prioritizedMessages) {
+        super(prioritizedMessages);
+    }
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
@@ -159,4 +169,5 @@ public class KahaDBPendingMessageCursorTest extends
         verifyPendingStats(topic, subKey, 200, publishedMessageSize.get());
         verifyStoreStats(topic, 0, 0);
     }
+
 }
