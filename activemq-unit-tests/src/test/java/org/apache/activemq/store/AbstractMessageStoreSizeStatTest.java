@@ -179,30 +179,30 @@ public abstract class AbstractMessageStoreSizeStatTest extends AbstractStoreStat
         final MessageStore messageStore = dest.getMessageStore();
         final MessageStoreStatistics storeStats = dest.getMessageStore().getMessageStoreStatistics();
 
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return (count == messageStore.getMessageCount()) && (messageStore.getMessageCount() ==
                         storeStats.getMessageCount().getCount()) && (messageStore.getMessageSize() ==
                 messageStore.getMessageStoreStatistics().getMessageSize().getTotalSize());
             }
-        });
+        }));
 
         if (count > 0) {
             assertTrue(storeStats.getMessageSize().getTotalSize() > minimumSize);
-            Wait.waitFor(new Condition() {
+            assertTrue(Wait.waitFor(new Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
                     return storeStats.getMessageSize().getTotalSize() > minimumSize;
                 }
-            });
+            }));
         } else {
-            Wait.waitFor(new Condition() {
+            assertTrue(Wait.waitFor(new Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
                     return storeStats.getMessageSize().getTotalSize() == 0;
                 }
-            });
+            }));
         }
     }
 

@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region.cursors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
@@ -382,12 +383,12 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected void verifyPendingStats(final org.apache.activemq.broker.region.Queue queue,
             final int count, final long minimumSize, final int storeCount, final long minimumStoreSize) throws Exception {
 
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return queue.getPendingMessageCount() == count;
             }
-        });
+        }));
 
         verifySize(count, new MessageSizeCalculator() {
             @Override
@@ -403,12 +404,12 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
         final TopicSubscription sub = (TopicSubscription) topic.getConsumers().get(0);
 
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return sub.getPendingQueueSize() == count;
             }
-        });
+        }));
 
         verifySize(count, new MessageSizeCalculator() {
             @Override
@@ -424,12 +425,12 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         final DurableTopicSubscription sub = topic.getDurableTopicSubs().get(subKey);
 
         //verify message count
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return sub.getPendingQueueSize() == count;
             }
-        });
+        }));
 
         //verify message size
         verifySize(count, new MessageSizeCalculator() {
@@ -444,12 +445,12 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
             final int storeCount, final long minimumStoreSize) throws Exception {
         final MessageStore messageStore = dest.getMessageStore();
 
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return messageStore.getMessageCount() == storeCount;
             }
-        });
+        }));
         verifySize(storeCount, new MessageSizeCalculator() {
             @Override
             public long getMessageSize() throws Exception {
@@ -463,19 +464,19 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected void verifySize(final int count, final MessageSizeCalculator messageSizeCalculator,
             final long minimumSize) throws Exception {
         if (count > 0) {
-            Wait.waitFor(new Condition() {
+            assertTrue(Wait.waitFor(new Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
                     return messageSizeCalculator.getMessageSize() > minimumSize ;
                 }
-            });
+            }));
         } else {
-            Wait.waitFor(new Condition() {
+            assertTrue(Wait.waitFor(new Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
                     return messageSizeCalculator.getMessageSize() == 0;
                 }
-            });
+            }));
         }
     }
 
