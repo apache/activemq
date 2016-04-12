@@ -669,6 +669,24 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         this.letter.setCompactAcksIgnoresStoreGrowth(compactAcksIgnoresStoreGrowth);
     }
 
+    /**
+     * Returns whether Ack compaction is enabled
+     *
+     * @return enableAckCompaction
+     */
+    public boolean isEnableAckCompaction() {
+        return letter.isEnableAckCompaction();
+    }
+
+    /**
+     * Configure if the Ack compaction task should be enabled to run
+     *
+     * @param enableAckCompaction
+     */
+    public void setEnableAckCompaction(boolean enableAckCompaction) {
+        letter.setEnableAckCompaction(enableAckCompaction);
+    }
+
     public KahaDBStore getStore() {
         return letter;
     }

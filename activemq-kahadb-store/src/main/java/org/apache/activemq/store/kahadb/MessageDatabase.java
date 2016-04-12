@@ -274,6 +274,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean enableIndexPageCaching = true;
     ReentrantReadWriteLock checkpointLock = new ReentrantReadWriteLock();
 
+    private boolean enableAckCompaction = true;
     private int compactAcksAfterNoGC = 10;
     private boolean compactAcksIgnoresStoreGrowth = false;
     private int checkPointCyclesWithNoGC;
@@ -1817,7 +1818,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 if (ackMessageFileMapMod) {
                     checkpointUpdate(tx, false);
                 }
-            } else {
+            } else if (isEnableAckCompaction()) {
                 if (++checkPointCyclesWithNoGC >= getCompactAcksAfterNoGC()) {
                     // First check length of journal to make sure it makes sense to even try.
                     //
@@ -3670,5 +3671,23 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     public void setCompactAcksIgnoresStoreGrowth(boolean compactAcksIgnoresStoreGrowth) {
         this.compactAcksIgnoresStoreGrowth = compactAcksIgnoresStoreGrowth;
+    }
+
+    /**
+     * Returns whether Ack compaction is enabled
+     *
+     * @return enableAckCompaction
+     */
+    public boolean isEnableAckCompaction() {
+        return enableAckCompaction;
+    }
+
+    /**
+     * Configure if the Ack compaction task should be enabled to run
+     *
+     * @param enableAckCompaction
+     */
+    public void setEnableAckCompaction(boolean enableAckCompaction) {
+        this.enableAckCompaction = enableAckCompaction;
     }
 }
