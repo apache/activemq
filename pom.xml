@@ -356,6 +356,12 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.activemq.tooling</groupId>
+        <artifactId>activemq-junit</artifactId>
+        <version>${project.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-unit-tests</artifactId>
         <version>${project.version}</version>
