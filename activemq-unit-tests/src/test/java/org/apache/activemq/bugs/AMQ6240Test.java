@@ -17,76 +17,85 @@
 package org.apache.activemq.bugs;
 
 import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.transport.RequestTimedOutIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import javax.jms.BytesMessage;
+import javax.jms.JMSException;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AMQ6240Test extends JmsTimeoutTest {
+public class AMQ6240Test extends EmbeddedBrokerTestSupport {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ6240Test.class);
-
-
-    public boolean isPersistent() { return true;}
 
     public void testBlockedTxProducerConnectionTimeoutConnectionCanClose() throws Exception {
         final ActiveMQConnection cx = (ActiveMQConnection)createConnection();
         final ActiveMQDestination queue = createDestination("noPfc");
 
-        // we should not take longer than 10 seconds to return from send
-        cx.setSendTimeout(10000);
+        cx.setSendTimeout(4000);
+        cx.setCloseTimeout(1000);
 
+        final AtomicInteger exceptionCount = new AtomicInteger(0);
         Runnable r = new Runnable() {
             public void run() {
+                int count=0;
                 try {
                     LOG.info("Sender thread starting");
                     Session session = cx.createSession(true, Session.SESSION_TRANSACTED);
                     MessageProducer producer = session.createProducer(queue);
-                    producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-                    TextMessage message = session.createTextMessage(createMessageText());
-                    for(int count=0; count<messageCount; count++){
+                    BytesMessage message = session.createBytesMessage();
+                    message.writeBytes(new byte[8*1024]);
+                    for(; count<100; count++){
                         producer.send(message);
                     }
                     LOG.info("Done sending..");
                 } catch (JMSException e) {
                     if (e.getCause() instanceof RequestTimedOutIOException) {
                         exceptionCount.incrementAndGet();
+                        LOG.info("Got expected send time out on message: " + count);
                     } else {
                         e.printStackTrace();
                     }
                     return;
                 }
-
             }
         };
         cx.start();
         Thread producerThread = new Thread(r);
         producerThread.start();
-        producerThread.join(15000);
+        producerThread.join(7000);
         cx.close();
-        // We should have a few timeout exceptions as memory store will fill up
+        // We should have a few timeout exceptions as store will fill up
         assertTrue("No exception from the broker", exceptionCount.get() > 0);
     }
 
-
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Override
+    protected BrokerService createBroker() throws Exception {
+        BrokerService answer = new BrokerService();
+        answer.getManagementContext().setCreateConnector(false);
+        answer.addConnector(bindAddress);
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry noProducerFlowControl = new PolicyEntry();
         noProducerFlowControl.setProducerFlowControl(false);
         policyMap.put(new ActiveMQQueue("noPfc"), noProducerFlowControl);
-        broker.setDestinationPolicy(policyMap);
-        broker.getSystemUsage().getStoreUsage().setLimit(50*1024*1024);
+        answer.setDestinationPolicy(policyMap);
+        KahaDBPersistenceAdapter kahaDBPersistenceAdapter = new KahaDBPersistenceAdapter();
+        kahaDBPersistenceAdapter.setJournalMaxFileLength(16*1024);
+        answer.getSystemUsage().getStoreUsage().setLimit(34*1024);
+        answer.setDeleteAllMessagesOnStartup(true);
 
+        return answer;
     }
 }
