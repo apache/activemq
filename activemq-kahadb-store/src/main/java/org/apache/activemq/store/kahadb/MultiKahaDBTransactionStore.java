@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -61,6 +62,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     private Journal journal;
     private int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     private int journalWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
     public MultiKahaDBTransactionStore(MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter) {
         this.multiKahaDBPersistenceAdapter = multiKahaDBPersistenceAdapter;
@@ -270,20 +272,22 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     @Override
     public void start() throws Exception {
-        journal = new Journal() {
-            @Override
-            protected void cleanup() {
-                super.cleanup();
-                txStoreCleanup();
-            }
-        };
-        journal.setDirectory(getDirectory());
-        journal.setMaxFileLength(journalMaxFileLength);
-        journal.setWriteBatchSize(journalWriteBatchSize);
-        IOHelper.mkdirs(journal.getDirectory());
-        journal.start();
-        recoverPendingLocalTransactions();
-        store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
+        if (started.compareAndSet(false, true)) {
+            journal = new Journal() {
+                @Override
+                protected void cleanup() {
+                    super.cleanup();
+                    txStoreCleanup();
+                }
+            };
+            journal.setDirectory(getDirectory());
+            journal.setMaxFileLength(journalMaxFileLength);
+            journal.setWriteBatchSize(journalWriteBatchSize);
+            IOHelper.mkdirs(journal.getDirectory());
+            journal.start();
+            recoverPendingLocalTransactions();
+            store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
+        }
     }
 
     private void txStoreCleanup() {
@@ -304,8 +308,10 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     @Override
     public void stop() throws Exception {
-        journal.close();
-        journal = null;
+        if (started.compareAndSet(true, false) && journal != null) {
+            journal.close();
+            journal = null;
+        }
     }
 
     private void recoverPendingLocalTransactions() throws IOException {
