@@ -55,12 +55,6 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     private void copy(ActiveMQTextMessage copy) {
-        //AMQ-6218 - Save text before calling super.copy() to prevent a race condition when
-        //concurrent store and dispatch is enabled in KahaDB
-        //The issue is sometimes beforeMarshall() gets called in between the time content and
-        //text are copied to the new object leading to both fields being null when text should
-        //not be null
-        String text = this.text;
         super.copy(copy);
         copy.text = text;
     }
@@ -85,11 +79,9 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     @Override
     public String getText() throws JMSException {
         ByteSequence content = getContent();
-        String text = this.text;
 
         if (text == null && content != null) {
             text = decodeContent(content);
-            this.text = text;
             setContent(null);
             setCompressed(false);
         }
