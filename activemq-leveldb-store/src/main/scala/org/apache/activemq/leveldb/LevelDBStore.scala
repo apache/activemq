@@ -754,7 +754,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def doAdd(uow: DelayableUOW, context: ConnectionContext, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
       check_running
-      message.beforeMarshall(wireFormat);
       message.incrementReferenceCount()
       uow.addCompleteListener({
         message.decrementReferenceCount()
