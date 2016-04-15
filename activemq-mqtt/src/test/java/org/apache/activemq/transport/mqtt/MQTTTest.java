@@ -380,6 +380,35 @@ public class MQTTTest extends MQTTTestSupport {
     }
 
     @Test(timeout = 2 *  60 * 1000)
+    public void testMQTTCompositeDestinations() throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("");
+        mqtt.setCleanSession(true);
+
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        Topic[] topics = {new Topic(utf8("a/1"), QoS.values()[AT_MOST_ONCE]), new Topic(utf8("a/2"), QoS.values()[AT_MOST_ONCE])};
+        connection.subscribe(topics);
+
+        String payload = "Test Message";
+        String publishedTopic = "a/1,a/2";
+        connection.publish(publishedTopic, payload.getBytes(), QoS.values()[AT_MOST_ONCE], false);
+
+        Message msg = connection.receive(1, TimeUnit.SECONDS);
+        assertNotNull(msg);
+        assertEquals("a/2", msg.getTopic());
+
+        msg = connection.receive(1, TimeUnit.SECONDS);
+        assertNotNull(msg);
+        assertEquals("a/1", msg.getTopic());
+
+        msg = connection.receive(1, TimeUnit.SECONDS);
+        assertNull(msg);
+
+    }
+
+    @Test(timeout = 2 *  60 * 1000)
     public void testMQTTPathPatterns() throws Exception {
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("");
