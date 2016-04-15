@@ -999,19 +999,15 @@ public class FailoverTransport implements CompositeTransport {
                         }
                     }
 
-                    // Sleep for the reconnectDelay if there's no backup and we aren't trying
-                    // for the first time, or we were disposed for some reason.
-                    if (transport == null && !firstConnection && (reconnectDelay > 0) && !disposed) {
-                        synchronized (sleepMutex) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
-                            }
-                            try {
-                                sleepMutex.wait(reconnectDelay);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        }
+                    // When there was no backup and we are reconnecting for the first time
+                    // we honor the initialReconnectDelay before trying a new connection, after
+                    // this normal reconnect delay happens following a failed attempt.
+                    if (transport == null && !firstConnection && connectFailures == 0 && initialReconnectDelay > 0 && !disposed) {
+                        // reconnectDelay will be equal to initialReconnectDelay since we are on
+                        // the first connect attempt after we had a working connection, doDelay
+                        // will apply updates to move to the next reconnectDelay value based on
+                        // configuration.
+                        doDelay();
                     }
 
                     Iterator<URI> iter = connectList.iterator();
@@ -1137,9 +1133,7 @@ public class FailoverTransport implements CompositeTransport {
     private void doDelay() {
         if (reconnectDelay > 0) {
             synchronized (sleepMutex) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection");
-                }
+                LOG.debug("Waiting {} ms before attempting connection", reconnectDelay);
                 try {
                     sleepMutex.wait(reconnectDelay);
                 } catch (InterruptedException e) {
