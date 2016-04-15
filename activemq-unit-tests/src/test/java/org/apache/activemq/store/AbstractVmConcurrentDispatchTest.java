@@ -14,15 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.bugs;
+package org.apache.activemq.store;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,13 +47,11 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,40 +61,23 @@ import org.slf4j.LoggerFactory;
  * This test shows that messages are received with non-null data while
  * several consumers are used.
  */
-@RunWith(Parameterized.class)
-public class AMQ6222Test {
+public abstract class AbstractVmConcurrentDispatchTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AMQ6222Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractVmConcurrentDispatchTest.class);
 
     private final MessageType messageType;
     private final boolean reduceMemoryFootPrint;
-    private final boolean concurrentDispatch;
 
-    private static enum MessageType {TEXT, MAP, OBJECT}
-    private final static boolean[] booleanVals = {true, false};
-    private static boolean[] reduceMemoryFootPrintVals = booleanVals;
-    private static boolean[] concurrentDispatchVals = booleanVals;
+    protected static enum MessageType {TEXT, MAP, OBJECT}
+    protected final static boolean[] booleanVals = {true, false};
+    protected static boolean[] reduceMemoryFootPrintVals = booleanVals;
 
-    @Parameters(name="Type:{0}; ReduceMemoryFootPrint:{1}; ConcurrentDispatch:{2}")
-    public static Collection<Object[]> data() {
-        List<Object[]> values = new ArrayList<>();
+    @Rule
+    public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
 
-        for (MessageType mt : MessageType.values()) {
-            for (boolean rmfVal : reduceMemoryFootPrintVals) {
-                for (boolean cdVal : concurrentDispatchVals) {
-                    values.add(new Object[] {mt, rmfVal, cdVal});
-                }
-            }
-        }
-
-        return values;
-    }
-
-    public AMQ6222Test(MessageType messageType, boolean reduceMemoryFootPrint,
-            boolean concurrentDispatch) {
+    public AbstractVmConcurrentDispatchTest(MessageType messageType, boolean reduceMemoryFootPrint) {
         this.messageType = messageType;
         this.reduceMemoryFootPrint = reduceMemoryFootPrint;
-        this.concurrentDispatch = concurrentDispatch;
     }
 
     private BrokerService broker;
@@ -126,8 +106,8 @@ public class AMQ6222Test {
         defaultPolicy.setReduceMemoryFootprint(reduceMemoryFootPrint);
         policyMap.setDefaultEntry(defaultPolicy);
         broker.setDestinationPolicy(policyMap);
-        KahaDBPersistenceAdapter ad = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-        ad.setConcurrentStoreAndDispatchQueues(concurrentDispatch);
+        broker.setDataDirectoryFile(dataFileDir.getRoot());
+        configurePersistenceAdapter(broker);
         broker.start();
         broker.waitUntilStarted();
 
@@ -142,6 +122,8 @@ public class AMQ6222Test {
             broker.stop();
         }
     }
+
+    protected abstract void configurePersistenceAdapter(final BrokerService broker) throws IOException;
 
     @Test(timeout=180000)
     public void testMessagesAreValid() throws Exception {
@@ -161,7 +143,7 @@ public class AMQ6222Test {
 
         try {
             tasks.shutdown();
-            tasks.awaitTermination(10, TimeUnit.SECONDS);
+            tasks.awaitTermination(20, TimeUnit.SECONDS);
         } catch (Exception e) {
             //should get exception with no errors
         }
