@@ -511,7 +511,6 @@ public class Topic extends BaseDestination implements Task {
 
                 waitForSpace(context,producerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
-            message.beforeMarshall(null);
             result = topicStore.asyncAddTopicMessage(context, message,isOptimizeStorage());
         }
 

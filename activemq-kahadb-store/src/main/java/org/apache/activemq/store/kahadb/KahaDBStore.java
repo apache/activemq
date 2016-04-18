@@ -383,6 +383,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public ListenableFuture<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message)
                 throws IOException {
             if (isConcurrentStoreAndDispatchQueues()) {
+                message.beforeMarshall(wireFormat);
                 StoreQueueTask result = new StoreQueueTask(this, context, message);
                 ListenableFuture<Object> future = result.getFuture();
                 message.getMessageId().setFutureOrSequenceLong(future);
@@ -753,6 +754,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public ListenableFuture<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message)
                 throws IOException {
             if (isConcurrentStoreAndDispatchTopics()) {
+                message.beforeMarshall(wireFormat);
                 StoreTopicTask result = new StoreTopicTask(this, context, message, subscriptionCount.get());
                 result.aquireLocks();
                 addTopicTask(this, result);
