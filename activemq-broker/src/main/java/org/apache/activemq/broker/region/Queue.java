@@ -840,7 +840,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         //condition if the original add is processed after the update, which can cause
                         //a duplicate message to be stored
                         if (messages.isCacheEnabled() && !isPersistJMSRedelivered()) {
-                            message.beforeMarshall(null);
                             result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
                             result.addListener(new PendingMarshalUsageTracker(message));
                         } else {
