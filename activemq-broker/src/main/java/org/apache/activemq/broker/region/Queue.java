@@ -840,28 +840,14 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         //condition if the original add is processed after the update, which can cause
                         //a duplicate message to be stored
                         if (messages.isCacheEnabled() && !isPersistJMSRedelivered()) {
-                        message.beforeMarshall(null);
+                            message.beforeMarshall(null);
                             result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
-                            final PendingMarshalUsageTracker tracker = new PendingMarshalUsageTracker(message);
-                            result.addListener(new Runnable() {
-                                @Override
-                                public void run() {
-                                    //Execute usage tracker and then check isReduceMemoryFootprint()
-                                    tracker.run();
-                                    if (isReduceMemoryFootprint()) {
-                                        try {
-                                            message.clearMarshalledState();
-                                        } catch (JMSException e) {
-                                            throw new IllegalStateException(e);
-                                        }
-                                    }
-                                }
-                            });
+                            result.addListener(new PendingMarshalUsageTracker(message));
                         } else {
                             store.addMessage(context, message);
-                            if (isReduceMemoryFootprint()) {
-                                message.clearMarshalledState();
-                            }
+                        }
+                        if (isReduceMemoryFootprint()) {
+                            message.clearMarshalledState();
                         }
                     } catch (Exception e) {
                         // we may have a store in inconsistent state, so reset the cursor
