@@ -276,7 +276,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
 
                 LOG.warn("Transport ({}) failed {} attempting to automatically reconnect: {}",
-                         connectedTransport, (reconnectOk ? "," : ", not"), e);
+                         connectedTransportURI, (reconnectOk ? "," : ", not"), e);
 
                 failedConnectTransportURI = connectedTransportURI;
                 connectedTransportURI = null;
