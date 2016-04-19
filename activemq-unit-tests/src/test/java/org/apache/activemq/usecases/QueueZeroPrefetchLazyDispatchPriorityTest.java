@@ -49,7 +49,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
     private static final Logger LOG = LoggerFactory.getLogger(QueueZeroPrefetchLazyDispatchPriorityTest.class);
 
     private final byte[] PAYLOAD = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-    private final int ITERATIONS = 10;
+    private final int ITERATIONS = 6;
 
     private BrokerService broker;
 
@@ -67,7 +67,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
         }
     }
 
-    @Test(timeout=90000)
+    @Test(timeout=120000)
     public void testPriorityMessages() throws Exception {
 
         for (int i = 0; i < ITERATIONS; i++) {
@@ -125,7 +125,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
         }
     }
 
-    @Test(timeout=90000)
+    @Test(timeout=120000)
     public void testLongLivedPriorityConsumer() throws Exception {
 
         final int numToSend = 150;
@@ -160,7 +160,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
         }
     }
 
-    @Test(timeout=90000)
+    @Test(timeout=120000)
     public void testPriorityMessagesWithJmsBrowser() throws Exception {
 
         final int numToSend = 250;
@@ -197,7 +197,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
         }
     }
 
-    @Test(timeout=90000)
+    @Test(timeout=120000)
     public void testJmsBrowserGetsPagedIn() throws Exception {
         final int numToSend = 10;
 
