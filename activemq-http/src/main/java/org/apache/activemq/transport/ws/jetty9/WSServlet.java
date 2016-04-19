@@ -18,17 +18,14 @@
 package org.apache.activemq.transport.ws.jetty9;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.activemq.jms.pool.IntrospectionSupport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.util.HttpTransportUtils;
@@ -50,6 +47,8 @@ public class WSServlet extends WebSocketServlet {
 
     private final static Map<String, Integer> stompProtocols = new ConcurrentHashMap<> ();
     private final static Map<String, Integer> mqttProtocols = new ConcurrentHashMap<> ();
+
+    private Map<String, Object> transportOptions;
 
     static {
         stompProtocols.put("v12.stomp", 3);
@@ -90,6 +89,7 @@ public class WSServlet extends WebSocketServlet {
                 if (isMqtt) {
                     socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
                     resp.setAcceptedSubProtocol(getAcceptedSubProtocol(mqttProtocols,req.getSubProtocols(), "mqtt"));
+                    ((MQTTSocket)socket).setTransportOptions(new HashMap(transportOptions));
                     ((MQTTSocket)socket).setPeerCertificates(req.getCertificates());
                 } else {
                     socket = new StompSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
@@ -135,5 +135,9 @@ public class WSServlet extends WebSocketServlet {
             this.protocol = protocol;
             this.priority = priority;
         }
+    }
+
+    public void setTransportOptions(Map<String, Object> transportOptions) {
+        this.transportOptions = transportOptions;
     }
 }

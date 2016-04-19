@@ -105,7 +105,9 @@ public class WSTransportServer extends WebTransportServerSupport {
     }
 
     private Servlet createWSServlet() throws Exception {
-        return new WSServlet();
+        WSServlet servlet = new WSServlet();
+        servlet.setTransportOptions(transportOptions);
+        return servlet;
     }
 
     private int getConnectorLocalPort() throws Exception {
