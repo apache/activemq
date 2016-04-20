@@ -175,7 +175,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
         if (toUse instanceof ConnectionFactory) {
             this.connectionFactory = toUse;
         } else {
-            throw new IllegalArgumentException("connectionFactory should implement javax.jmx.ConnectionFactory");
+            throw new IllegalArgumentException("connectionFactory should implement javax.jms.ConnectionFactory");
         }
     }
 
