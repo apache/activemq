@@ -64,11 +64,11 @@ public class TaskRunnerFactory implements Executor {
     }
 
     private TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
-        this(name,priority,daemon,maxIterationsPerRun,false);
+        this(name, priority, daemon, maxIterationsPerRun, false);
     }
 
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner) {
-        this(name, priority, daemon, maxIterationsPerRun, dedicatedTaskRunner, Integer.MAX_VALUE);
+        this(name, priority, daemon, maxIterationsPerRun, dedicatedTaskRunner, getDefaultMaximumPoolSize());
     }
 
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner, int maxThreadPoolSize) {
