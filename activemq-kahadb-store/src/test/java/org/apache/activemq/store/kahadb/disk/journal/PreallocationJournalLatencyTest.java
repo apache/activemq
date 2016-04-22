@@ -51,6 +51,7 @@ public class PreallocationJournalLatencyTest {
         File dataDirectory = new File("./target/activemq-data/kahadb" + randInt);
 
         KahaDBStore store = new KahaDBStore();
+        store.setJournalMaxFileLength(16*1204*1024);
         store.deleteAllMessages();
         store.setDirectory(dataDirectory);
         store.setPreallocationStrategy(preallocationStrategy);
@@ -68,7 +69,7 @@ public class PreallocationJournalLatencyTest {
         ByteSequence byteSequence = new ByteSequence(new byte[8*1024]);
 
         TimeStatisticImpl timeStatistic = new TimeStatisticImpl("append", "duration");
-        for (int i=0;i<300000; i++) {
+        for (int i=0;i<5000; i++) {
             final long start = System.currentTimeMillis();
             journal.write(byteSequence, true);
             timeStatistic.addTime(System.currentTimeMillis() - start);
