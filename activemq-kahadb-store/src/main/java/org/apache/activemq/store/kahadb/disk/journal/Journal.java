@@ -62,7 +62,7 @@ public class Journal {
 
     private static final int MAX_BATCH_SIZE = 32*1024*1024;
 
-    private static final int PREALLOC_CHUNK_SIZE = 1 << 20;
+    private static final int PREALLOC_CHUNK_SIZE = 1024*1024;
 
     // ITEM_HEAD_SPACE = length + type+ reserved space + SOR
     public static final int RECORD_HEAD_SPACE = 4 + 1;
@@ -282,7 +282,6 @@ public class Journal {
 
     private void doPreallocationZeros(RecoverableRandomAccessFile file) {
         ByteBuffer buffer = ByteBuffer.allocate(maxFileLength);
-        buffer.limit(maxFileLength);
 
         try {
             FileChannel channel = file.getChannel();
@@ -326,8 +325,6 @@ public class Journal {
     private void doPreallocationChunkedZeros(RecoverableRandomAccessFile file) {
 
         ByteBuffer buffer = ByteBuffer.allocate(PREALLOC_CHUNK_SIZE);
-        buffer.position(0);
-        buffer.limit(PREALLOC_CHUNK_SIZE);
 
         try {
             FileChannel channel = file.getChannel();
