@@ -105,6 +105,8 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
      * @throws Exception
      */
     public void testSendReceive() throws Exception {
+        Thread.sleep(100);
+
         sendMessages();
 
         assertMessagesAreReceived();
