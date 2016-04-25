@@ -23,7 +23,6 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportLoggerFactory;
@@ -60,7 +59,7 @@ public class HttpTransportFactory extends TransportFactory {
         if (wireFormat instanceof TextWireFormat) {
             return (TextWireFormat)wireFormat;
         }
-        LOG.trace("Not created with a TextWireFormat: " + wireFormat);
+        LOG.trace("Not created with a TextWireFormat: {}", wireFormat);
         return new XStreamWireFormat();
     }
 
@@ -94,8 +93,8 @@ public class HttpTransportFactory extends TransportFactory {
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = super.compositeConfigure(transport, format, options);
-        HttpClientTransport httpTransport = (HttpClientTransport)transport.narrow(HttpClientTransport.class);
-        if(httpTransport != null && httpTransport.isTrace() ) {
+        HttpClientTransport httpTransport = transport.narrow(HttpClientTransport.class);
+        if (httpTransport != null && httpTransport.isTrace()) {
             try {
                 transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
             } catch (Throwable e) {
@@ -104,7 +103,7 @@ public class HttpTransportFactory extends TransportFactory {
         }
         boolean useInactivityMonitor = "true".equals(getOption(options, "useInactivityMonitor", "true"));
         if (useInactivityMonitor) {
-            transport = new InactivityMonitor(transport, null /* ignore wire format as no negotiation over http */);
+            transport = new HttpInactivityMonitor(transport);
             IntrospectionSupport.setProperties(transport, options);
         }
 
