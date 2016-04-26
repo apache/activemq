@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -118,14 +118,17 @@ public abstract class InboundTransformer {
         } else {
             jms.setJMSDeliveryMode(defaultDeliveryMode);
         }
+
         if (header.getPriority() != null) {
             jms.setJMSPriority(header.getPriority().intValue());
         } else {
             jms.setJMSPriority(defaultPriority);
         }
+
         if (header.getFirstAcquirer() != null) {
             jms.setBooleanProperty(prefixVendor + "FirstAcquirer", header.getFirstAcquirer());
         }
+
         if (header.getDeliveryCount() != null) {
             vendor.setJMSXDeliveryCount(jms, header.getDeliveryCount().longValue());
         }
@@ -188,7 +191,7 @@ public abstract class InboundTransformer {
         final Properties properties = amqp.getProperties();
         if (properties != null) {
             if (properties.getMessageId() != null) {
-                jms.setJMSMessageID(properties.getMessageId().toString());
+                jms.setJMSMessageID(AMQPMessageIdHelper.INSTANCE.toBaseMessageIdString(properties.getMessageId()));
             }
             Binary userId = properties.getUserId();
             if (userId != null) {
@@ -236,6 +239,7 @@ public abstract class InboundTransformer {
             if (header.getTtl() != null) {
                 ttl = header.getTtl().longValue();
             }
+
             if (ttl == 0) {
                 jms.setJMSExpiration(0);
             } else {
