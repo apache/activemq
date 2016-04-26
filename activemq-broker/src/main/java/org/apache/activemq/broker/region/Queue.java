@@ -132,7 +132,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private boolean allConsumersExclusiveByDefault = false;
     private final AtomicBoolean started = new AtomicBoolean();
 
-    private boolean resetNeeded;
+    private volatile boolean resetNeeded;
 
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         @Override
