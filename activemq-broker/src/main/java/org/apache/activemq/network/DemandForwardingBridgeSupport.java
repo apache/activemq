@@ -570,7 +570,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         advisoryTopic += "," + AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC;
                     }
                     demandConsumerInfo.setDestination(new ActiveMQTopic(advisoryTopic));
-                    demandConsumerInfo.setPrefetchSize(configuration.getPrefetchSize());
+                    configureConsumerPrefetch(demandConsumerInfo);
                     remoteBroker.oneway(demandConsumerInfo);
                 }
                 startedLatch.countDown();
@@ -726,7 +726,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void ackAdvisory(Message message) throws IOException {
         demandConsumerDispatched++;
-        if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() * .75)) {
+        if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() *
+                (configuration.getAdvisoryAckPercentage() / 100f))) {
             MessageAck ack = new MessageAck(message, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched);
             ack.setConsumerId(demandConsumerInfo.getConsumerId());
             remoteBroker.oneway(ack);
@@ -1364,7 +1365,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         } else {
             sub.getLocalInfo().setDispatchAsync(configuration.isDispatchAsync());
         }
-        sub.getLocalInfo().setPrefetchSize(configuration.getPrefetchSize());
+        configureConsumerPrefetch(sub.getLocalInfo());
         subscriptionMapByLocalId.put(sub.getLocalInfo().getConsumerId(), sub);
         subscriptionMapByRemoteId.put(sub.getRemoteInfo().getConsumerId(), sub);
 
@@ -1718,6 +1719,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             LOG.debug("Failed to determine last producer sequence id for: {}", messageId, ignored);
         }
         return -1;
+    }
+
+    protected void configureConsumerPrefetch(ConsumerInfo consumerInfo) {
+        //If a consumer on an advisory topic and advisoryPrefetchSize has been explicitly
+        //set then use it, else default to the prefetchSize setting
+        if (AdvisorySupport.isAdvisoryTopic(consumerInfo.getDestination()) &&
+                configuration.getAdvisoryPrefetchSize() > 0) {
+            consumerInfo.setPrefetchSize(configuration.getAdvisoryPrefetchSize());
+        } else {
+            consumerInfo.setPrefetchSize(configuration.getPrefetchSize());
+        }
     }
 
 }
