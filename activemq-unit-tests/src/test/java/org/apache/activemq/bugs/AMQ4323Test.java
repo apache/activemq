@@ -116,7 +116,7 @@ public class AMQ4323Test {
         final int messageCount = 500;
         startBroker(true);
         int fileCount = getFileCount(kahaDbDir);
-        assertEquals(4, fileCount);
+        assertEquals(5, fileCount);
 
         Connection connection = new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
@@ -149,7 +149,7 @@ public class AMQ4323Test {
             public boolean isSatisified() throws Exception {
                 int fileCount = getFileCount(kahaDbDir);
                 LOG.info("current filecount:" + fileCount);
-                return 4 == fileCount;
+                return 5 == fileCount;
             }
         }));
 

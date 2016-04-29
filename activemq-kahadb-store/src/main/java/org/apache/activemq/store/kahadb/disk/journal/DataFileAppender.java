@@ -31,6 +31,9 @@ import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.activemq.store.kahadb.disk.journal.Journal.EMPTY_BATCH_CONTROL_RECORD;
+import static org.apache.activemq.store.kahadb.disk.journal.Journal.RECORD_HEAD_SPACE;
+
 /**
  * An optimized writer to do batch appends to a data file. This object is thread
  * safe and gains throughput as you increase the number of concurrent writes it
@@ -110,7 +113,7 @@ class DataFileAppender implements FileAppender {
     public Location storeItem(ByteSequence data, byte type, boolean sync) throws IOException {
 
         // Write the packet our internal buffer.
-        int size = data.getLength() + Journal.RECORD_HEAD_SPACE;
+        int size = data.getLength() + RECORD_HEAD_SPACE;
 
         final Location location = new Location();
         location.setSize(size);
@@ -138,7 +141,7 @@ class DataFileAppender implements FileAppender {
     @Override
     public Location storeItem(ByteSequence data, byte type, Runnable onComplete) throws IOException {
         // Write the packet our internal buffer.
-        int size = data.getLength() + Journal.RECORD_HEAD_SPACE;
+        int size = data.getLength() + RECORD_HEAD_SPACE;
 
         final Location location = new Location();
         location.setSize(size);
@@ -179,12 +182,7 @@ class DataFileAppender implements FileAppender {
 
             while ( true ) {
                 if (nextWriteBatch == null) {
-                    DataFile file = journal.getOrCreateCurrentWriteFile();
-                    if( file.getLength() + write.location.getSize() >= journal.getMaxFileLength() ) {
-                        file = journal.rotateWriteFile();
-                    }
-
-
+                    DataFile file = journal.getCurrentDataFile(write.location.getSize());
                     nextWriteBatch = newWriteBatch(write, file);
                     enqueueMutex.notifyAll();
                     break;
@@ -285,23 +283,14 @@ class DataFileAppender implements FileAppender {
                         dataFile.closeRandomAccessFile(file);
                     }
                     dataFile = wb.dataFile;
-                    file = dataFile.openRandomAccessFile();
-                    // pre allocate on first open of new file (length==0)
-                    // note dataFile.length cannot be used because it is updated in enqueue
-                    if (file.length() == 0l) {
-                        journal.preallocateEntireJournalDataFile(file);
-                    }
+                    file = dataFile.appendRandomAccessFile();
                 }
 
                 Journal.WriteCommand write = wb.writes.getHead();
 
                 // Write an empty batch control record.
                 buff.reset();
-                buff.writeInt(Journal.BATCH_CONTROL_RECORD_SIZE);
-                buff.writeByte(Journal.BATCH_CONTROL_RECORD_TYPE);
-                buff.write(Journal.BATCH_CONTROL_RECORD_MAGIC);
-                buff.writeInt(0);
-                buff.writeLong(0);
+                buff.write(EMPTY_BATCH_CONTROL_RECORD);
 
                 boolean forceToDisk = false;
                 while (write != null) {
@@ -312,19 +301,18 @@ class DataFileAppender implements FileAppender {
                     write = write.getNext();
                 }
 
-                // append 'unset' next batch (5 bytes) so read can always find eof
-                buff.writeInt(0);
-                buff.writeByte(0);
+                // append 'unset', zero length next batch so read can always find eof
+                buff.write(Journal.EOF_RECORD);
 
                 ByteSequence sequence = buff.toByteSequence();
 
                 // Now we can fill in the batch control record properly.
                 buff.reset();
-                buff.skip(5+Journal.BATCH_CONTROL_RECORD_MAGIC.length);
-                buff.writeInt(sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE - 5);
+                buff.skip(RECORD_HEAD_SPACE + Journal.BATCH_CONTROL_RECORD_MAGIC.length);
+                buff.writeInt(sequence.getLength() - Journal.BATCH_CONTROL_RECORD_SIZE - Journal.EOF_RECORD.length);
                 if( journal.isChecksum() ) {
                     Checksum checksum = new Adler32();
-                    checksum.update(sequence.getData(), sequence.getOffset()+Journal.BATCH_CONTROL_RECORD_SIZE, sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE - 5);
+                    checksum.update(sequence.getData(), sequence.getOffset()+Journal.BATCH_CONTROL_RECORD_SIZE, sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE-Journal.EOF_RECORD.length);
                     buff.writeLong(checksum.getValue());
                 }
 

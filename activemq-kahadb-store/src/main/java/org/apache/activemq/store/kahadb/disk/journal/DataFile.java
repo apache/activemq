@@ -36,6 +36,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     protected volatile int length;
     protected int typeCode = STANDARD_LOG_FILE;
     protected final SequenceSet corruptedBlocks = new SequenceSet();
+    protected RecoverableRandomAccessFile appendRandomAccessFile;
 
     DataFile(File file, int number) {
         this.file = file;
@@ -76,12 +77,22 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         return file.getName() + " number = " + dataFileId + " , length = " + length;
     }
 
+    public synchronized RecoverableRandomAccessFile appendRandomAccessFile() throws IOException {
+        if (appendRandomAccessFile == null) {
+            appendRandomAccessFile = new RecoverableRandomAccessFile(file.getCanonicalPath(), "rw");
+        }
+        return appendRandomAccessFile;
+    }
+
     public synchronized RecoverableRandomAccessFile openRandomAccessFile() throws IOException {
         return new RecoverableRandomAccessFile(file.getCanonicalPath(), "rw");
     }
 
     public synchronized void closeRandomAccessFile(RecoverableRandomAccessFile file) throws IOException {
         file.close();
+        if (file == appendRandomAccessFile) {
+            appendRandomAccessFile = null;
+        }
     }
 
     public synchronized boolean delete() throws IOException {

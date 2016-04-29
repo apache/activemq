@@ -135,7 +135,7 @@ public class KahaDBIndexLocationTest {
 
         // Should contain the initial log for the journal and the lock.
         assertNotNull(journal);
-        assertEquals(2, journal.length);
+        assertEquals(3, journal.length);
     }
 
     @Test

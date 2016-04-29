@@ -128,8 +128,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
         adapter.setCheckForCorruptJournalFiles(true);
         adapter.setIgnoreMissingJournalfiles(ignoreMissingJournalFiles);
 
-        adapter.setPreallocationStrategy("zeros");
-        adapter.setPreallocationScope("entire_journal");
+        adapter.setPreallocationStrategy(Journal.PreallocationStrategy.ZEROS.name());
+        adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC.name());
     }
 
     @After
@@ -259,6 +259,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         corruptOrderIndex(id, size);
 
         randomAccessFile.getChannel().force(true);
+        dataFile.closeRandomAccessFile(randomAccessFile);
     }
 
     private void corruptBatchEndEof(int id) throws Exception{

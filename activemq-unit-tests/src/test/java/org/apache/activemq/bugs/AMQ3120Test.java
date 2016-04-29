@@ -31,6 +31,7 @@ import org.junit.Test;
 import javax.jms.*;
 
 import java.io.File;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
@@ -101,6 +102,7 @@ public class AMQ3120Test {
     private int getFileCount(File dir){
         if (dir.isDirectory()) {
             String[] children = dir.list();
+            LOG.info("Children: " + Arrays.asList(children));
             return children.length;
         }
 
@@ -112,7 +114,7 @@ public class AMQ3120Test {
         final int messageCount = 500;
         startBroker(true);
         int fileCount = getFileCount(kahaDbDir);
-        assertEquals(4, fileCount);
+        assertEquals(5, fileCount);
 
         Connection connection = new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getConnectUri()).createConnection();

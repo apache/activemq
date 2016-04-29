@@ -257,7 +257,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     boolean enableIndexWriteAsync = false;
     int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
-    private String preallocationScope = Journal.PreallocationScope.ENTIRE_JOURNAL.name();
+    private String preallocationScope = Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC.name();
     private String preallocationStrategy = Journal.PreallocationStrategy.SPARSE_FILE.name();
 
     protected AtomicBoolean opened = new AtomicBoolean();
@@ -1860,32 +1860,37 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         @Override
         public void run() {
+
+            int journalToAdvance = -1;
+            Set<Integer> journalLogsReferenced = new HashSet<Integer>();
+
             // Lock index to capture the ackMessageFileMap data
             indexLock.writeLock().lock();
 
-            // Map keys might not be sorted, find the earliest log file to forward acks
-            // from and move only those, future cycles can chip away at more as needed.
-            // We won't move files that are themselves rewritten on a previous compaction.
-            List<Integer> journalFileIds = new ArrayList<Integer>(metadata.ackMessageFileMap.keySet());
-            Collections.sort(journalFileIds);
-            int journalToAdvance = -1;
-            for (Integer journalFileId : journalFileIds) {
-                DataFile current = journal.getDataFileById(journalFileId);
-                if (current != null && current.getTypeCode() != COMPACTED_JOURNAL_FILE) {
-                    journalToAdvance = journalFileId;
-                    break;
+            try {
+                // Map keys might not be sorted, find the earliest log file to forward acks
+                // from and move only those, future cycles can chip away at more as needed.
+                // We won't move files that are themselves rewritten on a previous compaction.
+                List<Integer> journalFileIds = new ArrayList<Integer>(metadata.ackMessageFileMap.keySet());
+                Collections.sort(journalFileIds);
+                for (Integer journalFileId : journalFileIds) {
+                    DataFile current = journal.getDataFileById(journalFileId);
+                    if (current != null && current.getTypeCode() != COMPACTED_JOURNAL_FILE) {
+                        journalToAdvance = journalFileId;
+                        break;
+                    }
                 }
+
+                // Check if we found one, or if we only found the current file being written to.
+                if (journalToAdvance == -1 || journalToAdvance == journal.getCurrentDataFileId()) {
+                    return;
+                }
+
+                journalLogsReferenced.addAll(metadata.ackMessageFileMap.get(journalToAdvance));
+
+            } finally {
+                indexLock.writeLock().unlock();
             }
-
-            // Check if we found one, or if we only found the current file being written to.
-            if (journalToAdvance == -1 || journalToAdvance == journal.getCurrentDataFileId()) {
-                return;
-            }
-
-            Set<Integer> journalLogsReferenced =
-                new HashSet<Integer>(metadata.ackMessageFileMap.get(journalToAdvance));
-
-            indexLock.writeLock().unlock();
 
             try {
                 // Background rewrite of the old acks
