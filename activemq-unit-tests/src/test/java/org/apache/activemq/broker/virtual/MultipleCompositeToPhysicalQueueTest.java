@@ -25,6 +25,7 @@ import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
@@ -39,6 +40,7 @@ import org.apache.activemq.broker.region.virtual.CompositeQueue;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
@@ -89,10 +91,17 @@ public class MultipleCompositeToPhysicalQueueTest {
         Session publisherSession = buildSession("Producer", url);
 
         createPublisher(publisherSession, PUB_BROADCAST.getVirtualDestination()).send(publisherSession.createTextMessage("BROADCAST"));
-        assertEquals("BROADCAST", ((TextMessage) consumer.receive()).getText());
+        ActiveMQMessage broadcastMessage = (ActiveMQMessage) consumer.receive();
+        ActiveMQDestination originalDestination = broadcastMessage.getOriginalDestination();
+
+        assertEquals("BROADCAST", ((TextMessage) broadcastMessage).getText());
+        assertEquals( PUB_BROADCAST.getName(), broadcastMessage.getOriginalDestination().getPhysicalName());
 
         createPublisher(publisherSession, PUB_INDIVIDUAL.getVirtualDestination()).send(publisherSession.createTextMessage("INDIVIDUAL"));
-        assertEquals("INDIVIDUAL", ((TextMessage) consumer.receive()).getText());
+        ActiveMQMessage individualMessage = (ActiveMQMessage)consumer.receive();
+
+        assertEquals("INDIVIDUAL", ((TextMessage)individualMessage).getText());
+        assertEquals( PUB_INDIVIDUAL.getName(), individualMessage.getOriginalDestination().getPhysicalName());
     }
 
     private BrokerService createBroker(boolean persistent) throws Exception {

@@ -144,6 +144,10 @@ public class ConsumerBean extends Assert implements MessageListener {
         this.verbose = verbose;
     }
 
+    public List<Message> getMessages() {
+        return messages;
+    }
+
     /**
      * Identifies if the message is empty.
      *

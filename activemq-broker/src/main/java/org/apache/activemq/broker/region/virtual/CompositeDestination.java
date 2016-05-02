@@ -29,7 +29,6 @@ import org.apache.activemq.command.CommandTypes;
  *
  */
 public abstract class CompositeDestination implements VirtualDestination {
-
     private String name;
     private Collection forwardTo;
     private boolean forwardOnly = true;
