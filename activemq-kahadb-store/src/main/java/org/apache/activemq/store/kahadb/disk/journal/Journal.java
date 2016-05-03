@@ -408,6 +408,8 @@ public class Journal {
 
             channel.force(false);
             channel.position(0);
+        } catch (ClosedByInterruptException ignored) {
+            LOG.trace("Could not preallocate journal file with zeros", ignored);
         } catch (IOException e) {
             LOG.error("Could not preallocate journal file with zeros! Will continue without preallocation", e);
         }
