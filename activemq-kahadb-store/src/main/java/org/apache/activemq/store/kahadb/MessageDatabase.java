@@ -629,8 +629,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             Location ackMessageFileLocation = recoverAckMessageFileMap();
             Location lastIndoubtPosition = getRecoveryPosition();
 
-            Location recoveryPosition = minimum(producerAuditPosition, ackMessageFileLocation);
-            recoveryPosition = minimum(recoveryPosition, lastIndoubtPosition);
+            Location recoveryPosition = startOfRecovery(producerAuditPosition, ackMessageFileLocation);
+            recoveryPosition = startOfRecovery(recoveryPosition, lastIndoubtPosition);
 
             if (recoveryPosition != null) {
                 int redoCounter = 0;
@@ -711,16 +711,21 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return TransactionIdConversion.convertToLocal(tx);
     }
 
-    private Location minimum(Location producerAuditPosition,
-            Location lastIndoubtPosition) {
+    private Location startOfRecovery(Location x,
+            Location y) {
         Location min = null;
-        if (producerAuditPosition != null) {
-            min = producerAuditPosition;
-            if (lastIndoubtPosition != null && lastIndoubtPosition.compareTo(producerAuditPosition) < 0) {
-                min = lastIndoubtPosition;
+        if (x != null) {
+            min = x;
+            if (y != null) {
+                int compare = y.compareTo(x);
+                if (compare < 0) {
+                    min = y;
+                } else if (compare == 0) {
+                    min = null; // no recovery needed on a matched location
+                }
             }
         } else {
-            min = lastIndoubtPosition;
+            min = y;
         }
         return min;
     }
