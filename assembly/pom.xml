@@ -142,11 +142,6 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-fileserver</artifactId>
-      <type>war</type>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jms-pool</artifactId>
     </dependency>
     <dependency>

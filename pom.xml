@@ -240,7 +240,6 @@
     <module>activemq-all</module>
     <module>activemq-camel</module>
     <module>activemq-console</module>
-    <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
     <module>activemq-karaf</module>
     <module>activemq-jms-pool</module>
@@ -431,12 +430,6 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-console</artifactId>
         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-fileserver</artifactId>
-        <version>${project.version}</version>
-        <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
