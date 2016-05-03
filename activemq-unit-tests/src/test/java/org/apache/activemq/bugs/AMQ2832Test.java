@@ -46,6 +46,7 @@ import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Test;
@@ -287,7 +288,7 @@ public class AMQ2832Test {
         assertTrue("Less than three journal file expected, was " + getNumberOfJournalFiles(), Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return getNumberOfJournalFiles() <= 3;
+                return getNumberOfJournalFiles() <= 4;
             }
         }, TimeUnit.MINUTES.toMillis(3)));
 
@@ -302,6 +303,7 @@ public class AMQ2832Test {
 
         Collection<DataFile> files =
             ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
+        LOG.info("Data files: " + files);
         int reality = 0;
         for (DataFile file : files) {
             if (file != null) {
