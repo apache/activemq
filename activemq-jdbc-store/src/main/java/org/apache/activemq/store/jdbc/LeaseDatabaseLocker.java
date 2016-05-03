@@ -83,7 +83,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
                 reportLeasOwnerShipAndDuration(connection);
 
             } catch (Exception e) {
-                LOG.debug(getLeaseHolderId() + " lease acquire failure: "+ e, e);
+                LOG.warn(getLeaseHolderId() + " lease acquire failure: "+ e, e);
                 if (isStopping()) {
                     throw new Exception(
                             "Cannot start broker as being asked to shut down. "
@@ -98,7 +98,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
                 close(connection);
             }
 
-            LOG.info(getLeaseHolderId() + " failed to acquire lease.  Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again...");
+            LOG.debug(getLeaseHolderId() + " failed to acquire lease.  Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again...");
             TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
         }
         if (isStopping()) {
@@ -114,7 +114,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
             statement = connection.prepareStatement(getStatements().getLeaseOwnerStatement());
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                LOG.info(getLeaseHolderId() + " Lease held by " + resultSet.getString(1) + " till " + new Date(resultSet.getLong(2)));
+                LOG.debug(getLeaseHolderId() + " Lease held by " + resultSet.getString(1) + " till " + new Date(resultSet.getLong(2)));
             }
         } finally {
             close(statement);
