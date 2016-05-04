@@ -678,6 +678,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     // made public so it can be used in MQTTProtocolConverter
     public void dispatchPending() throws IOException {
+        List<Destination> slowConsumerTargets = null;
+
         synchronized(pendingLock) {
             try {
                 int numberToDispatch = countBeforeFull();
@@ -721,12 +723,16 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     }
                 } else if (!isSlowConsumer()) {
                     setSlowConsumer(true);
-                    for (Destination dest :destinations) {
-                        dest.slowConsumer(context, this);
-                    }
+                    slowConsumerTargets = destinations;
                 }
             } finally {
                 pending.release();
+            }
+        }
+
+        if (slowConsumerTargets != null) {
+            for (Destination dest : slowConsumerTargets) {
+                dest.slowConsumer(context, this);
             }
         }
     }
