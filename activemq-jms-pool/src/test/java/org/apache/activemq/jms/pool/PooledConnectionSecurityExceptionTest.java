@@ -17,6 +17,7 @@
 package org.apache.activemq.jms.pool;
 
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import org.apache.activemq.security.AuthorizationPlugin;
 import org.apache.activemq.security.DefaultAuthorizationMap;
 import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.security.TempDestinationAuthorizationEntry;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -175,7 +177,7 @@ public class PooledConnectionSecurityExceptionTest {
     }
 
     @Test
-    public void testFailoverWithInvalidCredentials() throws JMSException {
+    public void testFailoverWithInvalidCredentials() throws Exception {
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(
             "failover:(" + connectionURI + ")");
@@ -184,24 +186,35 @@ public class PooledConnectionSecurityExceptionTest {
         pooledConnFact.setConnectionFactory(cf);
         pooledConnFact.setMaxConnections(1);
 
-        Connection connection1 = pooledConnFact.createConnection("invalid", "credentials");
+        final Connection connection1 = pooledConnFact.createConnection("invalid", "credentials");
 
         try {
             connection1.start();
             fail("Should fail to connect");
         } catch (JMSSecurityException ex) {
             LOG.info("Caught expected security error");
+            // Intentionally don't close here to see that async pool reconnect takes place.
         }
 
-        Connection connection2 = pooledConnFact.createConnection("invalid", "credentials");
+        // The pool should process the async error
+        assertTrue("Should get new connection", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connection1 != pooledConnFact.createConnection("invalid", "credentials");
+            }
+        }));
+
+        final Connection connection2 = pooledConnFact.createConnection("invalid", "credentials");
+        assertNotSame(connection1, connection2);
+
         try {
             connection2.start();
             fail("Should fail to connect");
         } catch (JMSSecurityException ex) {
             LOG.info("Caught expected security error");
+            connection2.close();
         }
-
-        assertNotSame(connection1, connection2);
     }
 
     @Test
