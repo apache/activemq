@@ -194,7 +194,7 @@ public class Journal {
     private  final AtomicReference<DataFile> currentDataFile = new AtomicReference<>(null);
     private volatile DataFile nextDataFile;
 
-    protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL_ASYNC;
+    protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
     protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
     private File osKernelCopyTemplateFile = null;
 
@@ -281,10 +281,6 @@ public class Journal {
         } else {
             currentDataFile.set(dataFiles.getTail());
             nextDataFileId = currentDataFile.get().dataFileId + 1;
-        }
-
-        if (preallocationStrategy != PreallocationStrategy.SPARSE_FILE && maxFileLength != DEFAULT_MAX_FILE_LENGTH) {
-            LOG.warn("You are using a preallocation strategy and journal maxFileLength which should be benchmarked accordingly to not introduce unexpected latencies.");
         }
 
         if( lastAppendLocation.get()==null ) {

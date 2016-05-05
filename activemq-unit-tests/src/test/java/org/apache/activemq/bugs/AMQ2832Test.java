@@ -107,6 +107,7 @@ public class AMQ2832Test {
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(5000);
         adapter.setCleanupInterval(5000);
+        adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
 
         if (recover) {
             adapter.setForceRecoverIndex(true);
@@ -288,7 +289,7 @@ public class AMQ2832Test {
         assertTrue("Less than three journal file expected, was " + getNumberOfJournalFiles(), Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return getNumberOfJournalFiles() <= 4;
+                return getNumberOfJournalFiles() <= 3;
             }
         }, TimeUnit.MINUTES.toMillis(3)));
 

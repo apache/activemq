@@ -32,6 +32,7 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -94,6 +95,7 @@ public class KahaDBIndexLocationTest {
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
         persistenceAdapter.setDirectory(kahaDataDir);
         persistenceAdapter.setIndexDirectory(kahaIndexDir);
+        persistenceAdapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
 
         broker.setDataDirectoryFile(testDataDir);
         broker.setUseJmx(false);
@@ -135,7 +137,7 @@ public class KahaDBIndexLocationTest {
 
         // Should contain the initial log for the journal and the lock.
         assertNotNull(journal);
-        assertEquals(3, journal.length);
+        assertEquals(2, journal.length);
     }
 
     @Test

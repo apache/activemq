@@ -259,7 +259,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     boolean enableIndexWriteAsync = false;
     int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
-    private String preallocationScope = Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC.name();
+    private String preallocationScope = Journal.PreallocationScope.ENTIRE_JOURNAL.name();
     private String preallocationStrategy = Journal.PreallocationStrategy.SPARSE_FILE.name();
 
     protected AtomicBoolean opened = new AtomicBoolean();

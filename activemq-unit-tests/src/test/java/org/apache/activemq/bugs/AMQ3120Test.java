@@ -22,6 +22,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
 import org.slf4j.Logger;
@@ -78,6 +79,7 @@ public class AMQ3120Test {
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(500);
         adapter.setCleanupInterval(500);
+        adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
 
         if (!deleteAllOnStart) {
             adapter.setForceRecoverIndex(true);
@@ -114,7 +116,7 @@ public class AMQ3120Test {
         final int messageCount = 500;
         startBroker(true);
         int fileCount = getFileCount(kahaDbDir);
-        assertEquals(5, fileCount);
+        assertEquals(4, fileCount);
 
         Connection connection = new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
