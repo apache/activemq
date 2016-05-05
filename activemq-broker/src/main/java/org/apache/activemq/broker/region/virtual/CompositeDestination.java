@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,20 +24,16 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.CommandTypes;
 
-/**
- *
- *
- */
 public abstract class CompositeDestination implements VirtualDestination {
+
     private String name;
     private Collection forwardTo;
     private boolean forwardOnly = true;
-    private boolean copyMessage = true;
     private boolean concurrentSend = false;
 
     @Override
     public Destination intercept(Destination destination) {
-        return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isCopyMessage(), isConcurrentSend());
+        return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isConcurrentSend());
     }
 
     @Override
@@ -83,17 +79,20 @@ public abstract class CompositeDestination implements VirtualDestination {
         this.forwardOnly = forwardOnly;
     }
 
+    @Deprecated
     public boolean isCopyMessage() {
-        return copyMessage;
+        return true;
     }
 
     /**
      * Sets whether a copy of the message will be sent to each destination.
      * Defaults to true so that the forward destination is set as the
      * destination of the message
+     *
+     * @deprecated this option will be removed in a later release, message are always copied.
      */
+    @Deprecated
     public void setCopyMessage(boolean copyMessage) {
-        this.copyMessage = copyMessage;
     }
 
     /**
@@ -109,7 +108,6 @@ public abstract class CompositeDestination implements VirtualDestination {
 
     @Override
     public ActiveMQDestination getMappedDestinations() {
-
         final ActiveMQDestination[] destinations = new ActiveMQDestination[forwardTo.size()];
         int i = 0;
         for (Object dest : forwardTo) {
@@ -148,39 +146,50 @@ public abstract class CompositeDestination implements VirtualDestination {
         final int prime = 31;
         int result = 1;
         result = prime * result + (concurrentSend ? 1231 : 1237);
-        result = prime * result + (copyMessage ? 1231 : 1237);
         result = prime * result + (forwardOnly ? 1231 : 1237);
-        result = prime * result
-                + ((forwardTo == null) ? 0 : forwardTo.hashCode());
+        result = prime * result + ((forwardTo == null) ? 0 : forwardTo.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+
+        if (getClass() != obj.getClass()) {
             return false;
+        }
+
         CompositeDestination other = (CompositeDestination) obj;
-        if (concurrentSend != other.concurrentSend)
+        if (concurrentSend != other.concurrentSend) {
             return false;
-        if (copyMessage != other.copyMessage)
+        }
+
+        if (forwardOnly != other.forwardOnly) {
             return false;
-        if (forwardOnly != other.forwardOnly)
-            return false;
+        }
+
         if (forwardTo == null) {
-            if (other.forwardTo != null)
+            if (other.forwardTo != null) {
                 return false;
-        } else if (!forwardTo.equals(other.forwardTo))
+            }
+        } else if (!forwardTo.equals(other.forwardTo)) {
             return false;
+        }
+
         if (name == null) {
             if (other.name != null)
                 return false;
-        } else if (!name.equals(other.name))
+        } else if (!name.equals(other.name)) {
             return false;
+        }
+
         return true;
     }
 }
