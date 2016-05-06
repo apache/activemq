@@ -29,6 +29,8 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.util.DestinationPathSeparatorBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -57,6 +59,7 @@ import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
@@ -75,6 +78,7 @@ public class FailoverTransactionTest extends TestSupport {
     private static final String TRANSPORT_URI = "tcp://localhost:0";
     private String url;
     BrokerService broker;
+    final Random random = new Random();
 
     public static Test suite() {
         return suite(FailoverTransactionTest.class);
@@ -121,6 +125,12 @@ public class FailoverTransactionTest extends TestSupport {
         broker.setAdvisorySupport(false);
         broker.addConnector(bindAddress);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
+
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setUsePrefetchExtension(false);
+        policyMap.setDefaultEntry(defaultEntry);
+        broker.setDestinationPolicy(policyMap);
 
         url = broker.getTransportConnectors().get(0).getConnectUri().toString();
 
@@ -763,12 +773,12 @@ public class FailoverTransactionTest extends TestSupport {
         connection = cf.createConnection();
         connection.start();
         connections.add(connection);
-        final Session consumerSession1 = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        final Session consumerSession1 = connection.createSession(true, Session.SESSION_TRANSACTED);
 
         connection = cf.createConnection();
         connection.start();
         connections.add(connection);
-        final Session consumerSession2 = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        final Session consumerSession2 = connection.createSession(true, Session.SESSION_TRANSACTED);
 
         final MessageConsumer consumer1 = consumerSession1.createConsumer(destination);
         final MessageConsumer consumer2 = consumerSession2.createConsumer(destination);
@@ -788,7 +798,7 @@ public class FailoverTransactionTest extends TestSupport {
                     receivedMessages.add(msg);
 
                     // give some variance to the runs
-                    TimeUnit.SECONDS.sleep(pauseSeconds * 2);
+                    TimeUnit.SECONDS.sleep(random.nextInt(5));
 
                     // should not get a second message as there are two messages and two consumers
                     // and prefetch=1, but with failover and unordered connection restore it can get the second
