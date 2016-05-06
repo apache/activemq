@@ -273,7 +273,8 @@ public class BrokerService implements Service {
             ClassLoader loader = BrokerService.class.getClassLoader();
             Class<?> clazz = loader.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
             Provider bouncycastle = (Provider) clazz.newInstance();
-            Security.insertProviderAt(bouncycastle, 2);
+            Security.insertProviderAt(bouncycastle,
+                Integer.getInteger("org.apache.activemq.broker.BouncyCastlePosition", 2));
             LOG.info("Loaded the Bouncy Castle security provider.");
         } catch(Throwable e) {
             // No BouncyCastle found so we use the default Java Security Provider
