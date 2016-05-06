@@ -63,6 +63,7 @@ public class PeriodicDiskUsageLimitTest {
     @Before
     public void setUpBroker() throws Exception {
         broker = new BrokerService();
+        broker.setUseJmx(false);
         broker.setPersistent(true);
         testfile = dataFileDir.newFile();
         broker.setDataDirectoryFile(dataFileDir.getRoot());
@@ -251,6 +252,7 @@ public class PeriodicDiskUsageLimitTest {
             assertEquals(originalDisk, broker.getSystemUsage().getStoreUsage().getLimit());
             assertEquals(originalTmp, broker.getSystemUsage().getTempUsage().getLimit());
         }
+        LOG.info("Not running b/c there is less that 4% disk space, freePrecent:" + freePercent);
     }
 
     protected void assertRampDown() throws Exception {
