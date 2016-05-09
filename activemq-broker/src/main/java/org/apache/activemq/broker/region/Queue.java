@@ -556,7 +556,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
 
-                for (MessageReference ref : unAckedMessages) {
+                for (Iterator<MessageReference> unackedListIterator = unAckedMessages.iterator(); unackedListIterator.hasNext(); ) {
+                    MessageReference ref = unackedListIterator.next();
                     // AMQ-5107: don't resend if the broker is shutting down
                     if ( this.brokerService.isStopping() ) {
                         break;
@@ -578,10 +579,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             }
                         }
                     }
-                    if (!qmr.isDropped()) {
-                        dispatchPendingList.addMessageForRedelivery(qmr);
+                    if (qmr.isDropped()) {
+                        unackedListIterator.remove();
                     }
                 }
+                dispatchPendingList.addForRedelivery(unAckedMessages, strictOrderDispatch && consumers.isEmpty());
                 if (sub instanceof QueueBrowserSubscription) {
                     ((QueueBrowserSubscription)sub).decrementQueueRef();
                     browserDispatches.remove(sub);

@@ -193,6 +193,11 @@ public class QueueDispatchPendingList implements PendingList {
         return rc;
     }
 
+    @Override
+    public void insertAtHead(List<MessageReference> list) {
+        throw new IllegalStateException("no insertion support in: " + this.getClass().getCanonicalName());
+    }
+
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         prioritized = prioritizedMessages;
         if (prioritizedMessages && this.pagedInPendingDispatch instanceof OrderedPendingList) {
@@ -204,11 +209,19 @@ public class QueueDispatchPendingList implements PendingList {
         }
     }
 
-    public void addMessageForRedelivery(QueueMessageReference qmr) {
-        redeliveredWaitingDispatch.addMessageLast(qmr);
-    }
-
     public boolean hasRedeliveries(){
         return !redeliveredWaitingDispatch.isEmpty();
+    }
+
+    public void addForRedelivery(List<MessageReference> list, boolean noConsumers) {
+        if (noConsumers) {
+            // a single consumer can expect repeatable redelivery order irrespective
+            // of transaction or prefetch boundaries
+            redeliveredWaitingDispatch.insertAtHead(list);
+        } else {
+            for (MessageReference ref : list) {
+                redeliveredWaitingDispatch.addMessageLast(ref);
+            }
+        }
     }
 }

@@ -198,4 +198,32 @@ public class OrderedPendingList implements PendingList {
         }
         return null;
     }
+
+    @Override
+    public void insertAtHead(List<MessageReference> list) {
+        if (list != null && !list.isEmpty()) {
+            PendingNode newHead = null;
+            PendingNode appendNode = null;
+            for (MessageReference ref : list) {
+                PendingNode node = new PendingNode(this, ref);
+                pendingMessageHelper.addToMap(ref, node);
+                if (newHead == null) {
+                    newHead = node;
+                    appendNode = node;
+                    continue;
+                }
+                appendNode.linkAfter(node);
+                appendNode = node;
+            }
+            // insert this new list at root
+            if (root == null) {
+                root = newHead;
+                tail = appendNode;
+            } else {
+                appendNode.linkAfter(root);
+                root = newHead;
+            }
+        }
+    }
+
 }

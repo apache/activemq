@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.activemq.broker.region.MessageReference;
@@ -203,6 +204,16 @@ public class PrioritizedPendingList implements PendingList {
             return node.getMessage();
         }
         return null;
+    }
+
+    @Override
+    public void insertAtHead(List<MessageReference> list) {
+        // behave like addAll - pure order within priority lists is not required
+        if (list != null) {
+            for (MessageReference ref: list) {
+                addMessageLast(ref);
+            }
+        }
     }
 
 }
