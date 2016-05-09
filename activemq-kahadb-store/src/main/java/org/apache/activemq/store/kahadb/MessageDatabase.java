@@ -469,7 +469,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 checkpointLock.writeLock().unlock();
             }
             journal.close();
-            ThreadPoolUtils.shutdownGraceful(scheduler, -1);
+            synchronized(schedulerLock) {
+                if (scheduler != null) {
+                    ThreadPoolUtils.shutdownGraceful(scheduler, -1);
+                    scheduler = null;
+                }
+            }
             // clear the cache and journalSize on shutdown of the store
             storeCache.clear();
             journalSize.set(0);
