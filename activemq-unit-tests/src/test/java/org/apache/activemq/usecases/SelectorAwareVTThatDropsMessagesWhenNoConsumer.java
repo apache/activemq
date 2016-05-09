@@ -45,7 +45,7 @@ import static org.junit.Assert.assertEquals;
 
 public class SelectorAwareVTThatDropsMessagesWhenNoConsumer {
     protected static final Logger LOG = LoggerFactory.getLogger(SelectorAwareVTThatDropsMessagesWhenNoConsumer.class);
-    private static final String QUEUE_NAME="AMQ4899TestQueue";
+    private static final String QUEUE_NAME="TestQ";
     private static final String CONSUMER_QUEUE="Consumer.Orders.VirtualOrders." + QUEUE_NAME;
     private static final String PRODUCER_DESTINATION_NAME = "VirtualOrders." + QUEUE_NAME;
 
@@ -67,7 +67,7 @@ public class SelectorAwareVTThatDropsMessagesWhenNoConsumer {
     }
 
     @Test(timeout = 60 * 1000)
-    public void testVirtualTopicMultipleSelectors() throws Exception{
+    public void verifyNoDispatchDuringDisconnect() throws Exception{
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection connection = factory.createConnection();
         connection.start();
