@@ -106,8 +106,8 @@ public class PooledConnectionSecurityExceptionTest {
     }
 
     @Test
-    public void testFailureGetsNewConnectionOnRetry() throws JMSException {
-        Connection connection1 = pooledConnFact.createConnection("invalid", "credentials");
+    public void testFailureGetsNewConnectionOnRetry() throws Exception {
+        final Connection connection1 = pooledConnFact.createConnection("invalid", "credentials");
 
         try {
             connection1.start();
@@ -115,6 +115,15 @@ public class PooledConnectionSecurityExceptionTest {
         } catch (JMSSecurityException ex) {
             LOG.info("Caught expected security error");
         }
+
+        // The pool should process the async error
+        assertTrue("Should get new connection", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connection1 != pooledConnFact.createConnection("invalid", "credentials");
+            }
+        }));
 
         Connection connection2 = pooledConnFact.createConnection("invalid", "credentials");
         try {
