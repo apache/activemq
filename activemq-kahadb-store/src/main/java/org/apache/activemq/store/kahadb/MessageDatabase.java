@@ -354,7 +354,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             return;
         }
         synchronized (schedulerLock) {
-            if (scheduler == null) {
+            if (scheduler == null || scheduler.isShutdown()) {
                 scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
 
                     @Override
