@@ -107,7 +107,7 @@ public class PooledConnectionSecurityExceptionTest {
 
     @Test
     public void testFailureGetsNewConnectionOnRetry() throws Exception {
-        final Connection connection1 = pooledConnFact.createConnection("invalid", "credentials");
+        final PooledConnection connection1 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
 
         try {
             connection1.start();
@@ -121,11 +121,12 @@ public class PooledConnectionSecurityExceptionTest {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return connection1 != pooledConnFact.createConnection("invalid", "credentials");
+                return connection1.getConnection() !=
+                          ((PooledConnection) pooledConnFact.createConnection("invalid", "credentials")).getConnection();
             }
         }));
 
-        Connection connection2 = pooledConnFact.createConnection("invalid", "credentials");
+        PooledConnection connection2 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
         try {
             connection2.start();
             fail("Should fail to connect");
@@ -133,7 +134,7 @@ public class PooledConnectionSecurityExceptionTest {
             LOG.info("Caught expected security error");
         }
 
-        assertNotSame(connection1, connection2);
+        assertNotSame(connection1.getConnection(), connection2.getConnection());
     }
 
     @Test
@@ -141,7 +142,6 @@ public class PooledConnectionSecurityExceptionTest {
         pooledConnFact.setMaxConnections(10);
 
         Connection connection1 = pooledConnFact.createConnection("invalid", "credentials");
-
         try {
             connection1.start();
             fail("Should fail to connect");
@@ -189,13 +189,13 @@ public class PooledConnectionSecurityExceptionTest {
     public void testFailoverWithInvalidCredentials() throws Exception {
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(
-            "failover:(" + connectionURI + ")");
+            "failover:(" + connectionURI + "?trace=true)");
 
         pooledConnFact = new PooledConnectionFactory();
         pooledConnFact.setConnectionFactory(cf);
         pooledConnFact.setMaxConnections(1);
 
-        final Connection connection1 = pooledConnFact.createConnection("invalid", "credentials");
+        final PooledConnection connection1 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
 
         try {
             connection1.start();
@@ -210,12 +210,13 @@ public class PooledConnectionSecurityExceptionTest {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return connection1 != pooledConnFact.createConnection("invalid", "credentials");
+                return connection1.getConnection() !=
+                          ((PooledConnection) pooledConnFact.createConnection("invalid", "credentials")).getConnection();
             }
         }));
 
-        final Connection connection2 = pooledConnFact.createConnection("invalid", "credentials");
-        assertNotSame(connection1, connection2);
+        final PooledConnection connection2 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
+        assertNotSame(connection1.getConnection(), connection2.getConnection());
 
         try {
             connection2.start();
