@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -201,7 +202,10 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
      * reached.
      */
     protected void waitForMessagesToBeDelivered() {
-        long maxWaitTime = 60000;
+        waitForMessagesToBeDelivered(TimeUnit.MINUTES.toMillis(1));
+    }
+
+    protected void waitForMessagesToBeDelivered(long maxWaitTime) {
         long waitTime = maxWaitTime;
         long start = (maxWaitTime <= 0) ? 0 : System.currentTimeMillis();
 

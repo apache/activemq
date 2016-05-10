@@ -16,21 +16,29 @@
  */
 package org.apache.activemq;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.jms.JMSException;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.usecases.TwoBrokerTopicSendReceiveTest;
 
 /**
- * 
+ *
  */
 public class TwoBrokerTopicSendReceiveUsingHttpTest extends TwoBrokerTopicSendReceiveTest {
 
+    @Override
     protected ActiveMQConnectionFactory createReceiverConnectionFactory() throws JMSException {
         return createConnectionFactory("org/apache/activemq/usecases/receiver-http.xml", "receiver", "vm://receiver");
     }
 
+    @Override
     protected ActiveMQConnectionFactory createSenderConnectionFactory() throws JMSException {
         return createConnectionFactory("org/apache/activemq/usecases/sender-http.xml", "sender", "vm://sender");
+    }
+
+    @Override
+    protected void waitForMessagesToBeDelivered() {
+        waitForMessagesToBeDelivered(TimeUnit.MINUTES.toMillis(2));
     }
 }
