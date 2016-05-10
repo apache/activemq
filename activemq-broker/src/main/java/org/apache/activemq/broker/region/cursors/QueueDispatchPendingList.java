@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.MessageId;
 
 /**
@@ -193,11 +192,6 @@ public class QueueDispatchPendingList implements PendingList {
         return rc;
     }
 
-    @Override
-    public void insertAtHead(List<MessageReference> list) {
-        throw new IllegalStateException("no insertion support in: " + this.getClass().getCanonicalName());
-    }
-
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         prioritized = prioritizedMessages;
         if (prioritizedMessages && this.pagedInPendingDispatch instanceof OrderedPendingList) {
@@ -214,10 +208,10 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     public void addForRedelivery(List<MessageReference> list, boolean noConsumers) {
-        if (noConsumers) {
+        if (noConsumers && redeliveredWaitingDispatch instanceof OrderedPendingList) {
             // a single consumer can expect repeatable redelivery order irrespective
             // of transaction or prefetch boundaries
-            redeliveredWaitingDispatch.insertAtHead(list);
+            ((OrderedPendingList)redeliveredWaitingDispatch).insertAtHead(list);
         } else {
             for (MessageReference ref : list) {
                 redeliveredWaitingDispatch.addMessageLast(ref);

@@ -199,7 +199,6 @@ public class OrderedPendingList implements PendingList {
         return null;
     }
 
-    @Override
     public void insertAtHead(List<MessageReference> list) {
         if (list != null && !list.isEmpty()) {
             PendingNode newHead = null;

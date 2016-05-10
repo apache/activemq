@@ -206,14 +206,4 @@ public class PrioritizedPendingList implements PendingList {
         return null;
     }
 
-    @Override
-    public void insertAtHead(List<MessageReference> list) {
-        // behave like addAll - pure order within priority lists is not required
-        if (list != null) {
-            for (MessageReference ref: list) {
-                addMessageLast(ref);
-            }
-        }
-    }
-
 }

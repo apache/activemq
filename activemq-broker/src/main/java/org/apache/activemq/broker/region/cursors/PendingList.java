@@ -116,5 +116,4 @@ public interface PendingList extends Iterable<MessageReference> {
 
     public MessageReference get(MessageId messageId);
 
-    public void insertAtHead(List<MessageReference> list);
 }
