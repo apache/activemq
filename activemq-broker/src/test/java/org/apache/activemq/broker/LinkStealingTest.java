@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +26,8 @@ import javax.jms.InvalidClientIDException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,7 +112,14 @@ public class LinkStealingTest {
             fail("Unexcpected exception causes test failure");
         }
 
-        assertNotNull(removeException.get());
+        //Need to wait because removeConnection might not be called yet
+        assertTrue(Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return removeException.get() != null;
+            }
+        }, 5000, 100));
+
         LOG.info("removeException: {}", removeException.get().getMessage());
     }
 }
