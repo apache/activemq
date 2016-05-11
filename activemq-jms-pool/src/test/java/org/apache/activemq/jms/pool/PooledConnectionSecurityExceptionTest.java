@@ -106,7 +106,16 @@ public class PooledConnectionSecurityExceptionTest {
     }
 
     @Test
+    public void testFailureGetsNewConnectionOnRetryLooped() throws Exception {
+        for (int i = 0; i < 10; ++i) {
+            testFailureGetsNewConnectionOnRetry();
+        }
+    }
+
+    @Test
     public void testFailureGetsNewConnectionOnRetry() throws Exception {
+        pooledConnFact.setMaxConnections(1);
+
         final PooledConnection connection1 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
 
         try {
@@ -122,19 +131,19 @@ public class PooledConnectionSecurityExceptionTest {
             @Override
             public boolean isSatisified() throws Exception {
                 return connection1.getConnection() !=
-                          ((PooledConnection) pooledConnFact.createConnection("invalid", "credentials")).getConnection();
+                    ((PooledConnection) pooledConnFact.createConnection("invalid", "credentials")).getConnection();
             }
         }));
 
-        PooledConnection connection2 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
+        final PooledConnection connection2 = (PooledConnection) pooledConnFact.createConnection("invalid", "credentials");
+        assertNotSame(connection1.getConnection(), connection2.getConnection());
+
         try {
             connection2.start();
             fail("Should fail to connect");
         } catch (JMSSecurityException ex) {
             LOG.info("Caught expected security error");
         }
-
-        assertNotSame(connection1.getConnection(), connection2.getConnection());
     }
 
     @Test
