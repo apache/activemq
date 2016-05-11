@@ -85,6 +85,11 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jaas</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-broker</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
@@ -132,7 +137,7 @@
         </plugins>
       </build>
     </profile>
-	<profile>
+    <profile>
       <id>activemq.tests-autoTransport</id>
       <activation>
         <property>
