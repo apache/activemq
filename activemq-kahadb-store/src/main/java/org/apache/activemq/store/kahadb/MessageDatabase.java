@@ -1888,6 +1888,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             int journalToAdvance = -1;
             Set<Integer> journalLogsReferenced = new HashSet<Integer>();
 
+            //flag to know whether the ack forwarding completed without an exception
+            boolean forwarded = false;
+
             try {
                 //acquire the checkpoint lock to prevent other threads from
                 //running a checkpoint while this is running
@@ -1903,7 +1906,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 //In the future it might be better to just remove the checkpointLock entirely
                 //and only use the executor but this would need to be examined for any unintended
                 //consequences
-                checkpointLock.writeLock().lock();
+                checkpointLock.readLock().lock();
 
                 try {
 
@@ -1937,18 +1940,29 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 try {
                     // Background rewrite of the old acks
                     forwardAllAcks(journalToAdvance, journalLogsReferenced);
-
-                    // Checkpoint with changes from the ackMessageFileMap
-                    checkpointUpdate(false);
+                    forwarded = true;
                 } catch (IOException ioe) {
-                    LOG.error("Checkpoint failed", ioe);
+                    LOG.error("Forwarding of acks failed", ioe);
                     brokerService.handleIOException(ioe);
                 } catch (Throwable e) {
-                    LOG.error("Checkpoint failed", e);
+                    LOG.error("Forwarding of acks failed", e);
                     brokerService.handleIOException(IOExceptionSupport.create(e));
                 }
             } finally {
-                checkpointLock.writeLock().unlock();
+                checkpointLock.readLock().unlock();
+            }
+
+            try {
+                if (forwarded) {
+                    // Checkpoint with changes from the ackMessageFileMap
+                    checkpointUpdate(false);
+                }
+            } catch (IOException ioe) {
+                LOG.error("Checkpoint failed", ioe);
+                brokerService.handleIOException(ioe);
+            } catch (Throwable e) {
+                LOG.error("Checkpoint failed", e);
+                brokerService.handleIOException(IOExceptionSupport.create(e));
             }
         }
     }
