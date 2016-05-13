@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import static org.apache.activemq.store.kahadb.disk.journal.Location.NOT_SET;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -1927,7 +1929,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             compactionMarker.setRewriteType(COMPACTED_JOURNAL_FILE);
 
             ByteSequence payload = toByteSequence(compactionMarker);
-            appender.storeItem(payload, Journal.USER_RECORD_TYPE, isEnableJournalDiskSyncs());
+            appender.storeItem(payload, Journal.USER_RECORD_TYPE, false);
             LOG.trace("Marked ack rewrites file as replacing file: {}", journalToRead);
 
             Location nextLocation = journal.getNextLocation(new Location(journalToRead, 0));
@@ -1941,7 +1943,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
                 if (command != null && command instanceof KahaRemoveMessageCommand) {
                     payload = toByteSequence(command);
-                    Location location = appender.storeItem(payload, Journal.USER_RECORD_TYPE, isEnableJournalDiskSyncs());
+                    Location location = appender.storeItem(payload, Journal.USER_RECORD_TYPE, false);
                     updatedAckLocations.put(location.getDataFileId(), journalLogsReferenced);
                 }
 
