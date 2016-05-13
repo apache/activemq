@@ -47,15 +47,37 @@ public class QueueOrderSingleTransactedConsumerTest {
 
         publishMessages(100);
 
-        consumeVerifyOrderAndRollback(20);
-        consumeVerifyOrderAndRollback(10);
-        consumeVerifyOrderAndRollback(5);
+        consumeVerifyOrderRollback(20);
+        consumeVerifyOrderRollback(10);
+        consumeVerifyOrderRollback(5);
     }
 
-    private void consumeVerifyOrderAndRollback(final int num) throws Exception {
+    @Test
+    public void testSingleSessionXConsumerTxRepeat() throws Exception {
+
+        publishMessages(100);
+
         Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString()).createConnection();
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        consumeVerifyOrder(session, 20);
+        session.rollback();
+        consumeVerifyOrder(session, 10);
+        session.rollback();
+        consumeVerifyOrder(session, 5);
+        session.commit();
+    }
+
+    private void consumeVerifyOrderRollback(final int num) throws Exception {
+        Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString()).createConnection();
+        connection.start();
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        consumeVerifyOrder(session, num);
+        session.rollback();
+        connection.close();
+    }
+
+    private void consumeVerifyOrder(Session session, final int num) throws Exception {
         MessageConsumer messageConsumer = session.createConsumer(dest);
         for (int i=0; i<num; ) {
             Message message = messageConsumer.receive(4000);
@@ -64,8 +86,7 @@ public class QueueOrderSingleTransactedConsumerTest {
                 i++;
             }
         }
-        session.rollback();
-        connection.close();
+        messageConsumer.close();
     }
 
     private void publishMessages(int num) throws Exception {
