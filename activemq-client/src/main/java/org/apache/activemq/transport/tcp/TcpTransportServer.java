@@ -501,10 +501,9 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         Exception firstFailure = null;
 
         try {
-            final Selector selector = this.selector;
             if (selector != null) {
-                this.selector = null;
                 selector.close();
+                selector = null;
             }
         } catch (Exception error) {
         }
