@@ -253,7 +253,7 @@ public abstract class PListTestSupport {
                          synchronized (plistLocks(candidate)) {
                              Object last = candidate.addLast(String.valueOf(i), payload);
                              getFirst(candidate);
-                            assertTrue(candidate.remove(last));
+                             assertTrue(candidate.remove(last));
                          }
                     }
                 } catch (Exception error) {
@@ -273,7 +273,7 @@ public abstract class PListTestSupport {
         executor.execute(new B());
 
         executor.shutdown();
-        boolean finishedInTime = executor.awaitTermination(30, TimeUnit.SECONDS);
+        boolean finishedInTime = executor.awaitTermination(60, TimeUnit.SECONDS);
 
         assertTrue("no exceptions", exceptions.isEmpty());
         assertTrue("finished ok", finishedInTime);
