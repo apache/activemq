@@ -1748,7 +1748,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
-            getDestinationStatistics().getDequeues().increment();
             dropMessage(reference);
         } else {
             try {
@@ -1758,7 +1757,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                     @Override
                     public void afterCommit() throws Exception {
-                        getDestinationStatistics().getDequeues().increment();
                         dropMessage(reference);
                         wakeup();
                     }
@@ -1788,9 +1786,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private void dropMessage(QueueMessageReference reference) {
-        if (!reference.isDropped()) {
-            reference.drop();
-            destinationStatistics.getMessages().decrement();
+        //use dropIfLive so we only process the statistics at most one time
+        if (reference.dropIfLive()) {
+            getDestinationStatistics().getDequeues().increment();
+            getDestinationStatistics().getMessages().decrement();
             pagedInMessagesLock.writeLock().lock();
             try {
                 pagedInMessages.remove(reference);
