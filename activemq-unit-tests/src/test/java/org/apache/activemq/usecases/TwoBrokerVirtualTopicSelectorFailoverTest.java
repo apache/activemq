@@ -155,11 +155,9 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
             if (symbol == null) {
                 continue;
             }
-            boolean queueEmpty = true;
             int mismatches = 0;
             for (Enumeration<Message> e = brokers.get("BrokerA").createBrowser(consumerQueue(symbol)).getEnumeration();
                     e.hasMoreElements();) {
-                queueEmpty = false;
                 Message m = e.nextElement();
                 if (!symbol.equals(m.getStringProperty("SYMBOL"))) {
                     LOG.error("Message {} doesn't match {} is {}",m.getJMSMessageID(),symbol, m.getStringProperty("SYMBOL"));
@@ -231,7 +229,7 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
-        String options = "?useJmx=false&deleteAllMessagesOnStartup=true";
+        String options = "?useJmx=true&deleteAllMessagesOnStartup=true";
         createAndConfigureBroker(new URI(
                 "broker:(tcp://localhost:61616)/BrokerA" + options));
         createAndConfigureBroker(new URI(
@@ -286,7 +284,6 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
 
     private BrokerService createAndConfigureBroker(URI uri) throws Exception {
         BrokerService broker = createBroker(uri);
-        broker.setUseJmx(true);
         // Make topics "selectorAware"
         VirtualTopic virtualTopic = new VirtualTopic();
         virtualTopic.setSelectorAware(true);
@@ -321,9 +318,10 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
     private void restartBrokerA() throws Exception {
         BrokerService broker = createAndConfigureBroker(new URI(
                 "broker:(tcp://localhost:61616)/BrokerA"));
-        broker.start(true); // force restart - not recommended
         broker.start();
-        broker.waitUntilStarted();
+        if (!broker.waitUntilStarted()) {
+            fail("Broker A failed to restart");
+        }
         NetworkConnector ncAB = bridgeBrokersWithFastReconnect("BrokerA", "BrokerB");
         ncAB.start();
     }
@@ -370,8 +368,8 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
 
     class ProducerThreadTester extends ProducerThread {
 
-        private Set<String> selectors = new LinkedHashSet<String>();
-        private Map<String, AtomicInteger> selectorCounts = new HashMap<String, AtomicInteger>();
+        private Set<String> selectors = new LinkedHashSet<>();
+        private Map<String, AtomicInteger> selectorCounts = new HashMap<>();
         private Random rand = new Random(System.currentTimeMillis());
 
         public ProducerThreadTester(Session session, javax.jms.Destination destination) {
@@ -400,7 +398,7 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
         }
 
         private String getRandomKey() {
-            ArrayList<String> keys = new ArrayList(selectors);
+            ArrayList<String> keys = new ArrayList<>(selectors);
             return keys.get(rand.nextInt(keys.size()));
         }
 
