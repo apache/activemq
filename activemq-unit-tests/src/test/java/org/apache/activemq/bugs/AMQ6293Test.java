@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,12 +41,9 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class AMQ6293Test {
 
@@ -55,23 +51,20 @@ public class AMQ6293Test {
 
     private BrokerService brokerService;
     private String connectionUri;
-    private ExecutorService service = Executors.newFixedThreadPool(6);
+    private final ExecutorService service = Executors.newFixedThreadPool(6);
     private final ActiveMQQueue queue = new ActiveMQQueue("test");
     private final int numMessages = 10000;
     private Connection connection;
     private Session session;
     private final AtomicBoolean isException = new AtomicBoolean();
 
-    @Rule
-    public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
-
     @Before
     public void before() throws Exception {
         brokerService = new BrokerService();
         TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
         connectionUri = connector.getPublishableConnectString();
-        brokerService.setPersistent(true);
-        brokerService.setDataDirectoryFile(dataFileDir.getRoot());
+        brokerService.setPersistent(false);
+        brokerService.getManagementContext().setCreateConnector(false);
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry entry = new PolicyEntry();
@@ -83,7 +76,7 @@ public class AMQ6293Test {
         brokerService.waitUntilStarted();
 
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
-        Connection connection = null;
+
         connection = factory.createConnection();
         connection.start();
 
@@ -139,6 +132,7 @@ public class AMQ6293Test {
     }
 
     private void sendTestMessages(int numMessages) throws JMSException {
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageProducer producer = session.createProducer(queue);
 
         final TextMessage textMessage = session.createTextMessage();
@@ -147,8 +141,11 @@ public class AMQ6293Test {
             producer.send(textMessage);
             if (i % 1000 == 0) {
                 LOG.info("Sent {} messages", i);
+                session.commit();
             }
         }
+
+        session.close();
     }
 
     private class TestConsumer implements Runnable {
