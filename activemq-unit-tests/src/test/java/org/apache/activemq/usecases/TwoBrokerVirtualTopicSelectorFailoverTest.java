@@ -229,6 +229,9 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
+        // we assume brokerA will be the primary broker, so we need to have it
+        // first in the map. On JDK7 HashMap would put BrokerB in front.
+        brokers = new TreeMap<>();
         String options = "?useJmx=true&deleteAllMessagesOnStartup=true";
         createAndConfigureBroker(new URI(
                 "broker:(tcp://localhost:61616)/BrokerA" + options));
@@ -284,6 +287,7 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
 
     private BrokerService createAndConfigureBroker(URI uri) throws Exception {
         BrokerService broker = createBroker(uri);
+        broker.getManagementContext().setCreateConnector(false);
         // Make topics "selectorAware"
         VirtualTopic virtualTopic = new VirtualTopic();
         virtualTopic.setSelectorAware(true);
@@ -294,8 +298,8 @@ public class TwoBrokerVirtualTopicSelectorFailoverTest extends
 
         SubQueueSelectorCacheBrokerPlugin selectorCacheBrokerPlugin = new SubQueueSelectorCacheBrokerPlugin();
         selectorCacheBrokerPlugin.setSingleSelectorPerDestination(true);
-        File persisteFile = new File(PERSIST_SELECTOR_CACHE_FILE_BASEPATH + broker.getBrokerName());
-        selectorCacheBrokerPlugin.setPersistFile(persisteFile);
+        File persistFile = new File(PERSIST_SELECTOR_CACHE_FILE_BASEPATH + broker.getBrokerName());
+        selectorCacheBrokerPlugin.setPersistFile(persistFile);
         broker.setPlugins(new BrokerPlugin[]{selectorCacheBrokerPlugin, new BrokerPlugin() {
             @Override
             public Broker installPlugin(Broker broker) throws Exception {
