@@ -63,6 +63,18 @@ public class Stomp11Test extends StompTestSupport {
         connection.start();
     }
 
+    @Override
+    public void tearDown() throws Exception {
+        try {
+            if (connection != null) {
+                connection.close();
+                connection = null;
+            }
+        } catch (Exception ex) {}
+
+        super.tearDown();
+    }
+
     @Test(timeout = 60000)
     public void testConnect() throws Exception {
 
