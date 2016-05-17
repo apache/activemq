@@ -273,7 +273,8 @@ public abstract class PListTestSupport {
         executor.execute(new B());
 
         executor.shutdown();
-        boolean finishedInTime = executor.awaitTermination(60, TimeUnit.SECONDS);
+        boolean finishedInTime = executor.awaitTermination(5, TimeUnit.MINUTES);
+        LOG.info("Tested completion finished in time? -> {}", finishedInTime ? "YES" : "NO");
 
         assertTrue("no exceptions", exceptions.isEmpty());
         assertTrue("finished ok", finishedInTime);
@@ -644,7 +645,8 @@ public abstract class PListTestSupport {
 
     @Before
     public void setUp() throws Exception {
-        File directory = new File("target/test/PlistDB");
+        //File directory = new File("target/test/PlistDB");
+        File directory = new File("/sandbox/temp/plist");
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
         startStore(directory);
