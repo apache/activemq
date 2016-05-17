@@ -25,6 +25,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -39,13 +41,26 @@ import static org.junit.Assert.assertEquals;
 
 public class QueueOrderSingleTransactedConsumerTest {
 
+    private static final Logger LOG = LoggerFactory.getLogger(QueueOrderSingleTransactedConsumerTest.class);
+
     BrokerService broker = null;
     ActiveMQQueue dest = new ActiveMQQueue("Queue");
 
     @Test
     public void testSingleConsumerTxRepeat() throws Exception {
 
-        publishMessages(100);
+        // effect the broker sequence id that is region wide
+        ActiveMQQueue dummyDest = new ActiveMQQueue("AnotherQueue");
+        publishMessagesWithOrderProperty(10, 0, dest);
+        publishMessagesWithOrderProperty(1, 0, dummyDest);
+
+        publishMessagesWithOrderProperty(10, 10, dest);
+        publishMessagesWithOrderProperty(1, 0, dummyDest);
+
+        publishMessagesWithOrderProperty(10, 20, dest);
+        publishMessagesWithOrderProperty(1, 0, dummyDest);
+
+        publishMessagesWithOrderProperty(5, 30, dest);
 
         consumeVerifyOrderRollback(20);
         consumeVerifyOrderRollback(10);
@@ -55,48 +70,105 @@ public class QueueOrderSingleTransactedConsumerTest {
     @Test
     public void testSingleSessionXConsumerTxRepeat() throws Exception {
 
-        publishMessages(100);
+        publishMessagesWithOrderProperty(50);
 
-        Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString()).createConnection();
+        Connection connection = getConnectionFactory().createConnection();
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
-        consumeVerifyOrder(session, 20);
+        MessageConsumer messageConsumer = consumeVerifyOrder(session, 20);
+        messageConsumer.close();
         session.rollback();
-        consumeVerifyOrder(session, 10);
+        messageConsumer = consumeVerifyOrder(session, 10);
+        messageConsumer.close();
         session.rollback();
-        consumeVerifyOrder(session, 5);
+        messageConsumer = consumeVerifyOrder(session, 5);
+        messageConsumer.close();
         session.commit();
+        connection.close();
+    }
+
+    @Test
+    public void tesXConsumerTxRepeat() throws Exception {
+
+        publishMessagesWithOrderProperty(10);
+
+        Connection connection = getConnectionFactory().createConnection();
+        connection.start();
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer messageConsumer = consumeVerifyOrder(session, 6);
+        messageConsumer.close();
+        messageConsumer = consumeVerifyOrder(session, 4, 6);
+
+        // rollback before close, so there are two consumers in the mix
+        session.rollback();
+
+        messageConsumer.close();
+
+        messageConsumer = consumeVerifyOrder(session, 10);
+        session.commit();
+        messageConsumer.close();
+        connection.close();
+    }
+
+    @Test
+    public void testSingleTxXConsumerTxRepeat() throws Exception {
+
+        publishMessagesWithOrderProperty(10);
+
+        Connection connection = getConnectionFactory().createConnection();
+        connection.start();
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer messageConsumer = consumeVerifyOrder(session, 6);
+        messageConsumer.close();
+        messageConsumer = consumeVerifyOrder(session, 4, 6);
+        messageConsumer.close();
+
+        session.rollback();
+        messageConsumer = consumeVerifyOrder(session, 10);
+        session.commit();
+        messageConsumer.close();
+        connection.close();
     }
 
     private void consumeVerifyOrderRollback(final int num) throws Exception {
-        Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString()).createConnection();
+        Connection connection = getConnectionFactory().createConnection();
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
-        consumeVerifyOrder(session, num);
+        MessageConsumer messageConsumer = consumeVerifyOrder(session, num);
+        messageConsumer.close();
         session.rollback();
         connection.close();
     }
 
-    private void consumeVerifyOrder(Session session, final int num) throws Exception {
+    private MessageConsumer consumeVerifyOrder(Session session, final int num) throws Exception {
+        return consumeVerifyOrder(session, num, 0);
+    }
+
+    private MessageConsumer consumeVerifyOrder(Session session, final int num, final int base) throws Exception {
         MessageConsumer messageConsumer = session.createConsumer(dest);
         for (int i=0; i<num; ) {
             Message message = messageConsumer.receive(4000);
             if (message != null) {
-                assertEquals(i, message.getIntProperty("Order"));
+                assertEquals(i + base, message.getIntProperty("Order"));
                 i++;
+                LOG.debug("Received:" + message.getJMSMessageID() + ", Order: " + message.getIntProperty("Order"));
             }
         }
-        messageConsumer.close();
+        return messageConsumer;
     }
 
-    private void publishMessages(int num) throws Exception {
-        Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString()).createConnection();
+    private void publishMessagesWithOrderProperty(int num) throws Exception {
+        publishMessagesWithOrderProperty(num, 0, dest);
+    }
+
+    private void publishMessagesWithOrderProperty(int num, int seqStart, ActiveMQQueue destination) throws Exception {
+        Connection connection = getConnectionFactory().createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer messageProducer = session.createProducer(dest);
+        MessageProducer messageProducer = session.createProducer(destination);
         TextMessage textMessage = session.createTextMessage("A");
         for (int i=0; i<num; i++) {
-            textMessage.setIntProperty("Order", i);
+            textMessage.setIntProperty("Order", i + seqStart);
             messageProducer.send(textMessage);
         }
     }
@@ -130,4 +202,10 @@ public class QueueOrderSingleTransactedConsumerTest {
             broker.stop();
         }
     }
+
+
+    private ActiveMQConnectionFactory getConnectionFactory() throws Exception {
+        return new ActiveMQConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString());
+    }
+
 }

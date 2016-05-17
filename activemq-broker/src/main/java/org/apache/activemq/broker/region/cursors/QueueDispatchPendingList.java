@@ -208,7 +208,7 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     public void addForRedelivery(List<MessageReference> list, boolean noConsumers) {
-        if (noConsumers && redeliveredWaitingDispatch instanceof OrderedPendingList) {
+        if (noConsumers && redeliveredWaitingDispatch instanceof OrderedPendingList && willBeInOrder(list)) {
             // a single consumer can expect repeatable redelivery order irrespective
             // of transaction or prefetch boundaries
             ((OrderedPendingList)redeliveredWaitingDispatch).insertAtHead(list);
@@ -217,5 +217,13 @@ public class QueueDispatchPendingList implements PendingList {
                 redeliveredWaitingDispatch.addMessageLast(ref);
             }
         }
+    }
+
+    private boolean willBeInOrder(List<MessageReference> list) {
+        // for a single consumer inserting at head will be in order w.r.t brokerSequence but
+        // will not be if there were multiple consumers in the mix even if this is the last
+        // consumer to close (noConsumers==true)
+        return !redeliveredWaitingDispatch.isEmpty() && list != null && !list.isEmpty() &&
+            redeliveredWaitingDispatch.iterator().next().getMessageId().getBrokerSequenceId() > list.get(list.size() - 1).getMessageId().getBrokerSequenceId();
     }
 }
