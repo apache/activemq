@@ -645,8 +645,7 @@ public abstract class PListTestSupport {
 
     @Before
     public void setUp() throws Exception {
-        //File directory = new File("target/test/PlistDB");
-        File directory = new File("/sandbox/temp/plist");
+        File directory = new File("target/test/PlistDB");
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
         startStore(directory);
