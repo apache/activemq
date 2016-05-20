@@ -350,7 +350,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                     for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
                         if (ia != null && ia.getAddress() instanceof java.net.Inet4Address
                                 && !ia.getAddress().isLoopbackAddress()
-                                && !ni.getDisplayName().startsWith("vnic")) {
+                                && (ni.getDisplayName()==null || !ni.getDisplayName().startsWith("vnic"))) {
                             possibles.add(ni);
                         }
                     }
