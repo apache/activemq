@@ -57,7 +57,6 @@
       org.fusesource.leveldbjni*;resolution:=optional,
       org.fusesource.hawtjni*;resolution:=optional,
       org.springframework.jms*;version="[3,5)";resolution:=optional,
-      org.springframework.osgi*;version="[1,4]";resolution:=optional,
       org.springframework.transaction*;version="[3,5)";resolution:=optional,
       org.springframework*;version="[3,5)";resolution:=optional,
       org.xmlpull*;resolution:=optional,
@@ -86,6 +85,7 @@
       org.apache.activemq.web*;version=${project.version};-noimport:=true;-split-package:=merge-first,
     </activemq.osgi.export>
     <activemq.osgi.private.pkg>
+         org.springframework.osgi*,
          org.fusesource.hawtdispatch*,
          org.fusesource.mqtt*,
          org.fusesource.hawtbuf*,
@@ -303,9 +303,9 @@
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
             <Embed-Dependency>
-              *;
-              groupId=org.apache.activemq;inline=META-INF/services/*,
-              groupId=org.apache.qpid;inline=META-INF/services/*
+              *;groupId=org.apache.activemq;inline=META-INF/services/*,
+              *;groupId=org.apache.qpid;inline=META-INF/services/*,
+              *;groupId=org.springframework.osgi;inline=true
               <!--
               groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,
               groupId=org.xerial.snappy;inline=org/xerial/snappy/*
