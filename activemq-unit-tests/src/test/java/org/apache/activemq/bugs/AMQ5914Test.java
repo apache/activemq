@@ -78,7 +78,7 @@ public class AMQ5914Test {
         MessageProducer producer = session.createProducer(queue);
         TextMessage expiredMessage = session.createTextMessage("expired message");
         TextMessage validMessage = session.createTextMessage("valid message");
-        producer.send(expiredMessage, Message.DEFAULT_DELIVERY_MODE, Message.DEFAULT_PRIORITY, 50);
+        producer.send(expiredMessage, Message.DEFAULT_DELIVERY_MODE, Message.DEFAULT_PRIORITY, 1000);
         producer.send(validMessage);
         session.close();
 
@@ -91,7 +91,7 @@ public class AMQ5914Test {
 
         // Rollback allow the first message to expire.
         session.rollback();
-        Thread.sleep(75);
+        Thread.sleep(1500);
 
         // Consume again, this should fetch the second valid message via a pull.
         message = consumer.receive(3000);
