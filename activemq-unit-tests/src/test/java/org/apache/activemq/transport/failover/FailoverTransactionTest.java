@@ -263,9 +263,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session2.createConsumer(destination);
         msg = consumer.receive(1000);
-        if (msg == null) {
-            msg = consumer.receive(5000);
-        }
         LOG.info("Received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
@@ -363,9 +360,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session2.createConsumer(destination);
         msg = consumer.receive(1000);
-        if (msg == null) {
-            msg = consumer.receive(5000);
-        }
         LOG.info("Received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
@@ -478,9 +472,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session2.createConsumer(destination);
         msg = consumer.receive(1000);
-        if (msg == null) {
-            msg = consumer.receive(5000);
-        }
         LOG.info("Received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
@@ -602,9 +593,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session2.createConsumer(destination);
         msg = consumer.receive(1000);
-        if (msg == null) {
-            msg = consumer.receive(5000);
-        }
         LOG.info("Received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
@@ -626,7 +614,11 @@ public class FailoverTransactionTest extends TestSupport {
         broker.stop();
         startBroker(false, url);
 
-        session.commit();
+        try {
+            session.commit();
+            fail("expect ex for rollback only on async exc");
+        } catch (JMSException expected) {
+        }
 
         // without tracking producers, message will not be replayed on recovery
         assertNull("we got the message", consumer.receive(5000));
@@ -886,9 +878,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session sweeperSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer sweeper = sweeperSession.createConsumer(destination);
         msg = sweeper.receive(1000);
-        if (msg == null) {
-            msg = sweeper.receive(5000);
-        }
         LOG.info("Sweep received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();

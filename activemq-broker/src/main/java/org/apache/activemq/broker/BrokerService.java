@@ -264,6 +264,7 @@ public class BrokerService implements Service {
     private boolean restartAllowed = true;
     private boolean restartRequested = false;
     private boolean rejectDurableConsumers = false;
+    private boolean rollbackOnlyOnAsyncException = true;
 
     private int storeOpenWireVersion = OpenWireFormat.DEFAULT_STORE_VERSION;
 
@@ -3204,5 +3205,13 @@ public class BrokerService implements Service {
 
     public void setAdjustUsageLimits(boolean adjustUsageLimits) {
         this.adjustUsageLimits = adjustUsageLimits;
+    }
+
+    public void setRollbackOnlyOnAsyncException(boolean rollbackOnlyOnAsyncException) {
+        this.rollbackOnlyOnAsyncException = rollbackOnlyOnAsyncException;
+    }
+
+    public boolean isRollbackOnlyOnAsyncException() {
+        return rollbackOnlyOnAsyncException;
     }
 }
