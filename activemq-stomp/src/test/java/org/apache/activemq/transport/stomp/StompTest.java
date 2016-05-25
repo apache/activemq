@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
@@ -891,10 +892,10 @@ public class StompTest extends StompTestSupport {
         String frame = "CONNECT\n" + "login: dejanb\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        String f = stompConnection.receiveFrame();
-
-        assertTrue(f.startsWith("ERROR"));
-        assertClients(1);
+        try {
+            String f = stompConnection.receiveFrame();
+            assertTrue(f.startsWith("ERROR"));
+        } catch (IOException socketMayBeClosedFirstByBroker) {}
     }
 
     @Test(timeout = 60000)
@@ -903,10 +904,10 @@ public class StompTest extends StompTestSupport {
         String frame = "CONNECT\n" + "login:system\n" + "passcode: dejanb\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        String f = stompConnection.receiveFrame();
-
-        assertTrue(f.startsWith("ERROR"));
-        assertClients(1);
+        try {
+            String f = stompConnection.receiveFrame();
+            assertTrue(f.startsWith("ERROR"));
+        } catch (IOException socketMayBeClosedFirstByBroker) {}
     }
 
     @Test(timeout = 60000)
