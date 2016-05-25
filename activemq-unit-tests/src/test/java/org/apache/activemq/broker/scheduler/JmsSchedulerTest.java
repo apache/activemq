@@ -84,6 +84,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         assertEquals(1, list.size());
         latch.await(240, TimeUnit.SECONDS);
         assertEquals(COUNT, count.get());
+        connection.close();
     }
 
     @Test
@@ -117,6 +118,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         assertEquals(latch.getCount(), COUNT);
         latch.await(5, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), 0);
+        connection.close();
     }
 
     @Test
@@ -156,6 +158,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         assertEquals(latch.getCount(), COUNT);
         latch.await(5, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), 0);
+        connection.close();
     }
 
     @Test
@@ -193,6 +196,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         // wait a little longer - make sure we only get NUMBER of replays
         Thread.sleep(1000);
         assertEquals(NUMBER, count.get());
+        connection.close();
     }
 
     @Test
@@ -230,6 +234,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         producer.send(message);
         producer.close();
+        connection.close();
     }
 
     @Test
@@ -290,5 +295,6 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         latch.await(20000l, TimeUnit.MILLISECONDS);
 
         assertEquals("Consumer did not receive all messages.", 0, latch.getCount());
+        conn.close();
     }
 }
