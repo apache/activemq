@@ -112,8 +112,8 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
     }
 
     protected void configureLocker(KahaDBPersistenceAdapter kahaDBPersistenceAdapter) throws IOException {
-        kahaDBPersistenceAdapter.setLockKeepAlivePeriod(500);
-        kahaDBPersistenceAdapter.getLocker().setLockAcquireSleepInterval(500);
+        kahaDBPersistenceAdapter.setLockKeepAlivePeriod(2000);
+        kahaDBPersistenceAdapter.getLocker().setLockAcquireSleepInterval(5000);
     }
 
     protected DataSource getExistingDataSource() throws Exception {
