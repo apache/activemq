@@ -154,8 +154,11 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     public void flow() throws Exception {
         int updatedCredit = getEndpoint().getCredit();
 
-        LOG.trace("Flow: drain={} credit={}, remoteCredit={}",
-                  getEndpoint().getDrain(), getEndpoint().getCredit(), getEndpoint().getRemoteCredit());
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Flow: currentCredit={}, draining={}, drain={} credit={}, remoteCredit={}, queued={}",
+                      currentCredit, draining, getEndpoint().getDrain(),
+                      getEndpoint().getCredit(), getEndpoint().getRemoteCredit(), getEndpoint().getQueued());
+        }
 
         if (getEndpoint().getDrain() && (updatedCredit != currentCredit || !draining)) {
             currentCredit = updatedCredit >= 0 ? updatedCredit : 0;
@@ -166,6 +169,9 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             control.setConsumerId(getConsumerId());
             control.setDestination(getDestination());
             control.setPrefetch(0);
+
+            LOG.trace("Flow: Pull case -> consumer control with prefetch (0)");
+
             sendToActiveMQ(control, null);
 
             // Now request dispatch of the drain amount, we request immediate
@@ -177,6 +183,9 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             pullRequest.setTimeout(-1);
             pullRequest.setAlwaysSignalDone(true);
             pullRequest.setQuantity(currentCredit);
+
+            LOG.trace("Pull case -> consumer pull request quantity = {}", currentCredit);
+
             sendToActiveMQ(pullRequest, null);
         } else if (updatedCredit != currentCredit) {
             currentCredit = updatedCredit >= 0 ? updatedCredit : 0;
@@ -184,7 +193,12 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             control.setConsumerId(getConsumerId());
             control.setDestination(getDestination());
             control.setPrefetch(currentCredit);
+
+            LOG.trace("Flow: update -> consumer control with prefetch (0)");
+
             sendToActiveMQ(control, null);
+        } else {
+            LOG.trace("Flow: no credit change -> no broker updates needed");
         }
     }
 
@@ -403,6 +417,12 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     draining = false;
                     currentCredit = 0;
                 } else {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Sender:[{}] msgId={} currentCredit={}, draining={}, drain={} credit={}, remoteCredit={}, queued={}",
+                                  getEndpoint().getName(), jms.getJMSMessageID(), currentCredit, draining, getEndpoint().getDrain(),
+                                  getEndpoint().getCredit(), getEndpoint().getRemoteCredit(), getEndpoint().getQueued());
+                    }
+
                     jms.setRedeliveryCounter(md.getRedeliveryCounter());
                     jms.setReadOnlyBody(true);
                     final EncodedMessage amqp = outboundTransformer.transform(jms);
