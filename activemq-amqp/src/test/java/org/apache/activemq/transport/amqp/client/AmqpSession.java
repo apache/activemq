@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp.client;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableSession;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -92,7 +93,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 sender.setStateInspector(getStateInspector());
                 sender.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -124,7 +125,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 sender.setStateInspector(getStateInspector());
                 sender.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -195,7 +196,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -227,7 +228,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -308,7 +309,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -345,7 +346,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -427,8 +428,8 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         return connection.getProtonConnection();
     }
 
-    void pumpToProtonTransport() {
-        connection.pumpToProtonTransport();
+    void pumpToProtonTransport(AsyncResult request) {
+        connection.pumpToProtonTransport(request);
     }
 
     AmqpTransactionId getTransactionId() {

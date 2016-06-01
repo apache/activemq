@@ -81,7 +81,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     private final ConsumerInfo consumerInfo;
     private final boolean presettle;
 
-    private int currentCredit;
     private boolean draining;
     private long lastDeliveredSequenceId;
 
@@ -101,7 +100,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     public AmqpSender(AmqpSession session, Sender endpoint, ConsumerInfo consumerInfo) {
         super(session, endpoint);
 
-        this.currentCredit = endpoint.getRemoteCredit();
         this.consumerInfo = consumerInfo;
         this.presettle = getEndpoint().getRemoteSenderSettleMode() == SenderSettleMode.SETTLED;
     }
@@ -120,7 +118,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (!isClosed() && isOpened()) {
             RemoveInfo removeCommand = new RemoveInfo(getConsumerId());
             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-            sendToActiveMQ(removeCommand, null);
+            sendToActiveMQ(removeCommand);
 
             session.unregisterSender(getConsumerId());
         }
@@ -133,7 +131,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (!isClosed() && isOpened()) {
             RemoveInfo removeCommand = new RemoveInfo(getConsumerId());
             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-            sendToActiveMQ(removeCommand, null);
+            sendToActiveMQ(removeCommand);
 
             if (consumerInfo.isDurable()) {
                 RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
@@ -141,7 +139,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 rsi.setSubscriptionName(getEndpoint().getName());
                 rsi.setClientId(session.getConnection().getClientId());
 
-                sendToActiveMQ(rsi, null);
+                sendToActiveMQ(rsi);
             }
 
             session.unregisterSender(getConsumerId());
@@ -152,17 +150,13 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
     @Override
     public void flow() throws Exception {
-        int updatedCredit = getEndpoint().getCredit();
-
         if (LOG.isTraceEnabled()) {
-            LOG.trace("Flow: currentCredit={}, draining={}, drain={} credit={}, remoteCredit={}, queued={}",
-                      currentCredit, draining, getEndpoint().getDrain(),
+            LOG.trace("Flow: draining={}, drain={} credit={}, remoteCredit={}, queued={}",
+                      draining, getEndpoint().getDrain(),
                       getEndpoint().getCredit(), getEndpoint().getRemoteCredit(), getEndpoint().getQueued());
         }
 
-        if (getEndpoint().getDrain() && (updatedCredit != currentCredit || !draining)) {
-            currentCredit = updatedCredit >= 0 ? updatedCredit : 0;
-            draining = true;
+        if (getEndpoint().getDrain() && !draining) {
 
             // Revert to a pull consumer.
             ConsumerControl control = new ConsumerControl();
@@ -170,35 +164,42 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             control.setDestination(getDestination());
             control.setPrefetch(0);
 
-            LOG.trace("Flow: Pull case -> consumer control with prefetch (0)");
+            LOG.trace("Flow: Pull case -> consumer control with prefetch (0) to control output");
 
-            sendToActiveMQ(control, null);
+            sendToActiveMQ(control);
 
-            // Now request dispatch of the drain amount, we request immediate
-            // timeout and an completion message regardless so that we can know
-            // when we should marked the link as drained.
-            MessagePull pullRequest = new MessagePull();
-            pullRequest.setConsumerId(getConsumerId());
-            pullRequest.setDestination(getDestination());
-            pullRequest.setTimeout(-1);
-            pullRequest.setAlwaysSignalDone(true);
-            pullRequest.setQuantity(currentCredit);
+            if (endpoint.getCredit() > 0) {
+                draining = true;
 
-            LOG.trace("Pull case -> consumer pull request quantity = {}", currentCredit);
+                // Now request dispatch of the drain amount, we request immediate
+                // timeout and an completion message regardless so that we can know
+                // when we should marked the link as drained.
+                MessagePull pullRequest = new MessagePull();
+                pullRequest.setConsumerId(getConsumerId());
+                pullRequest.setDestination(getDestination());
+                pullRequest.setTimeout(-1);
+                pullRequest.setAlwaysSignalDone(true);
+                pullRequest.setQuantity(endpoint.getCredit());
 
-            sendToActiveMQ(pullRequest, null);
-        } else if (updatedCredit != currentCredit) {
-            currentCredit = updatedCredit >= 0 ? updatedCredit : 0;
+                LOG.trace("Pull case -> consumer pull request quantity = {}", endpoint.getCredit());
+
+                sendToActiveMQ(pullRequest);
+            } else {
+                LOG.trace("Pull case -> sending any Queued messages and marking drained");
+
+                pumpOutbound();
+                getEndpoint().drained();
+                session.pumpProtonToSocket();
+            }
+        } else {
             ConsumerControl control = new ConsumerControl();
             control.setConsumerId(getConsumerId());
             control.setDestination(getDestination());
-            control.setPrefetch(currentCredit);
+            control.setPrefetch(getEndpoint().getCredit());
 
-            LOG.trace("Flow: update -> consumer control with prefetch (0)");
+            LOG.trace("Flow: update -> consumer control with prefetch {}", control.getPrefetch());
 
-            sendToActiveMQ(control, null);
-        } else {
-            LOG.trace("Flow: no credit change -> no broker updates needed");
+            sendToActiveMQ(control);
         }
     }
 
@@ -415,12 +416,27 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     // It's the end of browse signal in response to a MessagePull
                     getEndpoint().drained();
                     draining = false;
-                    currentCredit = 0;
                 } else {
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace("Sender:[{}] msgId={} currentCredit={}, draining={}, drain={} credit={}, remoteCredit={}, queued={}",
-                                  getEndpoint().getName(), jms.getJMSMessageID(), currentCredit, draining, getEndpoint().getDrain(),
+                        LOG.trace("Sender:[{}] msgId={} draining={}, drain={}, credit={}, remoteCredit={}, queued={}",
+                                  getEndpoint().getName(), jms.getJMSMessageID(), draining, getEndpoint().getDrain(),
                                   getEndpoint().getCredit(), getEndpoint().getRemoteCredit(), getEndpoint().getQueued());
+                    }
+
+                    if (draining && getEndpoint().getCredit() == 0) {
+                        LOG.trace("Sender:[{}] browse complete.", getEndpoint().getName());
+                        getEndpoint().drained();
+                        draining = false;
+                    } else {
+                        LOG.trace("Sender:[{}] updating conumser prefetch:{} after dispatch.",
+                                  getEndpoint().getName(), getEndpoint().getCredit());
+
+                        ConsumerControl control = new ConsumerControl();
+                        control.setConsumerId(getConsumerId());
+                        control.setDestination(getDestination());
+                        control.setPrefetch(Math.max(0, getEndpoint().getCredit() - 1));
+
+                        sendToActiveMQ(control);
                     }
 
                     jms.setRedeliveryCounter(md.getRedeliveryCounter());
