@@ -114,6 +114,35 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testConnectionCarriesContainerId() throws Exception {
+        AmqpClient client = createAmqpClient();
+        assertNotNull(client);
+
+        client.setValidator(new AmqpValidator() {
+
+            @Override
+            public void inspectOpenedResource(Connection connection) {
+                String remoteContainer = connection.getRemoteContainer();
+                if (remoteContainer == null || !remoteContainer.equals(brokerService.getBrokerName())) {
+                    markAsInvalid("Broker did not send a valid container ID");
+                } else {
+                    LOG.info("Broker container ID = {}", remoteContainer);
+                }
+            }
+        });
+
+        AmqpConnection connection = client.connect();
+        assertNotNull(connection);
+
+        assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
+
+        connection.getStateInspector().assertValid();
+        connection.close();
+
+        assertEquals(0, getProxyToBroker().getCurrentConnectionsCount());
+    }
+
+    @Test(timeout = 60000)
     public void testCanConnectWithDifferentContainerIds() throws Exception {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);

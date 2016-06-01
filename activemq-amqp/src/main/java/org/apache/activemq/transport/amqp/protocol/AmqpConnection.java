@@ -492,6 +492,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
                         protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
                         protonConnection.setProperties(getConnetionProperties());
+                        protonConnection.setContainer(brokerService.getBrokerName());
                         protonConnection.open();
 
                         configureInactivityMonitor();
