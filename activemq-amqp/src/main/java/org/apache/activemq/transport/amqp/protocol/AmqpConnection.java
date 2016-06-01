@@ -173,6 +173,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
         this.protonTransport.bind(this.protonConnection);
         this.protonTransport.setChannelMax(CHANNEL_MAX);
+        this.protonTransport.setEmitFlowEventOnSend(false);
 
         this.protonConnection.collect(eventCollector);
 

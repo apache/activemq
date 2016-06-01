@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -83,6 +84,45 @@ public class JMSClientTestSupport extends AmqpTestSupport {
      */
     protected URI getBrokerURI() {
         return amqpURI;
+    }
+
+    protected URI getAmqpURI() {
+        return getAmqpURI("");
+    }
+
+    protected URI getAmqpURI(String uriOptions) {
+
+        boolean useSSL = getBrokerURI().getScheme().toLowerCase().contains("ssl");
+
+        String amqpURI = (useSSL ? "amqps://" : "amqp://") + getBrokerURI().getHost() + ":" + getBrokerURI().getPort();
+
+        if (uriOptions != null && !uriOptions.isEmpty()) {
+            if (uriOptions.startsWith("?") || uriOptions.startsWith("&")) {
+                uriOptions = uriOptions.substring(1);
+            }
+        } else {
+            uriOptions = "";
+        }
+
+        if (useSSL) {
+            amqpURI += "?transport.verifyHost=false";
+        }
+
+        if (!uriOptions.isEmpty()) {
+            if (useSSL) {
+                amqpURI += "&" + uriOptions;
+            } else {
+                amqpURI += "?" + uriOptions;
+            }
+        }
+
+        URI result = getBrokerURI();
+        try {
+            result = new URI(amqpURI);
+        } catch (URISyntaxException e) {
+        }
+
+        return result;
     }
 
     protected Connection createConnection() throws JMSException {

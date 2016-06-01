@@ -342,34 +342,6 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
-    public void testReceiverCanDrainMessages() throws Exception {
-        int MSG_COUNT = 20;
-        sendMessages(getTestName(), MSG_COUNT, false);
-
-        AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
-        AmqpSession session = connection.createSession();
-
-        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
-
-        QueueViewMBean queueView = getProxyToQueue(getTestName());
-        assertEquals(MSG_COUNT, queueView.getQueueSize());
-        assertEquals(0, queueView.getDispatchCount());
-
-        receiver.drain(MSG_COUNT);
-        for (int i = 0; i < MSG_COUNT; ++i) {
-            AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
-            assertNotNull(message);
-            message.accept();
-        }
-        receiver.close();
-
-        assertEquals(0, queueView.getQueueSize());
-
-        connection.close();
-    }
-
-    @Test(timeout = 60000)
     public void testUnsupportedFiltersAreNotListedAsSupported() throws Exception {
         AmqpClient client = createAmqpClient();
 
