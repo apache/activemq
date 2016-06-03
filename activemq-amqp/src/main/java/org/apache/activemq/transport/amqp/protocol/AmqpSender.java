@@ -275,11 +275,9 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     @Override
                     public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
                         if (response.isException()) {
-                            if (response.isException()) {
-                                Throwable exception = ((ExceptionResponse) response).getException();
-                                exception.printStackTrace();
-                                getEndpoint().close();
-                            }
+                            Throwable exception = ((ExceptionResponse) response).getException();
+                            exception.printStackTrace();
+                            getEndpoint().close();
                         }
                         session.pumpProtonToSocket();
                     }

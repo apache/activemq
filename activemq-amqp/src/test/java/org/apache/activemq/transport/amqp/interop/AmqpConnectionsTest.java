@@ -192,31 +192,29 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
             @Override
             public void inspectClosedResource(Connection connection) {
                 ErrorCondition remoteError = connection.getRemoteCondition();
-                if (remoteError == null) {
+                if (remoteError == null || remoteError.getCondition() == null) {
                     markAsInvalid("Broker did not add error condition for duplicate client ID");
-                }
+                } else {
+                    if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
+                        markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    }
 
-                if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
-                    markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
-                }
-
-                if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
-                    markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
+                        markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    }
                 }
 
                 // Validate the info map contains a hint that the container/client id was the problem
                 Map<?, ?> infoMap = remoteError.getInfo();
-                if(infoMap == null) {
+                if (infoMap == null) {
                     markAsInvalid("Broker did not set an info map on condition");
-                }
-
-                if(!infoMap.containsKey(AmqpSupport.INVALID_FIELD)) {
+                } else if (!infoMap.containsKey(AmqpSupport.INVALID_FIELD)) {
                     markAsInvalid("Info map does not contain expected key");
-                }
-
-                Object value = infoMap.get(AmqpSupport.INVALID_FIELD);
-                if(!AmqpSupport.CONTAINER_ID.equals(value)) {
-                    markAsInvalid("Info map does not contain expected value: " + value);
+                } else {
+                    Object value = infoMap.get(AmqpSupport.INVALID_FIELD);
+                    if(!AmqpSupport.CONTAINER_ID.equals(value)) {
+                        markAsInvalid("Info map does not contain expected value: " + value);
+                    }
                 }
             }
         });
