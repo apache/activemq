@@ -98,7 +98,7 @@ public class CamelJmsRequestReplyNobTest extends CamelSpringTestSupport {
             discoveryNetworkConnector.setDuplex(true);
             discoveryNetworkConnector.setNetworkTTL(2);
             discoveryNetworkConnector.setDynamicallyIncludedDestinations(Arrays.asList(new ActiveMQDestination[]{new ActiveMQQueue("service1")}));
-            discoveryNetworkConnector.setDestinationFilter("ActiveMQ.Advisory.Consumer.Queue.service1,ActiveMQ.Advisory.TempQueue,ActiveMQ.Advisory.TempTopic,ActiveMQ.Advisory.Consumer.Queue.*.*");
+            discoveryNetworkConnector.setDestinationFilter("ActiveMQ.Advisory.TempQueue,ActiveMQ.Advisory.TempTopic,ActiveMQ.Advisory.Consumer.Queue.>");
             producerBroker.addNetworkConnector(discoveryNetworkConnector);
             consumerBroker.start();
             producerBroker.start();
