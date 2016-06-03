@@ -37,6 +37,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.log4j.Logger;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -72,6 +73,18 @@ public class PooledSessionExhaustionTest extends JmsPoolTestSupport {
         pooledFactory.setMaxConnections(1);
         pooledFactory.setBlockIfSessionPoolIsFull(false);
         pooledFactory.setMaximumActiveSessionPerConnection(1);
+    }
+
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        try {
+            pooledFactory.stop();
+        } catch (Exception ex) {
+            // ignored
+        }
+
+        super.tearDown();
     }
 
     class TestRunner implements Runnable {

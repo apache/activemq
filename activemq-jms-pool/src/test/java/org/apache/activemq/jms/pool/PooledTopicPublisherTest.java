@@ -43,13 +43,22 @@ import org.junit.Test;
 public class PooledTopicPublisherTest extends JmsPoolTestSupport {
 
     private TopicConnection connection;
+    private PooledConnectionFactory pcf;
 
     @Override
     @After
     public void tearDown() throws Exception {
         if (connection != null) {
-            connection.close();
+            try {
+                connection.close();
+            } catch (Exception ex) {}
             connection = null;
+        }
+
+        if (pcf != null) {
+            try {
+                pcf.stop();
+            } catch (Exception ex) {}
         }
 
         super.tearDown();
@@ -58,7 +67,7 @@ public class PooledTopicPublisherTest extends JmsPoolTestSupport {
     @Test(timeout = 60000)
     public void testPooledConnectionFactory() throws Exception {
         ActiveMQTopic topic = new ActiveMQTopic("test");
-        PooledConnectionFactory pcf = new PooledConnectionFactory();
+        pcf = new PooledConnectionFactory();
         pcf.setConnectionFactory(new ActiveMQConnectionFactory(
             "vm://test?broker.persistent=false&broker.useJmx=false"));
 
@@ -70,7 +79,7 @@ public class PooledTopicPublisherTest extends JmsPoolTestSupport {
 
     @Test(timeout = 60000)
     public void testSetGetExceptionListener() throws Exception {
-        PooledConnectionFactory pcf = new PooledConnectionFactory();
+        pcf = new PooledConnectionFactory();
         pcf.setConnectionFactory(new ActiveMQConnectionFactory(
             "vm://test?broker.persistent=false&broker.useJmx=false"));
 
@@ -97,7 +106,7 @@ public class PooledTopicPublisherTest extends JmsPoolTestSupport {
 
         SocketProxy proxy = new SocketProxy(networkConnector.getConnectUri());
 
-        PooledConnectionFactory pcf = new PooledConnectionFactory();
+        pcf = new PooledConnectionFactory();
         String uri = proxy.getUrl().toString() + "?trace=true&wireFormat.maxInactivityDuration=500&wireFormat.maxInactivityDurationInitalDelay=500";
         pcf.setConnectionFactory(new ActiveMQConnectionFactory(uri));
 

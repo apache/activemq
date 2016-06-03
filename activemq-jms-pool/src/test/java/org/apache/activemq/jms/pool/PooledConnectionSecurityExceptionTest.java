@@ -79,6 +79,8 @@ public class PooledConnectionSecurityExceptionTest {
         connection.start();
 
         LOG.info("Successfully create new connection.");
+
+        connection.close();
     }
 
     @Test
@@ -103,6 +105,8 @@ public class PooledConnectionSecurityExceptionTest {
         connection.start();
 
         LOG.info("Successfully create new connection.");
+
+        connection.close();
     }
 
     @Test
@@ -143,7 +147,11 @@ public class PooledConnectionSecurityExceptionTest {
             fail("Should fail to connect");
         } catch (JMSSecurityException ex) {
             LOG.info("Caught expected security error");
+        } finally {
+            connection2.close();
         }
+
+        connection1.close();
     }
 
     @Test
@@ -167,6 +175,9 @@ public class PooledConnectionSecurityExceptionTest {
         }
 
         assertNotSame(connection1, connection2);
+
+        connection1.close();
+        connection2.close();
     }
 
     @Test
@@ -192,6 +203,8 @@ public class PooledConnectionSecurityExceptionTest {
         connection.start();
 
         LOG.info("Successfully create new connection.");
+
+        connection.close();
     }
 
     @Test
@@ -233,7 +246,11 @@ public class PooledConnectionSecurityExceptionTest {
         } catch (JMSSecurityException ex) {
             LOG.info("Caught expected security error");
             connection2.close();
+        } finally {
+            connection2.close();
         }
+
+        connection1.close();
     }
 
     @Test
