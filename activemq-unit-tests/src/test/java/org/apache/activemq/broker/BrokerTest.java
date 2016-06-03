@@ -276,7 +276,6 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         assertNoMessagesLeft(connection1);
-        assertNoMessagesLeft(connection2);
 
         connection1.request(closeConnectionInfo(connectionInfo1));
         connection1.stop();
