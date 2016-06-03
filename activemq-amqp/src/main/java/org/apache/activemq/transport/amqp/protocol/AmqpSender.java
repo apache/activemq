@@ -427,16 +427,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         LOG.trace("Sender:[{}] browse complete.", getEndpoint().getName());
                         getEndpoint().drained();
                         draining = false;
-                    } else {
-                        LOG.trace("Sender:[{}] updating conumser prefetch:{} after dispatch.",
-                                  getEndpoint().getName(), getEndpoint().getCredit());
-
-                        ConsumerControl control = new ConsumerControl();
-                        control.setConsumerId(getConsumerId());
-                        control.setDestination(getDestination());
-                        control.setPrefetch(Math.max(0, getEndpoint().getCredit() - 1));
-
-                        sendToActiveMQ(control);
                     }
 
                     jms.setRedeliveryCounter(md.getRedeliveryCounter());
@@ -466,6 +456,17 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (tag != null && tag.length > 0 && delivery.remotelySettled()) {
             tagCache.returnTag(tag);
         }
+
+        int newCredit = Math.max(0, getEndpoint().getCredit() - 1);
+        LOG.trace("Sender:[{}] updating conumser prefetch:{} after delivery settled.",
+                  getEndpoint().getName(), newCredit);
+
+        ConsumerControl control = new ConsumerControl();
+        control.setConsumerId(getConsumerId());
+        control.setDestination(getDestination());
+        control.setPrefetch(newCredit);
+
+        sendToActiveMQ(control);
 
         if (ackType == -1) {
             // we are going to settle, but redeliver.. we we won't yet ack to ActiveMQ
