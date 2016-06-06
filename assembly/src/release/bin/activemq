@@ -673,6 +673,6 @@ case "$1" in
     exit $?
     ;;
   *)
-    invoke_task checkfornotrunning
+    invoke_task
     exit $?
 esac
