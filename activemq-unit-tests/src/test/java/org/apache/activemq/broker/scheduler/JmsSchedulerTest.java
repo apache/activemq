@@ -220,7 +220,6 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         broker.start();
         broker.waitUntilStarted();
 
-
         // consume the message
         connection = createConnection();
         connection.start();
@@ -244,9 +243,9 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         broker.getSystemUsage().getJobSchedulerUsage().setLimit(10 * 1024);
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
-        Connection conn = factory.createConnection();
-        conn.start();
-        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Connection connection = factory.createConnection();
+        connection.start();
+        Session sess = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final long time = 5000;
         final ProducerThread producer = new ProducerThread(sess, destination) {
             @Override
@@ -295,6 +294,6 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         latch.await(20000l, TimeUnit.MILLISECONDS);
 
         assertEquals("Consumer did not receive all messages.", 0, latch.getCount());
-        conn.close();
+        connection.close();
     }
 }
