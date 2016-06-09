@@ -30,6 +30,7 @@ public class AmqpWireFormatFactory implements WireFormatFactory {
     private int idelTimeout = AmqpWireFormat.DEFAULT_IDLE_TIMEOUT;
     private int producerCredit = AmqpWireFormat.DEFAULT_PRODUCER_CREDIT;
     private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
+    private boolean allowNonSaslConnections = AmqpWireFormat.DEFAULT_ALLOW_NON_SASL_CONNECTIONS;
 
     @Override
     public WireFormat createWireFormat() {
@@ -40,6 +41,7 @@ public class AmqpWireFormatFactory implements WireFormatFactory {
         wireFormat.setIdleTimeout(getIdelTimeout());
         wireFormat.setProducerCredit(getProducerCredit());
         wireFormat.setTransformer(getTransformer());
+        wireFormat.setAllowNonSaslConnections(isAllowNonSaslConnections());
 
         return wireFormat;
     }
@@ -82,5 +84,13 @@ public class AmqpWireFormatFactory implements WireFormatFactory {
 
     public void setTransformer(String transformer) {
         this.transformer = transformer;
+    }
+
+    public boolean isAllowNonSaslConnections() {
+        return allowNonSaslConnections;
+    }
+
+    public void setAllowNonSaslConnections(boolean allowNonSaslConnections) {
+        this.allowNonSaslConnections = allowNonSaslConnections;
     }
 }

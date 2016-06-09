@@ -60,11 +60,17 @@ public class UnsupportedClientTest extends AmqpTestSupport {
         super.setUp();
     }
 
+    @Override
+    public String getAdditionalConfig() {
+        return "&wireFormat.allowNonSaslConnections=false";
+    }
+
     @Test(timeout = 60000)
     public void testOlderProtocolIsRejected() throws Exception {
 
         AmqpHeader header = new AmqpHeader();
 
+        header.setProtocolId(3);
         header.setMajor(0);
         header.setMinor(9);
         header.setRevision(1);
@@ -87,6 +93,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
         AmqpHeader header = new AmqpHeader();
 
+        header.setProtocolId(3);
         header.setMajor(2);
         header.setMinor(0);
         header.setRevision(0);
@@ -109,6 +116,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
         AmqpHeader header = new AmqpHeader();
 
+        header.setProtocolId(3);
         header.setMajor(1);
         header.setMinor(1);
         header.setRevision(0);
@@ -131,9 +139,56 @@ public class UnsupportedClientTest extends AmqpTestSupport {
 
         AmqpHeader header = new AmqpHeader();
 
+        header.setProtocolId(3);
         header.setMajor(1);
         header.setMinor(0);
         header.setRevision(1);
+
+        // Test TCP
+        doTestInvalidHeaderProcessing(amqpPort, header, false);
+
+        // Test SSL
+        doTestInvalidHeaderProcessing(amqpSslPort, header, true);
+
+        // Test NIO
+        doTestInvalidHeaderProcessing(amqpNioPort, header, false);
+
+        // Test NIO+SSL
+        doTestInvalidHeaderProcessing(amqpNioPlusSslPort, header, true);
+    }
+
+    @Test(timeout = 60000)
+    public void testNonSaslClientIsRejected() throws Exception {
+
+        AmqpHeader header = new AmqpHeader();
+
+        header.setProtocolId(0);
+        header.setMajor(1);
+        header.setMinor(0);
+        header.setRevision(0);
+
+        // Test TCP
+        doTestInvalidHeaderProcessing(amqpPort, header, false);
+
+        // Test SSL
+        doTestInvalidHeaderProcessing(amqpSslPort, header, true);
+
+        // Test NIO
+        doTestInvalidHeaderProcessing(amqpNioPort, header, false);
+
+        // Test NIO+SSL
+        doTestInvalidHeaderProcessing(amqpNioPlusSslPort, header, true);
+    }
+
+    @Test(timeout = 60000)
+    public void testUnkownProtocolIdIsRejected() throws Exception {
+
+        AmqpHeader header = new AmqpHeader();
+
+        header.setProtocolId(5);
+        header.setMajor(1);
+        header.setMinor(0);
+        header.setRevision(0);
 
         // Test TCP
         doTestInvalidHeaderProcessing(amqpPort, header, false);
