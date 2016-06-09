@@ -696,7 +696,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             broker.addConsumer(cs.getContext(), info);
             try {
                 ss.addConsumer(info);
-                addConsumerBrokerExchange(info.getConsumerId());
+                addConsumerBrokerExchange(cs, info.getConsumerId());
             } catch (IllegalStateException e) {
                 broker.removeConsumer(cs.getContext(), info);
             }
@@ -1538,15 +1538,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return result;
     }
 
-    private ConsumerBrokerExchange addConsumerBrokerExchange(ConsumerId id) {
+    private ConsumerBrokerExchange addConsumerBrokerExchange(TransportConnectionState connectionState, ConsumerId id) {
         ConsumerBrokerExchange result = consumerExchanges.get(id);
         if (result == null) {
             synchronized (consumerExchanges) {
                 result = new ConsumerBrokerExchange();
-                TransportConnectionState state = lookupConnectionState(id);
-                context = state.getContext();
+                context = connectionState.getContext();
                 result.setConnectionContext(context);
-                SessionState ss = state.getSessionState(id.getParentId());
+                SessionState ss = connectionState.getSessionState(id.getParentId());
                 if (ss != null) {
                     ConsumerState cs = ss.getConsumerState(id);
                     if (cs != null) {
