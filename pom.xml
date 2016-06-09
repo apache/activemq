@@ -96,6 +96,7 @@
     <leveldbjni-version>1.8</leveldbjni-version>
     <log4j-version>1.2.17</log4j-version>
     <mockito-version>1.10.17</mockito-version>
+    <slf4j-test-version>1.1.0</slf4j-test-version>
     <mqtt-client-version>1.12</mqtt-client-version>
     <openjpa-version>1.2.0</openjpa-version>
     <org-apache-derby-version>10.11.1.1</org-apache-derby-version>
@@ -989,6 +990,12 @@
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-all</artifactId>
         <version>${hamcrest-version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>uk.org.lidalia</groupId>
+        <artifactId>slf4j-test</artifactId>
+        <version>${slf4j-test-version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
