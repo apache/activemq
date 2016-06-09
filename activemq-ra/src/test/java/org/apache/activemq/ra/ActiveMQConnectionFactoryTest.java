@@ -72,6 +72,8 @@ public class ActiveMQConnectionFactoryTest {
         ActiveMQConnection connection = ((ActiveMQConnection) ((ManagedConnectionProxy) con).getManagedConnection().getPhysicalConnection());
         assertEquals(100, connection.getPrefetchPolicy().getQueuePrefetch());
         assertNotNull("Connection object returned by ActiveMQConnectionFactory.createConnection() is null", con);
+
+        connection.close();
     }
 
     @Test(timeout = 60000)
@@ -92,6 +94,8 @@ public class ActiveMQConnectionFactoryTest {
         con.start();
 
         assertEquals(0, ((ActiveMQTopicSubscriber) sub).getPrefetchNumber());
+
+        con.close();
     }
 
     @Test(timeout = 60000)
