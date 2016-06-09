@@ -40,6 +40,7 @@ public class AmqpWireFormat implements WireFormat {
     public static final int DEFAULT_CONNECTION_TIMEOUT = 30000;
     public static final int DEFAULT_IDLE_TIMEOUT = 30000;
     public static final int DEFAULT_PRODUCER_CREDIT = 1000;
+    public static final boolean DEFAULT_ALLOW_NON_SASL_CONNECTIONS = true;
 
     private static final int SASL_PROTOCOL = 3;
 
@@ -50,6 +51,7 @@ public class AmqpWireFormat implements WireFormat {
     private int idelTimeout = DEFAULT_IDLE_TIMEOUT;
     private int producerCredit = DEFAULT_PRODUCER_CREDIT;
     private String transformer = InboundTransformer.TRANSFORMER_JMS;
+    private boolean allowNonSaslConnections = DEFAULT_ALLOW_NON_SASL_CONNECTIONS;
 
     private boolean magicRead = false;
     private ResetListener resetListener;
@@ -57,8 +59,6 @@ public class AmqpWireFormat implements WireFormat {
     public interface ResetListener {
         void onProtocolReset();
     }
-
-    private boolean allowNonSaslConnections = true;
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -128,6 +128,10 @@ public class AmqpWireFormat implements WireFormat {
      */
     public boolean isHeaderValid(AmqpHeader header) {
         if (!header.hasValidPrefix()) {
+            return false;
+        }
+
+        if (!(header.getProtocolId() == 0 || header.getProtocolId() == 3)) {
             return false;
         }
 
