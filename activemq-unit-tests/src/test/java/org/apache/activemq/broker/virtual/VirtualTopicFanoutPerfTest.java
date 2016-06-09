@@ -20,6 +20,7 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
@@ -73,16 +74,20 @@ public class VirtualTopicFanoutPerfTest {
 
     @Test
     @Ignore("comparison test - concurrentSend=true virtual topic, use transaction")
-	public void testFanoutDuration() throws Exception {
+    public void testFanoutDuration() throws Exception {
 
+        Connection connection1 = connectionFactory.createConnection();
+        connection1.start();
 
-        Session session = createStartAndTrackConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
         for (int i=0; i<numConsumers; i++) {
             session.createConsumer(new ActiveMQQueue("Consumer." + i + ".VirtualTopic.TEST"));
         }
 
         // create topic producer
-        Session producerSession = createStartAndTrackConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Connection connection2 = connectionFactory.createConnection();
+        connection2.start();
+        Session producerSession = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = producerSession.createProducer(new ActiveMQTopic("VirtualTopic.TEST"));
 
         long start = System.currentTimeMillis();
@@ -92,13 +97,11 @@ public class VirtualTopicFanoutPerfTest {
         }
         LOG.info("Done producer, duration: " + (System.currentTimeMillis() - start) );
 
-
+        try {
+            connection1.close();
+        } catch (Exception ex) {}
+        try {
+            connection2.close();
+        } catch (Exception ex) {}
     }
-
-    private Connection createStartAndTrackConnection() throws Exception {
-        Connection connection = connectionFactory.createConnection();
-        connection.start();
-        return connection;
-    }
-
 }
