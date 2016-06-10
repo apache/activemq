@@ -40,7 +40,7 @@ public class AmqpWireFormat implements WireFormat {
     public static final int DEFAULT_CONNECTION_TIMEOUT = 30000;
     public static final int DEFAULT_IDLE_TIMEOUT = 30000;
     public static final int DEFAULT_PRODUCER_CREDIT = 1000;
-    public static final boolean DEFAULT_ALLOW_NON_SASL_CONNECTIONS = true;
+    public static final boolean DEFAULT_ALLOW_NON_SASL_CONNECTIONS = false;
 
     private static final int SASL_PROTOCOL = 3;
 
