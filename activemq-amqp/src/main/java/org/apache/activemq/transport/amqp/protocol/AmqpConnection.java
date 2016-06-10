@@ -327,7 +327,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         if (command.getClass() == AmqpHeader.class) {
             AmqpHeader header = (AmqpHeader) command;
 
-            if (amqpWireFormat.isHeaderValid(header)) {
+            if (amqpWireFormat.isHeaderValid(header, authenticator != null)) {
                 LOG.trace("Connection from an AMQP v1.0 client initiated. {}", header);
             } else {
                 LOG.warn("Connection attempt from non AMQP v1.0 client. {}", header);

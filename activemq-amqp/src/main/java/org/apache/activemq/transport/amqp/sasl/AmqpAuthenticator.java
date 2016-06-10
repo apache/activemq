@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * SASL Authenitcation engine.
+ * SASL Authentication engine.
  */
 public class AmqpAuthenticator {
 
