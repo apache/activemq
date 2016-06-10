@@ -300,4 +300,70 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         sender.close();
         connection.close();
     }
+
+    @Test(timeout = 60000)
+    public void testSendMessageToQueueNoPrefixReceiveWithPrefix() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender(getTestName());
+        AmqpMessage message = new AmqpMessage();
+
+        message.setText("Test-Message");
+
+        sender.send(message);
+
+        QueueViewMBean queueView = getProxyToQueue(getTestName());
+        assertEquals(1, queueView.getQueueSize());
+        sender.close();
+
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+
+        assertEquals(1, queueView.getQueueSize());
+        assertEquals(0, queueView.getDispatchCount());
+
+        receiver.flow(1);
+        AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+        received.accept();
+        receiver.close();
+
+        assertEquals(0, queueView.getQueueSize());
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testSendMessageToQueueWithPrefixReceiveWithNoPrefix() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+        AmqpMessage message = new AmqpMessage();
+
+        message.setText("Test-Message");
+
+        sender.send(message);
+
+        QueueViewMBean queueView = getProxyToQueue(getTestName());
+        assertEquals(1, queueView.getQueueSize());
+        sender.close();
+
+        AmqpReceiver receiver = session.createReceiver(getTestName());
+
+        assertEquals(1, queueView.getQueueSize());
+        assertEquals(0, queueView.getDispatchCount());
+
+        receiver.flow(1);
+        AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+        received.accept();
+        receiver.close();
+
+        assertEquals(0, queueView.getQueueSize());
+
+        connection.close();
+    }
 }
