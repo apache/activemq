@@ -31,13 +31,15 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class LevelDbVmConcurrentDispatchTest extends AbstractVmConcurrentDispatchTest {
 
-      @Parameters(name="Type:{0}; ReduceMemoryFootPrint:{1}")
+      @Parameters(name="Type:{0}; ReduceMemoryFootPrint:{1}; UseTopic:{2}")
       public static Collection<Object[]> data() {
           List<Object[]> values = new ArrayList<>();
 
           for (MessageType mt : MessageType.values()) {
               for (boolean rmfVal : reduceMemoryFootPrintVals) {
-                  values.add(new Object[] {mt, rmfVal});
+                  for (boolean tpVal : useTopicVals) {
+                      values.add(new Object[] {mt, rmfVal, tpVal});
+                  }
               }
           }
 
@@ -49,8 +51,9 @@ public class LevelDbVmConcurrentDispatchTest extends AbstractVmConcurrentDispatc
      * @param reduceMemoryFootPrint
      * @param concurrentDispatch
      */
-    public LevelDbVmConcurrentDispatchTest(MessageType messageType, boolean reduceMemoryFootPrint) {
-        super(messageType, reduceMemoryFootPrint);
+    public LevelDbVmConcurrentDispatchTest(MessageType messageType, boolean reduceMemoryFootPrint,
+            boolean useTopic) {
+        super(messageType, reduceMemoryFootPrint, useTopic);
     }
 
     @Override
