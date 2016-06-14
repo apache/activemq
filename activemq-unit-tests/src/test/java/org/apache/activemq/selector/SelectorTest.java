@@ -20,13 +20,13 @@ import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
+
+import junit.framework.TestCase;
 
 /**
  *
@@ -342,6 +342,8 @@ public class SelectorTest extends TestCase {
         assertInvalidSelector(message, "3+5");
         assertInvalidSelector(message, "True AND 3+5");
         assertInvalidSelector(message, "=TEST 'test'");
+        assertInvalidSelector(message, "prop1 = prop2 foo AND string = 'Test'");
+        assertInvalidSelector(message, "a = 1 AMD  b = 2");
     }
 
     public void testFunctionSelector() throws Exception {
