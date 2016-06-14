@@ -90,6 +90,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.tcp.SslTransport;
+import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -342,11 +343,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     private void collectBrokerInfos() {
+        int timeout = 30000;
+        TcpTransport tcpTransport = remoteBroker.narrow(TcpTransport.class);
+        if (tcpTransport != null) {
+           timeout = tcpTransport.getConnectionTimeout();
+        }
 
         // First wait for the remote to feed us its BrokerInfo, then we can check on
         // the LocalBrokerInfo and decide is this is a loop.
         try {
-            remoteBrokerInfo = futureRemoteBrokerInfo.get();
+            remoteBrokerInfo = futureRemoteBrokerInfo.get(timeout, TimeUnit.MILLISECONDS);
             if (remoteBrokerInfo == null) {
                 serviceLocalException(new Throwable("remoteBrokerInfo is null"));
                 return;
@@ -357,7 +363,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         try {
-            localBrokerInfo = futureLocalBrokerInfo.get();
+            localBrokerInfo = futureLocalBrokerInfo.get(timeout, TimeUnit.MILLISECONDS);
             if (localBrokerInfo == null) {
                 serviceLocalException(new Throwable("localBrokerInfo is null"));
                 return;
