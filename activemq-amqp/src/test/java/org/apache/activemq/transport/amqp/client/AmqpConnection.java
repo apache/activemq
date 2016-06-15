@@ -532,7 +532,8 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     @Override
     protected void doOpenCompletion() {
         // If the remote indicates that a close is pending, don't open.
-        if (!getEndpoint().getRemoteProperties().containsKey(CONNECTION_OPEN_FAILED)) {
+        if (getEndpoint().getRemoteProperties() == null ||
+            !getEndpoint().getRemoteProperties().containsKey(CONNECTION_OPEN_FAILED)) {
 
             if (!isIdleProcessingDisabled()) {
                 // Using nano time since it is not related to the wall clock, which may change
