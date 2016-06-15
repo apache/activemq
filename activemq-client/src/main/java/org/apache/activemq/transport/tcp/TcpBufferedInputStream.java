@@ -22,8 +22,8 @@ import java.io.InputStream;
 
 /**
  * An optimized buffered input stream for Tcp
- * 
- * 
+ *
+ *
  */
 public class TcpBufferedInputStream extends FilterInputStream {
     private static final int DEFAULT_BUFFER_SIZE = 8192;
@@ -53,6 +53,7 @@ public class TcpBufferedInputStream extends FilterInputStream {
         }
     }
 
+    @Override
     public int read() throws IOException {
         if (position >= count) {
             fill();
@@ -81,6 +82,7 @@ public class TcpBufferedInputStream extends FilterInputStream {
         return cnt;
     }
 
+    @Override
     public int read(byte b[], int off, int len) throws IOException {
         if ((off | len | (off + len) | (b.length - (off + len))) < 0) {
             throw new IndexOutOfBoundsException();
@@ -105,6 +107,7 @@ public class TcpBufferedInputStream extends FilterInputStream {
         }
     }
 
+    @Override
     public long skip(long n) throws IOException {
         if (n <= 0) {
             return 0;
@@ -118,17 +121,34 @@ public class TcpBufferedInputStream extends FilterInputStream {
         return skipped;
     }
 
+    @Override
     public int available() throws IOException {
         return in.available() + (count - position);
     }
 
+    @Override
     public boolean markSupported() {
         return false;
     }
 
+    @Override
     public void close() throws IOException {
         if (in != null) {
             in.close();
         }
+    }
+
+    /**
+     * @param array
+     * @throws IOException
+     */
+    public void unread(byte[] array) throws IOException {
+        int avail = internalBuffer.length - position;
+        if (array.length > avail) {
+            throw new IOException("Buffer is full, can't unread");
+        }
+
+        System.arraycopy(array, position, internalBuffer, 0, array.length);
+        count += array.length;
     }
 }

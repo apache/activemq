@@ -93,13 +93,25 @@ public class WireFormatNegotiator extends TransportFilter {
     }
 
     public void oneway(Object command) throws IOException {
+        boolean wasInterrupted = Thread.interrupted();
         try {
-            if (!readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS)) {
+            if (readyCountDownLatch.getCount() > 0 && !readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS)) {
                 throw new IOException("Wire format negotiation timeout: peer did not send his wire format.");
             }
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new InterruptedIOException();
+            InterruptedIOException interruptedIOException = new InterruptedIOException("Interrupted waiting for wire format negotiation");
+            interruptedIOException.initCause(e);
+            try {
+                onException(interruptedIOException);
+            } finally {
+                Thread.currentThread().interrupt();
+                wasInterrupted = false;
+            }
+            throw interruptedIOException;
+        }  finally {
+            if (wasInterrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
         super.oneway(command);
     }
@@ -143,6 +155,7 @@ public class WireFormatNegotiator extends TransportFilter {
         } catch (IOException e) {
             onException(e);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             onException((IOException)new InterruptedIOException().initCause(e));
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));

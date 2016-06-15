@@ -16,6 +16,7 @@
  */
 package org.apache.activemq;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.AccessController;
@@ -311,7 +312,22 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     protected Transport createTransport() throws JMSException {
         try {
-            return TransportFactory.connect(brokerURL);
+            URI connectBrokerUL = brokerURL;
+            String scheme = brokerURL.getScheme();
+            if (scheme == null) {
+                throw new IOException("Transport not scheme specified: [" + brokerURL + "]");
+            }
+            if (scheme.equals("auto")) {
+                connectBrokerUL = new URI(brokerURL.toString().replace("auto", "tcp"));
+            } else if (scheme.equals("auto+ssl")) {
+                connectBrokerUL = new URI(brokerURL.toString().replace("auto+ssl", "ssl"));
+            } else if (scheme.equals("auto+nio")) {
+                connectBrokerUL = new URI(brokerURL.toString().replace("auto+nio", "nio"));
+            } else if (scheme.equals("auto+nio+ssl")) {
+                connectBrokerUL = new URI(brokerURL.toString().replace("auto+nio+ssl", "nio+ssl"));
+            }
+
+            return TransportFactory.connect(connectBrokerUL);
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Could not create Transport. Reason: " + e, e);
         }

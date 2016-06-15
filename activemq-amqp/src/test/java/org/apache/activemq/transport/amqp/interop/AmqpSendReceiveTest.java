@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.junit.ActiveMQTestRunner;
+import org.apache.activemq.junit.Repeat;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
@@ -33,11 +35,17 @@ import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test basic send and receive scenarios using only AMQP sender and receiver links.
  */
+@RunWith(ActiveMQTestRunner.class)
 public class AmqpSendReceiveTest extends AmqpClientTestSupport {
+
+    protected static final Logger LOG = LoggerFactory.getLogger(AmqpSendReceiveTest.class);
 
     @Test(timeout = 60000)
     public void testCloseBusyReceiver() throws Exception {
@@ -67,6 +75,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
         receiver1.flow(MSG_COUNT);
         AmqpMessage received = receiver1.receive(5, TimeUnit.SECONDS);
+        assertNotNull("Should have got a message", received);
         assertEquals("msg0", received.getMessageId());
         receiver1.close();
 
@@ -74,6 +83,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         receiver2.flow(200);
         for (int i = 0; i < MSG_COUNT; ++i) {
             received = receiver2.receive(5, TimeUnit.SECONDS);
+            assertNotNull("Should have got a message", received);
             assertEquals("msg" + i, received.getMessageId());
         }
 
@@ -103,7 +113,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), "sn = 100");
         receiver.flow(2);
         AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
-        assertNotNull(received);
+        assertNotNull("Should have read a message", received);
         assertEquals(100, received.getApplicationProperty("sn"));
         assertEquals("abcdefg", received.getGroupId());
         received.accept();
@@ -111,9 +121,11 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         assertNull(receiver.receive(1, TimeUnit.SECONDS));
 
         receiver.close();
+        connection.close();
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
+    @Repeat(repetitions = 1)
     public void testAdvancedLinkFlowControl() throws Exception {
         final int MSG_COUNT = 20;
 
@@ -135,33 +147,115 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         sender.close();
 
+        LOG.info("Attempting to read first two messages with receiver #1");
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
         receiver1.flow(2);
-        AmqpMessage message1 = receiver1.receive(5, TimeUnit.SECONDS);
-        AmqpMessage message2 = receiver1.receive(5, TimeUnit.SECONDS);
+        AmqpMessage message1 = receiver1.receive(10, TimeUnit.SECONDS);
+        AmqpMessage message2 = receiver1.receive(10, TimeUnit.SECONDS);
+        assertNotNull("Should have read message 1", message1);
+        assertNotNull("Should have read message 2", message2);
         assertEquals("msg0", message1.getMessageId());
         assertEquals("msg1", message2.getMessageId());
         message1.accept();
         message2.accept();
 
+        LOG.info("Attempting to read next two messages with receiver #2");
         AmqpReceiver receiver2 = session.createReceiver("queue://" + getTestName());
         receiver2.flow(2);
-        AmqpMessage message3 = receiver2.receive(5, TimeUnit.SECONDS);
-        AmqpMessage message4 = receiver2.receive(5, TimeUnit.SECONDS);
+        AmqpMessage message3 = receiver2.receive(10, TimeUnit.SECONDS);
+        AmqpMessage message4 = receiver2.receive(10, TimeUnit.SECONDS);
+        assertNotNull("Should have read message 3", message3);
+        assertNotNull("Should have read message 4", message4);
         assertEquals("msg2", message3.getMessageId());
         assertEquals("msg3", message4.getMessageId());
         message3.accept();
         message4.accept();
 
+        LOG.info("Attempting to read remaining messages with receiver #1");
         receiver1.flow(MSG_COUNT - 4);
         for (int i = 4; i < MSG_COUNT - 4; i++) {
-            AmqpMessage message = receiver1.receive(5, TimeUnit.SECONDS);
+            AmqpMessage message = receiver1.receive(10, TimeUnit.SECONDS);
+            assertNotNull("Should have read a message", message);
             assertEquals("msg" + i, message.getMessageId());
             message.accept();
         }
 
         receiver1.close();
         receiver2.close();
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    @Repeat(repetitions = 1)
+    public void testDispatchOrderWithPrefetchOfOne() throws Exception {
+        final int MSG_COUNT = 20;
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+
+        for (int i = 0; i < MSG_COUNT; i++) {
+            AmqpMessage message = new AmqpMessage();
+
+            message.setMessageId("msg" + i);
+            message.setMessageAnnotation("serialNo", i);
+            message.setText("Test-Message");
+
+            sender.send(message);
+        }
+
+        sender.close();
+
+        AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
+        receiver1.flow(1);
+
+        AmqpReceiver receiver2 = session.createReceiver("queue://" + getTestName());
+        receiver2.flow(1);
+
+        AmqpMessage message1 = receiver1.receive(10, TimeUnit.SECONDS);
+        AmqpMessage message2 = receiver2.receive(10, TimeUnit.SECONDS);
+        assertNotNull("Should have read message 1", message1);
+        assertNotNull("Should have read message 2", message2);
+        assertEquals("msg0", message1.getMessageId());
+        assertEquals("msg1", message2.getMessageId());
+        message1.accept();
+        message2.accept();
+
+        receiver1.flow(1);
+        AmqpMessage message3 = receiver1.receive(10, TimeUnit.SECONDS);
+        receiver2.flow(1);
+        AmqpMessage message4 = receiver2.receive(10, TimeUnit.SECONDS);
+        assertNotNull("Should have read message 3", message3);
+        assertNotNull("Should have read message 4", message4);
+        assertEquals("msg2", message3.getMessageId());
+        assertEquals("msg3", message4.getMessageId());
+        message3.accept();
+        message4.accept();
+
+        LOG.info("Attempting to read remaining messages with both receivers");
+        int splitCredit = (MSG_COUNT - 4) / 2;
+
+        receiver1.flow(splitCredit);
+        for (int i = 4; i < splitCredit; i++) {
+            AmqpMessage message = receiver1.receive(10, TimeUnit.SECONDS);
+            assertNotNull("Should have read a message", message);
+            message.accept();
+        }
+
+        receiver2.flow(splitCredit);
+        for (int i = 4; i < splitCredit; i++) {
+            AmqpMessage message = receiver2.receive(10, TimeUnit.SECONDS);
+            assertNotNull("Should have read a message", message);
+            message.accept();
+        }
+
+        receiver1.close();
+        receiver2.close();
+
+        connection.close();
     }
 
     @Test(timeout = 60000)
@@ -185,6 +279,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         assertEquals(1, queue.getQueueSize());
         receiver1.flow(1);
         message1 = receiver1.receive(50, TimeUnit.SECONDS);
+        assertNotNull("Should have read a message", message1);
         assertFalse("First message sent should not be durable", message1.isDurable());
         message1.accept();
 
@@ -198,6 +293,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         assertEquals(1, queue.getQueueSize());
         receiver1.flow(1);
         message2 = receiver1.receive(50, TimeUnit.SECONDS);
+        assertNotNull("Should have read a message", message2);
         assertTrue("Second message sent should be durable", message2.isDurable());
         message2.accept();
 

@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * Manages the thread pool for long running tasks. Long running tasks are not
  * always active but when they are active, they may need a few iterations of
  * processing for them to become idle. The manager ensures that each task is
- * processes but that no one task overtakes the system. This is kinda like
+ * processes but that no one task overtakes the system. This is somewhat like
  * cooperative multitasking.
  *
  * @org.apache.xbean.XBean
@@ -51,7 +51,7 @@ public class TaskRunnerFactory implements Executor {
     private boolean dedicatedTaskRunner;
     private long shutdownAwaitTermination = 30000;
     private final AtomicBoolean initDone = new AtomicBoolean(false);
-    private int maxThreadPoolSize = Integer.MAX_VALUE;
+    private int maxThreadPoolSize = getDefaultMaximumPoolSize();
     private RejectedExecutionHandler rejectedTaskHandler = null;
     private ClassLoader threadClassLoader;
 
@@ -64,11 +64,11 @@ public class TaskRunnerFactory implements Executor {
     }
 
     private TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
-        this(name,priority,daemon,maxIterationsPerRun,false);
+        this(name, priority, daemon, maxIterationsPerRun, false);
     }
 
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner) {
-        this(name, priority, daemon, maxIterationsPerRun, dedicatedTaskRunner, Integer.MAX_VALUE);
+        this(name, priority, daemon, maxIterationsPerRun, dedicatedTaskRunner, getDefaultMaximumPoolSize());
     }
 
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner, int maxThreadPoolSize) {
@@ -166,7 +166,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, getMaxThreadPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(getDefaultCorePoolSize(), getMaxThreadPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
                 String threadName = name + "-" + id.incrementAndGet();
@@ -182,14 +182,18 @@ public class TaskRunnerFactory implements Executor {
                         LOG.error("Error in thread '{}'", t.getName(), e);
                     }
                 });
-                
+
                 LOG.trace("Created thread[{}]: {}", threadName, thread);
                 return thread;
             }
         });
+
         if (rejectedTaskHandler != null) {
             rc.setRejectedExecutionHandler(rejectedTaskHandler);
+        } else {
+            rc.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         }
+
         return rc;
     }
 
@@ -267,6 +271,14 @@ public class TaskRunnerFactory implements Executor {
 
     public void setShutdownAwaitTermination(long shutdownAwaitTermination) {
         this.shutdownAwaitTermination = shutdownAwaitTermination;
+    }
+
+    private static int getDefaultCorePoolSize() {
+        return Integer.getInteger("org.apache.activemq.thread.TaskRunnerFactory.corePoolSize", 0);
+    }
+
+    private static int getDefaultMaximumPoolSize() {
+        return Integer.getInteger("org.apache.activemq.thread.TaskRunnerFactory.maximumPoolSize", Integer.MAX_VALUE);
     }
 
     private static int getDefaultKeepAliveTime() {

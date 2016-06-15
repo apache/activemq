@@ -17,7 +17,9 @@
 package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.KeepAliveInfo;
@@ -40,13 +42,14 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractStompSocket.class);
 
+    protected ReentrantLock protocolLock = new ReentrantLock();
     protected ProtocolConverter protocolConverter = new ProtocolConverter(this, null);
     protected StompWireFormat wireFormat = new StompWireFormat();
     protected final CountDownLatch socketTransportStarted = new CountDownLatch(1);
     protected final StompInactivityMonitor stompInactivityMonitor = new StompInactivityMonitor(this, wireFormat);
     protected volatile int receiveCounter;
     protected final String remoteAddress;
-
+    protected X509Certificate[] certificates;
 
     public AbstractStompSocket(String remoteAddress) {
         super();
@@ -55,16 +58,24 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
 
     @Override
     public void oneway(Object command) throws IOException {
+        protocolLock.lock();
         try {
             protocolConverter.onActiveMQCommand((Command)command);
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
+        } finally {
+            protocolLock.unlock();
         }
     }
 
     @Override
     public void sendToActiveMQ(Command command) {
-        doConsume(command);
+        protocolLock.lock();
+        try {
+            doConsume(command);
+        } finally {
+            protocolLock.unlock();
+        }
     }
 
     @Override
@@ -118,7 +129,6 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     //----- Internal implementation ------------------------------------------//
 
     protected void processStompFrame(String data) {
-
         if (!transportStartedAtLeastOnce()) {
             LOG.debug("Waiting for StompSocket to be properly started...");
             try {
@@ -128,6 +138,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
             }
         }
 
+        protocolLock.lock();
         try {
             if (data != null) {
                 receiveCounter += data.length();
@@ -135,15 +146,27 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
                 if (data.equals("\n")) {
                     stompInactivityMonitor.onCommand(new KeepAliveInfo());
                 } else {
-                    protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
+                    StompFrame frame = (StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8")));
+                    frame.setTransportContext(getCertificates());
+                    protocolConverter.onStompCommand(frame);
                 }
             }
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
+        } finally {
+            protocolLock.unlock();
         }
     }
 
     private boolean transportStartedAtLeastOnce() {
         return socketTransportStarted.getCount() == 0;
+    }
+
+    public X509Certificate[] getCertificates() {
+        return certificates;
+    }
+
+    public void setCertificates(X509Certificate[] certificates) {
+        this.certificates = certificates;
     }
 }

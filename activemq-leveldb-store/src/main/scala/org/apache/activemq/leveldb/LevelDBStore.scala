@@ -754,11 +754,12 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def doAdd(uow: DelayableUOW, context: ConnectionContext, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
       check_running
+      message.beforeMarshall(wireFormat);
       message.incrementReferenceCount()
       uow.addCompleteListener({
         message.decrementReferenceCount()
       })
-      val sequence = lastSeq.synchronized {
+      lastSeq.synchronized {
         val seq = lastSeq.incrementAndGet()
         message.getMessageId.setFutureOrSequenceLong(seq);
         // null context on xa recovery, we want to bypass the cursor & pending adds as it will be reset
@@ -768,9 +769,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
             def run(): Unit = pendingCursorAdds.synchronized { pendingCursorAdds.remove(seq) }
           }))
         }
-        seq
+        uow.enqueue(key, seq, message, delay)
       }
-      uow.enqueue(key, sequence, message, delay)
     }
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message) = asyncAddQueueMessage(context, message, false)
@@ -1008,6 +1008,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         case None => 0
       }
     }
+    
+    def getMessageSize(clientId: String, subscriptionName: String): Long = {
+      check_running
+      return 0
+    }
 
   }
   class LevelDBPList(val name: String, val key: Long) extends PList {
@@ -1066,6 +1071,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def isEmpty = size()==0
     def size(): Long = listSize.get()
+    def messageSize(): Long = 0
 
     def iterator() = new PListIterator() {
       check_running

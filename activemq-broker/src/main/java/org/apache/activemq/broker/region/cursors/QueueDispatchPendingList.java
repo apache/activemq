@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.MessageId;
 
 /**
@@ -40,6 +39,7 @@ public class QueueDispatchPendingList implements PendingList {
 
     private PendingList pagedInPendingDispatch = new OrderedPendingList();
     private PendingList redeliveredWaitingDispatch = new OrderedPendingList();
+    private boolean prioritized = false;
 
 
     @Override
@@ -85,7 +85,7 @@ public class QueueDispatchPendingList implements PendingList {
     public PendingNode remove(MessageReference message) {
         if (pagedInPendingDispatch.contains(message)) {
             return pagedInPendingDispatch.remove(message);
-        }else if (redeliveredWaitingDispatch.contains(message)) {
+        } else if (redeliveredWaitingDispatch.contains(message)) {
             return redeliveredWaitingDispatch.remove(message);
         }
         return null;
@@ -97,32 +97,70 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     @Override
+    public long messageSize() {
+        return pagedInPendingDispatch.messageSize() + redeliveredWaitingDispatch.messageSize();
+    }
+
+    @Override
     public Iterator<MessageReference> iterator() {
-        return new Iterator<MessageReference>() {
+        if (prioritized && hasRedeliveries()) {
+            final QueueDispatchPendingList delegate = this;
+            final PrioritizedPendingList  priorityOrderedRedeliveredAndPending = new PrioritizedPendingList();
+            priorityOrderedRedeliveredAndPending.addAll(redeliveredWaitingDispatch);
+            priorityOrderedRedeliveredAndPending.addAll(pagedInPendingDispatch);
 
-            Iterator<MessageReference> redeliveries = redeliveredWaitingDispatch.iterator();
-            Iterator<MessageReference> pendingDispatch = pagedInPendingDispatch.iterator();
-            Iterator<MessageReference> current = redeliveries;
+            return new Iterator<MessageReference>() {
 
+                Iterator<MessageReference> combinedIterator = priorityOrderedRedeliveredAndPending.iterator();
+                MessageReference current = null;
 
-            @Override
-            public boolean hasNext() {
-                if (!redeliveries.hasNext() && (current == redeliveries)) {
-                    current = pendingDispatch;
+                @Override
+                public boolean hasNext() {
+                    return combinedIterator.hasNext();
                 }
-                return current.hasNext();
-            }
 
-            @Override
-            public MessageReference next() {
-                return current.next();
-            }
+                @Override
+                public MessageReference next() {
+                    current = combinedIterator.next();
+                    return current;
+                }
 
-            @Override
-            public void remove() {
-                current.remove();
-            }
-        };
+                @Override
+                public void remove() {
+                    if (current!=null) {
+                        delegate.remove(current);
+                    }
+                }
+            };
+
+        } else {
+
+            return new Iterator<MessageReference>() {
+
+                Iterator<MessageReference> redeliveries = redeliveredWaitingDispatch.iterator();
+                Iterator<MessageReference> pendingDispatch = pagedInPendingDispatch.iterator();
+                Iterator<MessageReference> current = redeliveries;
+
+
+                @Override
+                public boolean hasNext() {
+                    if (!redeliveries.hasNext() && (current == redeliveries)) {
+                        current = pendingDispatch;
+                    }
+                    return current.hasNext();
+                }
+
+                @Override
+                public MessageReference next() {
+                    return current.next();
+                }
+
+                @Override
+                public void remove() {
+                    current.remove();
+                }
+            };
+        }
     }
 
     @Override
@@ -155,6 +193,7 @@ public class QueueDispatchPendingList implements PendingList {
     }
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
+        prioritized = prioritizedMessages;
         if (prioritizedMessages && this.pagedInPendingDispatch instanceof OrderedPendingList) {
             pagedInPendingDispatch = new PrioritizedPendingList();
             redeliveredWaitingDispatch = new PrioritizedPendingList();
@@ -164,11 +203,27 @@ public class QueueDispatchPendingList implements PendingList {
         }
     }
 
-    public void addMessageForRedelivery(QueueMessageReference qmr) {
-        redeliveredWaitingDispatch.addMessageLast(qmr);
-    }
-
     public boolean hasRedeliveries(){
         return !redeliveredWaitingDispatch.isEmpty();
+    }
+
+    public void addForRedelivery(List<MessageReference> list, boolean noConsumers) {
+        if (noConsumers && redeliveredWaitingDispatch instanceof OrderedPendingList && willBeInOrder(list)) {
+            // a single consumer can expect repeatable redelivery order irrespective
+            // of transaction or prefetch boundaries
+            ((OrderedPendingList)redeliveredWaitingDispatch).insertAtHead(list);
+        } else {
+            for (MessageReference ref : list) {
+                redeliveredWaitingDispatch.addMessageLast(ref);
+            }
+        }
+    }
+
+    private boolean willBeInOrder(List<MessageReference> list) {
+        // for a single consumer inserting at head will be in order w.r.t brokerSequence but
+        // will not be if there were multiple consumers in the mix even if this is the last
+        // consumer to close (noConsumers==true)
+        return !redeliveredWaitingDispatch.isEmpty() && list != null && !list.isEmpty() &&
+            redeliveredWaitingDispatch.iterator().next().getMessageId().getBrokerSequenceId() > list.get(list.size() - 1).getMessageId().getBrokerSequenceId();
     }
 }

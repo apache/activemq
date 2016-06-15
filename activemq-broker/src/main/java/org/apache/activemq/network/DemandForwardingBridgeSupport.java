@@ -34,7 +34,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.ObjectName;
 
@@ -139,8 +138,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected final BrokerId remoteBrokerPath[] = new BrokerId[]{null};
     protected BrokerId remoteBrokerId;
 
-    final AtomicLong enqueueCounter = new AtomicLong();
-    final AtomicLong dequeueCounter = new AtomicLong();
+    protected final NetworkBridgeStatistics networkBridgeStatistics = new NetworkBridgeStatistics();
 
     private NetworkBridgeListener networkBridgeListener;
     private boolean createdByDuplex;
@@ -180,6 +178,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (brokerService == null) {
                 throw new IllegalArgumentException("BrokerService is null on " + this);
             }
+
+            networkBridgeStatistics.setEnabled(brokerService.isEnableStatistics());
 
             if (isDuplex()) {
                 duplexInboundLocalBroker = NetworkBridgeFactory.createLocalTransport(brokerService.getBroker());
@@ -570,7 +570,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         advisoryTopic += "," + AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC;
                     }
                     demandConsumerInfo.setDestination(new ActiveMQTopic(advisoryTopic));
-                    demandConsumerInfo.setPrefetchSize(configuration.getPrefetchSize());
+                    configureConsumerPrefetch(demandConsumerInfo);
                     remoteBroker.oneway(demandConsumerInfo);
                 }
                 startedLatch.countDown();
@@ -640,6 +640,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                                     Response reply = resp.getResult();
                                                     reply.setCorrelationId(correlationId);
                                                     remoteBroker.oneway(reply);
+                                                    //increment counter when messages are received in duplex mode
+                                                    networkBridgeStatistics.getReceivedCount().increment();
                                                 } catch (IOException error) {
                                                     LOG.error("Exception: {} on duplex forward of: {}", error, message);
                                                     serviceRemoteException(error);
@@ -648,6 +650,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         });
                                     } else {
                                         duplexInboundLocalBroker.oneway(message);
+                                        networkBridgeStatistics.getReceivedCount().increment();
                                     }
                                     serviceInboundMessage(message);
                                 } else {
@@ -723,7 +726,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void ackAdvisory(Message message) throws IOException {
         demandConsumerDispatched++;
-        if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() * .75)) {
+        if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() *
+                (configuration.getAdvisoryAckPercentage() / 100f))) {
             MessageAck ack = new MessageAck(message, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched);
             ack.setConsumerId(demandConsumerInfo.getConsumerId());
             remoteBroker.oneway(ack);
@@ -833,6 +837,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         sending.setSubscriptionName(ds.getLocalDurableSubscriber().getSubscriptionName());
                         sending.setConnectionId(this.localConnectionInfo.getConnectionId());
                         localBroker.oneway(sending);
+
+                        //remove subscriber from map
+                        i.remove();
                     }
                 }
             }
@@ -965,7 +972,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             try {
                 if (command.isMessageDispatch()) {
                     safeWaitUntilStarted();
-                    enqueueCounter.incrementAndGet();
+                    networkBridgeStatistics.getEnqueues().increment();
                     final MessageDispatch md = (MessageDispatch) command;
                     final DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
                     if (sub != null && md.getMessage() != null && sub.incrementOutstandingResponses()) {
@@ -985,9 +992,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                         Message message = configureMessage(md);
                         LOG.debug("bridging ({} -> {}), consumer: {}, destination: {}, brokerPath: {}, message: {}", new Object[]{
-                                configuration.getBrokerName(), remoteBrokerName, (LOG.isTraceEnabled() ? message : message.getMessageId()), md.getConsumerId(), message.getDestination(), Arrays.toString(message.getBrokerPath()), message
+                                configuration.getBrokerName(), remoteBrokerName, md.getConsumerId(), message.getDestination(), Arrays.toString(message.getBrokerPath()), (LOG.isTraceEnabled() ? message : message.getMessageId())
                         });
-
                         if (isDuplex() && NetworkBridgeFilter.isAdvisoryInterpretedByNetworkBridge(message)) {
                             try {
                                 // never request b/c they are eventually acked async
@@ -1013,7 +1019,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                             serviceLocalException(md, er.getException());
                                         } else {
                                             localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
-                                            dequeueCounter.incrementAndGet();
+                                            networkBridgeStatistics.getDequeues().increment();
                                         }
                                     } catch (IOException e) {
                                         serviceLocalException(md, e);
@@ -1030,7 +1036,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             try {
                                 remoteBroker.oneway(message);
                                 localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
-                                dequeueCounter.incrementAndGet();
+                                networkBridgeStatistics.getDequeues().increment();
                             } finally {
                                 sub.decrementOutstandingResponses();
                             }
@@ -1352,12 +1358,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void configureDemandSubscription(ConsumerInfo info, DemandSubscription sub) throws IOException {
-        if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination())) {
+        if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination()) ||
+                AdvisorySupport.isVirtualDestinationConsumerAdvisoryTopic(info.getDestination())) {
             sub.getLocalInfo().setDispatchAsync(true);
         } else {
             sub.getLocalInfo().setDispatchAsync(configuration.isDispatchAsync());
         }
-        sub.getLocalInfo().setPrefetchSize(configuration.getPrefetchSize());
+        configureConsumerPrefetch(sub.getLocalInfo());
         subscriptionMapByLocalId.put(sub.getLocalInfo().getConsumerId(), sub);
         subscriptionMapByRemoteId.put(sub.getRemoteInfo().getConsumerId(), sub);
 
@@ -1555,12 +1562,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public long getDequeueCounter() {
-        return dequeueCounter.get();
+        return networkBridgeStatistics.getDequeues().getCount();
     }
 
     @Override
     public long getEnqueueCounter() {
-        return enqueueCounter.get();
+        return networkBridgeStatistics.getEnqueues().getCount();
+    }
+
+    @Override
+    public NetworkBridgeStatistics getNetworkBridgeStatistics() {
+        return networkBridgeStatistics;
     }
 
     protected boolean isDuplex() {
@@ -1590,8 +1602,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public void resetStats() {
-        enqueueCounter.set(0);
-        dequeueCounter.set(0);
+        networkBridgeStatistics.reset();
     }
 
     /*
@@ -1707,6 +1718,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             LOG.debug("Failed to determine last producer sequence id for: {}", messageId, ignored);
         }
         return -1;
+    }
+
+    protected void configureConsumerPrefetch(ConsumerInfo consumerInfo) {
+        //If a consumer on an advisory topic and advisoryPrefetchSize has been explicitly
+        //set then use it, else default to the prefetchSize setting
+        if (AdvisorySupport.isAdvisoryTopic(consumerInfo.getDestination()) &&
+                configuration.getAdvisoryPrefetchSize() > 0) {
+            consumerInfo.setPrefetchSize(configuration.getAdvisoryPrefetchSize());
+        } else {
+            consumerInfo.setPrefetchSize(configuration.getPrefetchSize());
+        }
     }
 
 }

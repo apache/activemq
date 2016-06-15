@@ -18,12 +18,15 @@ package org.apache.activemq.store.kahadb;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.store.AbstractMessageStoreSizeStatTest;
 import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +42,13 @@ public class KahaDBMessageStoreSizeStatTest extends
     protected static final Logger LOG = LoggerFactory
             .getLogger(KahaDBMessageStoreSizeStatTest.class);
 
-    File dataFileDir = new File("target/test-amq-5748/stat-datadb");
+    @Rule
+    public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
-        if (clearDataDir && dataFileDir.exists())
-            FileUtils.cleanDirectory(dataFileDir);
+        if (clearDataDir && dataFileDir.getRoot().exists())
+            FileUtils.cleanDirectory(dataFileDir.getRoot());
         super.setUpBroker(clearDataDir);
     }
 
@@ -52,7 +56,7 @@ public class KahaDBMessageStoreSizeStatTest extends
     protected void initPersistence(BrokerService brokerService)
             throws IOException {
         broker.setPersistent(true);
-        broker.setDataDirectoryFile(dataFileDir);
+        broker.setDataDirectoryFile(dataFileDir.getRoot());
     }
 
     /**
@@ -61,21 +65,21 @@ public class KahaDBMessageStoreSizeStatTest extends
      *
      * @throws Exception
      */
-    @Test
+    @Test(timeout=60000)
     public void testMessageSizeAfterRestartAndPublish() throws Exception {
-
-        Destination dest = publishTestQueueMessages(200);
+        AtomicLong publishedMessageSize = new AtomicLong();
+        Destination dest = publishTestQueueMessages(200, publishedMessageSize);
 
         // verify the count and size
-        verifyStats(dest, 200, 200 * messageSize);
+        verifyStats(dest, 200, publishedMessageSize.get());
 
         // stop, restart broker and publish more messages
         stopBroker();
         this.setUpBroker(false);
-        dest = publishTestQueueMessages(200);
+        dest = publishTestQueueMessages(200, publishedMessageSize);
 
         // verify the count and size
-        verifyStats(dest, 400, 400 * messageSize);
+        verifyStats(dest, 400, publishedMessageSize.get());
 
     }
 

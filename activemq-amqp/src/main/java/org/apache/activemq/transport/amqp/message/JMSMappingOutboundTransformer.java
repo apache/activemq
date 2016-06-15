@@ -41,6 +41,7 @@ import javax.jms.Topic;
 
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedByte;
@@ -180,7 +181,11 @@ public class JMSMappingOutboundTransformer extends OutboundTransformer {
 
             MessageId msgId = amqMsg.getMessageId();
             if (msgId.getTextView() != null) {
-                props.setMessageId(msgId.getTextView());
+                try {
+                    props.setMessageId(AMQPMessageIdHelper.INSTANCE.toIdObject(msgId.getTextView()));
+                } catch (AmqpProtocolException e) {
+                    props.setMessageId(msgId.getTextView().toString());
+                }
             } else {
                 props.setMessageId(msgId.toString());
             }

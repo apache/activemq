@@ -19,9 +19,6 @@ package org.apache.activemq.transport.amqp.client;
 import java.io.IOException;
 
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
-import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.transport.AmqpError;
-import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Endpoint;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.slf4j.Logger;
@@ -142,10 +139,7 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
 
     @Override
     public void remotelyClosed(AmqpConnection connection) {
-        Exception error = getRemoteError();
-        if (error == null) {
-            error = new IOException("Remote has closed without error information");
-        }
+        Exception error = AmqpSupport.convertToException(getEndpoint().getRemoteCondition());
 
         if (endpoint != null) {
             // TODO: if this is a producer/consumer link then we may only be detached,
@@ -154,6 +148,19 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
         }
 
         LOG.info("Resource {} was remotely closed", this);
+
+        connection.fireClientException(error);
+    }
+
+    @Override
+    public void locallyClosed(AmqpConnection connection, Exception error) {
+        if (endpoint != null) {
+            // TODO: if this is a producer/consumer link then we may only be detached,
+            // rather than fully closed, and should respond appropriately.
+            endpoint.close();
+        }
+
+        LOG.info("Resource {} was locally closed", this);
 
         connection.fireClientException(error);
     }
@@ -192,38 +199,8 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
         return getEndpoint().getRemoteState();
     }
 
-    @Override
     public boolean hasRemoteError() {
         return getEndpoint().getRemoteCondition().getCondition() != null;
-    }
-
-    @Override
-    public Exception getRemoteError() {
-        String message = getRemoteErrorMessage();
-        Exception remoteError = null;
-        Symbol error = getEndpoint().getRemoteCondition().getCondition();
-        if (error != null) {
-            if (error.equals(AmqpError.UNAUTHORIZED_ACCESS)) {
-                remoteError = new SecurityException(message);
-            } else {
-                remoteError = new Exception(message);
-            }
-        }
-
-        return remoteError;
-    }
-
-    @Override
-    public String getRemoteErrorMessage() {
-        String message = "Received unkown error from remote peer";
-        if (getEndpoint().getRemoteCondition() != null) {
-            ErrorCondition error = getEndpoint().getRemoteCondition();
-            if (error.getDescription() != null && !error.getDescription().isEmpty()) {
-                message = error.getDescription();
-            }
-        }
-
-        return message;
     }
 
     @Override
@@ -254,7 +231,7 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
             LOG.warn("Open of {} failed: ", this);
             Exception openError;
             if (hasRemoteError()) {
-                openError = getRemoteError();
+                openError = AmqpSupport.convertToException(getEndpoint().getRemoteCondition());
             } else {
                 openError = getOpenAbortException();
             }

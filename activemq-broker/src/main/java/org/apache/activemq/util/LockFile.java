@@ -42,6 +42,7 @@ public class LockFile {
     private int lockCounter;
     private final boolean deleteOnUnlock;
     private volatile boolean locked;
+    private String lockSystemPropertyName = "";
 
     private static final Logger LOG = LoggerFactory.getLogger(LockFile.class);
 
@@ -64,10 +65,11 @@ public class LockFile {
 
         IOHelper.mkdirs(file.getParentFile());
         synchronized (LockFile.class) {
-            if (System.getProperty(getVmLockKey()) != null) {
-                throw new IOException("File '" + file + "' could not be locked as lock is already held for this jvm.");
+            lockSystemPropertyName = getVmLockKey();
+            if (System.getProperty(lockSystemPropertyName) != null) {
+                throw new IOException("File '" + file + "' could not be locked as lock is already held for this jvm. Value: " + System.getProperty(lockSystemPropertyName));
             }
-            System.setProperty(getVmLockKey(), new Date().toString());
+            System.setProperty(lockSystemPropertyName, new Date().toString());
         }
         try {
             if (lock == null) {
@@ -86,7 +88,7 @@ public class LockFile {
                     randomAccessLockFile.getChannel().force(true);
                     lastModified = file.lastModified();
                     lockCounter++;
-                    System.setProperty(getVmLockKey(), new Date().toString());
+                    System.setProperty(lockSystemPropertyName, new Date().toString());
                     locked = true;
                 } else {
                     // new read file for next attempt
@@ -101,7 +103,7 @@ public class LockFile {
         } finally {
             synchronized (LockFile.class) {
                 if (lock == null) {
-                    System.getProperties().remove(getVmLockKey());
+                    System.getProperties().remove(lockSystemPropertyName);
                 }
             }
         }
@@ -109,7 +111,7 @@ public class LockFile {
 
     /**
      */
-    public void unlock() {
+    synchronized public void unlock() {
         if (DISABLE_FILE_LOCK) {
             return;
         }
@@ -123,10 +125,13 @@ public class LockFile {
         if (lock != null) {
             try {
                 lock.release();
-                System.getProperties().remove(getVmLockKey());
             } catch (Throwable ignore) {
+            } finally {
+                if (lockSystemPropertyName != null) {
+                    System.getProperties().remove(lockSystemPropertyName);
+                }
+                lock = null;
             }
-            lock = null;
         }
         closeReadFile();
 

@@ -24,9 +24,9 @@
     Download it from http://db.apache.org/derby/ and put it in the ${ACTIVEMQ_HOME}/lib/optional/ folder
     Optionally you can configure any other RDBM as shown below
 
-    To run ActiveMQ with this configuration add xbean:examples/conf/activemq-jdbc.xml to your command
+    To run ActiveMQ with this configuration add xbean:examples/conf/activemq-jdbc-performance.xml to your command
 
-    e.g. $ bin/activemq console xbean:examples/conf/activemq-jdbc.xml
+    e.g. $ bin/activemq console xbean:examples/conf/activemq-jdbc-performance.xml
  -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"

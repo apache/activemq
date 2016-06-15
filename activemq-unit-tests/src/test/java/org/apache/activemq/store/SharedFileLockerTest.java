@@ -32,6 +32,7 @@ import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LockFile;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.Wait;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Assert;
@@ -60,6 +61,13 @@ public class SharedFileLockerTest {
     }
 
     @Test
+    public void testStopNoStart() throws Exception {
+        SharedFileLocker locker1 = new SharedFileLocker();
+        locker1.setDirectory(testFolder.getRoot());
+        locker1.stop();
+    }
+
+    @Test
     public void testLoop() throws Exception {
         // Increase the number of iterations if you are debugging races
         for (int i = 0; i < 100; i++) {
@@ -81,7 +89,9 @@ public class SharedFileLockerTest {
         DefaultTestAppender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
-                logCounts.incrementAndGet();
+                if (event.getLevel() == Level.INFO) {
+                    logCounts.incrementAndGet();
+                }
             }
         };
 

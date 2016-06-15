@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.Security;
 import java.security.cert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,27 +94,25 @@ public class SpringSslContext extends SslContext {
     }
 
     private Collection<TrustManager> createTrustManagers() throws Exception {
+        boolean ocsp = Boolean.valueOf(Security.getProperty("ocsp.enable"));
+
         KeyStore ks = createTrustManagerKeyStore();
         if( ks ==null ) {
             return new ArrayList<TrustManager>(0);
         }
         TrustManagerFactory tmf  = TrustManagerFactory.getInstance(trustStoreAlgorithm);
         boolean initialized = false;
-        if (crlPath != null) {
-            if (trustStoreAlgorithm.equalsIgnoreCase("PKIX")) {
+        if ((ocsp || crlPath != null) && trustStoreAlgorithm.equalsIgnoreCase("PKIX")) {
+            PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(ks, new X509CertSelector());
+            if (crlPath != null) {
+                pkixParams.setRevocationEnabled(true);
                 Collection<? extends CRL> crlList = loadCRL();
-
                 if (crlList != null) {
-                    PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(ks, null);
-                    pkixParams.setRevocationEnabled(true);
                     pkixParams.addCertStore(CertStore.getInstance("Collection", new CollectionCertStoreParameters(crlList)));
-                    tmf.init(new CertPathTrustManagerParameters(pkixParams));
-                    initialized = true;
                 }
-
-            } else {
-                LOG.warn("Revocation checking is only supported with 'trustStoreAlgorithm=\"PKIX\"'. Ignoring CRL: " + crlPath);
             }
+            tmf.init(new CertPathTrustManagerParameters(pkixParams));
+            initialized = true;
         }
 
         if (!initialized) {

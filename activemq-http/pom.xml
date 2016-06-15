@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.12.4-SNAPSHOT</version>
+    <version>5.14.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-http</artifactId>
@@ -38,6 +38,10 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
+    </dependency>
+     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jms</artifactId>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -80,6 +84,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jaas</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>compile</scope>
@@ -111,11 +120,10 @@
     <dependency>
       <groupId>org.eclipse.jetty.websocket</groupId>
       <artifactId>websocket-server</artifactId>
-      <version>${jetty9-version}</version>
       <scope>provided</scope>
       <optional>true</optional>
-  </dependency>
-  <dependency>
+    </dependency>
+   <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
@@ -143,7 +151,7 @@
               org.apache.activemq.transport.https*;version=${project.version};-noimport:=;-split-package:=merge-last
             </Export-Package>
             <Import-Package>
-              org.eclipse.jetty*;version="[7.5,8.0)";resolution:=optional,
+              org.eclipse.jetty*;version="[9.0,10.0)";resolution:=optional,
               !org.apache.activemq.transport.ws*;version=${project.version},
               !org.apache.activemq.transport.xstream;version=${project.version},
               !org.apache.activemq.transport.util;version=${project.version},
@@ -220,6 +228,26 @@
         </plugins>
       </build>
     </profile>
-
+	<profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>

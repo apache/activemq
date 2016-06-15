@@ -1,4 +1,15 @@
 #!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          activemq
+# Required-Start:    $remote_fs $network $syslog
+# Required-Stop:     $remote_fs $network $syslog
+# Default-Start:     3 5
+# Default-Stop:      0 1 6
+# Short-Description: Starts ActiveMQ
+# Description:       Starts ActiveMQ Message Broker Server
+### END INIT INFO
+
 # ------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -98,7 +109,14 @@ if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
 
-ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/"
+# Configure user specified classpath here or externally using this variable
+if [ -z "$ACTIVEMQ_USER_CLASSPATH" ] ; then
+    ACTIVEMQ_USER_CLASSPATH=""
+fi
+
+# ActiveMQ Classpath configuration
+ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/:$ACTIVEMQ_USER_CLASSPATH"
+
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
 
@@ -594,9 +612,6 @@ invoke_task(){
     fi
     invokeJar "$ACTIVEMQ_PIDFILE"
     RET="$?"
-    if [ "$RET" != "0" ];then
-       echo "ERROR: task failed"
-    fi
     exit $RET
 }
 
@@ -657,37 +672,7 @@ case "$1" in
     invoke_kill
     exit $?
     ;;
-  decrypt|encrypt|create)
-    invoke_task checknotforrunning
-    exit $?
-    ;;
-  export)
-    invoke_task checkfornotrunning
-    exit $?
-    ;;
-  query|bstat|dstat|purge)
-    # Only check for a running broker if "--jmxurl" is part of the COMMANDLINE_ARGS
-    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--jmxurl");then
-      invoke_task checknotforrunning
-      RET="$?"
-    else
-      invoke_task checkforrunning
-      RET="$?"
-    fi
-    exit $RET
-    ;;
-  browse)
-    # Only check for a running broker if "--amqurl" is part of the COMMANDLINE_ARGS
-    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--amqurl");then
-      invoke_task checknotforrunning
-      RET="$?"
-    else
-      invoke_task checkforrunning
-      RET="$?"
-    fi
-    exit $RET
-    ;;
   *)
-    invoke_task checkforrunning
+    invoke_task checknotforrunning
     exit $?
 esac

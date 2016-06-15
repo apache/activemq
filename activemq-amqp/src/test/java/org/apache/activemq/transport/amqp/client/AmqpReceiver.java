@@ -26,14 +26,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.InvalidDestinationException;
 
+import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
+import org.apache.activemq.transport.amqp.client.util.IOExceptionSupport;
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableReceiver;
-import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.qpid.jms.JmsOperationTimedOutException;
+import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -44,6 +48,7 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
+import org.apache.qpid.proton.amqp.transaction.TransactionalState;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
@@ -71,6 +76,9 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     private String selector;
     private boolean presettle;
     private boolean noLocal;
+
+    private AsyncResult pullRequest;
+    private AsyncResult stopRequest;
 
     /**
      * Create a new receiver instance.
@@ -131,7 +139,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                 public void run() {
                     checkClosed();
                     close(request);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(request);
                 }
             });
 
@@ -154,7 +162,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                 public void run() {
                     checkClosed();
                     detach(request);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(request);
                 }
             });
 
@@ -221,6 +229,108 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     /**
+     * Request a remote peer send a Message to this client waiting until one arrives.
+     *
+     * @return the pulled AmqpMessage or null if none was pulled from the remote.
+     *
+     * @throws IOException if an error occurs
+     */
+    public AmqpMessage pull() throws IOException {
+        return pull(-1, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Request a remote peer send a Message to this client using an immediate drain request.
+     *
+     * @return the pulled AmqpMessage or null if none was pulled from the remote.
+     *
+     * @throws IOException if an error occurs
+     */
+    public AmqpMessage pullImmediate() throws IOException {
+        return pull(0, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Request a remote peer send a Message to this client.
+     *
+     *   {@literal timeout < 0} then it should remain open until a message is received.
+     *   {@literal timeout = 0} then it returns a message or null if none available
+     *   {@literal timeout > 0} then it should remain open for timeout amount of time.
+     *
+     * The timeout value when positive is given in milliseconds.
+     *
+     * @param timeout
+     *        the amount of time to tell the remote peer to keep this pull request valid.
+     * @param unit
+     *        the unit of measure that the timeout represents.
+     *
+     * @return the pulled AmqpMessage or null if none was pulled from the remote.
+     *
+     * @throws IOException if an error occurs
+     */
+    public AmqpMessage pull(final long timeout, final TimeUnit unit) throws IOException {
+        checkClosed();
+        final ClientFuture request = new ClientFuture();
+        session.getScheduler().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+
+                long timeoutMills = unit.toMillis(timeout);
+
+                try {
+                    LOG.trace("Pull on Receiver {} with timeout = {}", getSubscriptionName(), timeoutMills);
+                    if (timeoutMills < 0) {
+                        // Wait until message arrives. Just give credit if needed.
+                        if (getEndpoint().getCredit() == 0) {
+                            LOG.trace("Receiver {} granting 1 additional credit for pull.", getSubscriptionName());
+                            getEndpoint().flow(1);
+                        }
+
+                        // Await the message arrival
+                        pullRequest = request;
+                    } else if (timeoutMills == 0) {
+                        // If we have no credit then we need to issue some so that we can
+                        // try to fulfill the request, then drain down what is there to
+                        // ensure we consume what is available and remove all credit.
+                        if (getEndpoint().getCredit() == 0){
+                            LOG.trace("Receiver {} granting 1 additional credit for pull.", getSubscriptionName());
+                            getEndpoint().flow(1);
+                        }
+
+                        // Drain immediately and wait for the message(s) to arrive,
+                        // or a flow indicating removal of the remaining credit.
+                        stop(request);
+                    } else if (timeoutMills > 0) {
+                        // If we have no credit then we need to issue some so that we can
+                        // try to fulfill the request, then drain down what is there to
+                        // ensure we consume what is available and remove all credit.
+                        if (getEndpoint().getCredit() == 0) {
+                            LOG.trace("Receiver {} granting 1 additional credit for pull.", getSubscriptionName());
+                            getEndpoint().flow(1);
+                        }
+
+                        // Wait for the timeout for the message(s) to arrive, then drain if required
+                        // and wait for remaining message(s) to arrive or a flow indicating
+                        // removal of the remaining credit.
+                        stopOnSchedule(timeoutMills, request);
+                    }
+
+                    session.pumpToProtonTransport(request);
+                } catch (Exception e) {
+                    request.onFailure(e);
+                }
+            }
+        });
+
+        request.sync();
+
+        return prefetch.poll();
+    }
+
+
+    /**
      * Controls the amount of credit given to the receiver link.
      *
      * @param credit
@@ -238,7 +348,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                 checkClosed();
                 try {
                     getEndpoint().flow(credit);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(request);
                     request.onSuccess();
                 } catch (Exception e) {
                     request.onFailure(e);
@@ -267,8 +377,33 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                 checkClosed();
                 try {
                     getEndpoint().drain(credit);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(request);
                     request.onSuccess();
+                } catch (Exception e) {
+                    request.onFailure(e);
+                }
+            }
+        });
+
+        request.sync();
+    }
+
+    /**
+     * Stops the receiver, using all link credit and waiting for in-flight messages to arrive.
+     *
+     * @throws IOException if an error occurs while sending the drain.
+     */
+    public void stop() throws IOException {
+        checkClosed();
+        final ClientFuture request = new ClientFuture();
+        session.getScheduler().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+                try {
+                    stop(request);
+                    session.pumpToProtonTransport(request);
                 } catch (Exception e) {
                     request.onFailure(e);
                 }
@@ -301,10 +436,22 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                 checkClosed();
                 try {
                     if (!delivery.isSettled()) {
-                        delivery.disposition(Accepted.getInstance());
-                        delivery.settle();
-                        session.pumpToProtonTransport();
+                        if (session.isInTransaction()) {
+                            Binary txnId = session.getTransactionId().getRemoteTxId();
+                            if (txnId != null) {
+                                TransactionalState txState = new TransactionalState();
+                                txState.setOutcome(Accepted.getInstance());
+                                txState.setTxnId(txnId);
+                                delivery.disposition(txState);
+                                delivery.settle();
+                                session.getTransactionContext().registerTxConsumer(AmqpReceiver.this);
+                            }
+                        } else {
+                            delivery.disposition(Accepted.getInstance());
+                            delivery.settle();
+                        }
                     }
+                    session.pumpToProtonTransport(request);
                     request.onSuccess();
                 } catch (Exception e) {
                     request.onFailure(e);
@@ -346,7 +493,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                         disposition.setDeliveryFailed(deliveryFailed);
                         delivery.disposition(disposition);
                         delivery.settle();
-                        session.pumpToProtonTransport();
+                        session.pumpToProtonTransport(request);
                     }
                     request.onSuccess();
                 } catch (Exception e) {
@@ -383,7 +530,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                     if (!delivery.isSettled()) {
                         delivery.disposition(Released.getInstance());
                         delivery.settle();
-                        session.pumpToProtonTransport();
+                        session.pumpToProtonTransport(request);
                     }
                     request.onSuccess();
                 } catch (Exception e) {
@@ -438,6 +585,10 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
     public void setNoLocal(boolean noLocal) {
         this.noLocal = noLocal;
+    }
+
+    public long getDrainTimeout() {
+        return session.getConnection().getDrainTimeout();
     }
 
     //----- Internal implementation ------------------------------------------//
@@ -590,6 +741,15 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                     LOG.trace("{} has a partial incoming Message(s), deferring.", this);
                     incoming = null;
                 }
+            } else {
+                // We have exhausted the locally queued messages on this link.
+                // Check if we tried to stop and have now run out of credit.
+                if (getEndpoint().getRemoteCredit() <= 0) {
+                    if (stopRequest != null) {
+                        stopRequest.onSuccess();
+                        stopRequest = null;
+                    }
+                }
             }
         } while (incoming != null);
 
@@ -610,6 +770,35 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         // Store reference to envelope in delivery context for recovery
         incoming.setContext(amqpMessage);
         prefetch.add(amqpMessage);
+
+        // We processed a message, signal completion
+        // of a message pull request if there is one.
+        if (pullRequest != null) {
+            pullRequest.onSuccess();
+            pullRequest = null;
+        }
+    }
+
+    @Override
+    public void processFlowUpdates(AmqpConnection connection) throws IOException {
+        if (pullRequest != null || stopRequest != null) {
+            Receiver receiver = getEndpoint();
+            if (receiver.getRemoteCredit() <= 0 && receiver.getQueued() == 0) {
+                if (pullRequest != null) {
+                    pullRequest.onSuccess();
+                    pullRequest = null;
+                }
+
+                if (stopRequest != null) {
+                    stopRequest.onSuccess();
+                    stopRequest = null;
+                }
+            }
+        }
+
+        LOG.trace("Consumer {} flow updated, remote credit = {}", getSubscriptionName(), getEndpoint().getRemoteCredit());
+
+        super.processFlowUpdates(connection);
     }
 
     protected Message decodeIncomingMessage(Delivery incoming) {
@@ -647,6 +836,61 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         }
     }
 
+    private void stop(final AsyncResult request) {
+        Receiver receiver = getEndpoint();
+        if (receiver.getRemoteCredit() <= 0) {
+            if (receiver.getQueued() == 0) {
+                // We have no remote credit and all the deliveries have been processed.
+                request.onSuccess();
+            } else {
+                // There are still deliveries to process, wait for them to be.
+                stopRequest = request;
+            }
+        } else {
+            // TODO: We don't actually want the additional messages that could be sent while
+            // draining. We could explicitly reduce credit first, or possibly use 'echo' instead
+            // of drain if it was supported. We would first need to understand what happens
+            // if we reduce credit below the number of messages already in-flight before
+            // the peer sees the update.
+            stopRequest = request;
+            receiver.drain(0);
+
+            if (getDrainTimeout() > 0) {
+                // If the remote doesn't respond we will close the consumer and break any
+                // blocked receive or stop calls that are waiting.
+                final ScheduledFuture<?> future = getSession().getScheduler().schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        LOG.trace("Consumer {} drain request timed out", this);
+                        Exception cause = new JmsOperationTimedOutException("Remote did not respond to a drain request in time");
+                        locallyClosed(session.getConnection(), cause);
+                        stopRequest.onFailure(cause);
+                        session.pumpToProtonTransport(stopRequest);
+                    }
+                }, getDrainTimeout(), TimeUnit.MILLISECONDS);
+
+                stopRequest = new ScheduledRequest(future, stopRequest);
+            }
+        }
+    }
+
+    private void stopOnSchedule(long timeout, final AsyncResult request) {
+        LOG.trace("Receiver {} scheduling stop", this);
+        // We need to drain the credit if no message(s) arrive to use it.
+        final ScheduledFuture<?> future = getSession().getScheduler().schedule(new Runnable() {
+            @Override
+            public void run() {
+                LOG.trace("Receiver {} running scheduled stop", this);
+                if (getEndpoint().getRemoteCredit() != 0) {
+                    stop(request);
+                    session.pumpToProtonTransport(request);
+                }
+            }
+        }, timeout, TimeUnit.MILLISECONDS);
+
+        stopRequest = new ScheduledRequest(future, request);
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + "{ address = " + address + "}";
@@ -655,6 +899,53 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     private void checkClosed() {
         if (isClosed()) {
             throw new IllegalStateException("Receiver is already closed");
+        }
+    }
+
+    //----- Internal Transaction state callbacks -----------------------------//
+
+    void preCommit() {
+    }
+
+    void preRollback() {
+    }
+
+    void postCommit() {
+    }
+
+    void postRollback() {
+    }
+
+    //----- Inner classes used in message pull operations --------------------//
+
+    protected static final class ScheduledRequest implements AsyncResult {
+
+        private final ScheduledFuture<?> sheduledTask;
+        private final AsyncResult origRequest;
+
+        public ScheduledRequest(ScheduledFuture<?> completionTask, AsyncResult origRequest) {
+            this.sheduledTask = completionTask;
+            this.origRequest = origRequest;
+        }
+
+        @Override
+        public void onFailure(Throwable cause) {
+            sheduledTask.cancel(false);
+            origRequest.onFailure(cause);
+        }
+
+        @Override
+        public void onSuccess() {
+            boolean cancelled = sheduledTask.cancel(false);
+            if (cancelled) {
+                // Signal completion. Otherwise wait for the scheduled task to do it.
+                origRequest.onSuccess();
+            }
+        }
+
+        @Override
+        public boolean isComplete() {
+            return origRequest.isComplete();
         }
     }
 }

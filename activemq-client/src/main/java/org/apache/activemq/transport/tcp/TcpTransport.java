@@ -16,6 +16,27 @@ gxfdgvdfg * Licensed to the Apache Software Foundation (ASF) under one or more
  */
 package org.apache.activemq.transport.tcp;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.net.SocketFactory;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.TransportLoggerSupport;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -27,18 +48,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.net.SocketFactory;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.net.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
@@ -61,6 +70,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected DataOutputStream dataOut;
     protected DataInputStream dataIn;
     protected TimeStampStream buffOut = null;
+
+    protected final InitBuffer initBuffer;
 
     /**
      * The Traffic Class to be set on the socket.
@@ -149,6 +160,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
         this.remoteLocation = remoteLocation;
         this.localLocation = localLocation;
+        this.initBuffer = null;
         setDaemon(false);
     }
 
@@ -160,16 +172,22 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws IOException
      */
     public TcpTransport(WireFormat wireFormat, Socket socket) throws IOException {
+        this(wireFormat, socket, null);
+    }
+
+    public TcpTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
         this.wireFormat = wireFormat;
         this.socket = socket;
         this.remoteLocation = null;
         this.localLocation = null;
+        this.initBuffer = initBuffer;
         setDaemon(true);
     }
 
     /**
      * A one way asynchronous send
      */
+    @Override
     public void oneway(Object command) throws IOException {
         checkStarted();
         wireFormat.marshal(command, dataOut);
@@ -188,6 +206,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     /**
      * reads packets from a Socket
      */
+    @Override
     public void run() {
         LOG.trace("TCP consumer thread for " + this + " starting");
         this.runnerThread=Thread.currentThread();
@@ -434,8 +453,13 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
 
         try {
-            sock.setReceiveBufferSize(socketBufferSize);
-            sock.setSendBufferSize(socketBufferSize);
+            //only positive values are legal
+            if (socketBufferSize > 0) {
+                sock.setReceiveBufferSize(socketBufferSize);
+                sock.setSendBufferSize(socketBufferSize);
+            } else {
+                LOG.warn("Socket buffer size was set to {}; Skipping this setting as the size must be a positive number.", socketBufferSize);
+            }
         } catch (SocketException se) {
             LOG.warn("Cannot set socket buffer size = " + socketBufferSize);
             LOG.debug("Cannot set socket buffer size. Reason: " + se.getMessage() + ". This exception is ignored.", se);
@@ -536,6 +560,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 // need a async task for this
                 final TaskRunnerFactory taskRunnerFactory = new TaskRunnerFactory();
                 taskRunnerFactory.execute(new Runnable() {
+                    @Override
                     public void run() {
                         LOG.trace("Closing socket {}", socket);
                         try {
@@ -609,10 +634,16 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 super.fill();
             }
         };
+        //Unread the initBuffer that was used for protocol detection if it exists
+        //so the stream can start over
+        if (initBuffer != null) {
+            buffIn.unread(initBuffer.buffer.array());
+        }
         this.dataIn = new DataInputStream(buffIn);
         TcpBufferedOutputStream outputStream = new TcpBufferedOutputStream(socket.getOutputStream(), ioBufferSize);
         this.dataOut = new DataOutputStream(outputStream);
         this.buffOut = outputStream;
+
     }
 
     protected void closeStreams() throws IOException {
@@ -628,6 +659,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         this.socketOptions = new HashMap<String, Object>(socketOptions);
     }
 
+    @Override
     public String getRemoteAddress() {
         if (socket != null) {
             SocketAddress address = socket.getRemoteSocketAddress();
@@ -650,8 +682,22 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         return super.narrow(target);
     }
 
+    @Override
     public int getReceiveCounter() {
         return receiveCounter;
+    }
+
+    public static class InitBuffer {
+        public final int readSize;
+        public final ByteBuffer buffer;
+
+        public InitBuffer(int readSize, ByteBuffer buffer) {
+            if (buffer == null) {
+                throw new IllegalArgumentException("Null buffer not allowed.");
+            }
+            this.readSize = readSize;
+            this.buffer = buffer;
+        }
     }
 
     /**

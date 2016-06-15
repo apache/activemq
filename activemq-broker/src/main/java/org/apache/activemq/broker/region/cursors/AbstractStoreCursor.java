@@ -23,6 +23,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -43,11 +44,13 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private Iterator<MessageReference> iterator = null;
     protected boolean batchResetNeeded = false;
     protected int size;
-    private LinkedList<MessageId> pendingCachedIds = new LinkedList<>();
+    private final LinkedList<MessageId> pendingCachedIds = new LinkedList<>();
     private static int SYNC_ADD = 0;
     private static int ASYNC_ADD = 1;
     final MessageId[] lastCachedIds = new MessageId[2];
     protected boolean hadSpace = false;
+
+
 
     protected AbstractStoreCursor(Destination destination) {
         super((destination != null ? destination.isPrioritizedMessages():false));
@@ -60,6 +63,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public final synchronized void start() throws Exception{
         if (!isStarted()) {
             super.start();
@@ -78,6 +82,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         resetSize();
     }
 
+    @Override
     public final synchronized void stop() throws Exception {
         resetBatch();
         super.stop();
@@ -85,15 +90,16 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public final boolean recoverMessage(Message message) throws Exception {
         return recoverMessage(message,false);
     }
 
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
         boolean recovered = false;
+        message.setRegionDestination(regionDestination);
         if (recordUniqueId(message.getMessageId())) {
             if (!cached) {
-                message.setRegionDestination(regionDestination);
                 if( message.getMemoryUsage()==null ) {
                     message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
                 }
@@ -136,6 +142,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         duplicatesFromStore.clear();
     }
 
+    @Override
     public final synchronized void reset() {
         if (batchList.isEmpty()) {
             try {
@@ -150,6 +157,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public synchronized void release() {
         clearIterator(false);
     }
@@ -173,6 +181,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public final synchronized boolean hasNext() {
         if (batchList.isEmpty()) {
             try {
@@ -187,6 +196,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public final synchronized MessageReference next() {
         MessageReference result = null;
         if (!this.batchList.isEmpty()&&this.iterator.hasNext()) {
@@ -199,7 +209,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return result;
     }
 
-    public synchronized boolean addMessageLast(MessageReference node) throws Exception {
+    @Override
+    public synchronized boolean tryAddMessageLast(MessageReference node, long wait) throws Exception {
         boolean disableCache = false;
         if (hasSpace()) {
             if (!isCacheEnabled() && size==0 && isStarted() && useCache) {
@@ -333,12 +344,14 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         setCacheEnabled(false);
         size++;
     }
 
 
+    @Override
     public final synchronized void remove() {
         size--;
         if (iterator!=null) {
@@ -350,6 +363,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public final synchronized void remove(MessageReference node) {
         if (batchList.remove(node) != null) {
             size--;
@@ -358,11 +372,13 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public final synchronized void clear() {
         gc();
     }
 
 
+    @Override
     public synchronized void gc() {
         for (MessageReference msg : batchList) {
             rollback(msg.getMessageId());
@@ -374,6 +390,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         setCacheEnabled(false);
     }
 
+    @Override
     protected final synchronized void fillBatch() {
         if (LOG.isTraceEnabled()) {
             LOG.trace("{} fillBatch", this);
@@ -395,22 +412,30 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
 
+    @Override
     public final synchronized boolean isEmpty() {
         // negative means more messages added to store through queue.send since last reset
         return size == 0;
     }
 
 
+    @Override
     public final synchronized boolean hasMessagesBufferedToDeliver() {
         return !batchList.isEmpty();
     }
 
 
+    @Override
     public final synchronized int size() {
         if (size < 0) {
             this.size = getStoreSize();
         }
         return size;
+    }
+
+    @Override
+    public final synchronized long messageSize() {
+        return getStoreMessageSize();
     }
 
     @Override
@@ -427,6 +452,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected abstract void resetBatch();
 
     protected abstract int getStoreSize();
+
+    protected abstract long getStoreMessageSize();
 
     protected abstract boolean isStoreEmpty();
 

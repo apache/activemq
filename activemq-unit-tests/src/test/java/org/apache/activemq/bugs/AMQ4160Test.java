@@ -35,6 +35,7 @@ import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.network.NetworkBridgeListener;
+import org.apache.activemq.network.NetworkBridgeStatistics;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
@@ -56,6 +57,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
      * Since these tests involve wait conditions, protect against indefinite
      * waits (due to unanticipated issues).
      */
+    @Override
     public void setUp() throws Exception {
         setAutoFail(true);
         setMaxTestTime(MAX_TEST_TIME);
@@ -328,6 +330,11 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
                     }
 
                     @Override
+                    public NetworkBridgeStatistics getNetworkBridgeStatistics() {
+                        return next.getNetworkBridgeStatistics();
+                    }
+
+                    @Override
                     public void setMbeanObjectName(ObjectName objectName) {
                         next.setMbeanObjectName(objectName);
                     }
@@ -337,6 +344,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
                         return next.getMbeanObjectName();
                     }
 
+                    @Override
                     public void resetStats(){
                         next.resetStats();
                     }

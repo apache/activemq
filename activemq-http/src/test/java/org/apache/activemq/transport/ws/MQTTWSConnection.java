@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -25,7 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.mqtt.MQTTWireFormat;
 import org.apache.activemq.util.ByteSequence;
-import org.eclipse.jetty.websocket.WebSocket;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.codec.CONNACK;
 import org.fusesource.mqtt.codec.CONNECT;
@@ -45,13 +48,13 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements a simple WebSocket based MQTT Client that can be used for unit testing.
  */
-public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
+public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTWSConnection.class);
 
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
 
-    private Connection connection;
+    private Session connection;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     private final MQTTWireFormat wireFormat = new MQTTWireFormat();
 
@@ -60,6 +63,7 @@ public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
     private int closeCode = -1;
     private String closeMessage;
 
+    @Override
     public boolean isConnected() {
         return connection != null ? connection.isOpen() : false;
     }
@@ -68,6 +72,10 @@ public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
         if (connection != null) {
             connection.close();
         }
+    }
+
+    protected Session getConnection() {
+        return connection;
     }
 
     //----- Connection and Disconnection methods -----------------------------//
@@ -87,11 +95,17 @@ public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
         command.keepAlive((short) 0);
 
         ByteSequence payload = wireFormat.marshal(command.encode());
-        connection.sendMessage(payload.data, 0, payload.length);
+        connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
 
         MQTTFrame incoming = receive(15, TimeUnit.SECONDS);
+
         if (incoming == null || incoming.messageType() != CONNACK.TYPE) {
             throw new IOException("Failed to connect to remote service.");
+        } else {
+            CONNACK connack = new CONNACK().decode(incoming);
+            if (!connack.code().equals(CONNACK.Code.CONNECTION_ACCEPTED)) {
+                throw new IOException("Failed to connect to remote service: " + connack.code());
+            }
         }
     }
 
@@ -102,7 +116,7 @@ public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
 
         DISCONNECT command = new DISCONNECT();
         ByteSequence payload = wireFormat.marshal(command.encode());
-        connection.sendMessage(payload.data, 0, payload.length);
+        connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
     }
 
     //---- Send methods ------------------------------------------------------//
@@ -110,13 +124,13 @@ public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
     public void sendFrame(MQTTFrame frame) throws Exception {
         checkConnected();
         ByteSequence payload = wireFormat.marshal(frame);
-        connection.sendMessage(payload.data, 0, payload.length);
+        connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
     }
 
     public void keepAlive() throws Exception {
         checkConnected();
         ByteSequence payload = wireFormat.marshal(new PINGREQ().encode());
-        connection.sendMessage(payload.data, 0, payload.length);
+        connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
     }
 
     //----- Receive methods --------------------------------------------------//
@@ -159,7 +173,7 @@ public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
     //----- WebSocket callback handlers --------------------------------------//
 
     @Override
-    public void onMessage(byte[] data, int offset, int length) {
+    public void onWebSocketBinary(byte[] data, int offset, int length) {
         if (data ==null || length <= 0) {
             return;
         }
@@ -228,21 +242,6 @@ public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
         }
     }
 
-    @Override
-    public void onOpen(Connection connection) {
-        this.connection = connection;
-        this.connectLatch.countDown();
-    }
-
-    @Override
-    public void onClose(int closeCode, String message) {
-        LOG.trace("MQTT WS Connection closed, code:{} message:{}", closeCode, message);
-
-        this.connection = null;
-        this.closeCode = closeCode;
-        this.closeMessage = message;
-    }
-
     //----- Internal implementation ------------------------------------------//
 
     private void checkConnected() throws IOException {
@@ -250,4 +249,28 @@ public class MQTTWSConnection implements WebSocket, WebSocket.OnBinaryMessage {
             throw new IOException("MQTT WS Connection is closed.");
         }
     }
+
+    /* (non-Javadoc)
+     * @see org.eclipse.jetty.websocket.api.WebSocketListener#onWebSocketClose(int, java.lang.String)
+     */
+    @Override
+    public void onWebSocketClose(int statusCode, String reason) {
+        LOG.trace("MQTT WS Connection closed, code:{} message:{}", statusCode, reason);
+
+        this.connection = null;
+        this.closeCode = statusCode;
+        this.closeMessage = reason;
+
+    }
+
+    /* (non-Javadoc)
+     * @see org.eclipse.jetty.websocket.api.WebSocketListener#onWebSocketConnect(org.eclipse.jetty.websocket.api.Session)
+     */
+    @Override
+    public void onWebSocketConnect(
+            org.eclipse.jetty.websocket.api.Session session) {
+        this.connection = session;
+        this.connectLatch.countDown();
+    }
+
 }

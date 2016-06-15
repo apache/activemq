@@ -16,7 +16,8 @@
  */
 package org.apache.activemq.karaf.itest;
 
-import java.util.concurrent.Callable;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -24,11 +25,6 @@ import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
-
-
-import static org.junit.Assert.assertTrue;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 
 @RunWith(PaxExam.class)
@@ -48,14 +44,6 @@ public class ObrFeatureTest extends AbstractFeatureTest {
 
     @Test(timeout=5 * 60 * 1000)
     public void testWar() throws Throwable {
-        // note xbean deps manually installed above, should not be needed
-        withinReason(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                assertTrue("xbean finder bundle installed", verifyBundleInstalled("org.apache.xbean.finder"));
-                return true;
-            }
-        });
         installAndAssertFeature("war");
     }
 
@@ -71,21 +59,12 @@ public class ObrFeatureTest extends AbstractFeatureTest {
 
     @Test(timeout=5 * 60 * 1000)
     public void testBroker() throws Throwable {
-        // ensure pax-war feature deps are there for web-console
-        withinReason(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                assertTrue("xbean finder bundle installed", verifyBundleInstalled("org.apache.xbean.finder"));
-                return true;
-            }
-        });
-
         installAndAssertFeature("activemq-broker");
     }
 
     @Test(timeout=5 * 60 * 1000)
     public void testCamel() throws Throwable {
-        executeCommand("features:addurl " + getCamelFeatureUrl());
+        executeCommand("feature:repo-add " + getCamelFeatureUrl());
         installAndAssertFeature("activemq-camel");
     }
 }

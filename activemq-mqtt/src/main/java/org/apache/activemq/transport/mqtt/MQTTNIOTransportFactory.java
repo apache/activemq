@@ -33,6 +33,7 @@ import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.nio.NIOTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -64,6 +65,12 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
     @Override
     protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new MQTTNIOTransport(wf, socketFactory, location, localLocation);
+    }
+
+    @Override
+    public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+            InitBuffer initBuffer) throws IOException {
+        return new MQTTNIOTransport(wireFormat, socket, initBuffer);
     }
 
     @SuppressWarnings("rawtypes")

@@ -63,6 +63,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
         PooledConnectionFactory pcf = new PooledConnectionFactory();
         assertTrue(pcf instanceof QueueConnectionFactory);
         assertTrue(pcf instanceof TopicConnectionFactory);
+        pcf.stop();
     }
 
     @Test(timeout = 60000)
@@ -95,6 +96,8 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
         assertNotSame(conn1.getConnection(), conn2.getConnection());
         assertNotSame(conn1.getConnection(), conn3.getConnection());
         assertNotSame(conn2.getConnection(), conn3.getConnection());
+
+        cf.stop();
     }
 
     @Test(timeout = 60000)
@@ -115,6 +118,8 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
         assertNotSame(conn2.getConnection(), conn3.getConnection());
 
         assertEquals(3, cf.getNumConnections());
+
+        cf.stop();
     }
 
     @Test(timeout = 60000)
@@ -138,6 +143,8 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
             assertNotSame(previous, current);
             previous = current;
         }
+
+        cf.stop();
     }
 
     @Test(timeout = 60000)
@@ -157,6 +164,8 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
         assertSame(conn2.getConnection(), conn3.getConnection());
 
         assertEquals(1, cf.getNumConnections());
+
+        cf.stop();
     }
 
     @Test(timeout = 60000)
@@ -308,11 +317,13 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
             Connection conn = null;
             Session one = null;
 
+            PooledConnectionFactory cf = null;
+
             // wait at most 5 seconds for the call to createSession
             try {
                 ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
                     "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
-                PooledConnectionFactory cf = new PooledConnectionFactory();
+                cf = new PooledConnectionFactory();
                 cf.setConnectionFactory(amq);
                 cf.setMaxConnections(3);
                 cf.setMaximumActiveSessionPerConnection(1);
@@ -351,6 +362,10 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
                 return new Boolean(false);
+            } finally {
+                if (cf != null) {
+                    cf.stop();
+                }
             }
 
             // all good, test succeeded

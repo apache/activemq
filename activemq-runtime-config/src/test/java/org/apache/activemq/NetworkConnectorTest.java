@@ -16,16 +16,13 @@
  */
 package org.apache.activemq;
 
-import java.util.List;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.network.NetworkConnector;
-import org.apache.activemq.util.Wait;
-import org.junit.Before;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+
+import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.util.Wait;
+import org.junit.Test;
 
 public class NetworkConnectorTest extends RuntimeConfigTestSupport {
     String configurationSeed = "networkConnectorTest";
@@ -62,7 +59,6 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         assertEquals("one durable", 1, networkConnector.getDurableDestinations().size());
 
     }
-
 
     @Test
     public void testMod() throws Exception {

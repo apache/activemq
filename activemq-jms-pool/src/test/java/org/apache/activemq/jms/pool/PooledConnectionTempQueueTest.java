@@ -68,6 +68,8 @@ public class PooledConnectionTempQueueTest extends JmsPoolTestSupport {
         });
 
         sendWithReplyToTemp(cf, SERVICE_QUEUE);
+
+        cf.stop();
     }
 
     private void sendWithReplyToTemp(ConnectionFactory cf, String serviceQueue) throws JMSException,

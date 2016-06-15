@@ -98,7 +98,7 @@ public class ConnectorView implements ConnectorViewMBean {
      */
     @Override
     public boolean isUpdateClusterClients() {
-        return this.connector.isUpdateClusterClientsOnRemove();
+        return this.connector.isUpdateClusterClients();
     }
 
     /**

@@ -111,6 +111,10 @@ public class MessageQuery extends QueueBrowseQuery {
 
         return null;
     }
+    
+    public boolean isDLQ() throws Exception {
+    	return getQueueView().isDLQ();
+    }
 
     public Map<String, Object> getPropertiesMap() throws JMSException {
         Map<String, Object> answer = new HashMap<String, Object>();

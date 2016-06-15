@@ -35,6 +35,7 @@ import org.apache.camel.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.connection.SingleConnectionFactory;
+import org.springframework.jms.core.JmsTemplate;
 
 import javax.jms.Connection;
 
@@ -92,21 +93,37 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
         setConfiguration(configuration);
     }
 
+    /**
+     * Sets the broker URL to use to connect to ActiveMQ using the
+     * <a href="http://activemq.apache.org/configuring-transports.html">ActiveMQ URI format</a>
+     */
     public void setBrokerURL(String brokerURL) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setBrokerURL(brokerURL);
         }
     }
 
+    /**
+     * Sets the username to be used to login to ActiveMQ
+     */
     public void setUserName(String userName) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setUserName(userName);
         }
     }
 
+    /**
+     * Sets the password/passcode used to login to ActiveMQ
+     */
     public void setPassword(String password) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setPassword(password);
+        }
+    }
+
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration)getConfiguration()).setTrustAllPackages(trustAllPackages);
         }
     }
 
@@ -117,19 +134,33 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
     /**
      * If enabled this will cause all Queues in the ActiveMQ broker to be eagerly populated into the CamelContext
      * so that they can be easily browsed by any Camel tooling. This option is disabled by default.
-     *
-     * @param exposeAllQueues
      */
     public void setExposeAllQueues(boolean exposeAllQueues) {
         this.exposeAllQueues = exposeAllQueues;
     }
 
+    /**
+     * Enables or disables whether a PooledConnectionFactory will be used so that when
+     * messages are sent to ActiveMQ from outside of a message consuming thread, pooling will be used rather
+     * than the default with the Spring {@link JmsTemplate} which will create a new connection, session, producer
+     * for each message then close them all down again.
+     * <p/>
+     * The default value is true. Note that this requires an extra dependency on commons-pool2.
+     */
     public void setUsePooledConnection(boolean usePooledConnection) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setUsePooledConnection(usePooledConnection);
         }
     }
 
+    /**
+     * Enables or disables whether a Spring {@link SingleConnectionFactory} will be used so that when
+     * messages are sent to ActiveMQ from outside of a message consuming thread, pooling will be used rather
+     * than the default with the Spring {@link JmsTemplate} which will create a new connection, session, producer
+     * for each message then close them all down again.
+     * <p/>
+     * The default value is false and a pooled connection is used by default.
+     */
     public void setUseSingleConnection(boolean useSingleConnection) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setUseSingleConnection(useSingleConnection);
@@ -174,6 +205,11 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
             createDestinationSource();
             endpointLoader = new CamelEndpointLoader(getCamelContext(), source);
             endpointLoader.afterPropertiesSet();
+        }
+
+        // use OriginalDestinationPropagateStrategy by default if no custom stategy has been set
+        if (getMessageCreatedStrategy() == null) {
+            setMessageCreatedStrategy(new OriginalDestinationPropagateStrategy());
         }
     }
 

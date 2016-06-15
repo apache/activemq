@@ -20,6 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -34,7 +39,15 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.store.kahadb.MessageDatabase.Metadata;
+import org.apache.activemq.store.kahadb.MessageDatabase.StoredDestination;
+import org.apache.activemq.store.kahadb.disk.journal.DataFile;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.store.kahadb.disk.page.PageFile;
+import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,6 +74,8 @@ public class KahaDBStoreOpenWireVersionTest {
         broker.setAdvisorySupport(false);
         broker.setDataDirectory(storeDir);
         broker.setStoreOpenWireVersion(storeOpenWireVersion);
+        ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).setCheckForCorruptJournalFiles(true);
+
         broker.start();
         broker.waitUntilStarted();
 
@@ -117,6 +132,56 @@ public class KahaDBStoreOpenWireVersionTest {
         final int RELOAD_STORE_VERSION = OpenWireFormat.DEFAULT_LEGACY_VERSION;
 
         doTestStoreVersionConfigrationOverrides(INITIAL_STORE_VERSION, RELOAD_STORE_VERSION);
+    }
+
+    /**
+     * This test shows that a corrupted index/rebuild will still
+     * honor the storeOpenWireVersion set on the BrokerService.
+     * This wasn't the case before AMQ-6082
+     */
+    @Test(timeout = 60000)
+    public void testStoreVersionCorrupt() throws Exception {
+        final int create = 6;
+        final int reload = 6;
+
+        createBroker(create);
+        populateStore();
+
+        //blow up the index so it has to be recreated
+        corruptIndex();
+        stopBroker();
+
+        createBroker(reload);
+        assertEquals(create, broker.getStoreOpenWireVersion());
+        assertStoreIsUsable();
+    }
+
+
+    private void corruptIndex() throws IOException {
+        KahaDBStore store = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore();
+        final PageFile pageFile = store.getPageFile();
+        final Metadata metadata = store.metadata;
+
+        //blow up the index
+        try {
+            store.indexLock.writeLock().lock();
+            pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                @Override
+                public void execute(Transaction tx) throws IOException {
+                    for (Iterator<Entry<String, StoredDestination>> iterator = metadata.destinations.iterator(tx); iterator
+                            .hasNext();) {
+                        Entry<String, StoredDestination> entry = iterator.next();
+                        entry.getValue().orderIndex.nextMessageId = -100;
+                        entry.getValue().orderIndex.defaultPriorityIndex.clear(tx);
+                        entry.getValue().orderIndex.lowPriorityIndex.clear(tx);
+                        entry.getValue().orderIndex.highPriorityIndex.clear(tx);
+                        entry.getValue().messageReferences.clear();
+                    }
+                }
+            });
+        } finally {
+            store.indexLock.writeLock().unlock();
+        }
     }
 
     private void doTestStoreVersionConfigrationOverrides(int create, int reload) throws Exception {

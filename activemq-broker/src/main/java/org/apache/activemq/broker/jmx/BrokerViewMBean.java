@@ -22,11 +22,6 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.Service;
 
-
-/**
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (for the reloadLog4jProperties method)
- *
- */
 public interface BrokerViewMBean extends Service {
 
     /**
@@ -299,34 +294,6 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo(value="Reloads log4j.properties from the classpath.")
     public void reloadLog4jProperties() throws Throwable;
 
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    @Deprecated
-    @MBeanInfo("The url of the openwire connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
-    String getOpenWireURL();
-
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    @Deprecated
-    @MBeanInfo("The url of the stomp connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
-    String getStompURL();
-
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    @Deprecated
-    @MBeanInfo("The url of the SSL connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
-    String getSslURL();
-
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    @Deprecated
-    @MBeanInfo("The url of the Stomp SSL connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
-    String getStompSslURL();
-
     @MBeanInfo("The url of the VM connector")
     String getVMURL();
 
@@ -341,4 +308,5 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("JMSJobScheduler")
     ObjectName getJMSJobScheduler();
+
 }

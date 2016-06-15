@@ -90,12 +90,14 @@ public class SimpleNetworkTest {
             Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
             Message msg = consumer1.receive(3000);
-            assertNotNull(msg);
+            assertNotNull("not null? message: " + i, msg);
             ActiveMQMessage amqMessage = (ActiveMQMessage) msg;
             assertTrue(amqMessage.isCompressed());
         }
         // ensure no more messages received
         assertNull(consumer1.receive(1000));
+
+        assertNetworkBridgeStatistics(MESSAGE_COUNT, 0);
     }
 
     @Test(timeout = 60 * 1000)
@@ -128,6 +130,8 @@ public class SimpleNetworkTest {
             assertNotNull(result);
             LOG.info(result.getText());
         }
+
+        assertNetworkBridgeStatistics(MESSAGE_COUNT, MESSAGE_COUNT);
     }
 
     @Test(timeout = 60 * 1000)
@@ -136,13 +140,15 @@ public class SimpleNetworkTest {
         MessageConsumer excludedConsumer = remoteSession.createConsumer(excluded);
         MessageProducer includedProducer = localSession.createProducer(included);
         MessageProducer excludedProducer = localSession.createProducer(excluded);
-        // allow for consumer infos to perculate arround
+        // allow for consumer infos to perculate around
         Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
         includedProducer.send(test);
         excludedProducer.send(test);
         assertNull(excludedConsumer.receive(1000));
         assertNotNull(includedConsumer.receive(1000));
+
+        assertNetworkBridgeStatistics(1, 0);
     }
 
     @Test(timeout = 60 * 1000)
@@ -163,6 +169,8 @@ public class SimpleNetworkTest {
         // ensure no more messages received
         assertNull(consumer1.receive(1000));
         assertNull(consumer2.receive(1000));
+
+        assertNetworkBridgeStatistics(MESSAGE_COUNT, 0);
     }
 
     private void waitForConsumerRegistration(final BrokerService brokerService, final int min, final ActiveMQDestination destination) throws Exception {
@@ -318,5 +326,21 @@ public class SimpleNetworkTest {
 
     protected BrokerService createRemoteBroker() throws Exception {
         return createBroker(getRemoteBrokerURI());
+    }
+
+    protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
+
+        final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
+        final NetworkBridge remoteBridge = remoteBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+                       0 == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount() &&
+                       expectedRemoteSent == remoteBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+                       0 == remoteBridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
+            }
+        }));
     }
 }

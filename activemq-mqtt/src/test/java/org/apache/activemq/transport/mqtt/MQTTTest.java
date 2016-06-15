@@ -331,6 +331,34 @@ public class MQTTTest extends MQTTTestSupport {
         connection.disconnect();
     }
 
+    @Test(timeout = 30 * 1000)
+    public void testConnectWithUserButNoPassword() throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("test");
+        mqtt.setUserName("foo");
+
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.disconnect();
+    }
+
+    @Test(timeout = 30 * 1000)
+    public void testConnectWithPasswordButNoUsername() throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setVersion("3.1.1"); // The V3.1 spec doesn't make the same assertion
+        mqtt.setClientId("test");
+        mqtt.setPassword("bar");
+
+        BlockingConnection connection = mqtt.blockingConnection();
+
+        try {
+            connection.connect();
+            fail("Should not be able to connect in this case.");
+        } catch (Exception ex) {
+            LOG.info("Exception expected on connect with password but no username");
+        }
+    }
+
     @Test(timeout = 2 *  60 * 1000)
     public void testMQTTWildcard() throws Exception {
         MQTT mqtt = createMQTTConnection();
@@ -348,6 +376,35 @@ public class MQTTTest extends MQTTTestSupport {
 
         Message msg = connection.receive(1, TimeUnit.SECONDS);
         assertEquals("Topic changed", publishedTopic, msg.getTopic());
+    }
+
+    @Test(timeout = 2 *  60 * 1000)
+    public void testMQTTCompositeDestinations() throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("");
+        mqtt.setCleanSession(true);
+
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        Topic[] topics = {new Topic(utf8("a/1"), QoS.values()[AT_MOST_ONCE]), new Topic(utf8("a/2"), QoS.values()[AT_MOST_ONCE])};
+        connection.subscribe(topics);
+
+        String payload = "Test Message";
+        String publishedTopic = "a/1,a/2";
+        connection.publish(publishedTopic, payload.getBytes(), QoS.values()[AT_MOST_ONCE], false);
+
+        Message msg = connection.receive(1, TimeUnit.SECONDS);
+        assertNotNull(msg);
+        assertEquals("a/2", msg.getTopic());
+
+        msg = connection.receive(1, TimeUnit.SECONDS);
+        assertNotNull(msg);
+        assertEquals("a/1", msg.getTopic());
+
+        msg = connection.receive(1, TimeUnit.SECONDS);
+        assertNull(msg);
+
     }
 
     @Test(timeout = 2 *  60 * 1000)
@@ -1136,6 +1193,37 @@ public class MQTTTest extends MQTTTestSupport {
     }
 
     @Test(timeout = 60 * 1000)
+    public void testPublishWildcard31() throws Exception {
+        testPublishWildcard("3.1");
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testPublishWildcard311() throws Exception {
+        testPublishWildcard("3.1.1");
+    }
+
+    private void testPublishWildcard(String version) throws Exception {
+        MQTT mqttPub = createMQTTConnection("MQTTPub-Client", true);
+        mqttPub.setVersion(version);
+        BlockingConnection blockingConnection = mqttPub.blockingConnection();
+        blockingConnection.connect();
+        String payload = "Test Message";
+        try {
+            blockingConnection.publish("foo/#", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
+            fail("Should not be able to publish with wildcard in topic.");
+        } catch (Exception ex) {
+            LOG.info("Exception expected on publish with wildcard in topic name");
+        }
+        try {
+            blockingConnection.publish("foo/+", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
+            fail("Should not be able to publish with wildcard in topic.");
+        } catch (Exception ex) {
+            LOG.info("Exception expected on publish with wildcard in topic name");
+        }
+        blockingConnection.disconnect();
+    }
+
+    @Test(timeout = 60 * 1000)
     public void testDuplicateClientId() throws Exception {
         // test link stealing enabled by default
         final String clientId = "duplicateClient";
@@ -1276,6 +1364,238 @@ public class MQTTTest extends MQTTTestSupport {
         }
 
         jmsConn.close();
+    }
+
+    @Test(timeout = 30 * 10000)
+    public void testSubscribeWithLargeTopicFilter() throws Exception {
+
+        byte[] payload = new byte[1024 * 32];
+        for (int i = 0; i < payload.length; i++) {
+            payload[i] = '2';
+        }
+
+        StringBuilder topicBuilder = new StringBuilder("/topic/");
+
+        for (int i = 0; i < 32800; ++i) {
+            topicBuilder.append("a");
+        }
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        Topic[] topic = { new Topic(topicBuilder.toString(), QoS.EXACTLY_ONCE) };
+        connection.subscribe(topic);
+        connection.publish(topic[0].name().toString(), payload, QoS.AT_LEAST_ONCE, false);
+
+        Message message = connection.receive();
+        assertNotNull(message);
+        message.ack();
+    }
+
+    @Test(timeout = 30 * 10000)
+    public void testSubscribeWithZeroLengthTopic() throws Exception {
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        Topic topic = new Topic("", QoS.EXACTLY_ONCE);
+
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        LOG.info("Trying to subscrobe to topic: {}", topic.name());
+
+        try {
+            connection.subscribe(new Topic[] { topic });
+            fail("Should not be able to subscribe with invalid Topic");
+        } catch (Exception ex) {
+            LOG.info("Caught expected error on subscribe");
+        }
+
+        assertTrue("Should have lost connection", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !connection.isConnected();
+            }
+        }));
+    }
+
+    @Test(timeout = 30 * 10000)
+    public void testUnsubscribeWithZeroLengthTopic() throws Exception {
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        Topic topic = new Topic("", QoS.EXACTLY_ONCE);
+
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        LOG.info("Trying to subscrobe to topic: {}", topic.name());
+
+        try {
+            connection.unsubscribe(new String[] { topic.name().toString() });
+            fail("Should not be able to subscribe with invalid Topic");
+        } catch (Exception ex) {
+            LOG.info("Caught expected error on subscribe");
+        }
+
+        assertTrue("Should have lost connection", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !connection.isConnected();
+            }
+        }));
+    }
+
+    @Test(timeout = 30 * 10000)
+    public void testSubscribeWithInvalidMultiLevelWildcards() throws Exception {
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        Topic[] topics = { new Topic("#/Foo", QoS.EXACTLY_ONCE),
+                           new Topic("#/Foo/#", QoS.EXACTLY_ONCE),
+                           new Topic("Foo/#/Level", QoS.EXACTLY_ONCE),
+                           new Topic("Foo/X#", QoS.EXACTLY_ONCE) };
+
+        for (int i = 0; i < topics.length; ++i) {
+            final BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+
+            LOG.info("Trying to subscrobe to topic: {}", topics[i].name());
+
+            try {
+                connection.subscribe(new Topic[] { topics[i] });
+                fail("Should not be able to subscribe with invalid Topic");
+            } catch (Exception ex) {
+                LOG.info("Caught expected error on subscribe");
+            }
+
+            assertTrue("Should have lost connection", Wait.waitFor(new Wait.Condition() {
+
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return !connection.isConnected();
+                }
+            }));
+        }
+    }
+
+    @Test(timeout = 30 * 10000)
+    public void testSubscribeWithInvalidSingleLevelWildcards() throws Exception {
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        Topic[] topics = { new Topic("Foo+", QoS.EXACTLY_ONCE),
+                           new Topic("+Foo/#", QoS.EXACTLY_ONCE),
+                           new Topic("+#", QoS.EXACTLY_ONCE),
+                           new Topic("Foo/+X/Level", QoS.EXACTLY_ONCE),
+                           new Topic("Foo/+F", QoS.EXACTLY_ONCE) };
+
+        for (int i = 0; i < topics.length; ++i) {
+            final BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+
+            LOG.info("Trying to subscrobe to topic: {}", topics[i].name());
+
+            try {
+                connection.subscribe(new Topic[] { topics[i] });
+                fail("Should not be able to subscribe with invalid Topic");
+            } catch (Exception ex) {
+                LOG.info("Caught expected error on subscribe");
+            }
+
+            assertTrue("Should have lost connection", Wait.waitFor(new Wait.Condition() {
+
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return !connection.isConnected();
+                }
+            }));
+        }
+    }
+
+    @Test(timeout = 30 * 10000)
+    public void testUnsubscribeWithInvalidMultiLevelWildcards() throws Exception {
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        Topic[] topics = { new Topic("#/Foo", QoS.EXACTLY_ONCE),
+                           new Topic("#/Foo/#", QoS.EXACTLY_ONCE),
+                           new Topic("Foo/#/Level", QoS.EXACTLY_ONCE),
+                           new Topic("Foo/X#", QoS.EXACTLY_ONCE) };
+
+        for (int i = 0; i < topics.length; ++i) {
+            final BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+
+            LOG.info("Trying to subscrobe to topic: {}", topics[i].name());
+
+            try {
+                connection.unsubscribe(new String[] { topics[i].name().toString() });
+                fail("Should not be able to unsubscribe with invalid Topic");
+            } catch (Exception ex) {
+                LOG.info("Caught expected error on subscribe");
+            }
+
+            assertTrue("Should have lost connection", Wait.waitFor(new Wait.Condition() {
+
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return !connection.isConnected();
+                }
+            }));
+        }
+    }
+
+    @Test(timeout = 30 * 10000)
+    public void testUnsubscribeWithInvalidSingleLevelWildcards() throws Exception {
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        Topic[] topics = { new Topic("Foo+", QoS.EXACTLY_ONCE),
+                           new Topic("+Foo/#", QoS.EXACTLY_ONCE),
+                           new Topic("+#", QoS.EXACTLY_ONCE),
+                           new Topic("Foo/+X/Level", QoS.EXACTLY_ONCE),
+                           new Topic("Foo/+F", QoS.EXACTLY_ONCE) };
+
+        for (int i = 0; i < topics.length; ++i) {
+            final BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+
+            LOG.info("Trying to subscrobe to topic: {}", topics[i].name());
+
+            try {
+                connection.unsubscribe(new String[] { topics[i].name().toString() });
+                fail("Should not be able to unsubscribe with invalid Topic");
+            } catch (Exception ex) {
+                LOG.info("Caught expected error on subscribe");
+            }
+
+            assertTrue("Should have lost connection", Wait.waitFor(new Wait.Condition() {
+
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return !connection.isConnected();
+                }
+            }));
+        }
     }
 
     @Test(timeout = 30 * 10000)

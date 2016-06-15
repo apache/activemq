@@ -505,8 +505,12 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
             // now that the job is removed from the index we can store the remove info and
             // then dereference the log files that hold the initial add command and the most
-            // recent update command.
-            this.store.referenceRemovedLocation(tx, location, removed);
+            // recent update command.  If the remove and the add that created the job are in
+            // the same file we don't need to track it and just let a normal GC of the logs
+            // remove it when the log is unreferenced.
+            if (removed.getLocation().getDataFileId() != location.getDataFileId()) {
+                this.store.referenceRemovedLocation(tx, location, removed);
+            }
         }
     }
 
@@ -589,8 +593,12 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
                     // now that the job is removed from the index we can store the remove info and
                     // then dereference the log files that hold the initial add command and the most
-                    // recent update command.
-                    this.store.referenceRemovedLocation(tx, location, job);
+                    // recent update command.  If the remove and the add that created the job are in
+                    // the same file we don't need to track it and just let a normal GC of the logs
+                    // remove it when the log is unreferenced.
+                    if (job.getLocation().getDataFileId() != location.getDataFileId()) {
+                        this.store.referenceRemovedLocation(tx, location, job);
+                    }
                 }
             }
         }

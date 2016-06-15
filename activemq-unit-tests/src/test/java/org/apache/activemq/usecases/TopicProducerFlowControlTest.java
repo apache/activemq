@@ -71,15 +71,8 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         tpe.setProducerFlowControl(true);
         tpe.setAdvisoryWhenFull(true);
 
-        // Setup the topic destination policy
-        PolicyEntry qpe = new PolicyEntry();
-        qpe.setQueue(">");
-        qpe.setMemoryLimit(destinationMemLimit);
-        qpe.setProducerFlowControl(true);
-        qpe.setQueuePrefetch(1);
-        qpe.setAdvisoryWhenFull(true);
 
-        pm.setPolicyEntries(Arrays.asList(new PolicyEntry[]{tpe, qpe}));
+        pm.setPolicyEntries(Arrays.asList(new PolicyEntry[]{tpe}));
 
         setDestinationPolicy(broker, pm);
 
@@ -118,8 +111,20 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         listenerSession.createConsumer(new ActiveMQTopic(AdvisorySupport.FULL_TOPIC_PREFIX + ">")).setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
-                LOG.info("Got full advisory, blockedCounter: " + blockedCounter.get());
-                blockedCounter.incrementAndGet();
+                try {
+                    if (blockedCounter.get() % 100 == 0) {
+                        LOG.info("Got full advisory, usageName: " +
+                                message.getStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME) +
+                                ", usageCount: " +
+                                message.getLongProperty(AdvisorySupport.MSG_PROPERTY_USAGE_COUNT)
+                                + ", blockedCounter: " + blockedCounter.get());
+                    }
+                    blockedCounter.incrementAndGet();
+
+                } catch (Exception error) {
+                    error.printStackTrace();
+                    LOG.error("missing advisory property", error);
+                }
             }
         });
 

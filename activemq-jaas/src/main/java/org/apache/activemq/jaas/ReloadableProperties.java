@@ -20,8 +20,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +32,7 @@ public class ReloadableProperties {
 
     private Properties props = new Properties();
     private Map<String, String> invertedProps;
+    private Map<String, Set<String>> invertedValueProps;
     private long reloadTime = -1;
     private final PropertiesLoader.FileNameKey key;
 
@@ -47,6 +50,7 @@ public class ReloadableProperties {
             try {
                 load(key.file(), props);
                 invertedProps = null;
+                invertedValueProps = null;
                 if (key.isDebug()) {
                     LOG.debug("Load of: " + key);
                 }
@@ -69,6 +73,24 @@ public class ReloadableProperties {
             }
         }
         return invertedProps;
+    }
+
+    public synchronized Map<String, Set<String>> invertedPropertiesValuesMap() {
+        if (invertedValueProps == null) {
+            invertedValueProps = new HashMap<>(props.size());
+            for (Map.Entry<Object, Object> val : props.entrySet()) {
+                String[] userList = ((String)val.getValue()).split(",");
+                for (String user : userList) {
+                    Set<String> set = invertedValueProps.get(user);
+                    if (set == null) {
+                        set = new HashSet<>();
+                        invertedValueProps.put(user, set);
+                    }
+                    set.add((String)val.getKey());
+                }
+            }
+        }
+        return invertedValueProps;
     }
 
     private void load(final File source, Properties props) throws IOException {

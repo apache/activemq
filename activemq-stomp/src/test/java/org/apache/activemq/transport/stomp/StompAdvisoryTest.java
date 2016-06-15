@@ -32,6 +32,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.Topic;
+import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -89,10 +90,18 @@ public class StompAdvisoryTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testConnectionAdvisory() throws Exception {
-
         stompConnect();
+
+        HashMap<String, String> subheaders = new HashMap<String, String>(1);
+        subheaders.put("receipt", "id-1");
+
         stompConnection.connect("system", "manager");
-        stompConnection.subscribe("/topic/ActiveMQ.Advisory.Connection", Stomp.Headers.Subscribe.AckModeValues.AUTO);
+        stompConnection.subscribe("/topic/ActiveMQ.Advisory.Connection",
+            Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
 
         // Now connect via openwire and check we get the advisory
         Connection c = cf.createConnection("system", "manager");
@@ -121,10 +130,15 @@ public class StompAdvisoryTest extends StompTestSupport {
 
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("transformation", Stomp.Transformations.JMS_JSON.toString());
+        subheaders.put("receipt", "id-1");
 
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/ActiveMQ.Advisory.Connection",
                 Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
 
         // Now connect via openwire and check we get the advisory
         Connection c = cf.createConnection("system", "manager");
@@ -153,10 +167,15 @@ public class StompAdvisoryTest extends StompTestSupport {
 
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("transformation", Stomp.Transformations.JMS_XML.toString());
+        subheaders.put("receipt", "id-1");
 
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/ActiveMQ.Advisory.Connection",
                 Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
 
         // Now connect via openwire and check we get the advisory
         Connection c = cf.createConnection("system", "manager");
@@ -185,8 +204,16 @@ public class StompAdvisoryTest extends StompTestSupport {
 
         Destination dest = new ActiveMQQueue("testConsumerAdvisory");
 
+        HashMap<String, String> subheaders = new HashMap<String, String>(1);
+        subheaders.put("receipt", "id-1");
+
         stompConnection.connect("system", "manager");
-        stompConnection.subscribe("/topic/ActiveMQ.Advisory.Consumer.>", Stomp.Headers.Subscribe.AckModeValues.AUTO);
+        stompConnection.subscribe("/topic/ActiveMQ.Advisory.Consumer.>",
+            Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
 
         // Now connect via openwire and check we get the advisory
         Connection c = cf.createConnection("system", "manager");
@@ -212,8 +239,16 @@ public class StompAdvisoryTest extends StompTestSupport {
 
         Destination dest = new ActiveMQQueue("testProducerAdvisory");
 
+        HashMap<String, String> subheaders = new HashMap<String, String>(1);
+        subheaders.put("receipt", "id-1");
+
         stompConnection.connect("system", "manager");
-        stompConnection.subscribe("/topic/ActiveMQ.Advisory.Producer.>", Stomp.Headers.Subscribe.AckModeValues.AUTO);
+        stompConnection.subscribe("/topic/ActiveMQ.Advisory.Producer.>",
+            Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
 
         // Now connect via openwire and check we get the advisory
         Connection c = cf.createConnection("system", "manager");
@@ -242,10 +277,15 @@ public class StompAdvisoryTest extends StompTestSupport {
 
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("transformation", Stomp.Transformations.JMS_ADVISORY_XML.toString());
+        subheaders.put("receipt", "id-1");
 
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/ActiveMQ.Advisory.Producer.>",
                 Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
 
         // Now connect via openwire and check we get the advisory
         Connection c = cf.createConnection("system", "manager");
@@ -274,10 +314,15 @@ public class StompAdvisoryTest extends StompTestSupport {
 
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("transformation", Stomp.Transformations.JMS_ADVISORY_JSON.toString());
+        subheaders.put("receipt", "id-1");
 
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/ActiveMQ.Advisory.Producer.>",
                 Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
 
         // Now connect via openwire and check we get the advisory
         Connection c = cf.createConnection("system", "manager");
@@ -343,5 +388,110 @@ public class StompAdvisoryTest extends StompTestSupport {
 
         c.stop();
         c.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testDestinationAdvisoryTempQueue() throws Exception {
+
+        cf.setWatchTopicAdvisories(false);
+
+        stompConnect();
+
+        HashMap<String, String> subheaders = new HashMap<String, String>(1);
+        subheaders.put("receipt", "id-1");
+
+        stompConnection.connect("system", "manager");
+        stompConnection.subscribe("/topic/ActiveMQ.Advisory.TempQueue",
+            Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
+
+        // Now connect via openwire and check we get the advisory
+        Connection connection = cf.createConnection("system", "manager");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createTemporaryQueue();
+        connection.close();
+
+        StompFrame f = stompConnection.receive();
+        LOG.debug(f.toString());
+        assertEquals(f.getAction(),"MESSAGE");
+        assertTrue("Should have a body", f.getBody().length() > 0);
+        assertTrue(f.getBody().startsWith("{\"DestinationInfo\":"));
+    }
+
+    @Test(timeout = 60000)
+    public void testDestinationAdvisoryTempTopic() throws Exception {
+
+        cf.setWatchTopicAdvisories(false);
+
+        stompConnect();
+
+        HashMap<String, String> subheaders = new HashMap<String, String>(1);
+        subheaders.put("receipt", "id-1");
+
+        stompConnection.connect("system", "manager");
+        stompConnection.subscribe("/topic/ActiveMQ.Advisory.TempTopic",
+            Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
+
+        // Now connect via openwire and check we get the advisory
+        Connection connection = cf.createConnection("system", "manager");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createTemporaryTopic();
+        connection.close();
+
+        StompFrame f = stompConnection.receive();
+        LOG.debug(f.toString());
+        assertEquals(f.getAction(),"MESSAGE");
+        assertTrue("Should have a body", f.getBody().length() > 0);
+        assertTrue(f.getBody().startsWith("{\"DestinationInfo\":"));
+    }
+
+    @Test(timeout = 60000)
+    public void testDestinationAdvisoryCompositeTempDestinations() throws Exception {
+
+        cf.setWatchTopicAdvisories(true);
+
+        HashMap<String, String> subheaders = new HashMap<String, String>(1);
+        subheaders.put("receipt", "id-1");
+
+        stompConnect();
+        stompConnection.connect("system", "manager");
+        stompConnection.subscribe("/topic/ActiveMQ.Advisory.TempTopic,/topic/ActiveMQ.Advisory.TempQueue",
+            Stomp.Headers.Subscribe.AckModeValues.AUTO, subheaders);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Response to subscribe was: {}", frame);
+        assertTrue(frame.trim().startsWith("RECEIPT"));
+
+        // Now connect via openwire and check we get the advisory
+        Connection connection = cf.createConnection("system", "manager");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createTemporaryTopic();
+        session.createTemporaryQueue();
+
+        ObjectName[] topicSubscribers = brokerService.getAdminView().getTopicSubscribers();
+        for (ObjectName subscription : topicSubscribers) {
+            LOG.info("Topic Subscription: {}", subscription);
+        }
+
+        connection.close();
+
+        StompFrame f = stompConnection.receive();
+        LOG.debug(f.toString());
+        assertEquals(f.getAction(),"MESSAGE");
+        assertTrue("Should have a body", f.getBody().length() > 0);
+        assertTrue(f.getBody().startsWith("{\"DestinationInfo\":"));
+
+        f = stompConnection.receive();
+        LOG.debug(f.toString());
+        assertEquals(f.getAction(),"MESSAGE");
+        assertTrue("Should have a body", f.getBody().length() > 0);
+        assertTrue(f.getBody().startsWith("{\"DestinationInfo\":"));
     }
 }

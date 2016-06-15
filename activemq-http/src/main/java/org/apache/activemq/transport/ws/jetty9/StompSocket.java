@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.ws.jetty9;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
@@ -32,6 +33,8 @@ import org.slf4j.LoggerFactory;
 public class StompSocket extends AbstractStompSocket implements WebSocketListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompSocket.class);
+
+    private final int ORDERLY_CLOSE_TIMEOUT = 10;
 
     private Session session;
 
@@ -60,9 +63,16 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     @Override
     public void onWebSocketClose(int arg0, String arg1) {
         try {
-            protocolConverter.onStompCommand(new StompFrame(Stomp.Commands.DISCONNECT));
+            if (protocolLock.tryLock() || protocolLock.tryLock(ORDERLY_CLOSE_TIMEOUT, TimeUnit.SECONDS)) {
+                LOG.debug("Stomp WebSocket closed: code[{}] message[{}]", arg0, arg1);
+                protocolConverter.onStompCommand(new StompFrame(Stomp.Commands.DISCONNECT));
+            }
         } catch (Exception e) {
-            LOG.warn("Failed to close WebSocket", e);
+            LOG.debug("Failed to close STOMP WebSocket cleanly", e);
+        } finally {
+            if (protocolLock.isHeldByCurrentThread()) {
+                protocolLock.unlock();
+            }
         }
     }
 

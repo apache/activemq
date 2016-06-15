@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.ws;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -27,8 +28,9 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.util.Wait;
-import org.eclipse.jetty.websocket.WebSocketClient;
-import org.eclipse.jetty.websocket.WebSocketClientFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,14 +51,16 @@ public class StompWSTransportTest extends WSTransportTestSupport {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-
-        WebSocketClientFactory clientFactory = new WebSocketClientFactory();
-        clientFactory.start();
-
-        wsClient = clientFactory.newWebSocketClient();
         wsStompConnection = new StompWSConnection();
 
-        wsClient.open(wsConnectUri, wsStompConnection);
+
+        ClientUpgradeRequest request = new ClientUpgradeRequest();
+        request.setSubProtocols("v11.stomp");
+
+        wsClient = new WebSocketClient(new SslContextFactory(true));
+        wsClient.start();
+
+        wsClient.connect(wsStompConnection, wsConnectUri, request);
         if (!wsStompConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to STOMP WS endpoint");
         }
@@ -88,6 +92,7 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
         assertNotNull(incoming);
         assertTrue(incoming.startsWith("CONNECTED"));
+        assertEquals("v11.stomp", wsStompConnection.getConnection().getUpgradeResponse().getAcceptedSubProtocol());
 
         assertTrue("Connection should close", Wait.waitFor(new Wait.Condition() {
 
@@ -278,6 +283,10 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         service.shutdownNow();
         service.awaitTermination(5, TimeUnit.SECONDS);
 
-        wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
+        try {
+            wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
+        } catch (Exception ex) {
+            LOG.info("Caught exception on write of disconnect", ex);
+        }
     }
 }

@@ -30,7 +30,7 @@
   <broker brokerName="web-console" useJmx="true" xmlns="http://activemq.apache.org/schema/core">
 
     <persistenceAdapter>
-      <kahaDB directory="${activemq.data}/kahadb"/>
+      <kahaDB directory="target/kahadb"/>
     </persistenceAdapter>
 
     <transportConnectors>

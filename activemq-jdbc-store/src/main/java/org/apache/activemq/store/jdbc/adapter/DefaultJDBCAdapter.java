@@ -1133,9 +1133,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         cleanupExclusiveLock.readLock().lock();
         try {
             if (isPrioritizedMessages) {
-                s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesByPriorityStatement());
+                s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesByPriorityStatement()));
             } else {
-                s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
+                s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesStatement()));
             }
             s.setMaxRows(Math.min(maxReturned, maxRows));
             s.setString(1, destination.getQualifiedName());
@@ -1259,4 +1259,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
+    public String limitQuery(String query) {
+        return query;
+    }
 }

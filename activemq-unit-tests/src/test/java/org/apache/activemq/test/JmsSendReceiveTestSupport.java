@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -33,16 +34,13 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import junit.framework.AssertionFailedError;
-
-import org.apache.activemq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 
- */
+import junit.framework.AssertionFailedError;
+
 public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.TestSupport implements MessageListener {
+
     private static final Logger LOG = LoggerFactory.getLogger(JmsSendReceiveTestSupport.class);
 
     protected int messageCount = 100;
@@ -66,8 +64,10 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
     /*
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
+        messages.clear();
         String temp = System.getProperty("messageCount");
 
         if (temp != null) {
@@ -102,13 +102,11 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
 
     /**
      * Test if all the messages sent are being received.
-     * 
+     *
      * @throws Exception
      */
     public void testSendReceive() throws Exception {
-
-        Thread.sleep(1000);
-        messages.clear();
+        Thread.sleep(100);
 
         sendMessages();
 
@@ -128,7 +126,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
     }
 
     protected void sendMessage(int index, Message message) throws Exception {
-    	producer.send(producerDestination, message);
+        producer.send(producerDestination, message);
     }
 
     protected Message createMessage(int index) throws JMSException {
@@ -138,7 +136,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
 
     /**
      * A hook to allow the message to be configured such as adding extra headers
-     * 
+     *
      * @throws JMSException
      */
     protected void configureMessage(Message message) throws JMSException {
@@ -147,7 +145,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
     /**
      * Waits to receive the messages and performs the test if all messages have
      * been received and are in sequential order.
-     * 
+     *
      * @throws JMSException
      */
     protected void assertMessagesAreReceived() throws JMSException {
@@ -157,7 +155,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
 
     /**
      * Tests if the messages have all been received and are in sequential order.
-     * 
+     *
      * @param receivedMessages
      * @throws JMSException
      */
@@ -204,7 +202,10 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
      * reached.
      */
     protected void waitForMessagesToBeDelivered() {
-        long maxWaitTime = 60000;
+        waitForMessagesToBeDelivered(TimeUnit.MINUTES.toMillis(1));
+    }
+
+    protected void waitForMessagesToBeDelivered(long maxWaitTime) {
         long waitTime = maxWaitTime;
         long start = (maxWaitTime <= 0) ? 0 : System.currentTimeMillis();
 
@@ -224,13 +225,14 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
     /**
      * @see javax.jms.MessageListener#onMessage(javax.jms.Message)
      */
+    @Override
     public synchronized void onMessage(Message message) {
         consumeMessage(message, messages);
     }
 
     /**
      * Consumes a received message.
-     * 
+     *
      * @param message - a newly received message.
      * @param messageList - list containing the received messages.
      */
@@ -250,7 +252,7 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
 
     /**
      * Creates a synchronized list.
-     * 
+     *
      * @return a synchronized view of the specified list.
      */
     protected List<Message> createConcurrentList() {

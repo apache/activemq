@@ -17,11 +17,14 @@
 package org.apache.activemq.karaf.itest;
 
 import javax.security.auth.Subject;
+
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.karaf.features.FeaturesService;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
 import org.apache.karaf.jaas.boot.principal.UserPrincipal;
+import org.apache.karaf.shell.api.console.Session;
+import org.apache.karaf.shell.api.console.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.ops4j.pax.exam.Option;
@@ -37,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +53,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
-
 
 import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.junit.Assert.assertTrue;
@@ -96,18 +99,20 @@ public abstract class AbstractFeatureTest {
     }
 
     @Inject
-    CommandProcessor commandProcessor;
+    SessionFactory sessionFactory;
+
     ExecutorService executor = Executors.newCachedThreadPool();
 
     protected String executeCommand(final String command, final Long timeout, final Boolean silent) {
         String response;
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         final PrintStream printStream = new PrintStream(byteArrayOutputStream);
-        final CommandSession commandSession = commandProcessor.createSession(System.in, printStream, printStream);
+        final Session commandSession = sessionFactory.create(System.in, printStream, printStream);
         commandSession.put("APPLICATION", System.getProperty("karaf.name", "root"));
         commandSession.put("USER", USER);
         FutureTask<String> commandFuture = new FutureTask<String>(
                 new Callable<String>() {
+                    @Override
                     public String call() {
 
                         Subject subject = new Subject();
@@ -154,13 +159,13 @@ public abstract class AbstractFeatureTest {
 	 * @throws Exception
 	 */
 	public void installAndAssertFeature(final String feature) throws Throwable {
-        executeCommand("osgi:list -t 0");
-		executeCommand("features:install " + feature);
+        executeCommand("feature:list -i");
+		executeCommand("feature:install " + feature);
 		assertFeatureInstalled(feature);
 	}
 
     public void assertFeatureInstalled(final String feature) throws Throwable {
-        executeCommand("osgi:list -t 0");
+        executeCommand("feature:list -i");
         withinReason(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
@@ -174,7 +179,7 @@ public abstract class AbstractFeatureTest {
         boolean found = false;
         for (Bundle bundle: bundleContext.getBundles()) {
             LOG.debug("Checking: " + bundle.getSymbolicName());
-            if (bundle.getSymbolicName().equals(bundleName)) {
+            if (bundle.getSymbolicName().contains(bundleName)) {
                 found = true;
                 break;
             }
@@ -251,6 +256,11 @@ public abstract class AbstractFeatureTest {
                 editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
                 //debugConfiguration("5005", true),
                 features(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
+        if (f.contains("activemq-camel")) {
+            options = append(features(maven().groupId("org.apache.camel.karaf").artifactId("apache-camel")
+                    .versionAsInProject()
+                    .type("xml/features")), options);
+        }
 
         return options;
     }

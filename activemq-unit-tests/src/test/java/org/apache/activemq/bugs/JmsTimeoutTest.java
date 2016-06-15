@@ -38,9 +38,9 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 
     static final Logger LOG = LoggerFactory.getLogger(JmsTimeoutTest.class);
 
-    private final int messageSize=1024*64;
-    private final int messageCount=10000;
-    private final AtomicInteger exceptionCount = new AtomicInteger(0);
+    protected final int messageSize=1024*64;
+    protected final int messageCount=10000;
+    protected final AtomicInteger exceptionCount = new AtomicInteger(0);
 
     /**
      * Test the case where the broker is blocked due to a memory limit
@@ -145,7 +145,7 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
             broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 
-    private String createMessageText() {
+    protected String createMessageText() {
         StringBuffer buffer = new StringBuffer();
         buffer.append("<filler>");
         for (int i = buffer.length(); i < messageSize; i++) {

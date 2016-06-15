@@ -199,6 +199,32 @@ public class AmqpMessage {
     }
 
     /**
+     * Return the set MessageId value in the original form, if there are no properties
+     * in the given message return null.
+     *
+     * @return the set message ID in its original form or null if not set.
+     */
+    public Object getRawMessageId() {
+        if (message.getProperties() == null) {
+            return null;
+        }
+
+        return message.getProperties().getMessageId();
+    }
+
+    /**
+     * Sets the MessageId property on an outbound message using the provided value
+     *
+     * @param messageId
+     *        the message ID value to set.
+     */
+    public void setRawMessageId(Object messageId) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setMessageId(messageId);
+    }
+
+    /**
      * Sets the GroupId property on an outbound message using the provided String
      *
      * @param messageId

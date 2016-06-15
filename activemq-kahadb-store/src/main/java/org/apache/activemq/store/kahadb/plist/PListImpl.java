@@ -21,22 +21,22 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.command.Message;
+import org.apache.activemq.management.SizeStatisticImpl;
 import org.apache.activemq.store.PList;
 import org.apache.activemq.store.PListEntry;
 import org.apache.activemq.store.kahadb.disk.index.ListIndex;
+import org.apache.activemq.store.kahadb.disk.index.ListNode;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
-import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.store.kahadb.disk.util.LocationMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
-import org.apache.activemq.wireformat.WireFormat;
+import org.apache.activemq.util.ByteSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +45,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
     final PListStoreImpl store;
     private String name;
     Object indexLock;
+    private final SizeStatisticImpl messageSize;
 
     PListImpl(PListStoreImpl store) {
         this.store = store;
@@ -52,6 +53,9 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         setPageFile(store.getPageFile());
         setKeyMarshaller(StringMarshaller.INSTANCE);
         setValueMarshaller(LocationMarshaller.INSTANCE);
+
+        messageSize = new SizeStatisticImpl("messageSize", "The size in bytes of the pending messages");
+        messageSize.setEnabled(true);
     }
 
     public void setName(String name) {
@@ -75,6 +79,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
     public synchronized void destroy() throws IOException {
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     clear(tx);
                     unload(tx);
@@ -100,6 +105,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         final Location location = this.store.write(bs, false);
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     add(tx, id, location);
                 }
@@ -113,6 +119,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         final Location location = this.store.write(bs, false);
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     addFirst(tx, id, location);
                 }
@@ -133,6 +140,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         final AtomicBoolean result = new AtomicBoolean();
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     result.set(remove(tx, id) != null);
                 }
@@ -145,6 +153,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         final AtomicBoolean result = new AtomicBoolean();
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     Iterator<Map.Entry<String, Location>> iterator = iterator(tx, position);
                     if (iterator.hasNext()) {
@@ -165,6 +174,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     Iterator<Map.Entry<String, Location>> iterator = iterator(tx, position);
                     ref.set(iterator.next());
@@ -183,6 +193,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     ref.set(getFirst(tx));
                 }
@@ -200,6 +211,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     ref.set(getLast(tx));
                 }
@@ -270,6 +282,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
             }
         }
 
+        @Override
         public void release() {
             try {
                 tx.rollback();
@@ -285,6 +298,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         synchronized (indexLock) {
             if (loaded.get()) {
                 this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                    @Override
                     public void execute(Transaction tx) throws IOException {
                         Iterator<Map.Entry<String,Location>> iterator = iterator(tx);
                         while (iterator.hasNext()) {
@@ -294,6 +308,53 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
                     }
                 });
             }
+        }
+    }
+
+    @Override
+    public long messageSize() {
+        return messageSize.getTotalSize();
+    }
+
+    @Override
+    public synchronized Location add(Transaction tx, String key, Location value)
+            throws IOException {
+        Location location = super.add(tx, key, value);
+        messageSize.addSize(value.getSize());
+        return location;
+    }
+
+    @Override
+    public synchronized Location addFirst(Transaction tx, String key,
+            Location value) throws IOException {
+        Location location = super.addFirst(tx, key, value);
+        messageSize.addSize(value.getSize());
+        return location;
+    }
+
+    @Override
+    public synchronized void clear(Transaction tx) throws IOException {
+        messageSize.reset();
+        super.clear(tx);
+    }
+
+    @Override
+    protected synchronized void onLoad(ListNode<String, Location> node, Transaction tx) {
+        try {
+            Iterator<Entry<String, Location>> i = node.iterator(tx);
+            while (i.hasNext()) {
+                messageSize.addSize(i.next().getValue().getSize());
+            }
+        } catch (IOException e) {
+            LOG.warn("could not increment message size", e);
+        }
+    }
+
+    @Override
+    public void onRemove(Entry<String, Location> removed) {
+        super.onRemove(removed);
+        if (removed != null) {
+            messageSize.addSize(-removed.getValue().getSize());
         }
     }
 

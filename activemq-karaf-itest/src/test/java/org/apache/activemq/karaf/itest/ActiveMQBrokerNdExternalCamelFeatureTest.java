@@ -32,7 +32,8 @@ import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
-@RunWith(PaxExam.class)
+//@RunWith(PaxExam.class)
+@Ignore
 public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeatureTest {
 
     @Configuration

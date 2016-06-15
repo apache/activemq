@@ -22,12 +22,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.store.AbstractMessageStoreSizeStatTest;
 import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,12 +46,13 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
     protected static final Logger LOG = LoggerFactory
             .getLogger(MultiKahaDBMessageStoreSizeStatTest.class);
 
-    File dataFileDir = new File("target/test-amq-5748/stat-datadb");
+    @Rule
+    public TemporaryFolder dataFileDir = new TemporaryFolder(new File("target"));
 
     @Override
     protected void setUpBroker(boolean clearDataDir) throws Exception {
-        if (clearDataDir && dataFileDir.exists())
-            FileUtils.cleanDirectory(dataFileDir);
+        if (clearDataDir && dataFileDir.getRoot().exists())
+            FileUtils.cleanDirectory(dataFileDir.getRoot());
         super.setUpBroker(clearDataDir);
     }
 
@@ -59,7 +63,7 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
 
         //setup multi-kaha adapter
         MultiKahaDBPersistenceAdapter persistenceAdapter = new MultiKahaDBPersistenceAdapter();
-        persistenceAdapter.setDirectory(dataFileDir);
+        persistenceAdapter.setDirectory(dataFileDir.getRoot());
 
         KahaDBPersistenceAdapter kahaStore = new KahaDBPersistenceAdapter();
         kahaStore.setJournalMaxFileLength(1024 * 512);
@@ -81,51 +85,53 @@ public class MultiKahaDBMessageStoreSizeStatTest extends
      *
      * @throws Exception
      */
-    @Test
+    @Test(timeout=60000)
     public void testMessageSizeAfterRestartAndPublish() throws Exception {
+        AtomicLong publishedMessageSize = new AtomicLong();
 
-        Destination dest = publishTestQueueMessages(200);
+        Destination dest = publishTestQueueMessages(200, publishedMessageSize);
 
         // verify the count and size
-        verifyStats(dest, 200, 200 * messageSize);
+        verifyStats(dest, 200, publishedMessageSize.get());
 
         // stop, restart broker and publish more messages
         stopBroker();
         this.setUpBroker(false);
-        dest = publishTestQueueMessages(200);
+        dest = publishTestQueueMessages(200, publishedMessageSize);
 
         // verify the count and size
-        verifyStats(dest, 400, 400 * messageSize);
+        verifyStats(dest, 400, publishedMessageSize.get());
 
     }
 
-    @Test
+    @Test(timeout=60000)
     public void testMessageSizeAfterRestartAndPublishMultiQueue() throws Exception {
+        AtomicLong publishedMessageSize = new AtomicLong();
+        AtomicLong publishedMessageSize2 = new AtomicLong();
 
-        Destination dest = publishTestQueueMessages(200);
-
-        // verify the count and size
-        verifyStats(dest, 200, 200 * messageSize);
-        assertTrue(broker.getPersistenceAdapter().size() > 200 * messageSize);
-
-        Destination dest2 = publishTestQueueMessages(200, "test.queue2");
+        Destination dest = publishTestQueueMessages(200, publishedMessageSize);
 
         // verify the count and size
-        verifyStats(dest2, 200, 200 * messageSize);
-        assertTrue(broker.getPersistenceAdapter().size() > 400 * messageSize);
+        verifyStats(dest, 200, publishedMessageSize.get());
+        assertTrue(broker.getPersistenceAdapter().size() > publishedMessageSize.get());
+
+        Destination dest2 = publishTestQueueMessages(200, "test.queue2", publishedMessageSize2);
+
+        // verify the count and size
+        verifyStats(dest2, 200, publishedMessageSize2.get());
+        assertTrue(broker.getPersistenceAdapter().size() > publishedMessageSize.get() + publishedMessageSize2.get());
 
         // stop, restart broker and publish more messages
         stopBroker();
         this.setUpBroker(false);
-        dest = publishTestQueueMessages(200);
-        dest2 = publishTestQueueMessages(200, "test.queue2");
+        dest = publishTestQueueMessages(200, publishedMessageSize);
+        dest2 = publishTestQueueMessages(200, "test.queue2", publishedMessageSize2);
 
         // verify the count and size after publishing messages
-        verifyStats(dest, 400, 400 * messageSize);
-        verifyStats(dest2, 400, 400 * messageSize);
+        verifyStats(dest, 400, publishedMessageSize.get());
+        verifyStats(dest2, 400, publishedMessageSize2.get());
 
-        System.out.println(broker.getPersistenceAdapter().size());
-        assertTrue(broker.getPersistenceAdapter().size() > 800 * messageSize);
+        assertTrue(broker.getPersistenceAdapter().size() > publishedMessageSize.get() + publishedMessageSize2.get());
         assertTrue(broker.getPersistenceAdapter().size() >=
                 (dest.getMessageStore().getMessageSize() + dest2.getMessageStore().getMessageSize()));
 

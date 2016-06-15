@@ -28,6 +28,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
@@ -217,6 +218,51 @@ public class StompCompositeDestinationTest extends StompTestSupport {
 
             @Override
             public boolean isSatisified() throws Exception {
+                return brokerView.getQueues().length == 2;
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(150)));
+
+        QueueViewMBean viewOfA = getProxyToQueue(destinationA);
+        QueueViewMBean viewOfB = getProxyToQueue(destinationB);
+
+        assertNotNull(viewOfA);
+        assertNotNull(viewOfB);
+
+        assertEquals(1, viewOfA.getQueueSize());
+        assertEquals(1, viewOfB.getQueueSize());
+
+        stompConnection.disconnect();
+    }
+
+    @Test(timeout = 60000)
+    public void testSendMessageToCompositeQueueNoPrefixes() throws Exception {
+        stompConnect();
+
+        String destinationA = "StompA.Queue";
+        String destinationB = "StompB.Queue";
+
+        String frame = "CONNECT\n" +
+                       "login:system\n" +
+                       "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" +
+                "destination:" + destinationA + "," + destinationB +
+                "\n\n" + "Hello World" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        final BrokerViewMBean brokerView = getProxyToBroker();
+        assertTrue("Should be two destinations for the dispatch", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                for(ObjectName queueName : brokerView.getQueues()) {
+                    LOG.info("Broker Has Queue: {}", queueName);
+                }
                 return brokerView.getQueues().length == 2;
             }
         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(150)));

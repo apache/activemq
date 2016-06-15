@@ -94,13 +94,17 @@ public class SharedFileLocker extends AbstractLocker {
 
     @Override
     public boolean keepAlive() {
-        return lockFile != null && lockFile.keepAlive();
+        boolean result = lockFile != null && lockFile.keepAlive();
+        LOG.trace("keepAlive result: " + result + (name != null ? ", name: " + name : ""));
+        return result;
     }
 
     @Override
     public void doStop(ServiceStopper stopper) throws Exception {
-        lockFile.unlock();
-        lockFile=null;
+        if (lockFile != null) {
+            lockFile.unlock();
+            lockFile = null;
+        }
     }
 
     public File getDirectory() {
@@ -114,5 +118,8 @@ public class SharedFileLocker extends AbstractLocker {
     @Override
     public void configure(PersistenceAdapter persistenceAdapter) throws IOException {
         this.setDirectory(persistenceAdapter.getDirectory());
+        if (name == null) {
+            name = getDirectory().toString();
+        }
     }
 }

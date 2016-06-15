@@ -16,18 +16,11 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
-public class AuthorizationTest extends RuntimeConfigTestSupport {
+public class AuthorizationTest extends AbstractAuthorizationTest {
 
     private static final int RECEIVE_TIMEOUT = 1000;
     String configurationSeed = "authorizationTest";
@@ -102,47 +95,6 @@ public class AuthorizationTest extends RuntimeConfigTestSupport {
 
 
         assertAllowedTemp("guest");
-    }
-
-    private void assertDeniedTemp(String userPass) {
-        try {
-            assertAllowedTemp(userPass);
-            fail("Expected not allowed exception");
-        } catch (Exception expected) {
-            LOG.debug("got:" + expected, expected);
-        }
-    }
-
-    private void assertAllowedTemp(String userPass) throws Exception {
-        ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection(userPass, userPass);
-        connection.start();
-        try {
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            session.createConsumer(session.createTemporaryQueue());
-        } finally {
-            connection.close();
-        }
-
-    }
-
-    private void assertDenied(String userPass, String destination) {
-        try {
-            assertAllowed(userPass, destination);
-            fail("Expected not allowed exception");
-        } catch (JMSException expected) {
-            LOG.debug("got:" + expected, expected);
-        }
-    }
-
-    private void assertAllowed(String userPass, String dest) throws JMSException {
-        ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection(userPass, userPass);
-        connection.start();
-        try {
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            session.createConsumer(session.createQueue(dest));
-        } finally {
-            connection.close();
-        }
     }
 
 }

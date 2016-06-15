@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 /**
  * persist pendingCount messages pendingCount message (messages awaiting disptach
  * to a consumer) cursor
- * 
- * 
+ *
+ *
  */
 class TopicStorePrefetch extends AbstractStoreCursor {
     private static final Logger LOG = LoggerFactory.getLogger(TopicStorePrefetch.class);
@@ -59,14 +59,18 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         this.storeHasMessages=this.size > 0;
     }
 
+    @Override
     public boolean recoverMessageReference(MessageId messageReference) throws Exception {
         // shouldn't get called
         throw new RuntimeException("Not supported");
     }
 
+    @Override
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         batchList.addMessageFirst(node);
         size++;
+        node.incrementReferenceCount();
+        //this.messageSize.addSize(node.getMessage().getSize());
     }
 
     @Override
@@ -88,7 +92,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
             }
             storeHasMessages = true;
         }
-        return recovered;      
+        return recovered;
     }
 
     @Override
@@ -100,7 +104,18 @@ class TopicStorePrefetch extends AbstractStoreCursor {
             throw new RuntimeException(e);
         }
     }
-    
+
+
+    @Override
+    protected synchronized long getStoreMessageSize() {
+        try {
+            return store.getMessageSize(clientId, subscriberName);
+        } catch (Exception e) {
+            LOG.error("{} Failed to get the outstanding message count from the store", this, e);
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     protected synchronized boolean isStoreEmpty() {
         try {
@@ -111,7 +126,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         }
     }
 
-            
+
     @Override
     protected void resetBatch() {
         this.store.resetBatching(clientId, subscriberName);

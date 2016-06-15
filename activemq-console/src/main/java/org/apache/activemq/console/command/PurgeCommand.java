@@ -83,61 +83,56 @@ public class PurgeCommand extends AbstractJmxCommand {
      */
     @Override
     protected void runTask(List<String> tokens) throws Exception {
-        try {
-            // If there is no queue name specified, let's select all
-            if (tokens.isEmpty()) {
-                tokens.add("*");
-            }
+        // If there is no queue name specified, let's select all
+        if (tokens.isEmpty()) {
+            tokens.add("*");
+        }
 
-            // Iterate through the queue names
-            for (Iterator<String> i = tokens.iterator(); i.hasNext();) {
-                List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + i.next());
+        // Iterate through the queue names
+        for (Iterator<String> i = tokens.iterator(); i.hasNext(); ) {
+            List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + i.next());
 
-                for (Iterator j = queueList.iterator(); j.hasNext();) {
-                    ObjectName queueName = ((ObjectInstance)j.next()).getObjectName();
-                    if (queryAddObjects.isEmpty()) {
-                        purgeQueue(queueName);
+            for (Iterator j = queueList.iterator(); j.hasNext(); ) {
+                ObjectName queueName = ((ObjectInstance) j.next()).getObjectName();
+                if (queryAddObjects.isEmpty()) {
+                    purgeQueue(queueName);
+                } else {
+
+                    QueueViewMBean proxy = MBeanServerInvocationHandler.
+                            newProxyInstance(createJmxConnection(),
+                                    queueName,
+                                    QueueViewMBean.class,
+                                    true);
+                    int removed = 0;
+
+                    // AMQ-3404: We support two syntaxes for the message
+                    // selector query:
+                    // 1) AMQ specific:
+                    //    "JMSPriority>2,MyHeader='Foo'"
+                    //
+                    // 2) SQL-92 syntax:
+                    //    "(JMSPriority>2) AND (MyHeader='Foo')"
+                    //
+                    // If syntax style 1) is used, the comma separated
+                    // criterias are broken into List<String> elements.
+                    // We then need to construct the SQL-92 query out of
+                    // this list.
+
+                    String sqlQuery = null;
+                    if (queryAddObjects.size() > 1) {
+                        sqlQuery = convertToSQL92(queryAddObjects);
                     } else {
+                        sqlQuery = queryAddObjects.get(0);
+                    }
+                    removed = proxy.removeMatchingMessages(sqlQuery);
+                    context.printInfo("Removed: " + removed
+                            + " messages for message selector " + sqlQuery.toString());
 
-                        QueueViewMBean proxy = MBeanServerInvocationHandler.
-                                newProxyInstance(createJmxConnection(),
-                                        queueName,
-                                        QueueViewMBean.class,
-                                        true);
-                        int removed = 0;
-
-                        // AMQ-3404: We support two syntaxes for the message
-                        // selector query:
-                        // 1) AMQ specific:
-                        //    "JMSPriority>2,MyHeader='Foo'"
-                        //
-                        // 2) SQL-92 syntax:
-                        //    "(JMSPriority>2) AND (MyHeader='Foo')"
-                        //
-                        // If syntax style 1) is used, the comma separated
-                        // criterias are broken into List<String> elements.
-                        // We then need to construct the SQL-92 query out of
-                        // this list.
-
-                        String sqlQuery = null;
-                        if (queryAddObjects.size() > 1) {
-                             sqlQuery = convertToSQL92(queryAddObjects);
-                        } else {
-                            sqlQuery = queryAddObjects.get(0);
-                        }
-                        removed = proxy.removeMatchingMessages(sqlQuery);
-                        context.printInfo("Removed: " + removed
-                                + " messages for message selector " + sqlQuery.toString());
-
-                        if (resetStatistics) {
-                            proxy.resetStatistics();
-                        }
+                    if (resetStatistics) {
+                        proxy.resetStatistics();
                     }
                 }
             }
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute purge task. Reason: " + e));
-            throw new Exception(e);
         }
     }
 

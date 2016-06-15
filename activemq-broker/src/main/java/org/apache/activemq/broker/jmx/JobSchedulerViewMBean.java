@@ -29,23 +29,6 @@ public interface JobSchedulerViewMBean {
      *        the string formated time that should be used to remove jobs.
      *
      * @throws Exception if an error occurs while performing the remove.
-     *
-     * @deprecated use removeAllJobsAtScheduledTime instead as it is more explicit about what
-     *             the method is actually doing.
-     */
-    @Deprecated
-    @MBeanInfo("remove jobs with matching execution time")
-    public abstract void removeJobAtScheduledTime(@MBeanInfo("time: yyyy-MM-dd hh:mm:ss")String time) throws Exception;
-
-    /**
-     * Remove all jobs scheduled to run at this time.  If there are no jobs scheduled
-     * at the given time this methods returns without making any modifications to the
-     * scheduler store.
-     *
-     * @param time
-     *        the string formated time that should be used to remove jobs.
-     *
-     * @throws Exception if an error occurs while performing the remove.
      */
     @MBeanInfo("remove jobs with matching execution time")
     public abstract void removeAllJobsAtScheduledTime(@MBeanInfo("time: yyyy-MM-dd hh:mm:ss")String time) throws Exception;

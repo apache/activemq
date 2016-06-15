@@ -16,18 +16,21 @@
  */
 package org.apache.activemq.plugin;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.broker.region.virtual.*;
+import org.apache.activemq.broker.region.virtual.CompositeQueue;
+import org.apache.activemq.broker.region.virtual.CompositeTopic;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
+import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
+import org.apache.activemq.broker.region.virtual.VirtualTopic;
+import org.apache.activemq.schema.core.DtoCompositeQueue;
+import org.apache.activemq.schema.core.DtoCompositeTopic;
 import org.apache.activemq.schema.core.DtoVirtualDestinationInterceptor;
 import org.apache.activemq.schema.core.DtoVirtualTopic;
-import org.apache.activemq.schema.core.DtoCompositeTopic;
-import org.apache.activemq.schema.core.DtoCompositeQueue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class VirtualDestinationInterceptorProcessor extends DefaultConfigurationProcessor {
 
@@ -38,49 +41,23 @@ public class VirtualDestinationInterceptorProcessor extends DefaultConfiguration
     @Override
     public void addNew(Object o) {
         final DtoVirtualDestinationInterceptor dto = (DtoVirtualDestinationInterceptor) o;
-        plugin.addDestinationWork.add(new Runnable() {
-            public void run() {
 
-                boolean updatedExistingInterceptor = false;
-                RegionBroker regionBroker = (RegionBroker) plugin.getBrokerService().getRegionBroker();
+        plugin.addDestinationWork.add(new UpdateVirtualDestinationsTask(plugin) {
 
-                for (DestinationInterceptor destinationInterceptor : plugin.getBrokerService().getDestinationInterceptors()) {
-                    if (destinationInterceptor instanceof VirtualDestinationInterceptor) {
-                        // update existing interceptor
-                        final VirtualDestinationInterceptor virtualDestinationInterceptor =
-                                (VirtualDestinationInterceptor) destinationInterceptor;
-
-                        virtualDestinationInterceptor.setVirtualDestinations(fromDto(dto));
-                        plugin.info("applied updates to: " + virtualDestinationInterceptor);
-                        updatedExistingInterceptor = true;
-                    }
-                }
-
-                if (!updatedExistingInterceptor) {
-                    // add
-                    VirtualDestinationInterceptor virtualDestinationInterceptor =
-                            new VirtualDestinationInterceptor();
-                    virtualDestinationInterceptor.setVirtualDestinations(fromDto(dto));
-
-                    List<DestinationInterceptor> interceptorsList = new ArrayList<DestinationInterceptor>();
-                    interceptorsList.addAll(Arrays.asList(plugin.getBrokerService().getDestinationInterceptors()));
-                    interceptorsList.add(virtualDestinationInterceptor);
-
-                    DestinationInterceptor[] destinationInterceptors = interceptorsList.toArray(new DestinationInterceptor[]{});
-                    plugin.getBrokerService().setDestinationInterceptors(destinationInterceptors);
-
-                    ((CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor()).setInterceptors(destinationInterceptors);
-                    plugin.info("applied new: " + interceptorsList);
-                }
-                regionBroker.reapplyInterceptor();
+            @Override
+            protected VirtualDestination[] getVirtualDestinations() {
+                return fromDto(dto);
             }
+
         });
+
     }
 
     @Override
     public void remove(Object o) {
         // whack it
         plugin.addDestinationWork.add(new Runnable() {
+            @Override
             public void run() {
                 List<DestinationInterceptor> interceptorsList = new ArrayList<DestinationInterceptor>();
                 for (DestinationInterceptor candidate : plugin.getBrokerService().getDestinationInterceptors()) {
@@ -113,4 +90,6 @@ public class VirtualDestinationInterceptorProcessor extends DefaultConfiguration
         answer.toArray(array);
         return array;
     }
+
+
 }

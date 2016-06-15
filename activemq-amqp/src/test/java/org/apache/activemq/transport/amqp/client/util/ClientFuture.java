@@ -19,23 +19,24 @@ package org.apache.activemq.transport.amqp.client.util;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.activemq.util.IOExceptionSupport;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Asynchronous Client Future class.
  */
-public class ClientFuture extends WrappedAsyncResult {
+public class ClientFuture implements AsyncResult {
 
-    protected final CountDownLatch latch = new CountDownLatch(1);
-    protected Throwable error;
+    private final AtomicBoolean completer = new AtomicBoolean();
+    private final CountDownLatch latch = new CountDownLatch(1);
+    private final ClientFutureSynchronization synchronization;
+    private volatile Throwable error;
 
     public ClientFuture() {
-        super(null);
+        this(null);
     }
 
-    public ClientFuture(AsyncResult watcher) {
-        super(watcher);
+    public ClientFuture(ClientFutureSynchronization synchronization) {
+        this.synchronization = synchronization;
     }
 
     @Override
@@ -45,15 +46,23 @@ public class ClientFuture extends WrappedAsyncResult {
 
     @Override
     public void onFailure(Throwable result) {
-        error = result;
-        latch.countDown();
-        super.onFailure(result);
+        if (completer.compareAndSet(false, true)) {
+            error = result;
+            if (synchronization != null) {
+                synchronization.onPendingFailure(error);
+            }
+            latch.countDown();
+        }
     }
 
     @Override
     public void onSuccess() {
-        latch.countDown();
-        super.onSuccess();
+        if (completer.compareAndSet(false, true)) {
+            if (synchronization != null) {
+                synchronization.onPendingSuccess();
+            }
+            latch.countDown();
+        }
     }
 
     /**

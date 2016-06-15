@@ -83,7 +83,6 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     };
     final DelegateDestinationMap destinationMap = new DelegateDestinationMap();
 
-    BrokerService brokerService;
     List<PersistenceAdapter> adapters = new CopyOnWriteArrayList<PersistenceAdapter>();
     private File directory = new File(IOHelper.getDefaultDataDirectory() + File.separator + "mKahaDB");
 
@@ -470,17 +469,12 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
-        this.brokerService = brokerService;
+        super.setBrokerService(brokerService);
         for (PersistenceAdapter persistenceAdapter : adapters) {
             if( persistenceAdapter instanceof BrokerServiceAware ) {
                 ((BrokerServiceAware)persistenceAdapter).setBrokerService(getBrokerService());
             }
         }
-    }
-
-    @Override
-    public BrokerService getBrokerService() {
-        return brokerService;
     }
 
     public void setTransactionStore(MultiKahaDBTransactionStore transactionStore) {

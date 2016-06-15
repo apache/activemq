@@ -18,6 +18,7 @@ package org.apache.activemq.advisory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,6 +41,7 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.TopicSubscription;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -55,6 +57,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.SessionId;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
@@ -78,12 +81,30 @@ public class AdvisoryBroker extends BrokerFilter {
     private final ReentrantReadWriteLock consumersLock = new ReentrantReadWriteLock();
     protected final Map<ConsumerId, ConsumerInfo> consumers = new LinkedHashMap<ConsumerId, ConsumerInfo>();
 
+    /**
+     * This is a set to track all of the virtual destinations that have been added to the broker so
+     * they can be easily referenced later.
+     */
+    protected final Set<VirtualDestination> virtualDestinations = Collections.newSetFromMap(new ConcurrentHashMap<VirtualDestination, Boolean>());
+    /**
+     * This is a map to track all consumers that exist on the virtual destination so that we can fire
+     * an advisory later when they go away to remove the demand.
+     */
+    protected final ConcurrentMap<ConsumerInfo, VirtualDestination> virtualDestinationConsumers = new ConcurrentHashMap<>();
+    /**
+     * This is a map to track unique demand for the existence of a virtual destination so we make sure
+     * we don't send duplicate advisories.
+     */
+    protected final ConcurrentMap<VirtualConsumerPair, ConsumerInfo> brokerConsumerDests = new ConcurrentHashMap<>();
+
     protected final ConcurrentMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<ProducerId, ProducerInfo>();
     protected final ConcurrentMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<ActiveMQDestination, DestinationInfo>();
     protected final ConcurrentMap<BrokerInfo, ActiveMQMessage> networkBridges = new ConcurrentHashMap<BrokerInfo, ActiveMQMessage>();
     protected final ProducerId advisoryProducerId = new ProducerId();
 
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
+
+    private VirtualDestinationMatcher virtualDestinationMatcher = new DestinationFilterVirtualDestinationMatcher();
 
     public AdvisoryBroker(Broker next) {
         super(next);
@@ -112,6 +133,15 @@ public class AdvisoryBroker extends BrokerFilter {
             consumersLock.writeLock().lock();
             try {
                 consumers.put(info.getConsumerId(), info);
+
+                //check if this is a consumer on a destination that matches a virtual destination
+                if (getBrokerService().isUseVirtualDestSubs()) {
+                    for (VirtualDestination virtualDestination : virtualDestinations) {
+                        if (virtualDestinationMatcher.matches(virtualDestination, info.getDestination())) {
+                            fireVirtualDestinationAddAdvisory(context, info, info.getDestination(), virtualDestination);
+                        }
+                    }
+                }
             } finally {
                 consumersLock.writeLock().unlock();
             }
@@ -171,6 +201,15 @@ public class AdvisoryBroker extends BrokerFilter {
                 }
             }
 
+            // Replay the virtual destination consumers.
+            if (AdvisorySupport.isVirtualDestinationConsumerAdvisoryTopic(info.getDestination())) {
+                for (Iterator<ConsumerInfo> iter = virtualDestinationConsumers.keySet().iterator(); iter.hasNext(); ) {
+                    ConsumerInfo key = iter.next();
+                    ActiveMQTopic topic = AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(key.getDestination());
+                    fireConsumerAdvisory(context, key.getDestination(), topic, key);
+              }
+            }
+
             // Replay network bridges
             if (AdvisorySupport.isNetworkBridgeAdvisoryTopic(info.getDestination())) {
                 for (Iterator<BrokerInfo> iter = networkBridges.keySet().iterator(); iter.hasNext(); ) {
@@ -199,6 +238,16 @@ public class AdvisoryBroker extends BrokerFilter {
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean create) throws Exception {
         Destination answer = super.addDestination(context, destination, create);
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
+            //for queues, create demand if isUseVirtualDestSubsOnCreation is true
+            if (getBrokerService().isUseVirtualDestSubsOnCreation() && destination.isQueue()) {
+                //check if this new destination matches a virtual destination that exists
+                for (VirtualDestination virtualDestination : virtualDestinations) {
+                    if (virtualDestinationMatcher.matches(virtualDestination, destination)) {
+                        fireVirtualDestinationAddAdvisory(context, null, destination, virtualDestination);
+                    }
+                }
+            }
+
             DestinationInfo info = new DestinationInfo(context.getConnectionId(), DestinationInfo.ADD_OPERATION_TYPE, destination);
             DestinationInfo previous = destinations.putIfAbsent(destination, info);
             if (previous == null) {
@@ -228,6 +277,27 @@ public class AdvisoryBroker extends BrokerFilter {
         super.removeDestination(context, destination, timeout);
         DestinationInfo info = destinations.remove(destination);
         if (info != null) {
+
+            //on destination removal, remove all demand if using virtual dest subs
+            if (getBrokerService().isUseVirtualDestSubs()) {
+                for (ConsumerInfo consumerInfo : virtualDestinationConsumers.keySet()) {
+                    //find all consumers for this virtual destination
+                    VirtualDestination virtualDestination = virtualDestinationConsumers.get(consumerInfo);
+
+                    //find a consumer that matches this virtualDest and destination
+                    if (virtualDestinationMatcher.matches(virtualDestination, destination)) {
+                        //in case of multiple matches
+                        VirtualConsumerPair key = new VirtualConsumerPair(virtualDestination, destination);
+                        ConsumerInfo i = brokerConsumerDests.get(key);
+                        if (consumerInfo.equals(i) && brokerConsumerDests.remove(key) != null) {
+                            LOG.debug("Virtual consumer pair removed: {} for consumer: {} ", key, i);
+                            fireVirtualDestinationRemoveAdvisory(context, consumerInfo);
+                            break;
+                        }
+                    }
+                }
+            }
+
             // ensure we don't modify (and loose/overwrite) an in-flight add advisory, so duplicate
             info = info.copy();
             info.setDestination(destination);
@@ -285,6 +355,11 @@ public class AdvisoryBroker extends BrokerFilter {
             consumersLock.writeLock().lock();
             try {
                 consumers.remove(info.getConsumerId());
+
+                //remove the demand for this consumer if it matches a virtual destination
+                if(getBrokerService().isUseVirtualDestSubs()) {
+                    fireVirtualDestinationRemoveAdvisory(context, info);
+                }
             } finally {
                 consumersLock.writeLock().unlock();
             }
@@ -350,9 +425,10 @@ public class AdvisoryBroker extends BrokerFilter {
         super.messageExpired(context, messageReference, subscription);
         try {
             if (!messageReference.isAdvisory()) {
-                ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(messageReference.getMessage().getDestination());
+                BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
+                ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
-                if (!isIncludeBodyForAdvisory(messageReference.getMessage().getDestination())) {
+                if (!baseDestination.isIncludeBodyForAdvisory()) {
                     payload.clearBody();
                 }
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
@@ -369,17 +445,15 @@ public class AdvisoryBroker extends BrokerFilter {
         super.messageConsumed(context, messageReference);
         try {
             if (!messageReference.isAdvisory()) {
-                ActiveMQTopic topic = AdvisorySupport.getMessageConsumedAdvisoryTopic(messageReference.getMessage().getDestination());
+                BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
+                ActiveMQTopic topic = AdvisorySupport.getMessageConsumedAdvisoryTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
-                if (!isIncludeBodyForAdvisory(messageReference.getMessage().getDestination())) {
+                if (!baseDestination.isIncludeBodyForAdvisory()) {
                     payload.clearBody();
                 }
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
-                ActiveMQDestination destination = payload.getDestination();
-                if (destination != null) {
-                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, destination.getQualifiedName());
-                }
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, baseDestination.getActiveMQDestination().getQualifiedName());
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
@@ -392,17 +466,15 @@ public class AdvisoryBroker extends BrokerFilter {
         super.messageDelivered(context, messageReference);
         try {
             if (!messageReference.isAdvisory()) {
-                ActiveMQTopic topic = AdvisorySupport.getMessageDeliveredAdvisoryTopic(messageReference.getMessage().getDestination());
+                BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
+                ActiveMQTopic topic = AdvisorySupport.getMessageDeliveredAdvisoryTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
-                if (!isIncludeBodyForAdvisory(messageReference.getMessage().getDestination())) {
+                if (!baseDestination.isIncludeBodyForAdvisory()) {
                     payload.clearBody();
                 }
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
-                ActiveMQDestination destination = payload.getDestination();
-                if (destination != null) {
-                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, destination.getQualifiedName());
-                }
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, baseDestination.getActiveMQDestination().getQualifiedName());
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
@@ -415,9 +487,10 @@ public class AdvisoryBroker extends BrokerFilter {
         super.messageDiscarded(context, sub, messageReference);
         try {
             if (!messageReference.isAdvisory()) {
-                ActiveMQTopic topic = AdvisorySupport.getMessageDiscardedAdvisoryTopic(messageReference.getMessage().getDestination());
+                BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
+                ActiveMQTopic topic = AdvisorySupport.getMessageDiscardedAdvisoryTopic(baseDestination.getActiveMQDestination());
                 Message payload = messageReference.getMessage().copy();
-                if (!isIncludeBodyForAdvisory(messageReference.getMessage().getDestination())) {
+                if (!baseDestination.isIncludeBodyForAdvisory()) {
                     payload.clearBody();
                 }
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
@@ -426,10 +499,8 @@ public class AdvisoryBroker extends BrokerFilter {
                 }
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, sub.getConsumerInfo().getConsumerId().toString());
-                ActiveMQDestination destination = payload.getDestination();
-                if (destination != null) {
-                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, destination.getQualifiedName());
-                }
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, baseDestination.getActiveMQDestination().getQualifiedName());
+
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
@@ -467,6 +538,150 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
+    private final IdGenerator connectionIdGenerator = new IdGenerator("advisory");
+    private final LongSequenceGenerator sessionIdGenerator = new LongSequenceGenerator();
+    private final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
+
+    @Override
+    public void virtualDestinationAdded(ConnectionContext context,
+            VirtualDestination virtualDestination) {
+        super.virtualDestinationAdded(context, virtualDestination);
+
+        if (virtualDestinations.add(virtualDestination)) {
+            LOG.debug("Virtual destination added: {}", virtualDestination);
+            try {
+                // Don't advise advisory topics.
+                if (!AdvisorySupport.isAdvisoryTopic(virtualDestination.getVirtualDestination())) {
+
+                    //create demand for consumers on virtual destinations
+                    consumersLock.readLock().lock();
+                    try {
+                        //loop through existing destinations to see if any match this newly
+                        //created virtual destination
+                        if (getBrokerService().isUseVirtualDestSubsOnCreation()) {
+                            //for matches that are a queue, fire an advisory for demand
+                            for (ActiveMQDestination destination : destinations.keySet()) {
+                                if(destination.isQueue()) {
+                                    if (virtualDestinationMatcher.matches(virtualDestination, destination)) {
+                                        fireVirtualDestinationAddAdvisory(context, null, destination, virtualDestination);
+                                    }
+                                }
+                            }
+                        }
+
+                        //loop through existing consumers to see if any of them are consuming on a destination
+                        //that matches the new virtual destination
+                        for (Iterator<ConsumerInfo> iter = consumers.values().iterator(); iter.hasNext(); ) {
+                            ConsumerInfo info = iter.next();
+                            if (virtualDestinationMatcher.matches(virtualDestination, info.getDestination())) {
+                                fireVirtualDestinationAddAdvisory(context, info, info.getDestination(), virtualDestination);
+                            }
+                        }
+                    } finally {
+                        consumersLock.readLock().unlock();
+                    }
+                }
+            } catch (Exception e) {
+                handleFireFailure("virtualDestinationAdded", e);
+            }
+        }
+    }
+
+    private void fireVirtualDestinationAddAdvisory(ConnectionContext context, ConsumerInfo info, ActiveMQDestination activeMQDest,
+            VirtualDestination virtualDestination) throws Exception {
+        //if no consumer info, we need to create one - this is the case when an advisory is fired
+        //because of the existence of a destination matching a virtual destination
+        if (info == null) {
+
+            //store the virtual destination and the activeMQDestination as a pair so that we can keep track
+            //of all matching forwarded destinations that caused demand
+            VirtualConsumerPair pair = new VirtualConsumerPair(virtualDestination, activeMQDest);
+            if (brokerConsumerDests.get(pair) == null) {
+                ConnectionId connectionId = new ConnectionId(connectionIdGenerator.generateId());
+                SessionId sessionId = new SessionId(connectionId, sessionIdGenerator.getNextSequenceId());
+                ConsumerId consumerId = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
+                info = new ConsumerInfo(consumerId);
+
+                if(brokerConsumerDests.putIfAbsent(pair, info) == null) {
+                    LOG.debug("Virtual consumer pair added: {} for consumer: {} ", pair, info);
+                    info.setDestination(virtualDestination.getVirtualDestination());
+                    ActiveMQTopic topic = AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(info.getDestination());
+
+                    if (virtualDestinationConsumers.putIfAbsent(info, virtualDestination) == null) {
+                        LOG.debug("Virtual consumer added: {}, for virtual destination: {}", info, virtualDestination);
+                        fireConsumerAdvisory(context, info.getDestination(), topic, info);
+                    }
+                }
+            }
+        //this is the case of a real consumer coming online
+        } else {
+            info = info.copy();
+            info.setDestination(virtualDestination.getVirtualDestination());
+            ActiveMQTopic topic = AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(info.getDestination());
+
+            if (virtualDestinationConsumers.putIfAbsent(info, virtualDestination) == null) {
+                LOG.debug("Virtual consumer added: {}, for virtual destination: {}", info, virtualDestination);
+                fireConsumerAdvisory(context, info.getDestination(), topic, info);
+            }
+        }
+    }
+
+    @Override
+    public void virtualDestinationRemoved(ConnectionContext context,
+            VirtualDestination virtualDestination) {
+        super.virtualDestinationRemoved(context, virtualDestination);
+
+        if (virtualDestinations.remove(virtualDestination)) {
+            LOG.debug("Virtual destination removed: {}", virtualDestination);
+            try {
+                consumersLock.readLock().lock();
+                try {
+                    // remove the demand created by the addition of the virtual destination
+                    if (getBrokerService().isUseVirtualDestSubsOnCreation()) {
+                        if (!AdvisorySupport.isAdvisoryTopic(virtualDestination.getVirtualDestination())) {
+                            for (ConsumerInfo info : virtualDestinationConsumers.keySet()) {
+                                //find all consumers for this virtual destination
+                                if (virtualDestinationConsumers.get(info).equals(virtualDestination)) {
+                                    fireVirtualDestinationRemoveAdvisory(context, info);
+
+                                    //check consumers created for the existence of a destination to see if they
+                                    //match the consumerinfo and clean up
+                                    for (VirtualConsumerPair activeMQDest : brokerConsumerDests.keySet()) {
+                                        ConsumerInfo i = brokerConsumerDests.get(activeMQDest);
+                                        if (info.equals(i) && brokerConsumerDests.remove(activeMQDest) != null) {
+                                            LOG.debug("Virtual consumer pair removed: {} for consumer: {} ", activeMQDest, i);
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                } finally {
+                    consumersLock.readLock().unlock();
+                }
+            } catch (Exception e) {
+                handleFireFailure("virtualDestinationAdded", e);
+            }
+        }
+    }
+
+    private void fireVirtualDestinationRemoveAdvisory(ConnectionContext context,
+            ConsumerInfo info) throws Exception {
+
+        VirtualDestination virtualDestination = virtualDestinationConsumers.remove(info);
+        if (virtualDestination != null) {
+            LOG.debug("Virtual consumer removed: {}, for virtual destination: {}", info, virtualDestination);
+            ActiveMQTopic topic = AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(virtualDestination.getVirtualDestination());
+
+            ActiveMQDestination dest = info.getDestination();
+
+            if (!dest.isTemporary() || destinations.containsKey(dest)) {
+                fireConsumerAdvisory(context, dest, topic, info.createRemoveCommand());
+            }
+        }
+    }
+
     @Override
     public void isFull(ConnectionContext context, Destination destination, Usage usage) {
         super.isFull(context, destination, usage);
@@ -476,6 +691,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 ActiveMQTopic topic = AdvisorySupport.getFullAdvisoryTopic(destination.getActiveMQDestination());
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME, usage.getName());
+                advisoryMessage.setLongProperty(AdvisorySupport.MSG_PROPERTY_USAGE_COUNT, usage.getUsage());
                 fireAdvisory(context, topic, null, null, advisoryMessage);
 
             } catch (Exception e) {
@@ -506,9 +722,10 @@ public class AdvisoryBroker extends BrokerFilter {
         if (wasDLQd) {
             try {
                 if (!messageReference.isAdvisory()) {
-                    ActiveMQTopic topic = AdvisorySupport.getMessageDLQdAdvisoryTopic(messageReference.getMessage().getDestination());
+                    BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
+                    ActiveMQTopic topic = AdvisorySupport.getMessageDLQdAdvisoryTopic(baseDestination.getActiveMQDestination());
                     Message payload = messageReference.getMessage().copy();
-                    if (!isIncludeBodyForAdvisory(messageReference.getMessage().getDestination())) {
+                    if (!baseDestination.isIncludeBodyForAdvisory()) {
                         payload.clearBody();
                     }
                     fireAdvisory(context, topic, payload);
@@ -563,15 +780,9 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
-    protected boolean isIncludeBodyForAdvisory(ActiveMQDestination activemqDestination) {
-        Destination destination = next.getDestinationMap(activemqDestination).get(activemqDestination);
-        return (destination instanceof BaseDestination &&
-                ((BaseDestination) destination).isIncludeBodyForAdvisory()) ? true : false;
-    }
-
     private void handleFireFailure(String message, Throwable cause) {
         LOG.warn("Failed to fire {} advisory, reason: {}", message, cause);
-        LOG.debug("{} detail: {}", message, cause);
+        LOG.debug("{} detail: {}", message, cause, cause);
     }
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
@@ -680,5 +891,71 @@ public class AdvisoryBroker extends BrokerFilter {
 
     public Map<ActiveMQDestination, DestinationInfo> getAdvisoryDestinations() {
         return destinations;
+    }
+
+    private class VirtualConsumerPair {
+        private final VirtualDestination virtualDestination;
+
+        //destination that matches this virtualDestination as part target
+        //this is so we can keep track of more than one destination that might
+        //match the virtualDestination and cause demand
+        private final ActiveMQDestination activeMQDestination;
+
+        public VirtualConsumerPair(VirtualDestination virtualDestination,
+                ActiveMQDestination activeMQDestination) {
+            super();
+            this.virtualDestination = virtualDestination;
+            this.activeMQDestination = activeMQDestination;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime
+                    * result
+                    + ((activeMQDestination == null) ? 0 : activeMQDestination
+                            .hashCode());
+            result = prime
+                    * result
+                    + ((virtualDestination == null) ? 0 : virtualDestination
+                            .hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            VirtualConsumerPair other = (VirtualConsumerPair) obj;
+            if (!getOuterType().equals(other.getOuterType()))
+                return false;
+            if (activeMQDestination == null) {
+                if (other.activeMQDestination != null)
+                    return false;
+            } else if (!activeMQDestination.equals(other.activeMQDestination))
+                return false;
+            if (virtualDestination == null) {
+                if (other.virtualDestination != null)
+                    return false;
+            } else if (!virtualDestination.equals(other.virtualDestination))
+                return false;
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "VirtualConsumerPair [virtualDestination=" + virtualDestination + ", activeMQDestination="
+                    + activeMQDestination + "]";
+        }
+
+        private AdvisoryBroker getOuterType() {
+            return AdvisoryBroker.this;
+        }
     }
 }

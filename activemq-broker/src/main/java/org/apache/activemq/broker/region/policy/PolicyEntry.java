@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import java.util.Set;
+
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.BaseDestination;
@@ -135,18 +137,48 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void update(Queue queue) {
-        baseUpdate(queue);
-        if (memoryLimit > 0) {
+        update(queue, null);
+    }
+
+    /**
+     * Update a queue with this policy.  Only apply properties that
+     * match the includedProperties list.  Not all properties are eligible
+     * to be updated.
+     *
+     * If includedProperties is null then all of the properties will be set as
+     * isUpdate will return true
+     * @param baseDestination
+     * @param includedProperties
+     */
+    public void update(Queue queue, Set<String> includedProperties) {
+        baseUpdate(queue, includedProperties);
+        if (isUpdate("memoryLimit", includedProperties) && memoryLimit > 0) {
             queue.getMemoryUsage().setLimit(memoryLimit);
         }
-        queue.setUseConsumerPriority(isUseConsumerPriority());
-        queue.setStrictOrderDispatch(isStrictOrderDispatch());
-        queue.setOptimizedDispatch(isOptimizedDispatch());
-        queue.setLazyDispatch(isLazyDispatch());
-        queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
-        queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
-        queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
-        queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
+        if (isUpdate("useConsumerPriority", includedProperties)) {
+            queue.setUseConsumerPriority(isUseConsumerPriority());
+        }
+        if (isUpdate("strictOrderDispatch", includedProperties)) {
+            queue.setStrictOrderDispatch(isStrictOrderDispatch());
+        }
+        if (isUpdate("optimizedDispatch", includedProperties)) {
+            queue.setOptimizedDispatch(isOptimizedDispatch());
+        }
+        if (isUpdate("lazyDispatch", includedProperties)) {
+            queue.setLazyDispatch(isLazyDispatch());
+        }
+        if (isUpdate("timeBeforeDispatchStarts", includedProperties)) {
+            queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
+        }
+        if (isUpdate("consumersBeforeDispatchStarts", includedProperties)) {
+            queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
+        }
+        if (isUpdate("allConsumersExclusiveByDefault", includedProperties)) {
+            queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
+        }
+        if (isUpdate("persistJMSRedelivered", includedProperties)) {
+            queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
+        }
     }
 
     public void configure(Broker broker,Topic topic) {
@@ -167,42 +199,100 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void update(Topic topic) {
-        baseUpdate(topic);
-        if (memoryLimit > 0) {
+        update(topic, null);
+    }
+
+    //If includedProperties is null then all of the properties will be set as
+    //isUpdate will return true
+    public void update(Topic topic, Set<String> includedProperties) {
+        baseUpdate(topic, includedProperties);
+        if (isUpdate("memoryLimit", includedProperties) && memoryLimit > 0) {
             topic.getMemoryUsage().setLimit(memoryLimit);
         }
-        topic.setLazyDispatch(isLazyDispatch());
+        if (isUpdate("lazyDispatch", includedProperties)) {
+            topic.setLazyDispatch(isLazyDispatch());
+        }
     }
 
     // attributes that can change on the fly
     public void baseUpdate(BaseDestination destination) {
-        destination.setProducerFlowControl(isProducerFlowControl());
-        destination.setAlwaysRetroactive(isAlwaysRetroactive());
-        destination.setBlockedProducerWarningInterval(getBlockedProducerWarningInterval());
+        baseUpdate(destination, null);
+    }
 
-        destination.setMaxPageSize(getMaxPageSize());
-        destination.setMaxBrowsePageSize(getMaxBrowsePageSize());
+    // attributes that can change on the fly
+    //If includedProperties is null then all of the properties will be set as
+    //isUpdate will return true
+    public void baseUpdate(BaseDestination destination, Set<String> includedProperties) {
+        if (isUpdate("producerFlowControl", includedProperties)) {
+            destination.setProducerFlowControl(isProducerFlowControl());
+        }
+        if (isUpdate("alwaysRetroactive", includedProperties)) {
+            destination.setAlwaysRetroactive(isAlwaysRetroactive());
+        }
+        if (isUpdate("blockedProducerWarningInterval", includedProperties)) {
+            destination.setBlockedProducerWarningInterval(getBlockedProducerWarningInterval());
+        }
+        if (isUpdate("maxPageSize", includedProperties)) {
+            destination.setMaxPageSize(getMaxPageSize());
+        }
+        if (isUpdate("maxBrowsePageSize", includedProperties)) {
+            destination.setMaxBrowsePageSize(getMaxBrowsePageSize());
+        }
 
-        destination.setMinimumMessageSize((int) getMinimumMessageSize());
-        destination.setMaxExpirePageSize(getMaxExpirePageSize());
-        destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
-        destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
-
-        destination.setGcIfInactive(isGcInactiveDestinations());
-        destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
-        destination.setInactiveTimeoutBeforeGC(getInactiveTimeoutBeforeGC());
-        destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
-        destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
-        destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
-
-        destination.setAdvisoryForConsumed(isAdvisoryForConsumed());
-        destination.setAdvisoryForDelivery(isAdvisoryForDelivery());
-        destination.setAdvisoryForDiscardingMessages(isAdvisoryForDiscardingMessages());
-        destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
-        destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
-        destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
-        destination.setIncludeBodyForAdvisory(isIncludeBodyForAdvisory());
-        destination.setSendAdvisoryIfNoConsumers(isSendAdvisoryIfNoConsumers());
+        if (isUpdate("minimumMessageSize", includedProperties)) {
+            destination.setMinimumMessageSize((int) getMinimumMessageSize());
+        }
+        if (isUpdate("maxExpirePageSize", includedProperties)) {
+            destination.setMaxExpirePageSize(getMaxExpirePageSize());
+        }
+        if (isUpdate("cursorMemoryHighWaterMark", includedProperties)) {
+            destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+        }
+        if (isUpdate("storeUsageHighWaterMark", includedProperties)) {
+            destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
+        }
+        if (isUpdate("gcInactiveDestinations", includedProperties)) {
+            destination.setGcIfInactive(isGcInactiveDestinations());
+        }
+        if (isUpdate("gcWithNetworkConsumers", includedProperties)) {
+            destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
+        }
+        if (isUpdate("inactiveTimeoutBeforeGc", includedProperties)) {
+            destination.setInactiveTimeoutBeforeGC(getInactiveTimeoutBeforeGC());
+        }
+        if (isUpdate("reduceMemoryFootprint", includedProperties)) {
+            destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
+        }
+        if (isUpdate("doOptimizeMessageStore", includedProperties)) {
+            destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
+        }
+        if (isUpdate("optimizeMessageStoreInFlightLimit", includedProperties)) {
+            destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
+        }
+        if (isUpdate("advisoryForConsumed", includedProperties)) {
+            destination.setAdvisoryForConsumed(isAdvisoryForConsumed());
+        }
+        if (isUpdate("advisoryForDelivery", includedProperties)) {
+            destination.setAdvisoryForDelivery(isAdvisoryForDelivery());
+        }
+        if (isUpdate("advisoryForDiscardingMessages", includedProperties)) {
+            destination.setAdvisoryForDiscardingMessages(isAdvisoryForDiscardingMessages());
+        }
+        if (isUpdate("advisoryForSlowConsumers", includedProperties)) {
+            destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
+        }
+        if (isUpdate("advisoryForFastProducers", includedProperties)) {
+            destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
+        }
+        if (isUpdate("advisoryWhenFull", includedProperties)) {
+            destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
+        }
+        if (isUpdate("includeBodyForAdvisory", includedProperties)) {
+            destination.setIncludeBodyForAdvisory(isIncludeBodyForAdvisory());
+        }
+        if (isUpdate("sendAdvisoryIfNoConsumers", includedProperties)) {
+            destination.setSendAdvisoryIfNoConsumers(isSendAdvisoryIfNoConsumers());
+        }
     }
 
     public void baseConfiguration(Broker broker, BaseDestination destination) {
@@ -223,6 +313,7 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
         configurePrefetch(subscription);
+        subscription.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         if (pendingMessageLimitStrategy != null) {
             int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);
             int consumerLimit = subscription.getInfo().getMaximumPendingMessageLimit();
@@ -321,6 +412,9 @@ public class PolicyEntry extends DestinationMapEntry {
         }
     }
 
+    private boolean isUpdate(String property, Set<String> includedProperties) {
+        return includedProperties == null || includedProperties.contains(property);
+    }
     // Properties
     // -------------------------------------------------------------------------
     public DispatchPolicy getDispatchPolicy() {

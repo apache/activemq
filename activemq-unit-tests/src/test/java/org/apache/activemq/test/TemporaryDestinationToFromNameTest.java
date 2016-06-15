@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -21,13 +21,9 @@ import javax.jms.Session;
 import javax.jms.Topic;
 
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
-import org.apache.activemq.broker.jmx.PurgeTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 
- */
 public class TemporaryDestinationToFromNameTest extends EmbeddedBrokerAndConnectionTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(TemporaryDestinationToFromNameTest.class);

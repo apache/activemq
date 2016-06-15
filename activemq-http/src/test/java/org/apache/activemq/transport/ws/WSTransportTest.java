@@ -74,9 +74,6 @@ public class WSTransportTest extends WSTransportTestSupport {
         Server server = new Server();
 
         Connector connector = createJettyConnector(server);
-        if (Server.getVersion().startsWith("8")) {
-            connector.setServer(server);
-        }
 
         WebAppContext context = new WebAppContext();
         context.setResourceBase("src/test/webapp");

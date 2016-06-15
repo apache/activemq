@@ -27,13 +27,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JmsTopicSendReceiveTest.class);
 
     protected Connection connection;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -76,21 +77,16 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
         connection.start();
     }
 
+    @Override
     protected void tearDown() throws Exception {
-        LOG.info("Dumping stats...");
-        // TODO
-        // connectionFactory.getFactoryStats().dump(new IndentPrinter());
-
         LOG.info("Closing down connection");
-
-        /** TODO we should be able to shut down properly */
         session.close();
         connection.close();
     }
 
     /**
      * Creates a session.
-     * 
+     *
      * @return session
      * @throws JMSException
      */
@@ -103,9 +99,9 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
     }
 
     /**
-     * Creates a durable suscriber or a consumer.
-     * 
-     * @return MessageConsumer - durable suscriber or consumer.
+     * Creates a durable subscriber or a consumer.
+     *
+     * @return MessageConsumer - durable subscriber or consumer.
      * @throws JMSException
      */
     protected MessageConsumer createConsumer() throws JMSException {

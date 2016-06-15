@@ -114,6 +114,8 @@ public class JournalCorruptionIndexRecoveryTest {
 
         adapter.setCheckForCorruptJournalFiles(true);
         adapter.setIgnoreMissingJournalfiles(true);
+
+        adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC.name());
     }
 
     @After

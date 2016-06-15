@@ -47,7 +47,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
     private CallbackHandler callbackHandler;
 
     private Properties users;
-    private Properties groups;
+    private Map<String,Set<String>> groups;
     private String user;
     private final Set<Principal> principals = new HashSet<Principal>();
     private boolean loginSucceeded;
@@ -59,7 +59,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         loginSucceeded = false;
         init(options);
         users = load(USER_FILE_PROP_NAME, "user", options).getProps();
-        groups = load(GROUP_FILE_PROP_NAME, "group", options).getProps();
+        groups = load(GROUP_FILE_PROP_NAME, "group", options).invertedPropertiesValuesMap();
     }
 
     @Override
@@ -105,14 +105,10 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         if (result) {
             principals.add(new UserPrincipal(user));
 
-            for (Map.Entry<Object, Object> entry : groups.entrySet()) {
-                String name = (String) entry.getKey();
-                String[] userList = ((String)entry.getValue()).split(",");
-                for (int i = 0; i < userList.length; i++) {
-                    if (user.equals(userList[i])) {
-                        principals.add(new GroupPrincipal(name));
-                        break;
-                    }
+            Set<String> matchedGroups = groups.get(user);
+            if (matchedGroups != null) {
+                for (String entry : matchedGroups) {
+                    principals.add(new GroupPrincipal(entry));
                 }
             }
 

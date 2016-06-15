@@ -63,6 +63,12 @@ public class AmqpNioTransport extends TcpTransport {
         frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
 
+    public AmqpNioTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
+        super(wireFormat, socket, initBuffer);
+
+        frameReader.setWireFormat((AmqpWireFormat) wireFormat);
+    }
+
     @Override
     protected void initializeStreams() throws IOException {
         channel = socket.getChannel();
@@ -91,6 +97,17 @@ public class AmqpNioTransport extends TcpTransport {
         NIOOutputStream outPutStream = new NIOOutputStream(channel, 8 * 1024);
         this.dataOut = new DataOutputStream(outPutStream);
         this.buffOut = outPutStream;
+
+        try {
+            if (initBuffer != null) {
+                processBuffer(initBuffer.buffer, initBuffer.readSize);
+            }
+        } catch (IOException e) {
+            onException(e);
+        } catch (Throwable e) {
+            onException(IOExceptionSupport.create(e));
+        }
+
     }
 
     boolean magicRead = false;
@@ -101,6 +118,7 @@ public class AmqpNioTransport extends TcpTransport {
             while (isStarted()) {
                 // read channel
                 int readSize = channel.read(inputBuffer);
+
                 // channel is closed, cleanup
                 if (readSize == -1) {
                     onException(new EOFException());
@@ -112,17 +130,21 @@ public class AmqpNioTransport extends TcpTransport {
                     break;
                 }
 
-                receiveCounter += readSize;
-
-                inputBuffer.flip();
-                frameReader.parse(inputBuffer);
-                inputBuffer.clear();
+                processBuffer(inputBuffer, readSize);
             }
         } catch (IOException e) {
             onException(e);
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
         }
+    }
+
+    protected void processBuffer(ByteBuffer buffer, int readSize) throws Exception {
+        receiveCounter += readSize;
+
+        buffer.flip();
+        frameReader.parse(buffer);
+        buffer.clear();
     }
 
     @Override

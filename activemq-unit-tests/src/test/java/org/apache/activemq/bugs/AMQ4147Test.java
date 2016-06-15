@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.bugs;
 
 import java.net.URI;
@@ -37,6 +36,7 @@ import org.apache.activemq.util.Wait;
  * manipulated by the remote broker.
  */
 public class AMQ4147Test extends JmsMultipleBrokersTestSupport {
+
     /**
      * This test demonstrates the bug: namely, when a message is bridged over
      * the VMTransport, its memory usage continues to refer to the originating
@@ -46,10 +46,10 @@ public class AMQ4147Test extends JmsMultipleBrokersTestSupport {
      */
     public void testVMTransportRemoteMemoryUsage() throws Exception {
         BrokerService broker1 = createBroker(new URI(
-                "broker:(vm://broker1)/broker1?persistent=false"));
+                "broker:(vm://broker1)/broker1?persistent=false&useJmx=false"));
 
         BrokerService broker2 = createBroker(new URI(
-                "broker:(vm://broker2)/broker2?persistent=false"));
+                "broker:(vm://broker2)/broker2?persistent=false&useJmx=false"));
 
         startAllBrokers();
 
@@ -106,8 +106,7 @@ public class AMQ4147Test extends JmsMultipleBrokersTestSupport {
             }));
             assertTrue(broker2TestQueue.getMemoryUsage().getUsage() > 0);
         } finally {
-            // Consume the message and verify that there is no more memory
-            // usage.
+            // Consume the message and verify that there is no more memory usage.
             consumerProceed.release();
         }
 
@@ -131,10 +130,10 @@ public class AMQ4147Test extends JmsMultipleBrokersTestSupport {
      */
     public void testTcpTransportRemoteMemoryUsage() throws Exception {
         BrokerService broker1 = createBroker(new URI(
-                "broker:(vm://broker1)/broker1?persistent=false"));
+                "broker:(vm://broker1)/broker1?persistent=false&useJmx=false"));
 
         BrokerService broker2 = createBroker(new URI(
-                "broker:(tcp://localhost:61616)/broker2?persistent=false"));
+                "broker:(tcp://localhost:0)/broker2?persistent=false&useJmx=false"));
 
         startAllBrokers();
 
@@ -189,8 +188,7 @@ public class AMQ4147Test extends JmsMultipleBrokersTestSupport {
             }));
             assertTrue(broker2TestQueue.getMemoryUsage().getUsage() > 0);
         } finally {
-            // Consume the message and verify that there is no more memory
-            // usage.
+            // Consume the message and verify that there is no more memory usage.
             consumerProceed.release();
         }
 

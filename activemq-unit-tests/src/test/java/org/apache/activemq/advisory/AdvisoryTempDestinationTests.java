@@ -35,7 +35,6 @@ import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.Topic;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
@@ -54,7 +53,7 @@ public class AdvisoryTempDestinationTests {
 
     protected BrokerService broker;
     protected Connection connection;
-    protected String bindAddress = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
+    protected String connectionURI;
     protected int topicCount;
 
     @Test(timeout = 60000)
@@ -174,9 +173,8 @@ public class AdvisoryTempDestinationTests {
 
     @Before
     public void setUp() throws Exception {
-        if (broker == null) {
-            broker = createBroker();
-        }
+        broker = createBroker();
+        connectionURI = broker.getTransportConnectors().get(0).getPublishableConnectString();
         ConnectionFactory factory = createConnectionFactory();
         connection = factory.createConnection();
         connection.start();
@@ -191,7 +189,7 @@ public class AdvisoryTempDestinationTests {
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectionURI);
         return cf;
     }
 
@@ -218,7 +216,7 @@ public class AdvisoryTempDestinationTests {
         pMap.setPolicyEntries(policyEntries);
 
         answer.setDestinationPolicy(pMap);
-        answer.addConnector(bindAddress);
+        answer.addConnector("tcp://0.0.0.0:0");
         answer.setDeleteAllMessagesOnStartup(true);
     }
 

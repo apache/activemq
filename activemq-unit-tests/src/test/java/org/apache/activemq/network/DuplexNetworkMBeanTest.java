@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.util.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +46,7 @@ public class DuplexNetworkMBeanTest {
 
     private int primaryBrokerPort;
     private int secondaryBrokerPort;
+    private MBeanServer mBeanServer = new ManagementContext().getMBeanServer();
 
     @Before
     public void setUp() throws Exception {
@@ -228,7 +230,7 @@ public class DuplexNetworkMBeanTest {
             }
 
             LOG.info("Query name: " + beanName);
-            mbeans = broker.getManagementContext().queryNames(beanName, null);
+            mbeans = mBeanServer.queryNames(beanName, null);
             if (mbeans != null) {
                 count = mbeans.size();
             } else {
@@ -248,7 +250,7 @@ public class DuplexNetworkMBeanTest {
     private void logAllMbeans(BrokerService broker) throws MalformedURLException {
         try {
             // trace all existing MBeans
-            Set<?> all = broker.getManagementContext().queryNames(null, null);
+            Set<?> all = mBeanServer.queryNames(null, null);
             LOG.info("Total MBean count=" + all.size());
             for (Object o : all) {
                 ObjectInstance bean = (ObjectInstance)o;

@@ -29,4 +29,8 @@ public class WSSTransportServer extends WSTransportServer {
         this.socketConnectorFactory = new SecureSocketConnectorFactory(context);
     }
 
+    @Override
+    public boolean isSslServer() {
+        return true;
+    }
 }

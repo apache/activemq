@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.util.List;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
@@ -157,6 +158,23 @@ public abstract class AbstractCommand implements Command {
                     reader.close();
                 } catch (IOException e) {}
             }
+        }
+    }
+
+    protected void handleException(Exception exception, String serviceUrl) throws Exception {
+        Throwable cause = exception.getCause();
+        while (true) {
+            Throwable next = cause.getCause();
+            if (next == null) {
+                break;
+            }
+            cause = next;
+        }
+        if (cause instanceof ConnectException) {
+            context.printInfo("Broker not available at: " + serviceUrl);
+        } else {
+            context.printInfo("Failed to execute " + getName() + " task.");
+            throw exception;
         }
     }
 }

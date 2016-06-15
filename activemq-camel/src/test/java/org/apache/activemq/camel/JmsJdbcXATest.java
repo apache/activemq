@@ -25,6 +25,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import javax.sql.DataSource;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerPluginSupport;
@@ -34,8 +35,6 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.util.Wait;
 import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.apache.commons.dbcp2.BasicDataSource;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +75,7 @@ public class JmsJdbcXATest extends CamelSpringTestSupport {
     }
 
     private java.sql.Connection getJDBCConnection() throws Exception {
-        BasicDataSource dataSource = getMandatoryBean(BasicDataSource.class, "managedDataSourceWithRecovery");
+        DataSource dataSource = getMandatoryBean(DataSource.class, "managedDataSourceWithRecovery");
         return dataSource.getConnection();
     }
 

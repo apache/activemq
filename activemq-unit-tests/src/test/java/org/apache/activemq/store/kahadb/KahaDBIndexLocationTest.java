@@ -32,6 +32,7 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -94,6 +95,7 @@ public class KahaDBIndexLocationTest {
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
         persistenceAdapter.setDirectory(kahaDataDir);
         persistenceAdapter.setIndexDirectory(kahaIndexDir);
+        persistenceAdapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
 
         broker.setDataDirectoryFile(testDataDir);
         broker.setUseJmx(false);

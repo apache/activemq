@@ -142,7 +142,7 @@ public abstract class AmqpAbstractLink<LINK_TYPE extends Link> implements AmqpLi
     }
 
     /**
-     * Shorcut method to hand off an ActiveMQ Command to the broker and assign
+     * Shortcut method to hand off an ActiveMQ Command to the broker and assign
      * a ResponseHandler to deal with any reply from the broker.
      *
      * @param command
@@ -153,7 +153,7 @@ public abstract class AmqpAbstractLink<LINK_TYPE extends Link> implements AmqpLi
     }
 
     /**
-     * Shorcut method to hand off an ActiveMQ Command to the broker and assign
+     * Shortcut method to hand off an ActiveMQ Command to the broker and assign
      * a ResponseHandler to deal with any reply from the broker.
      *
      * @param command

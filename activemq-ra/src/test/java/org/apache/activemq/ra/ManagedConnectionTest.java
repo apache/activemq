@@ -33,7 +33,9 @@ import javax.jms.TopicConnectionFactory;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionEvent;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -59,6 +61,13 @@ public class ManagedConnectionTest {
         connection = (ManagedConnectionProxy)connectionFactory.createConnection();
         managedConnection = connection.getManagedConnection();
 
+    }
+
+    @After
+    public void destroyManagedConnection() throws Exception {
+        if (managedConnection != null) {
+            managedConnection.destroy();
+        }
     }
 
     @Test(timeout = 60000)
@@ -156,6 +165,36 @@ public class ManagedConnectionTest {
             // This should throw exception
             doWork(session);
             fail("Using a session after the connection is closed should throw exception.");
+        } catch (JMSException e) {
+        }
+    }
+
+    @Test(timeout = 60000)
+    public void testSetClientIdAfterCleanup() throws Exception {
+
+        connection.setClientID("test");
+        try {
+            connection.setClientID("test");
+            fail("Should have received JMSException");
+        } catch (JMSException e) {
+        }
+
+        ActiveMQConnection physicalConnection = (ActiveMQConnection) managedConnection.getPhysicalConnection();
+        try {
+            physicalConnection.setClientID("testTwo");
+            fail("Should have received JMSException");
+        } catch (JMSException e) {
+        }
+
+        // close the proxy
+        connection.close();
+
+        // can set the id on the physical connection again after cleanup
+        physicalConnection.setClientID("test3");
+
+        try {
+            physicalConnection.setClientID("test4");
+            fail("Should have received JMSException");
         } catch (JMSException e) {
         }
     }

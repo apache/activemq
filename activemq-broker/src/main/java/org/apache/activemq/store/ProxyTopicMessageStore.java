@@ -209,6 +209,7 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         return delegate.isPrioritizedMessages();
     }
 
+    @Override
     public void updateMessage(Message message) throws IOException {
         delegate.updateMessage(message);
     }
@@ -221,6 +222,15 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     @Override
     public MessageStoreStatistics getMessageStoreStatistics() {
         return delegate.getMessageStoreStatistics();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.TopicMessageStore#getMessageSize(java.lang.String, java.lang.String)
+     */
+    @Override
+    public long getMessageSize(String clientId, String subscriberName)
+            throws IOException {
+        return delegate.getMessageSize(clientId, subscriberName);
     }
 
 }

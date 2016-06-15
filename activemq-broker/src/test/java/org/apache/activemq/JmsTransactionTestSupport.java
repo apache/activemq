@@ -49,7 +49,6 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     private static final int MESSAGE_COUNT = 5;
     private static final String MESSAGE_TEXT = "message";
 
-    protected ConnectionFactory connectionFactory;
     protected Connection connection;
     protected Session session;
     protected MessageConsumer consumer;
@@ -130,6 +129,10 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         try {
             session.close();
             session = null;
+        } catch (Exception e) {
+            LOG.info("Caught exception while closing resources.");
+        }
+        try {
             connection.close();
             connection = null;
         } catch (Exception e) {

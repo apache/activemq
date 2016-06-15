@@ -182,7 +182,7 @@ public class JMSClientContext {
 
         factory.setUsername(username);
         factory.setPassword(password);
-        factory.setAlwaysSyncSend(syncPublish);
+        factory.setForceSyncSend(syncPublish);
         factory.setTopicPrefix("topic://");
         factory.setQueuePrefix("queue://");
 
