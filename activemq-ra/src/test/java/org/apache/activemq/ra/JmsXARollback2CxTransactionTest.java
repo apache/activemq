@@ -41,6 +41,7 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
 
     private static final String DEFAULT_HOST = "vm://localhost?create=false";
 
+    private ManagedConnectionProxy cx2;
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
     private static long txGenerator;
     private Xid xid;
@@ -51,6 +52,15 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
     protected void setUp() throws Exception {
         LOG.info("Starting ----------------------------> {}", this.getName());
         super.setUp();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        if (cx2 != null) {
+            cx2.close();
+        }
+
+        super.tearDown();
     }
 
     @Override
@@ -90,7 +100,7 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
     protected void reconnect() throws Exception {
         super.reconnect();
         xares[0] = getXAResource(connection);
-        ManagedConnectionProxy cx2 = (ManagedConnectionProxy) connectionFactory.createConnection();
+        cx2 = (ManagedConnectionProxy) connectionFactory.createConnection();
         xares[1] = getXAResource(cx2);
     }
 
