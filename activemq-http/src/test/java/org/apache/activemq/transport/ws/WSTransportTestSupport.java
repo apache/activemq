@@ -69,18 +69,16 @@ public class WSTransportTestSupport {
         LOG.info("========== Finished test: {} ==========", name.getMethodName());
     }
 
-//    protected String getWSConnectorURI() {
-//        return "ws://127.0.0.1:" + getProxyPort() +
-//            "?allowLinkStealing=" + isAllowLinkStealing() +
-//            "&websocket.maxTextMessageSize=99999&" +
-//            "transport.maxIdleTime=1001";
-//    }
+    protected String getWSConnectionURI() {
+        return "ws://127.0.0.1:" + getProxyPort();
+    }
 
     protected String getWSConnectorURI() {
         return "ws://127.0.0.1:" + getProxyPort() +
-            "?allowLinkStealing=" + isAllowLinkStealing() +
-            "&websocket.maxTextMessageSize=99999&" +
-            "transport.idleTimeout=1001";
+               "?allowLinkStealing=" + isAllowLinkStealing() +
+               "&websocket.maxTextMessageSize=99999" +
+               "&transport.idleTimeout=1001" +
+               "&trace=true&transport.trace=true";
     }
 
     protected boolean isAllowLinkStealing() {

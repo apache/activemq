@@ -18,7 +18,10 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.cert.X509Certificate;
+
 import org.apache.activemq.Service;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Represents the client side of a transport allowing messages to be sent
@@ -116,6 +119,7 @@ public interface Transport extends Service {
      * @return true if updating uris is supported
      */
     boolean isUpdateURIsSupported();
+
     /**
      * reconnect to another location
      * @param uri
@@ -139,4 +143,25 @@ public interface Transport extends Service {
      * @return a counter which gets incremented as data is read from the transport.
      */
     int getReceiveCounter();
+
+    /**
+     * @return the Certificates provided by the peer, or null if not a secure channel.
+     */
+    X509Certificate[] getPeerCertificates();
+
+    /**
+     * Sets the certificates provided by the connected peer.
+     *
+     * @param certificates
+     *      the Certificates provided by the peer.
+     */
+    void setPeerCertificates(X509Certificate[] certificates);
+
+    /**
+     * Retrieves the WireFormat instance associated with this Transport instance.
+     *
+     * @return the WireFormat in use.
+     */
+    WireFormat getWireFormat();
+
 }

@@ -54,14 +54,14 @@ public class AmqpAuthenticator {
     }
 
     /**
-     * @return true if the SASL exchange has conpleted, regardless of success.
+     * @return true if the SASL exchange has completed, regardless of success.
      */
     public boolean isDone() {
         return sasl.getOutcome() != Sasl.SaslOutcome.PN_SASL_NONE;
     }
 
     /**
-     * @return the list of all SASL mechanisms that are supported curretnly.
+     * @return the list of all SASL mechanisms that are supported currently.
      */
     public String[] getSupportedMechanisms() {
         return mechanisms;

@@ -18,6 +18,7 @@ package org.apache.activemq.transport.amqp;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.Set;
@@ -33,6 +34,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.net.ServerSocketFactory;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -78,6 +80,11 @@ public class AmqpTestSupport {
     protected int amqpNioPort;
     protected URI amqpNioPlusSslURI;
     protected int amqpNioPlusSslPort;
+
+    protected URI amqpWsURI;
+    protected int amqpWsPort;
+    protected URI amqpWssURI;
+    protected int amqpWssPort;
 
     protected URI autoURI;
     protected int autoPort;
@@ -213,6 +220,20 @@ public class AmqpTestSupport {
             autoNioPlusSslURI = connector.getPublishableConnectURI();
             LOG.debug("Using auto+nio+ssl port " + autoNioPlusSslPort);
         }
+        if (isUseWsConnector()) {
+            connector = brokerService.addConnector(
+                "ws://0.0.0.0:" + getProxyPort(amqpWsPort) + "?transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
+            amqpWsPort = connector.getConnectUri().getPort();
+            amqpWsURI = connector.getPublishableConnectURI();
+            LOG.debug("Using amqp+ws port " + amqpWsPort);
+        }
+        if (isUseWssConnector()) {
+            connector = brokerService.addConnector(
+                "wss://0.0.0.0:" + getProxyPort(amqpWssPort) + "?transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
+            amqpWssPort = connector.getConnectUri().getPort();
+            amqpWssURI = connector.getPublishableConnectURI();
+            LOG.debug("Using amqp+wss port " + amqpWssPort);
+        }
     }
 
     protected boolean isPersistent() {
@@ -260,6 +281,14 @@ public class AmqpTestSupport {
     }
 
     protected boolean isUseAutoNioPlusSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseWsConnector() {
+        return false;
+    }
+
+    protected boolean isUseWssConnector() {
         return false;
     }
 
@@ -353,6 +382,26 @@ public class AmqpTestSupport {
 
     public String getTestName() {
         return name.getMethodName();
+    }
+
+    protected int getProxyPort(int proxyPort) {
+        if (proxyPort == 0) {
+            ServerSocket ss = null;
+            try {
+                ss = ServerSocketFactory.getDefault().createServerSocket(0);
+                proxyPort = ss.getLocalPort();
+            } catch (IOException e) { // ignore
+            } finally {
+                try {
+                    if (ss != null ) {
+                        ss.close();
+                    }
+                } catch (IOException e) { // ignore
+                }
+            }
+        }
+
+        return proxyPort;
     }
 
     protected BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {

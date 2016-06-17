@@ -309,7 +309,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
             while (!done) {
                 ByteBuffer toWrite = protonTransport.getOutputBuffer();
                 if (toWrite != null && toWrite.hasRemaining()) {
-                    LOG.trace("Sending {} bytes out", toWrite.limit());
+                    LOG.trace("Server: Sending {} bytes out", toWrite.limit());
                     amqpTransport.sendToAmqp(toWrite);
                     protonTransport.outputConsumed();
                 } else {
@@ -356,6 +356,8 @@ public class AmqpConnection implements AmqpProtocolConverter {
             return;
         }
 
+        LOG.trace("Server: Received from client: {} bytes", frame.getLength());
+
         while (frame.length > 0) {
             try {
                 int count = protonTransport.input(frame.data, frame.offset, frame.length);
@@ -386,7 +388,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
             Event event = null;
             while ((event = eventCollector.peek()) != null) {
                 if (amqpTransport.isTrace()) {
-                    LOG.trace("Processing event: {}", event.getType());
+                    LOG.trace("Server: Processing event: {}", event.getType());
                 }
                 switch (event.getType()) {
                     case CONNECTION_REMOTE_OPEN:
@@ -484,7 +486,6 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
                         protonConnection.close();
                     } else {
-
                         if (amqpTransport.isUseInactivityMonitor() && amqpWireFormat.getIdleTimeout() > 0) {
                             LOG.trace("Connection requesting Idle timeout of: {} mills", amqpWireFormat.getIdleTimeout());
                             protonTransport.setIdleTimeout(amqpWireFormat.getIdleTimeout());

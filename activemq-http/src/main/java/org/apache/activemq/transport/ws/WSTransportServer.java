@@ -23,6 +23,8 @@ import java.util.Map;
 
 import javax.servlet.Servlet;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.WebTransportServerSupport;
@@ -41,9 +43,12 @@ import org.slf4j.LoggerFactory;
  * Creates a web server and registers web socket server
  *
  */
-public class WSTransportServer extends WebTransportServerSupport {
+public class WSTransportServer extends WebTransportServerSupport implements BrokerServiceAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(WSTransportServer.class);
+
+    private BrokerService brokerService;
+    private WSServlet servlet;
 
     public WSTransportServer(URI location) {
         super(location);
@@ -105,8 +110,10 @@ public class WSTransportServer extends WebTransportServerSupport {
     }
 
     private Servlet createWSServlet() throws Exception {
-        WSServlet servlet = new WSServlet();
+        servlet = new WSServlet();
         servlet.setTransportOptions(transportOptions);
+        servlet.setBrokerService(brokerService);
+
         return servlet;
     }
 
@@ -146,5 +153,13 @@ public class WSTransportServer extends WebTransportServerSupport {
     @Override
     public boolean isSslServer() {
         return false;
+    }
+
+    @Override
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+        if (servlet != null) {
+            servlet.setBrokerService(brokerService);
+        }
     }
 }

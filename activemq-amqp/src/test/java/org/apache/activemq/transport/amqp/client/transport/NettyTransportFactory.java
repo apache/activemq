@@ -46,7 +46,7 @@ public final class NettyTransportFactory {
 
         remoteURI = PropertyUtil.replaceQuery(remoteURI, map);
 
-        if (!remoteURI.getScheme().equalsIgnoreCase("ssl")) {
+        if (!remoteURI.getScheme().equalsIgnoreCase("ssl") && !remoteURI.getScheme().equalsIgnoreCase("wss")) {
             transportOptions = NettyTransportOptions.INSTANCE.clone();
         } else {
             transportOptions = NettyTransportSslOptions.INSTANCE.clone();
@@ -61,7 +61,20 @@ public final class NettyTransportFactory {
             throw new IllegalArgumentException(msg);
         }
 
-        NettyTransport result = new NettyTransport(remoteURI, transportOptions);
+        NettyTransport result = null;
+
+        switch (remoteURI.getScheme().toLowerCase()) {
+            case "tcp":
+            case "ssl":
+                result = new NettyTcpTransport(remoteURI, transportOptions);
+                break;
+            case "ws":
+            case "wss":
+                result = new NettyWSTransport(remoteURI, transportOptions);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid URI Scheme: " + remoteURI.getScheme());
+        }
 
         return result;
     }

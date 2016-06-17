@@ -17,21 +17,22 @@
 package org.apache.activemq.transport.http;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A server side HTTP based TransportChannel which processes incoming packets
  * and adds outgoing packets onto a {@link Queue} so that they can be dispatched
  * by the HTTP GET requests from the client.
- *
- * 
  */
-public class  BlockingQueueTransport extends TransportSupport {
+public class BlockingQueueTransport extends TransportSupport {
+
     public static final long MAX_TIMEOUT = 30000L;
 
     private BlockingQueue<Object> queue;
@@ -44,6 +45,7 @@ public class  BlockingQueueTransport extends TransportSupport {
         return queue;
     }
 
+    @Override
     public void oneway(Object command) throws IOException {
         try {
             boolean success = queue.offer(command, MAX_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -55,18 +57,35 @@ public class  BlockingQueueTransport extends TransportSupport {
         }
     }
 
-
+    @Override
     public String getRemoteAddress() {
         return "blockingQueue_" + queue.hashCode();
     }
 
+    @Override
     protected void doStart() throws Exception {
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
     }
 
+    @Override
     public int getReceiveCounter() {
         return 0;
+    }
+
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        return null;
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
+    }
+
+    @Override
+    public WireFormat getWireFormat() {
+        return null;
     }
 }

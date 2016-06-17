@@ -25,6 +25,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.activemq.transport.amqp.AmqpSupport;
@@ -37,15 +39,33 @@ import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Test broker handling of AMQP connections with various configurations.
  */
+@RunWith(Parameterized.class)
 public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
     private static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
     private static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");
     private static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
+
+    @Parameters(name="{0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+            {"amqp", false},
+            {"amqp+ws", false},
+            {"amqp+ssl", true},
+            {"amqp+wss", true}
+        });
+    }
+
+    public AmqpConnectionsTest(String connectorScheme, boolean secure) {
+        super(connectorScheme, secure);
+    }
 
     @Test(timeout = 60000)
     public void testCanConnect() throws Exception {

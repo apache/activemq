@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -26,6 +26,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -61,6 +62,7 @@ import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
+import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1447,5 +1449,29 @@ public class FailoverTransport implements CompositeTransport {
      */
     public void setWarnAfterReconnectAttempts(int warnAfterReconnectAttempts) {
         this.warnAfterReconnectAttempts = warnAfterReconnectAttempts;
+    }
+
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        Transport transport = connectedTransport.get();
+        if (transport != null) {
+            return transport.getPeerCertificates();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
+    }
+
+    @Override
+    public WireFormat getWireFormat() {
+        Transport transport = connectedTransport.get();
+        if (transport != null) {
+            return transport.getWireFormat();
+        } else {
+            return null;
+        }
     }
 }

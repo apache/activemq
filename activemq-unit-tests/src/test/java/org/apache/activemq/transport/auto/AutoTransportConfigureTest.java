@@ -35,7 +35,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-
 @RunWith(Parameterized.class)
 public class AutoTransportConfigureTest {
 
@@ -49,12 +48,7 @@ public class AutoTransportConfigureTest {
 
     @Parameters
     public static Iterable<Object[]> parameters() {
-        return Arrays.asList(new Object[][]{
-                {"auto"},
-                {"auto+nio"},
-                {"auto+ssl"},
-                {"auto+nio+ssl"}
-        });
+        return Arrays.asList(new Object[][] { { "auto" }, { "auto+nio" }, { "auto+ssl" }, { "auto+nio+ssl" } });
     }
 
     private String transportType;
@@ -76,7 +70,7 @@ public class AutoTransportConfigureTest {
     }
 
     @After
-    public void tearDown() throws Exception{
+    public void tearDown() throws Exception {
         if (this.brokerService != null) {
             this.brokerService.stop();
             this.brokerService.waitUntilStopped();
@@ -92,7 +86,7 @@ public class AutoTransportConfigureTest {
 
     }
 
-    @Test(expected=JMSException.class)
+    @Test(expected = JMSException.class)
     public void testUrlConfiguration() throws Exception {
         createBroker(transportType + "://localhost:0?wireFormat.maxFrameSize=10");
 
@@ -100,7 +94,7 @@ public class AutoTransportConfigureTest {
         sendMessage(factory.createConnection());
     }
 
-    @Test(expected=JMSException.class)
+    @Test(expected = JMSException.class)
     public void testUrlConfigurationOpenWireFail() throws Exception {
         createBroker(transportType + "://localhost:0?wireFormat.default.maxFrameSize=10");
 
@@ -110,17 +104,17 @@ public class AutoTransportConfigureTest {
 
     @Test
     public void testUrlConfigurationOpenWireSuccess() throws Exception {
-        //Will work because max frame size only applies to amqp
-        createBroker(transportType + "://localhost:0?wireFormat.amqp.maxFrameSize=10");
+        // Will work because max frame size only applies to stomp
+        createBroker(transportType + "://localhost:0?wireFormat.stomp.maxFrameSize=10");
 
         ConnectionFactory factory = new ActiveMQConnectionFactory(url);
         sendMessage(factory.createConnection());
     }
 
-    @Test(expected=JMSException.class)
+    @Test(expected = JMSException.class)
     public void testUrlConfigurationOpenWireNotAvailable() throws Exception {
-        //only amqp is available so should fail
-        createBroker(transportType + "://localhost:0?auto.protocols=amqp");
+        // only stomp is available so should fail
+        createBroker(transportType + "://localhost:0?auto.protocols=stomp");
 
         ConnectionFactory factory = new ActiveMQConnectionFactory(url);
         sendMessage(factory.createConnection());
@@ -128,7 +122,7 @@ public class AutoTransportConfigureTest {
 
     @Test
     public void testUrlConfigurationOpenWireAvailable() throws Exception {
-        //only open wire is available
+        // only open wire is available
         createBroker(transportType + "://localhost:0?auto.protocols=default");
 
         ConnectionFactory factory = new ActiveMQConnectionFactory(url);
@@ -137,12 +131,11 @@ public class AutoTransportConfigureTest {
 
     @Test
     public void testUrlConfigurationOpenWireAndAmqpAvailable() throws Exception {
-        createBroker(transportType + "://localhost:0?auto.protocols=default,amqp");
+        createBroker(transportType + "://localhost:0?auto.protocols=default,stomp");
 
         ConnectionFactory factory = new ActiveMQConnectionFactory(url);
         sendMessage(factory.createConnection());
     }
-
 
     protected void sendMessage(Connection connection) throws JMSException {
         connection.start();
@@ -152,5 +145,4 @@ public class AutoTransportConfigureTest {
         message.setText("this is a test");
         producer.send(message);
     }
-
 }

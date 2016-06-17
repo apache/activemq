@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.amqp.client.sasl.SaslAuthenticator;
-import org.apache.activemq.transport.amqp.client.transport.NettyTransport;
 import org.apache.activemq.transport.amqp.client.transport.NettyTransportListener;
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
@@ -79,7 +78,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private final AtomicLong sessionIdGenerator = new AtomicLong();
     private final AtomicLong txIdGenerator = new AtomicLong();
     private final Collector protonCollector = new CollectorImpl();
-    private final NettyTransport transport;
+    private final org.apache.activemq.transport.amqp.client.transport.NettyTransport transport;
     private final Transport protonTransport = Transport.Factory.create();
 
     private final String username;
@@ -103,7 +102,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private long closeTimeout = DEFAULT_CLOSE_TIMEOUT;
     private long drainTimeout = DEFAULT_DRAIN_TIMEOUT;
 
-    public AmqpConnection(NettyTransport transport, String username, String password) {
+    public AmqpConnection(org.apache.activemq.transport.amqp.client.transport.NettyTransport transport, String username, String password) {
         setEndpoint(Connection.Factory.create());
         getEndpoint().collect(protonCollector);
 
@@ -490,7 +489,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
             @Override
             public void run() {
                 ByteBuffer source = incoming.nioBuffer();
-                LOG.trace("Received from Broker {} bytes:", source.remaining());
+                LOG.trace("Client Received from Broker {} bytes:", source.remaining());
 
                 if (protonTransport.isClosed()) {
                     LOG.debug("Ignoring incoming data because transport is closed");
@@ -520,6 +519,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     @Override
     public void onTransportClosed() {
         LOG.debug("The transport has unexpectedly closed");
+        failed(getOpenAbortException());
     }
 
     @Override
@@ -612,7 +612,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
             Event protonEvent = null;
             while ((protonEvent = protonCollector.peek()) != null) {
                 if (!protonEvent.getType().equals(Type.TRANSPORT)) {
-                    LOG.trace("New Proton Event: {}", protonEvent.getType());
+                    LOG.trace("Client: New Proton Event: {}", protonEvent.getType());
                 }
 
                 AmqpEventSink amqpEventSink = null;

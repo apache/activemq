@@ -51,12 +51,12 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
 
     @Override
     protected boolean isUseTcpConnector() {
-        return !isUseSSL() && !connectorScheme.contains("nio");
+        return !isUseSSL() && !connectorScheme.contains("nio") && !connectorScheme.contains("ws");
     }
 
     @Override
     protected boolean isUseSslConnector() {
-        return isUseSSL() && !connectorScheme.contains("nio");
+        return isUseSSL() && !connectorScheme.contains("nio") && !connectorScheme.contains("wss");
     }
 
     @Override
@@ -69,12 +69,32 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
         return isUseSSL() && connectorScheme.contains("nio");
     }
 
+    @Override
+    protected boolean isUseWsConnector() {
+        return !isUseSSL() && connectorScheme.contains("ws");
+    }
+
+    @Override
+    protected boolean isUseWssConnector() {
+        return isUseSSL() && connectorScheme.contains("wss");
+    }
+
     public URI getBrokerAmqpConnectionURI() {
+        boolean webSocket = false;
+
         try {
             int port = 0;
             switch (connectorScheme) {
                 case "amqp":
                     port = this.amqpPort;
+                    break;
+                case "amqp+ws":
+                    port = this.amqpWsPort;
+                    webSocket = true;
+                    break;
+                case "amqp+wss":
+                    port = this.amqpWssPort;
+                    webSocket = true;
                     break;
                 case "amqp+ssl":
                     port = this.amqpSslPort;
@@ -92,9 +112,17 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
             String uri = null;
 
             if (isUseSSL()) {
-                uri = "ssl://127.0.0.1:" + port;
+                if (webSocket) {
+                    uri = "wss://127.0.0.1:" + port;
+                } else {
+                    uri = "ssl://127.0.0.1:" + port;
+                }
             } else {
-                uri = "tcp://127.0.0.1:" + port;
+                if (webSocket) {
+                    uri = "ws://127.0.0.1:" + port;
+                } else {
+                    uri = "tcp://127.0.0.1:" + port;
+                }
             }
 
             if (!getAmqpConnectionURIOptions().isEmpty()) {

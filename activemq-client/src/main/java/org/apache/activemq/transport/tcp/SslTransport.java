@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.transport.tcp;
 
 import java.io.IOException;
@@ -43,6 +42,7 @@ import org.apache.activemq.wireformat.WireFormat;
  * unexpected situations may occur.
  */
 public class SslTransport extends TcpTransport {
+
     /**
      * Connect to a remote node such as a Broker.
      *
@@ -56,6 +56,7 @@ public class SslTransport extends TcpTransport {
      * @throws UnknownHostException If TcpTransport throws.
      * @throws IOException If TcpTransport throws.
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public SslTransport(WireFormat wireFormat, SSLSocketFactory socketFactory, URI remoteLocation, URI localLocation, boolean needClientAuth) throws IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
         if (this.socket != null) {
@@ -65,7 +66,7 @@ public class SslTransport extends TcpTransport {
             // a single proxy to route to different messaging apps.
 
             // On java 1.7 it seems like it can only be configured via reflection.
-            // todo: find out if this will work on java 1.8
+            // TODO: find out if this will work on java 1.8
             HashMap props = new HashMap();
             props.put("host", remoteLocation.getHost());
             IntrospectionSupport.setProperties(this.socket, props);
@@ -110,6 +111,7 @@ public class SslTransport extends TcpTransport {
     /**
      * @return peer certificate chain associated with the ssl socket
      */
+    @Override
     public X509Certificate[] getPeerCertificates() {
 
         SSLSocket sslSocket = (SSLSocket)this.socket;
@@ -120,7 +122,7 @@ public class SslTransport extends TcpTransport {
         try {
             clientCertChain = (X509Certificate[])sslSession.getPeerCertificates();
         } catch (SSLPeerUnverifiedException e) {
-        	clientCertChain = null;
+            clientCertChain = null;
         }
 
         return clientCertChain;
@@ -133,5 +135,4 @@ public class SslTransport extends TcpTransport {
     public String toString() {
         return "ssl://" + socket.getInetAddress() + ":" + socket.getPort();
     }
-
 }

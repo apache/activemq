@@ -147,7 +147,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
                     stompInactivityMonitor.onCommand(new KeepAliveInfo());
                 } else {
                     StompFrame frame = (StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8")));
-                    frame.setTransportContext(getCertificates());
+                    frame.setTransportContext(getPeerCertificates());
                     protocolConverter.onStompCommand(frame);
                 }
             }
@@ -162,11 +162,13 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
         return socketTransportStarted.getCount() == 0;
     }
 
-    public X509Certificate[] getCertificates() {
+    @Override
+    public X509Certificate[] getPeerCertificates() {
         return certificates;
     }
 
-    public void setCertificates(X509Certificate[] certificates) {
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
         this.certificates = certificates;
     }
 }
