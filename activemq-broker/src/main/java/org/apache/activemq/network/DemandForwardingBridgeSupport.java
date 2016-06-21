@@ -1009,45 +1009,46 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             }
                             return;
                         }
+                        if (isPermissableDestination(md.getDestination())) {
+                           if (message.isPersistent() || configuration.isAlwaysSyncSend()) {
 
-                        if (message.isPersistent() || configuration.isAlwaysSyncSend()) {
-
-                            // The message was not sent using async send, so we should only
-                            // ack the local broker when we get confirmation that the remote
-                            // broker has received the message.
-                            remoteBroker.asyncRequest(message, new ResponseCallback() {
-                                @Override
-                                public void onCompletion(FutureResponse future) {
+                              // The message was not sent using async send, so we should only
+                              // ack the local broker when we get confirmation that the remote
+                              // broker has received the message.
+                              remoteBroker.asyncRequest(message, new ResponseCallback() {
+                                 @Override
+                                 public void onCompletion(FutureResponse future) {
                                     try {
-                                        Response response = future.getResult();
-                                        if (response.isException()) {
-                                            ExceptionResponse er = (ExceptionResponse) response;
-                                            serviceLocalException(md, er.getException());
-                                        } else {
-                                            localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
-                                            networkBridgeStatistics.getDequeues().increment();
-                                        }
+                                       Response response = future.getResult();
+                                       if (response.isException()) {
+                                          ExceptionResponse er = (ExceptionResponse) response;
+                                          serviceLocalException(md, er.getException());
+                                       } else {
+                                          localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
+                                          networkBridgeStatistics.getDequeues().increment();
+                                       }
                                     } catch (IOException e) {
-                                        serviceLocalException(md, e);
+                                       serviceLocalException(md, e);
                                     } finally {
-                                        sub.decrementOutstandingResponses();
+                                       sub.decrementOutstandingResponses();
                                     }
-                                }
-                            });
+                                 }
+                              });
 
-                        } else {
-                            // If the message was originally sent using async send, we will
-                            // preserve that QOS by bridging it using an async send (small chance
-                            // of message loss).
-                            try {
-                                remoteBroker.oneway(message);
-                                localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
-                                networkBridgeStatistics.getDequeues().increment();
-                            } finally {
-                                sub.decrementOutstandingResponses();
-                            }
+                           } else {
+                              // If the message was originally sent using async send, we will
+                              // preserve that QOS by bridging it using an async send (small chance
+                              // of message loss).
+                              try {
+                                 remoteBroker.oneway(message);
+                                 localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
+                                 networkBridgeStatistics.getDequeues().increment();
+                              } finally {
+                                 sub.decrementOutstandingResponses();
+                              }
+                           }
+                           serviceOutbound(message);
                         }
-                        serviceOutbound(message);
                     } else {
                         LOG.debug("No subscription registered with this network bridge for consumerId: {} for message: {}", md.getConsumerId(), md.getMessage());
                     }
@@ -1132,22 +1133,22 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
         }
 
-        ActiveMQDestination[] dests = staticallyIncludedDestinations;
-        if (dests != null && dests.length > 0) {
-            for (ActiveMQDestination dest : dests) {
-                DestinationFilter inclusionFilter = DestinationFilter.parseFilter(dest);
-                if (dest != null && inclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
-                    return true;
-                }
-            }
-        }
-
-        dests = excludedDestinations;
+        ActiveMQDestination[] dests = excludedDestinations;
         if (dests != null && dests.length > 0) {
             for (ActiveMQDestination dest : dests) {
                 DestinationFilter exclusionFilter = DestinationFilter.parseFilter(dest);
                 if (dest != null && exclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
                     return false;
+                }
+            }
+        }
+
+        dests = staticallyIncludedDestinations;
+        if (dests != null && dests.length > 0) {
+            for (ActiveMQDestination dest : dests) {
+                DestinationFilter inclusionFilter = DestinationFilter.parseFilter(dest);
+                if (dest != null && inclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
+                    return true;
                 }
             }
         }
@@ -1173,14 +1174,18 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         ActiveMQDestination[] dests = staticallyIncludedDestinations;
         if (dests != null) {
             for (ActiveMQDestination dest : dests) {
-                DemandSubscription sub = createDemandSubscription(dest);
-                sub.setStaticallyIncluded(true);
-                try {
-                    addSubscription(sub);
-                } catch (IOException e) {
-                    LOG.error("Failed to add static destination {}", dest, e);
+                if (isPermissableDestination(dest)) {
+                    DemandSubscription sub = createDemandSubscription(dest);
+                    sub.setStaticallyIncluded(true);
+                    try {
+                        addSubscription(sub);
+                    } catch (IOException e) {
+                        LOG.error("Failed to add static destination {}", dest, e);
+                    }
+                    LOG.trace("{}, bridging messages for static destination: {}", configuration.getBrokerName(), dest);
+                } else {
+                    LOG.info("{}, static destination excluded: {}", configuration.getBrokerName(), dest);
                 }
-                LOG.trace("{}, bridging messages for static destination: {}", configuration.getBrokerName(), dest);
             }
         }
     }
