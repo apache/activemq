@@ -241,7 +241,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         Object instance;
         for (i = 0; i < constructors.length; i++) {
             Class<?>[] paramTypes = constructors[i].getParameterTypes();
-            if (paramTypes.length != 0 && paramTypes[0].equals(String.class)) {
+            if (paramTypes.length == 1 && paramTypes[0].equals(String.class)) {
                 break;
             }
         }
@@ -253,7 +253,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
             i = 0;
             for (i = 0; i < methods.length; i++) {
                 Class<?>[] paramTypes = methods[i].getParameterTypes();
-                if (paramTypes.length != 0 && methods[i].getName().equals("setName") && paramTypes[0].equals(String.class)) {
+                if (paramTypes.length == 1 && methods[i].getName().equals("setName") && paramTypes[0].equals(String.class)) {
                     break;
                 }
             }
