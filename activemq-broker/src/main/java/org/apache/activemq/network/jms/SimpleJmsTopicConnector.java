@@ -157,122 +157,142 @@ public class SimpleJmsTopicConnector extends JmsConnector {
     @Override
     protected void initializeForeignConnection() throws NamingException, JMSException {
 
-        final TopicConnection newConnection;
+        TopicConnection newConnection = null;
 
-        if (foreignConnection.get() == null) {
-            // get the connection factories
-            if (outboundTopicConnectionFactory == null) {
-                // look it up from JNDI
-                if (outboundTopicConnectionFactoryName != null) {
-                    outboundTopicConnectionFactory = jndiOutboundTemplate
-                        .lookup(outboundTopicConnectionFactoryName, TopicConnectionFactory.class);
+        try {
+            if (foreignConnection.get() == null) {
+                // get the connection factories
+                if (outboundTopicConnectionFactory == null) {
+                    // look it up from JNDI
+                    if (outboundTopicConnectionFactoryName != null) {
+                        outboundTopicConnectionFactory = jndiOutboundTemplate
+                            .lookup(outboundTopicConnectionFactoryName, TopicConnectionFactory.class);
+                        if (outboundUsername != null) {
+                            newConnection = outboundTopicConnectionFactory
+                                .createTopicConnection(outboundUsername, outboundPassword);
+                        } else {
+                            newConnection = outboundTopicConnectionFactory.createTopicConnection();
+                        }
+                    } else {
+                        throw new JMSException("Cannot create foreignConnection - no information");
+                    }
+                } else {
                     if (outboundUsername != null) {
                         newConnection = outboundTopicConnectionFactory
                             .createTopicConnection(outboundUsername, outboundPassword);
                     } else {
                         newConnection = outboundTopicConnectionFactory.createTopicConnection();
                     }
-                } else {
-                    throw new JMSException("Cannot create foreignConnection - no information");
                 }
             } else {
-                if (outboundUsername != null) {
-                    newConnection = outboundTopicConnectionFactory
-                        .createTopicConnection(outboundUsername, outboundPassword);
-                } else {
-                    newConnection = outboundTopicConnectionFactory.createTopicConnection();
+                // Clear if for now in case something goes wrong during the init.
+                newConnection = (TopicConnection) foreignConnection.getAndSet(null);
+            }
+
+            // Register for any async error notifications now so we can reset in the
+            // case where there's not a lot of activity and a connection drops.
+            newConnection.setExceptionListener(new ExceptionListener() {
+                @Override
+                public void onException(JMSException exception) {
+                    handleConnectionFailure(foreignConnection.get());
                 }
+            });
+
+            if (outboundClientId != null && outboundClientId.length() > 0) {
+                newConnection.setClientID(getOutboundClientId());
             }
-        } else {
-            // Clear if for now in case something goes wrong during the init.
-            newConnection = (TopicConnection) foreignConnection.getAndSet(null);
-        }
+            newConnection.start();
 
-        if (outboundClientId != null && outboundClientId.length() > 0) {
-            newConnection.setClientID(getOutboundClientId());
-        }
-        newConnection.start();
+            outboundMessageConvertor.setConnection(newConnection);
 
-        outboundMessageConvertor.setConnection(newConnection);
+            // Configure the bridges with the new Outbound connection.
+            initializeInboundDestinationBridgesOutboundSide(newConnection);
+            initializeOutboundDestinationBridgesOutboundSide(newConnection);
 
-        // Configure the bridges with the new Outbound connection.
-        initializeInboundDestinationBridgesOutboundSide(newConnection);
-        initializeOutboundDestinationBridgesOutboundSide(newConnection);
-
-        // Register for any async error notifications now so we can reset in the
-        // case where there's not a lot of activity and a connection drops.
-        newConnection.setExceptionListener(new ExceptionListener() {
-            @Override
-            public void onException(JMSException exception) {
-                handleConnectionFailure(newConnection);
+            // At this point all looks good, so this our current connection now.
+            foreignConnection.set(newConnection);
+        } catch (Exception ex) {
+            if (newConnection != null) {
+                try {
+                    newConnection.close();
+                } catch (Exception ignore) {}
             }
-        });
 
-        // At this point all looks good, so this our current connection now.
-        foreignConnection.set(newConnection);
+            throw ex;
+        }
     }
 
     @Override
     protected void initializeLocalConnection() throws NamingException, JMSException {
 
-        final TopicConnection newConnection;
+        TopicConnection newConnection = null;
 
-        if (localConnection.get() == null) {
-            // get the connection factories
-            if (localTopicConnectionFactory == null) {
-                if (embeddedConnectionFactory == null) {
-                    // look it up from JNDI
-                    if (localConnectionFactoryName != null) {
-                        localTopicConnectionFactory = jndiLocalTemplate
-                            .lookup(localConnectionFactoryName, TopicConnectionFactory.class);
-                        if (localUsername != null) {
-                            newConnection = localTopicConnectionFactory
-                                .createTopicConnection(localUsername, localPassword);
+        try {
+            if (localConnection.get() == null) {
+                // get the connection factories
+                if (localTopicConnectionFactory == null) {
+                    if (embeddedConnectionFactory == null) {
+                        // look it up from JNDI
+                        if (localConnectionFactoryName != null) {
+                            localTopicConnectionFactory = jndiLocalTemplate
+                                .lookup(localConnectionFactoryName, TopicConnectionFactory.class);
+                            if (localUsername != null) {
+                                newConnection = localTopicConnectionFactory
+                                    .createTopicConnection(localUsername, localPassword);
+                            } else {
+                                newConnection = localTopicConnectionFactory.createTopicConnection();
+                            }
                         } else {
-                            newConnection = localTopicConnectionFactory.createTopicConnection();
+                            throw new JMSException("Cannot create localConnection - no information");
                         }
                     } else {
-                        throw new JMSException("Cannot create localConnection - no information");
+                        newConnection = embeddedConnectionFactory.createTopicConnection();
                     }
                 } else {
-                    newConnection = embeddedConnectionFactory.createTopicConnection();
+                    if (localUsername != null) {
+                        newConnection = localTopicConnectionFactory.
+                                createTopicConnection(localUsername, localPassword);
+                    } else {
+                        newConnection = localTopicConnectionFactory.createTopicConnection();
+                    }
                 }
+
             } else {
-                if (localUsername != null) {
-                    newConnection = localTopicConnectionFactory.
-                            createTopicConnection(localUsername, localPassword);
-                } else {
-                    newConnection = localTopicConnectionFactory.createTopicConnection();
+                // Clear if for now in case something goes wrong during the init.
+                newConnection = (TopicConnection) localConnection.getAndSet(null);
+            }
+
+            // Register for any async error notifications now so we can reset in the
+            // case where there's not a lot of activity and a connection drops.
+            newConnection.setExceptionListener(new ExceptionListener() {
+                @Override
+                public void onException(JMSException exception) {
+                    handleConnectionFailure(localConnection.get());
                 }
+            });
+
+            if (localClientId != null && localClientId.length() > 0) {
+                newConnection.setClientID(getLocalClientId());
+            }
+            newConnection.start();
+
+            inboundMessageConvertor.setConnection(newConnection);
+
+            // Configure the bridges with the new Local connection.
+            initializeInboundDestinationBridgesLocalSide(newConnection);
+            initializeOutboundDestinationBridgesLocalSide(newConnection);
+
+            // At this point all looks good, so this our current connection now.
+            localConnection.set(newConnection);
+        } catch (Exception ex) {
+            if (newConnection != null) {
+                try {
+                    newConnection.close();
+                } catch (Exception ignore) {}
             }
 
-        } else {
-            // Clear if for now in case something goes wrong during the init.
-            newConnection = (TopicConnection) localConnection.getAndSet(null);
+            throw ex;
         }
-
-        if (localClientId != null && localClientId.length() > 0) {
-            newConnection.setClientID(getLocalClientId());
-        }
-        newConnection.start();
-
-        inboundMessageConvertor.setConnection(newConnection);
-
-        // Configure the bridges with the new Local connection.
-        initializeInboundDestinationBridgesLocalSide(newConnection);
-        initializeOutboundDestinationBridgesLocalSide(newConnection);
-
-        // Register for any async error notifications now so we can reset in the
-        // case where there's not a lot of activity and a connection drops.
-        newConnection.setExceptionListener(new ExceptionListener() {
-            @Override
-            public void onException(JMSException exception) {
-                handleConnectionFailure(newConnection);
-            }
-        });
-
-        // At this point all looks good, so this our current connection now.
-        localConnection.set(newConnection);
     }
 
     protected void initializeInboundDestinationBridgesOutboundSide(TopicConnection connection) throws JMSException {
