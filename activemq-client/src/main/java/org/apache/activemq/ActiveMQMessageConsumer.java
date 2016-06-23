@@ -1419,9 +1419,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 // delayed redelivery, ensure it can be re delivered
                                 session.connection.rollbackDuplicate(this, md.getMessage());
                             }
-                            unconsumedMessages.enqueue(md);
-                            if (availableListener != null) {
-                                availableListener.onMessageAvailable(this);
+                            if (!(md.getMessage() != null && md.getMessage().isExpired())) {
+                                unconsumedMessages.enqueue(md);
+                                if (availableListener != null) {
+                                    availableListener.onMessageAvailable(this);
+                                }
+                            } else {
+                                beforeMessageIsConsumed(md);
+                                afterMessageIsConsumed(md, false);
                             }
                         }
                     } else {
