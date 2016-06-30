@@ -90,10 +90,16 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
     @Override
     public void close() {
         if (!isClosed() && isOpened()) {
-            sendToActiveMQ(new RemoveInfo(getProducerId()));
-        }
+            sendToActiveMQ(new RemoveInfo(getProducerId()), new ResponseHandler() {
 
-        super.close();
+                @Override
+                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    AmqpReceiver.super.close();
+                }
+            });
+        } else {
+            super.close();
+        }
     }
 
     //----- Configuration accessors ------------------------------------------//

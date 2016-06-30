@@ -108,11 +108,15 @@ public class AmqpSession implements AmqpResource {
     public void close() {
         LOG.debug("Session {} closed", getSessionId());
 
-        getEndpoint().setContext(null);
-        getEndpoint().close();
-        getEndpoint().free();
+        connection.sendToActiveMQ(new RemoveInfo(getSessionId()), new ResponseHandler() {
 
-        connection.sendToActiveMQ(new RemoveInfo(getSessionId()));
+            @Override
+            public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                getEndpoint().setContext(null);
+                getEndpoint().close();
+                getEndpoint().free();
+            }
+        });
     }
 
     /**

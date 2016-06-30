@@ -118,12 +118,18 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (!isClosed() && isOpened()) {
             RemoveInfo removeCommand = new RemoveInfo(getConsumerId());
             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-            sendToActiveMQ(removeCommand);
 
-            session.unregisterSender(getConsumerId());
+            sendToActiveMQ(removeCommand, new ResponseHandler() {
+
+                @Override
+                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    session.unregisterSender(getConsumerId());
+                    AmqpSender.super.detach();
+                }
+            });
+        } else {
+            super.detach();
         }
-
-        super.detach();
     }
 
     @Override
@@ -131,21 +137,27 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (!isClosed() && isOpened()) {
             RemoveInfo removeCommand = new RemoveInfo(getConsumerId());
             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-            sendToActiveMQ(removeCommand);
 
-            if (consumerInfo.isDurable()) {
-                RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
-                rsi.setConnectionId(session.getConnection().getConnectionId());
-                rsi.setSubscriptionName(getEndpoint().getName());
-                rsi.setClientId(session.getConnection().getClientId());
+            sendToActiveMQ(removeCommand, new ResponseHandler() {
 
-                sendToActiveMQ(rsi);
-            }
+                @Override
+                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    if (consumerInfo.isDurable()) {
+                        RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
+                        rsi.setConnectionId(session.getConnection().getConnectionId());
+                        rsi.setSubscriptionName(getEndpoint().getName());
+                        rsi.setClientId(session.getConnection().getClientId());
 
-            session.unregisterSender(getConsumerId());
+                        sendToActiveMQ(rsi);
+                    }
+
+                    session.unregisterSender(getConsumerId());
+                    AmqpSender.super.close();
+                }
+            });
+        } else {
+            super.close();
         }
-
-        super.close();
     }
 
     @Override
