@@ -112,6 +112,7 @@ import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public abstract class MessageDatabase extends ServiceSupport implements BrokerServiceAware {
 
@@ -1646,6 +1647,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @throws IOException
      */
     void checkpointUpdate(Transaction tx, boolean cleanup) throws IOException {
+        MDC.put("activemq.persistenceDir", getDirectory().getName());
         LOG.debug("Checkpoint started.");
 
         // reflect last update exclusive of current checkpoint
@@ -1877,6 +1879,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 journalLogOnLastCompactionCheck = journal.getCurrentDataFileId();
             }
         }
+        MDC.remove("activemq.persistenceDir");
 
         LOG.debug("Checkpoint done.");
     }
