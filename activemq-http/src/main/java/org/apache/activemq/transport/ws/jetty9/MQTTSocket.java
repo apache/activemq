@@ -19,6 +19,7 @@ package org.apache.activemq.transport.ws.jetty9;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.transport.ws.AbstractMQTTSocket;
 import org.apache.activemq.util.ByteSequence;
@@ -36,6 +37,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
 
     private final int ORDERLY_CLOSE_TIMEOUT = 10;
     private Session session;
+    final AtomicBoolean receivedDisconnect = new AtomicBoolean();
 
     public MQTTSocket(String remoteAddress) {
         super(remoteAddress);
@@ -71,6 +73,9 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
         try {
             receiveCounter += length;
             MQTTFrame frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(bytes, offset, length));
+            if (frame.messageType() == DISCONNECT.TYPE) {
+                receivedDisconnect.set(true);
+            }
             getProtocolConverter().onMQTTCommand(frame);
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
@@ -84,6 +89,10 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
         try {
             if (protocolLock.tryLock() || protocolLock.tryLock(ORDERLY_CLOSE_TIMEOUT, TimeUnit.SECONDS)) {
                 LOG.debug("MQTT WebSocket closed: code[{}] message[{}]", arg0, arg1);
+                //Check if we received a disconnect packet before closing
+                if (!receivedDisconnect.get()) {
+                    getProtocolConverter().onTransportError();
+                }
                 getProtocolConverter().onMQTTCommand(new DISCONNECT().encode());
             }
         } catch (Exception e) {

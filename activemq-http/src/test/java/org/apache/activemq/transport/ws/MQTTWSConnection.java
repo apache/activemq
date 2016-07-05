@@ -85,14 +85,16 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     }
 
     public void connect(String clientId) throws Exception {
-        checkConnected();
-
         CONNECT command = new CONNECT();
-
         command.clientId(new UTF8Buffer(clientId));
         command.cleanSession(false);
         command.version(3);
         command.keepAlive((short) 0);
+        connect(command);
+    }
+
+    public void connect(CONNECT command) throws Exception {
+        checkConnected();
 
         ByteSequence payload = wireFormat.marshal(command.encode());
         connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
