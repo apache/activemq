@@ -366,8 +366,7 @@ public class MQTTProtocolConverter {
     }
 
     void onMQTTDisconnect() throws MQTTProtocolException {
-        if (connected.get()) {
-            connected.set(false);
+        if (connected.compareAndSet(true, false)) {
             sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
             sendToActiveMQ(new ShutdownInfo(), null);
         }

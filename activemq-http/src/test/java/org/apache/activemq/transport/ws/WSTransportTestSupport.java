@@ -55,7 +55,7 @@ public class WSTransportTestSupport {
     @Before
     public void setUp() throws Exception {
         LOG.info("========== Starting test: {} ==========", name.getMethodName());
-        broker = createBroker(true);
+        broker = createBroker(true, true);
     }
 
     @After
@@ -89,7 +89,7 @@ public class WSTransportTestSupport {
 
     }
 
-    protected BrokerService createBroker(boolean deleteMessages) throws Exception {
+    protected BrokerService createBroker(boolean deleteMessages, boolean advisorySupport) throws Exception {
 
         BrokerService broker = new BrokerService();
 
@@ -103,6 +103,7 @@ public class WSTransportTestSupport {
 
         wsConnectUri = broker.addConnector(getWSConnectorURI()).getPublishableConnectURI();
 
+        broker.setAdvisorySupport(advisorySupport);
         broker.setUseJmx(true);
         broker.getManagementContext().setCreateConnector(false);
         broker.setPersistent(isPersistent());
