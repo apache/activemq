@@ -147,7 +147,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private boolean clearDeliveredList;
     AtomicInteger inProgressClearRequiredFlag = new AtomicInteger(0);
 
-    private MessageAck pendingAck;
+    private volatile MessageAck pendingAck;
     private long lastDeliveredSequenceId = -1;
 
     private IOException failureError;
@@ -780,6 +780,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     void deliverAcks() {
         MessageAck ack = null;
         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
+            //Capture the pendingAck reference in case the optimizeAcknowledge dispatch
+            //thread mutates it
+            final MessageAck oldPendingAck = pendingAck;
             if (isAutoAcknowledgeEach()) {
                 synchronized(deliveredMessages) {
                     ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
@@ -787,12 +790,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         deliveredMessages.clear();
                         ackCounter = 0;
                     } else {
-                        ack = pendingAck;
+                        ack = oldPendingAck;
                         pendingAck = null;
                     }
                 }
-            } else if (pendingAck != null && pendingAck.isStandardAck()) {
-                ack = pendingAck;
+            } else if (oldPendingAck != null && oldPendingAck.isStandardAck()) {
+                ack = oldPendingAck;
                 pendingAck = null;
             }
             if (ack != null) {
@@ -971,8 +974,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                     // we won't sent standard acks with every msg just
                                     // because the deliveredCounter just below
                                     // 0.5 * prefetch as used in ackLater()
-                                    if (pendingAck != null && deliveredCounter > 0) {
-                                        session.sendAck(pendingAck);
+                                    final MessageAck oldPendingAck = pendingAck;
+                                    if (oldPendingAck != null && deliveredCounter > 0) {
+                                        session.sendAck(oldPendingAck);
                                         pendingAck = null;
                                         deliveredCounter = 0;
                                     }
@@ -1035,29 +1039,31 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         deliveredCounter++;
 
-        MessageAck oldPendingAck = pendingAck;
-        pendingAck = new MessageAck(md, ackType, deliveredCounter);
-        pendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
-        if( oldPendingAck==null ) {
-            pendingAck.setFirstMessageId(pendingAck.getLastMessageId());
-        } else if ( oldPendingAck.getAckType() == pendingAck.getAckType() ) {
-            pendingAck.setFirstMessageId(oldPendingAck.getFirstMessageId());
+        final MessageAck oldPendingAck = pendingAck;
+        final MessageAck newPendingAck = new MessageAck(md, ackType, deliveredCounter);
+        newPendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
+        if (oldPendingAck == null) {
+            newPendingAck.setFirstMessageId(newPendingAck.getLastMessageId());
+        } else if (oldPendingAck.getAckType() == newPendingAck.getAckType()) {
+            newPendingAck.setFirstMessageId(oldPendingAck.getFirstMessageId());
         } else {
             // old pending ack being superseded by ack of another type, if is is not a delivered
             // ack and hence important, send it now so it is not lost.
             if (!oldPendingAck.isDeliveredAck()) {
-                LOG.debug("Sending old pending ack {}, new pending: {}", oldPendingAck, pendingAck);
+                LOG.debug("Sending old pending ack {}, new pending: {}", oldPendingAck, newPendingAck);
                 session.sendAck(oldPendingAck);
             } else {
-                LOG.debug("dropping old pending ack {}, new pending: {}", oldPendingAck, pendingAck);
+                LOG.debug("dropping old pending ack {}, new pending: {}", oldPendingAck, newPendingAck);
             }
         }
+        pendingAck = newPendingAck;
+
         // AMQ-3956 evaluate both expired and normal msgs as
         // otherwise consumer may get stalled
         if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter + ackCounter - additionalWindowSize)) {
-            LOG.debug("ackLater: sending: {}", pendingAck);
-            session.sendAck(pendingAck);
-            pendingAck=null;
+            LOG.debug("ackLater: sending: {}", newPendingAck);
+            session.sendAck(newPendingAck);
+            pendingAck = null;
             deliveredCounter = 0;
             additionalWindowSize = 0;
         }
