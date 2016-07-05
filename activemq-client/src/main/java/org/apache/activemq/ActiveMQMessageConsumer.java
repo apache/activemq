@@ -780,8 +780,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     void deliverAcks() {
         MessageAck ack = null;
         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
-            if (isAutoAcknowledgeEach()) {
-                synchronized(deliveredMessages) {
+            synchronized(deliveredMessages) {
+                if (isAutoAcknowledgeEach()) {
                     ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                     if (ack != null) {
                         deliveredMessages.clear();
@@ -790,10 +790,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         ack = pendingAck;
                         pendingAck = null;
                     }
+                } else if (pendingAck != null && pendingAck.isStandardAck()) {
+                    ack = pendingAck;
+                    pendingAck = null;
                 }
-            } else if (pendingAck != null && pendingAck.isStandardAck()) {
-                ack = pendingAck;
-                pendingAck = null;
             }
             if (ack != null) {
                 final MessageAck ackToSend = ack;
@@ -1035,31 +1035,33 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         deliveredCounter++;
 
-        MessageAck oldPendingAck = pendingAck;
-        pendingAck = new MessageAck(md, ackType, deliveredCounter);
-        pendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
-        if( oldPendingAck==null ) {
-            pendingAck.setFirstMessageId(pendingAck.getLastMessageId());
-        } else if ( oldPendingAck.getAckType() == pendingAck.getAckType() ) {
-            pendingAck.setFirstMessageId(oldPendingAck.getFirstMessageId());
-        } else {
-            // old pending ack being superseded by ack of another type, if is is not a delivered
-            // ack and hence important, send it now so it is not lost.
-            if (!oldPendingAck.isDeliveredAck()) {
-                LOG.debug("Sending old pending ack {}, new pending: {}", oldPendingAck, pendingAck);
-                session.sendAck(oldPendingAck);
+        synchronized(deliveredMessages) {
+            MessageAck oldPendingAck = pendingAck;
+            pendingAck = new MessageAck(md, ackType, deliveredCounter);
+            pendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
+            if( oldPendingAck==null ) {
+                pendingAck.setFirstMessageId(pendingAck.getLastMessageId());
+            } else if ( oldPendingAck.getAckType() == pendingAck.getAckType() ) {
+                pendingAck.setFirstMessageId(oldPendingAck.getFirstMessageId());
             } else {
-                LOG.debug("dropping old pending ack {}, new pending: {}", oldPendingAck, pendingAck);
+                // old pending ack being superseded by ack of another type, if is is not a delivered
+                // ack and hence important, send it now so it is not lost.
+                if (!oldPendingAck.isDeliveredAck()) {
+                    LOG.debug("Sending old pending ack {}, new pending: {}", oldPendingAck, pendingAck);
+                    session.sendAck(oldPendingAck);
+                } else {
+                    LOG.debug("dropping old pending ack {}, new pending: {}", oldPendingAck, pendingAck);
+                }
             }
-        }
-        // AMQ-3956 evaluate both expired and normal msgs as
-        // otherwise consumer may get stalled
-        if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter + ackCounter - additionalWindowSize)) {
-            LOG.debug("ackLater: sending: {}", pendingAck);
-            session.sendAck(pendingAck);
-            pendingAck=null;
-            deliveredCounter = 0;
-            additionalWindowSize = 0;
+            // AMQ-3956 evaluate both expired and normal msgs as
+            // otherwise consumer may get stalled
+            if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter + ackCounter - additionalWindowSize)) {
+                LOG.debug("ackLater: sending: {}", pendingAck);
+                session.sendAck(pendingAck);
+                pendingAck=null;
+                deliveredCounter = 0;
+                additionalWindowSize = 0;
+            }
         }
     }
 
