@@ -36,6 +36,7 @@ import javax.jms.TextMessage;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
@@ -43,8 +44,10 @@ import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.impl.Log4jLoggerAdapter;
 
 /**
  * Test to demostrate a message trapped in the JDBC store and not
@@ -106,6 +109,9 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
      */
 
     public void testDBCommitException() throws Exception {
+
+        org.apache.log4j.Logger serviceLogger = org.apache.log4j.Logger.getLogger(TransportConnection.class.getName() + ".Service");
+        serviceLogger.setLevel (Level.TRACE);
 
         broker = this.createBroker(false);
         broker.deleteAllMessages();
