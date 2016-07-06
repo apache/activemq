@@ -196,6 +196,7 @@ public class MQTTProtocolConverter {
         switch (frame.messageType()) {
             case PINGREQ.TYPE:
                 LOG.debug("Received a ping from client: " + getClientId());
+                checkConnected();
                 sendToMQTT(PING_RESP_FRAME);
                 LOG.debug("Sent Ping Response to " + getClientId());
                 break;
