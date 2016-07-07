@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
+import org.fusesource.hawtdispatch.DispatchQueue;
+import org.fusesource.hawtdispatch.internal.SerialDispatchQueue;
 import org.fusesource.hawtdispatch.transport.Transport;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.Callback;
@@ -46,6 +48,7 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,6 +117,8 @@ public class MQTTPingReqTest extends MQTTTestSupport {
             fail(error.get().getMessage());
         }
 
+        disableDispatchAssertion(transport.get());
+
         //Send a PINGREQ without a connect packet first
         final MQTTProtocolCodec codec = new MQTTProtocolCodec();
         codec.setTransport(transport.get());
@@ -153,6 +158,7 @@ public class MQTTPingReqTest extends MQTTTestSupport {
         BlockingConnection connection = new BlockingConnection(new FutureConnection(callbackConnection));
         connection.connect();
         Transport transport =  callbackConnection.transport();
+        disableDispatchAssertion(transport);
 
         //SEND a PINGREQ and wait for the response
         final MQTTProtocolCodec codec = new MQTTProtocolCodec();
@@ -161,5 +167,16 @@ public class MQTTPingReqTest extends MQTTTestSupport {
 
         //Wait for the response
         assertTrue(pingRespReceived.await(5, TimeUnit.SECONDS));
+    }
+
+    private void disableDispatchAssertion(final Transport transport) {
+        //Since we are purposefully bypassing the normal way of sending a packet, turn off the
+        //assertion
+        DispatchQueue dispatchQueue = transport.getDispatchQueue();
+        if (dispatchQueue instanceof SerialDispatchQueue) {
+            SerialDispatchQueue spyQueue = Mockito.spy((SerialDispatchQueue)dispatchQueue);
+            Mockito.doNothing().when(spyQueue).assertExecuting();
+            transport.setDispatchQueue(spyQueue);
+        }
     }
 }
