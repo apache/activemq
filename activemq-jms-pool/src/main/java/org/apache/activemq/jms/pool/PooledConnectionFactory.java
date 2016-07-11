@@ -301,6 +301,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
             try {
                 if (connectionsPool != null) {
                     connectionsPool.close();
+                    connectionsPool = null;
                 }
             } catch (Exception e) {
             }
