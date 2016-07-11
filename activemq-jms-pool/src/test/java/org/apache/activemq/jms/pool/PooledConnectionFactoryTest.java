@@ -18,6 +18,7 @@ package org.apache.activemq.jms.pool;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -115,6 +116,32 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
         assertNotSame(conn2.getConnection(), conn3.getConnection());
 
         assertEquals(3, cf.getNumConnections());
+    }
+
+    @Test(timeout = 60000)
+    public void testFactoryStopStart() throws Exception {
+
+        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
+        PooledConnectionFactory cf = new PooledConnectionFactory();
+        cf.setConnectionFactory(amq);
+        cf.setMaxConnections(1);
+
+        PooledConnection conn1 = (PooledConnection) cf.createConnection();
+
+        cf.stop();
+
+        assertNull(cf.createConnection());
+
+        cf.start();
+
+        PooledConnection conn2 = (PooledConnection) cf.createConnection();
+
+        assertNotSame(conn1.getConnection(), conn2.getConnection());
+
+        assertEquals(1, cf.getNumConnections());
+
+        cf.stop();
     }
 
     @Test(timeout = 60000)
