@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -222,6 +222,58 @@ public class AmqpMessage {
         checkReadOnly();
         lazyCreateProperties();
         getWrappedMessage().setMessageId(messageId);
+    }
+
+    /**
+     * Sets the CorrelationId property on an outbound message using the provided String
+     *
+     * @param correlationId
+     *        the String Correlation ID value to set.
+     */
+    public void setCorrelationId(String correlationId) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setCorrelationId(correlationId);
+    }
+
+    /**
+     * Return the set CorrelationId value in String form, if there are no properties
+     * in the given message return null.
+     *
+     * @return the set correlation ID in String form or null if not set.
+     */
+    public String getCorrelationId() {
+        if (message.getProperties() == null) {
+            return null;
+        }
+
+        return message.getProperties().getCorrelationId().toString();
+    }
+
+    /**
+     * Return the set CorrelationId value in the original form, if there are no properties
+     * in the given message return null.
+     *
+     * @return the set message ID in its original form or null if not set.
+     */
+    public Object getRawCorrelationId() {
+        if (message.getProperties() == null) {
+            return null;
+        }
+
+        return message.getProperties().getCorrelationId();
+    }
+
+    /**
+     * Sets the CorrelationId property on an outbound message using the provided value
+     *
+     * @param correlationId
+     *        the correlation ID value to set.
+     */
+    public void setRawCorrelationId(Object correlationId) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setCorrelationId(correlationId);
     }
 
     /**
