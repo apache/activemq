@@ -19,10 +19,13 @@ package org.apache.activemq.transport.amqp.interop;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.transport.amqp.JMSInteroperabilityTest;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
@@ -33,11 +36,39 @@ import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests that the AMQP MessageID value and type are preserved.
  */
+@RunWith(Parameterized.class)
 public class AmqpMessageIdPreservationTest extends AmqpClientTestSupport {
+
+    protected static final Logger LOG = LoggerFactory.getLogger(JMSInteroperabilityTest.class);
+
+    private final String transformer;
+
+    @Parameters(name="Transformer->{0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {"jms"},
+                {"native"},
+                {"raw"},
+            });
+    }
+
+    public AmqpMessageIdPreservationTest(String transformer) {
+        this.transformer = transformer;
+    }
+
+    @Override
+    protected String getAmqpTransformer() {
+        return transformer;
+    }
 
     @Override
     protected boolean isPersistent() {
