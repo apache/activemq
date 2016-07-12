@@ -358,7 +358,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     @Override
     public synchronized long messageSize() {
-        return memoryList.messageSize() + (isDiskListEmpty() ? 0 : (int)getDiskList().messageSize());
+        return memoryList.messageSize() + (isDiskListEmpty() ? 0 : getDiskList().messageSize());
     }
 
     /**
