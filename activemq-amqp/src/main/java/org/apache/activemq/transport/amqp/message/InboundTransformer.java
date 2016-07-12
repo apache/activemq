@@ -207,7 +207,7 @@ public abstract class InboundTransformer {
                 jms.setJMSReplyTo(vendor.createDestination(properties.getReplyTo()));
             }
             if (properties.getCorrelationId() != null) {
-                jms.setJMSCorrelationID(properties.getCorrelationId().toString());
+                jms.setJMSCorrelationID(AMQPMessageIdHelper.INSTANCE.toBaseMessageIdString(properties.getCorrelationId()));
             }
             if (properties.getContentType() != null) {
                 jms.setStringProperty(prefixVendor + "ContentType", properties.getContentType().toString());

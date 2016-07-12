@@ -46,7 +46,6 @@ import org.apache.qpid.proton.amqp.UnsignedLong;
  *
  * <p>When provided a string for conversion which attempts to identify itself as an encoded binary, uuid, or
  * ulong but can't be converted into the indicated format, an exception will be thrown.
- *
  */
 public class AMQPMessageIdHelper {
 
