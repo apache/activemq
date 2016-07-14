@@ -433,8 +433,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 pageFile = null;
                 loadPageFile();
             }
-            startCheckpoint();
             recover();
+            startCheckpoint();
         }
     }
 
