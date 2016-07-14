@@ -1471,10 +1471,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             );
             sd.locationIndex.put(tx, location, id);
             incrementAndAddSizeToStoreStat(command.getDestination(), location.getSize());
-            // on first update previous is original location, on recovery/replay it may be the updated location
-            if(previousKeys != null && !previousKeys.location.equals(location)) {
-                sd.locationIndex.remove(tx, previousKeys.location);
+
+            if (previousKeys != null) {
+                //Remove the existing from the size
                 decrementAndSubSizeToStoreStat(command.getDestination(), previousKeys.location.getSize());
+
+                // on first update previous is original location, on recovery/replay it may be the updated location
+                if(!previousKeys.location.equals(location)) {
+                    sd.locationIndex.remove(tx, previousKeys.location);
+                }
             }
             metadata.lastUpdate = location;
         } else {
