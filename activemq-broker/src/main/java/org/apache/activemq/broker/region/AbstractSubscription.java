@@ -236,8 +236,9 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public int getInFlightUsage() {
-        if (info.getPrefetchSize() > 0) {
-            return (getInFlightSize() * 100)/info.getPrefetchSize();
+        int prefetchSize = info.getPrefetchSize();
+        if (prefetchSize > 0) {
+            return (getInFlightSize() * 100) / prefetchSize;
         }
         return Integer.MAX_VALUE;
     }
