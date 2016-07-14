@@ -46,6 +46,7 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.activemq.transport.amqp.ResponseHandler;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -312,6 +313,22 @@ public class AmqpSession implements AmqpResource {
             protonSender.setSource(source);
 
             int senderCredit = protonSender.getRemoteCredit();
+
+            // Allows the options on the destination to configure the consumerInfo
+            if (destination.getOptions() != null) {
+                Map<String, Object> options = IntrospectionSupport.extractProperties(
+                    new HashMap<String, Object>(destination.getOptions()), "consumer.");
+                IntrospectionSupport.setProperties(consumerInfo, options);
+                if (options.size() > 0) {
+                    String msg = "There are " + options.size()
+                        + " consumer options that couldn't be set on the consumer."
+                        + " Check the options are spelled correctly."
+                        + " Unknown parameters=[" + options + "]."
+                        + " This consumer cannot be started.";
+                    LOG.warn(msg);
+                    throw new AmqpProtocolException(AmqpError.INVALID_FIELD.toString(), msg);
+                }
+            }
 
             consumerInfo.setSelector(selector);
             consumerInfo.setNoRangeAcks(true);

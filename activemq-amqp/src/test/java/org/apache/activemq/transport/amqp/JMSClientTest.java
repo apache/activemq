@@ -55,8 +55,10 @@ import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
+import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
@@ -1174,6 +1176,85 @@ public class JMSClientTest extends JMSClientTestSupport {
                     return broker.getTemporaryTopics().length == 0;
                 }
             }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(50)));
+        }
+    }
+
+    @Test(timeout = 60000)
+    public void testZeroPrefetchWithTwoConsumers() throws Exception {
+        JmsConnectionFactory cf = new JmsConnectionFactory(getAmqpURI("jms.prefetchPolicy.all=0"));
+        connection = cf.createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(getDestinationName());
+
+        MessageProducer producer = session.createProducer(queue);
+        producer.send(session.createTextMessage("Msg1"));
+        producer.send(session.createTextMessage("Msg2"));
+
+        // now lets receive it
+        MessageConsumer consumer1 = session.createConsumer(queue);
+        MessageConsumer consumer2 = session.createConsumer(queue);
+        TextMessage answer = (TextMessage)consumer1.receive(5000);
+        assertNotNull(answer);
+        assertEquals("Should have received a message!", answer.getText(), "Msg1");
+        answer = (TextMessage)consumer2.receive(5000);
+        assertNotNull(answer);
+        assertEquals("Should have received a message!", answer.getText(), "Msg2");
+
+        answer = (TextMessage)consumer2.receiveNoWait();
+        assertNull("Should have not received a message!", answer);
+    }
+
+    @Test(timeout=30000)
+    public void testRetroactiveConsumerSupported() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(getDestinationName() + "?consumer.retroactive=true");
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        QueueViewMBean queueView = getProxyToQueue(getDestinationName());
+        assertNotNull(queueView);
+        assertEquals(1, queueView.getSubscriptions().length);
+
+        SubscriptionViewMBean subscriber = getProxyToQueueSubscriber(getDestinationName());
+        assertTrue(subscriber.isRetroactive());
+
+        consumer.close();
+    }
+
+    @Test(timeout=30000)
+    public void testExclusiveConsumerSupported() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(getDestinationName() + "?consumer.exclusive=true");
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        QueueViewMBean queueView = getProxyToQueue(getDestinationName());
+        assertNotNull(queueView);
+        assertEquals(1, queueView.getSubscriptions().length);
+
+        SubscriptionViewMBean subscriber = getProxyToQueueSubscriber(getDestinationName());
+        assertTrue(subscriber.isExclusive());
+
+        consumer.close();
+    }
+
+    @Test(timeout=30000)
+    public void testUnpplicableDestinationOption() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(getDestinationName() + "?consumer.unknoen=true");
+        try {
+            session.createConsumer(queue);
+            fail("Should have failed to create consumer");
+        } catch (JMSException jmsEx) {
         }
     }
 
