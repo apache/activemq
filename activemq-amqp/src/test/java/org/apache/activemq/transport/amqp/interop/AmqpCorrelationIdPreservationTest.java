@@ -25,7 +25,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.transport.amqp.JMSInteroperabilityTest;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
@@ -48,7 +47,7 @@ import org.slf4j.LoggerFactory;
 @RunWith(Parameterized.class)
 public class AmqpCorrelationIdPreservationTest extends AmqpClientTestSupport {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(JMSInteroperabilityTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(AmqpCorrelationIdPreservationTest.class);
 
     private final String transformer;
 
