@@ -318,19 +318,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     final MessageReference node = iter.next();
                     Destination nodeDest = (Destination) node.getRegionDestination();
                     MessageId messageId = node.getMessageId();
-                    if (ack.getFirstMessageId() == null
-                            || ack.getFirstMessageId().equals(messageId)) {
+                    if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
                         inAckRange = true;
                     }
                     if (inAckRange) {
-                        if (node.isExpired()) {
-                            if (broker.isExpired(node)) {
-                                Destination regionDestination = nodeDest;
-                                regionDestination.messageExpired(context, this, node);
-                            }
-                            iter.remove();
-                            nodeDest.getDestinationStatistics().getInflight().decrement();
-                        }
+                        Destination regionDestination = nodeDest;
+                        regionDestination.messageExpired(context, this, node);
+                        iter.remove();
+                        nodeDest.getDestinationStatistics().getInflight().decrement();
+
                         if (ack.getLastMessageId().equals(messageId)) {
                             if (usePrefetchExtension && getPrefetchSize() != 0) {
                                 // allow  batch to exceed prefetch
