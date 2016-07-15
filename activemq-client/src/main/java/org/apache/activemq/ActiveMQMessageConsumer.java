@@ -525,11 +525,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     private boolean consumeExpiredMessage(MessageDispatch dispatch) {
-        if (dispatch.getMessage().isExpired()) {
-            return !isBrowser() && isConsumerExpiryCheckEnabled();
-        }
-
-        return false;
+        return isConsumerExpiryCheckEnabled() && dispatch.getMessage().isExpired();
     }
 
     private void posionAck(MessageDispatch md, String cause) throws JMSException {
@@ -1421,14 +1417,26 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 // delayed redelivery, ensure it can be re delivered
                                 session.connection.rollbackDuplicate(this, md.getMessage());
                             }
-                            if (!(md.getMessage() != null && md.getMessage().isExpired())) {
+
+                            if (md.getMessage() == null) {
+                                // End of browse or pull request timeout.
                                 unconsumedMessages.enqueue(md);
-                                if (availableListener != null) {
-                                    availableListener.onMessageAvailable(this);
-                                }
                             } else {
-                                beforeMessageIsConsumed(md);
-                                afterMessageIsConsumed(md, false);
+                                if (!consumeExpiredMessage(md)) {
+                                    unconsumedMessages.enqueue(md);
+                                    if (availableListener != null) {
+                                        availableListener.onMessageAvailable(this);
+                                    }
+                                } else {
+                                    beforeMessageIsConsumed(md);
+                                    afterMessageIsConsumed(md, true);
+
+                                    // Pull consumer needs to check if pull timed out and send
+                                    // a new pull command if not.
+                                    if (info.getCurrentPrefetchSize() == 0) {
+                                        unconsumedMessages.enqueue(null);
+                                    }
+                                }
                             }
                         }
                     } else {
