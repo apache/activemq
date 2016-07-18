@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -259,6 +259,11 @@ public class NettyTransportSslOptions extends NettyTransportOptions {
 
     public void setDefaultSslPort(int defaultSslPort) {
         this.defaultSslPort = defaultSslPort;
+    }
+
+    @Override
+    public boolean isSSL() {
+        return true;
     }
 
     @Override

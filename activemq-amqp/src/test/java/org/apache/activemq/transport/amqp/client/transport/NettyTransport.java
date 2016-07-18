@@ -23,7 +23,7 @@ import java.security.Principal;
 import io.netty.buffer.ByteBuf;
 
 /**
- *
+ * Base for all Netty based Transports in this client.
  */
 public interface NettyTransport {
 
