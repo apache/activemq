@@ -210,6 +210,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     private List<String> trustedPackages = new ArrayList<String>();
     private boolean trustAllPackages = false;
+	private int connectResponseTimeout;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -1496,7 +1497,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             if (info.getClientId() == null || info.getClientId().trim().length() == 0) {
                 info.setClientId(clientIdGenerator.generateId());
             }
-            syncSendPacket(info.copy());
+            syncSendPacket(info.copy(), getConnectResponseTimeout());
 
             this.isConnectionInfoSentToBroker = true;
             // Add a temp destination advisory consumer so that
@@ -2605,4 +2606,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setTrustAllPackages(boolean trustAllPackages) {
         this.trustAllPackages = trustAllPackages;
     }
+
+    public int getConnectResponseTimeout() {
+    	return connectResponseTimeout;
+    }
+
+	public void setConnectResponseTimeout(int connectResponseTimeout) {
+		this.connectResponseTimeout = connectResponseTimeout;
+	}
 }

@@ -98,6 +98,29 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertEquals(5000, cf.getAuditDepth());
     }
 
+    public void testConnectAttemptTimeotOptionIsApplied() throws URISyntaxException, JMSException {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
+
+        assertEquals(0, cf.getConnectResponseTimeout());
+
+        // the broker url have been adjusted.
+        assertEquals("vm://localhost", cf.getBrokerURL());
+
+        ActiveMQConnection connection = (ActiveMQConnection)cf.createConnection();
+        assertEquals(0, connection.getConnectResponseTimeout());
+        connection.close();
+
+        cf = new ActiveMQConnectionFactory("vm://localhost?jms.connectResponseTimeout=1000");
+        assertEquals(1000, cf.getConnectResponseTimeout());
+
+        // the broker url have been adjusted.
+        assertEquals("vm://localhost", cf.getBrokerURL());
+
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertEquals(1000, connection.getConnectResponseTimeout());
+        connection.close();
+    }
+
     public void testUseURIToConfigureRedeliveryPolicy() throws URISyntaxException, JMSException {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(
             "vm://localhost?broker.persistent=false&broker.useJmx=false&jms.redeliveryPolicy.maximumRedeliveries=2");
