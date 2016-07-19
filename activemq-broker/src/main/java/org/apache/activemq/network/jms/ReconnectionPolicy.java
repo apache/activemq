@@ -234,7 +234,7 @@ public class ReconnectionPolicy {
         long nextDelay = initialReconnectDelay;
 
         if (useExponentialBackOff) {
-            nextDelay = nextDelay * (long)(attempt * backOffMultiplier);
+            nextDelay = Math.max(initialReconnectDelay, nextDelay * (long)((attempt - 1) * backOffMultiplier));
         }
 
         if (maximumReconnectDelay > 0 && nextDelay > maximumReconnectDelay) {
