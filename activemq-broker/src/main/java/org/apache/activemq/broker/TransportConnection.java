@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -116,9 +117,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     protected final Map<ConnectionId, ConnectionState> brokerConnectionStates;
     // The broker and wireformat info that was exchanged.
     protected BrokerInfo brokerInfo;
-    protected final List<Command> dispatchQueue = new LinkedList<Command>();
+    protected final List<Command> dispatchQueue = new LinkedList<>();
     protected TaskRunner taskRunner;
-    protected final AtomicReference<Throwable> transportException = new AtomicReference<Throwable>();
+    protected final AtomicReference<Throwable> transportException = new AtomicReference<>();
     protected AtomicBoolean dispatchStopped = new AtomicBoolean(false);
     private final Transport transport;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
@@ -140,8 +141,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private final AtomicBoolean stopping = new AtomicBoolean(false);
     private final CountDownLatch stopped = new CountDownLatch(1);
     private final AtomicBoolean asyncException = new AtomicBoolean(false);
-    private final Map<ProducerId, ProducerBrokerExchange> producerExchanges = new HashMap<ProducerId, ProducerBrokerExchange>();
-    private final Map<ConsumerId, ConsumerBrokerExchange> consumerExchanges = new HashMap<ConsumerId, ConsumerBrokerExchange>();
+    private final Map<ProducerId, ProducerBrokerExchange> producerExchanges = new HashMap<>();
+    private final Map<ConsumerId, ConsumerBrokerExchange> consumerExchanges = new HashMap<>();
     private final CountDownLatch dispatchStoppedLatch = new CountDownLatch(1);
     private ConnectionContext context;
     private boolean networkConnection;
@@ -1419,6 +1420,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 listener.setCreatedByDuplex(true);
                 duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteBridgeTransport, listener);
                 duplexBridge.setBrokerService(brokerService);
+                Set<ActiveMQDestination> durableDestinations = broker.getDurableDestinations();
+                //Need to set durableDestinations to properly restart subs when dynamicOnly=false
+                if (durableDestinations != null) {
+                    duplexBridge.setDurableDestinations(broker.getDurableDestinations().toArray(new ActiveMQDestination[0]));
+                }
                 // now turn duplex off this side
                 info.setDuplexConnection(false);
                 duplexBridge.setCreatedByDuplex(true);
