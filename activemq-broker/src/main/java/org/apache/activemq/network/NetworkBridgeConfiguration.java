@@ -31,6 +31,7 @@ public class NetworkBridgeConfiguration {
     private boolean conduitSubscriptions = true;
     private boolean useVirtualDestSubs;
     private boolean dynamicOnly;
+    private boolean syncDurableSubs;
     private boolean dispatchAsync = true;
     private boolean decreaseNetworkConsumerPriority;
     private int consumerPriorityBase = ConsumerInfo.NETWORK_CONSUMER_PRIORITY;
@@ -96,6 +97,14 @@ public class NetworkBridgeConfiguration {
      */
     public void setDynamicOnly(boolean dynamicOnly) {
         this.dynamicOnly = dynamicOnly;
+    }
+
+    public boolean isSyncDurableSubs() {
+        return syncDurableSubs;
+    }
+
+    public void setSyncDurableSubs(boolean syncDurableSubs) {
+        this.syncDurableSubs = syncDurableSubs;
     }
 
     /**

@@ -57,7 +57,9 @@ import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.BrokerSubscriptionInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
@@ -127,11 +129,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected ActiveMQDestination[] dynamicallyIncludedDestinations;
     protected ActiveMQDestination[] staticallyIncludedDestinations;
     protected ActiveMQDestination[] durableDestinations;
-    protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByLocalId = new ConcurrentHashMap<ConsumerId, DemandSubscription>();
-    protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByRemoteId = new ConcurrentHashMap<ConsumerId, DemandSubscription>();
+    protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByLocalId = new ConcurrentHashMap<>();
+    protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByRemoteId = new ConcurrentHashMap<>();
     protected final BrokerId localBrokerPath[] = new BrokerId[]{null};
     protected final CountDownLatch startedLatch = new CountDownLatch(2);
     protected final CountDownLatch localStartedLatch = new CountDownLatch(1);
+    protected final CountDownLatch staticDestinationsLatch = new CountDownLatch(1);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
     protected NetworkBridgeConfiguration configuration;
     protected final NetworkBridgeFilterFactory defaultFilterFactory = new DefaultNetworkBridgeFilterFactory();
@@ -311,6 +314,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     startedLatch.countDown();
                     startedLatch.countDown();
                     localStartedLatch.countDown();
+                    staticDestinationsLatch.countDown();
 
                     ss.throwFirstException();
                 }
@@ -440,6 +444,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         try {
             if (safeWaitUntilStarted()) {
                 setupStaticDestinations();
+                staticDestinationsLatch.countDown();
             }
         } catch (Throwable e) {
             serviceLocalException(e);
@@ -549,6 +554,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     brokerInfo.setNetworkProperties(str);
                     brokerInfo.setBrokerId(this.localBrokerId);
                     remoteBroker.oneway(brokerInfo);
+                    if (configuration.isSyncDurableSubs() &&
+                            remoteBroker.getWireFormat().getVersion() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
+                        remoteBroker.oneway(TransportConnection.getBrokerSubscriptionInfo(brokerService));
+                    }
                 }
                 if (remoteConnectionInfo != null) {
                     remoteBroker.oneway(remoteConnectionInfo.createRemoveCommand());
@@ -617,6 +626,31 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     ackAdvisory(md.getMessage());
                 } else if (command.isBrokerInfo()) {
                     futureRemoteBrokerInfo.set((BrokerInfo) command);
+                } else if (command instanceof BrokerSubscriptionInfo) {
+                    staticDestinationsLatch.await();
+                    BrokerSubscriptionInfo subInfo = (BrokerSubscriptionInfo) command;
+                    LOG.debug("Received Remote BrokerSubscriptionInfo on {} from {}",
+                            this.brokerService.getBrokerName(), subInfo.getBrokerName());
+
+                    if (configuration.isSyncDurableSubs() && configuration.isConduitSubscriptions()
+                            && !configuration.isDynamicOnly() && subInfo.getSubscriptionInfos() != null) {
+                        if (started.get()) {
+                            for (ConsumerInfo info : subInfo.getSubscriptionInfos()) {
+                                if(!info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX) &&
+                                        matchesDynamicallyIncludedDestinations(info.getDestination())) {
+                                    serviceRemoteConsumerAdvisory(info);
+                                }
+                            }
+
+                            //After re-added, clean up any empty durables
+                            for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
+                                DemandSubscription ds = i.next();
+                                if (matchesDynamicallyIncludedDestinations(ds.getLocalInfo().getDestination())) {
+                                    cleanupDurableSub(ds, i);
+                                }
+                            }
+                        }
+                    }
                 } else if (command.getClass() == ConnectionError.class) {
                     ConnectionError ce = (ConnectionError) command;
                     serviceRemoteException(ce.getException());
@@ -831,24 +865,29 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 DemandSubscription ds = i.next();
                 boolean removed = ds.getDurableRemoteSubs().remove(subscriptionInfo);
                 if (removed) {
-                    if (ds.getDurableRemoteSubs().isEmpty()) {
-
-                        // deactivate subscriber
-                        RemoveInfo removeInfo = new RemoveInfo(ds.getLocalInfo().getConsumerId());
-                        localBroker.oneway(removeInfo);
-
-                        // remove subscriber
-                        RemoveSubscriptionInfo sending = new RemoveSubscriptionInfo();
-                        sending.setClientId(localClientId);
-                        sending.setSubscriptionName(ds.getLocalDurableSubscriber().getSubscriptionName());
-                        sending.setConnectionId(this.localConnectionInfo.getConnectionId());
-                        localBroker.oneway(sending);
-
-                        //remove subscriber from map
-                        i.remove();
-                    }
+                    cleanupDurableSub(ds, i);
                 }
             }
+        }
+    }
+
+    private void cleanupDurableSub(final DemandSubscription ds,
+            Iterator<DemandSubscription> i) throws IOException {
+        if (ds != null && ds.getLocalDurableSubscriber() != null && ds.getDurableRemoteSubs().isEmpty()) {
+
+            // deactivate subscriber
+            RemoveInfo removeInfo = new RemoveInfo(ds.getLocalInfo().getConsumerId());
+            localBroker.oneway(removeInfo);
+
+            // remove subscriber
+            RemoveSubscriptionInfo sending = new RemoveSubscriptionInfo();
+            sending.setClientId(localClientId);
+            sending.setSubscriptionName(ds.getLocalDurableSubscriber().getSubscriptionName());
+            sending.setConnectionId(this.localConnectionInfo.getConnectionId());
+            localBroker.oneway(sending);
+
+            //remove subscriber from map
+            i.remove();
         }
     }
 
@@ -1002,7 +1041,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         });
                         if (isDuplex() && NetworkBridgeFilter.isAdvisoryInterpretedByNetworkBridge(message)) {
                             try {
-                                // never request b/c they are eventually acked async
+                                // never request b/c they are eventually                     acked async
                                 remoteBroker.oneway(message);
                             } finally {
                                 sub.decrementOutstandingResponses();
@@ -1063,6 +1102,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } else {
                     switch (command.getDataStructureType()) {
                         case WireFormatInfo.DATA_STRUCTURE_TYPE:
+                            break;
+                        case BrokerSubscriptionInfo.DATA_STRUCTURE_TYPE:
                             break;
                         default:
                             LOG.warn("Unexpected local command: {}", command);
@@ -1155,16 +1196,24 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         dests = dynamicallyIncludedDestinations;
         if (dests != null && dests.length > 0) {
+            return matchesDynamicallyIncludedDestinations(destination);
+        }
+
+        return true;
+    }
+
+    private boolean matchesDynamicallyIncludedDestinations(ActiveMQDestination destination) {
+        ActiveMQDestination[] dests = dynamicallyIncludedDestinations;
+        if (dests != null && dests.length > 0) {
             for (ActiveMQDestination dest : dests) {
                 DestinationFilter inclusionFilter = DestinationFilter.parseFilter(dest);
                 if (dest != null && inclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
                     return true;
                 }
             }
-
-            return false;
         }
-        return true;
+
+        return false;
     }
 
     /**
@@ -1175,7 +1224,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (dests != null) {
             for (ActiveMQDestination dest : dests) {
                 if (isPermissableDestination(dest)) {
-                    DemandSubscription sub = createDemandSubscription(dest);
+                    DemandSubscription sub = createDemandSubscription(dest, null);
                     sub.setStaticallyIncluded(true);
                     try {
                         addSubscription(sub);
@@ -1348,10 +1397,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return result;
     }
 
-    final protected DemandSubscription createDemandSubscription(ActiveMQDestination destination) {
+    final protected DemandSubscription createDemandSubscription(ActiveMQDestination destination, final String subscriptionName) {
         ConsumerInfo info = new ConsumerInfo();
         info.setNetworkSubscription(true);
         info.setDestination(destination);
+
+        if (subscriptionName != null) {
+            info.setSubscriptionName(subscriptionName);
+        }
 
         // Indicate that this subscription is being made on behalf of the remote broker.
         info.setBrokerPath(new BrokerId[]{remoteBrokerId});

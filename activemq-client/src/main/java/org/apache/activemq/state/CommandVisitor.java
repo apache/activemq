@@ -17,6 +17,7 @@
 package org.apache.activemq.state;
 
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.BrokerSubscriptionInfo;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
@@ -93,6 +94,8 @@ public interface CommandVisitor {
     Response processFlush(FlushCommand command) throws Exception;
 
     Response processBrokerInfo(BrokerInfo info) throws Exception;
+
+    Response processBrokerSubscriptionInfo(BrokerSubscriptionInfo info) throws Exception;
 
     Response processRecoverTransactions(TransactionInfo info) throws Exception;
 

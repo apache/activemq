@@ -73,7 +73,7 @@ public class DurableConduitBridge extends ConduitBridge {
                             for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
                                 String subName = subscription.getConsumerInfo().getSubscriptionName();
                                 if (subName != null && subName.equals(candidateSubName)) {
-                                    DemandSubscription sub = createDemandSubscription(dest);
+                                    DemandSubscription sub = createDemandSubscription(dest, subName);
                                     sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
                                     sub.setStaticallyIncluded(true);
                                     addSubscription(sub);
