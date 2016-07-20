@@ -81,6 +81,7 @@ import org.apache.activemq.network.DemandForwardingBridge;
 import org.apache.activemq.network.MBeanNetworkListener;
 import org.apache.activemq.network.NetworkBridgeConfiguration;
 import org.apache.activemq.network.NetworkBridgeFactory;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.state.ConnectionState;
@@ -1420,11 +1421,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 listener.setCreatedByDuplex(true);
                 duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteBridgeTransport, listener);
                 duplexBridge.setBrokerService(brokerService);
-                Set<ActiveMQDestination> durableDestinations = broker.getDurableDestinations();
                 //Need to set durableDestinations to properly restart subs when dynamicOnly=false
-                if (durableDestinations != null) {
-                    duplexBridge.setDurableDestinations(broker.getDurableDestinations().toArray(new ActiveMQDestination[0]));
-                }
+                duplexBridge.setDurableDestinations(NetworkConnector.getDurableTopicDestinations(
+                        broker.getDurableDestinations()));
+
                 // now turn duplex off this side
                 info.setDuplexConnection(false);
                 duplexBridge.setCreatedByDuplex(true);
