@@ -70,7 +70,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     //This is deprecated and should be removed in a future release
     protected boolean batchStatments = true;
     protected boolean prioritizedMessages;
-    protected ReadWriteLock cleanupExclusiveLock = new ReentrantReadWriteLock();
     protected int maxRows = MAX_ROWS;
 
     protected void setBinaryData(PreparedStatement s, int index, byte data[]) throws SQLException {
@@ -83,20 +82,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     @Override
     public void doCreateTables(TransactionContext transactionContext) throws SQLException, IOException {
-        cleanupExclusiveLock.writeLock().lock();
-        try {
-            // Check to see if the table already exists. If it does, then don't log warnings during startup.
-            // Need to run the scripts anyways since they may contain ALTER statements that upgrade a previous version of the table
-            boolean messageTableAlreadyExists = messageTableAlreadyExists(transactionContext);
+        // Check to see if the table already exists. If it does, then don't log warnings during startup.
+        // Need to run the scripts anyways since they may contain ALTER statements that upgrade a previous version of the table
+        boolean messageTableAlreadyExists = messageTableAlreadyExists(transactionContext);
 
-            for (String createStatement : this.statements.getCreateSchemaStatements()) {
-                // This will fail usually since the tables will be
-                // created already.
-                executeStatement(transactionContext, createStatement, messageTableAlreadyExists);
-            }
-
-        } finally {
-            cleanupExclusiveLock.writeLock().unlock();
+        for (String createStatement : this.statements.getCreateSchemaStatements()) {
+            // This will fail usually since the tables will be
+            // created already.
+            executeStatement(transactionContext, createStatement, messageTableAlreadyExists);
         }
     }
 
@@ -150,7 +143,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doDropTables(TransactionContext c) throws SQLException, IOException {
         Statement s = null;
-        cleanupExclusiveLock.writeLock().lock();
         try {
             s = c.getConnection().createStatement();
             String[] dropStatments = this.statements.getDropSchemaStatements();
@@ -169,7 +161,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             commitIfAutoCommitIsDisabled(c);
         } finally {
-            cleanupExclusiveLock.writeLock().unlock();
             try {
                 s.close();
             } catch (Throwable e) {
@@ -181,7 +172,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public long doGetLastMessageStoreSequenceId(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindLastSequenceIdInMsgsStatement());
             rs = s.executeQuery();
@@ -200,7 +190,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             long seq = Math.max(seq1, seq2);
             return seq;
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -210,7 +199,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public byte[] doGetMessageById(TransactionContext c, long storeSequenceId) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(
                     this.statements.getFindMessageByIdStatement());
@@ -221,7 +209,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return getBinaryData(rs, 1);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -235,7 +222,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
                              long expiration, byte priority, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(this.statements.getAddMessageStatement());
@@ -264,7 +250,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new SQLException("Failed add a message");
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 if (s != null) {
                     s.close();
@@ -276,7 +261,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doUpdateMessage(TransactionContext c, ActiveMQDestination destination, MessageId id, byte[] data) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getUpdateMessageStatement());
             setBinaryData(s, 1, data);
@@ -287,7 +271,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new IOException("Could not update message: " + id + " in " + destination);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -297,7 +280,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doAddMessageReference(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination,
             long expirationTime, String messageRef) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(this.statements.getAddMessageStatement());
@@ -317,7 +299,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new SQLException("Failed add a message");
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 s.close();
             }
@@ -328,7 +309,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public long[] getStoreSequenceId(TransactionContext c, ActiveMQDestination destination, MessageId messageID) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindMessageSequenceIdStatement());
             s.setString(1, messageID.getProducerId().toString());
@@ -340,7 +320,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return new long[]{rs.getLong(1), rs.getLong(2)};
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -350,7 +329,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public byte[] doGetMessage(TransactionContext c, MessageId id) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindMessageStatement());
             s.setString(1, id.getProducerId().toString());
@@ -361,7 +339,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return getBinaryData(rs, 1);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -371,7 +348,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public String doGetMessageReference(TransactionContext c, long seq) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindMessageStatement());
             s.setLong(1, seq);
@@ -381,7 +357,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return rs.getString(1);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -393,7 +368,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doRemoveMessage(TransactionContext c, long seq, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getRemovedMessageStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(xid == null ?
@@ -417,7 +391,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new SQLException("Failed to remove message seq: " + seq);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements && s != null) {
                 s.close();
             }
@@ -429,7 +402,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllMessagesStatement());
             s.setString(1, destination.getQualifiedName());
@@ -448,7 +420,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -459,7 +430,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             JDBCMessageIdScanListener listener) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIdsStatement());
             s.setMaxRows(limit);
@@ -476,7 +446,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 listener.messageId(id);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -486,7 +455,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
                                          String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(xid == null ?
@@ -513,7 +481,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new SQLException("Failed update last ack with priority: " + priority + ", for sub: " + subscriptionName);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 close(s);
             }
@@ -525,7 +492,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
                              String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(xid == null ?
@@ -553,7 +519,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                             + seq + ", for sub: " + subscriptionName);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 close(s);
             }
@@ -573,7 +538,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doClearLastAck(TransactionContext c, ActiveMQDestination destination, byte priority, String clientId, String subName) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getClearDurableLastAckInTxStatement());
             s.setString(1, destination.getQualifiedName());
@@ -584,7 +548,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new IOException("Could not remove prepared transaction state from message ack for: " + clientId + ":" + subName);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -596,7 +559,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         // destination.getQualifiedName(),clientId,subscriptionName);
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllDurableSubMessagesStatement());
             s.setString(1, destination.getQualifiedName());
@@ -617,7 +579,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -629,7 +590,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
@@ -653,7 +613,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -665,7 +624,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
@@ -690,7 +648,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -702,7 +659,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         int result = 0;
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (isPrioritizedMessages) {
                 s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatementWithPriority());
@@ -717,7 +673,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 result = rs.getInt(1);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -737,7 +692,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         // dumpTables(c, destination.getQualifiedName(), clientId,
         // subscriptionName);
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             long lastMessageId = -1;
             if (!retroactive) {
@@ -774,7 +728,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
 
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -784,7 +737,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             String clientId, String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubStatement());
             s.setString(1, destination.getQualifiedName());
@@ -803,7 +755,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     ActiveMQDestination.QUEUE_TYPE));
             return subscription;
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -814,7 +765,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllDurableSubsStatement());
             s.setString(1, destination.getQualifiedName());
@@ -832,7 +782,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return rc.toArray(new SubscriptionInfo[rc.size()]);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -842,7 +791,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doRemoveAllMessages(TransactionContext c, ActiveMQDestination destinationName) throws SQLException,
             IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getRemoveAllMessagesStatement());
             s.setString(1, destinationName.getQualifiedName());
@@ -852,7 +800,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(1, destinationName.getQualifiedName());
             s.executeUpdate();
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -861,7 +808,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doDeleteSubscription(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getDeleteSubscriptionStatement());
             s.setString(1, destination.getQualifiedName());
@@ -869,7 +815,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, subscriptionName);
             s.executeUpdate();
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -878,17 +823,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.writeLock().lock();
         try {
             LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatementWithPriority());
-            s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
+            s = c.getExclusiveConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
             int priority = priorityIterator++%10;
             s.setInt(1, priority);
             s.setInt(2, priority);
             int i = s.executeUpdate();
             LOG.debug("Deleted " + i + " old message(s) at priority: " + priority);
         } finally {
-            cleanupExclusiveLock.writeLock().unlock();
             close(s);
         }
     }
@@ -899,7 +842,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         long result = -1;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getLastAckedDurableSubscriberMessageStatement());
             s.setString(1, destination.getQualifiedName());
@@ -913,7 +855,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -939,7 +880,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllDestinationsStatement());
             rs = s.executeQuery();
@@ -947,7 +887,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 rc.add(ActiveMQDestination.createDestination(rs.getString(1), ActiveMQDestination.QUEUE_TYPE));
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -1024,7 +963,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doRecordDestination(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getCreateDurableSubStatement());
             s.setString(1, destination.getQualifiedName());
@@ -1039,7 +977,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new IOException("Could not create ack record for destination: " + destination);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -1048,7 +985,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doRecoverPreparedOps(TransactionContext c, JdbcMemoryTransactionStore jdbcMemoryTransactionStore) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindOpsPendingOutcomeStatement());
             rs = s.executeQuery();
@@ -1080,7 +1016,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
         } finally {
             close(rs);
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -1088,7 +1023,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doCommitAddOp(TransactionContext c, long preparedSequence, long sequence) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getClearXidFlagStatement());
             s.setLong(1, sequence);
@@ -1097,7 +1031,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new IOException("Could not remove prepared transaction state from message add for sequenceId: " + sequence);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -1109,7 +1042,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         int result = 0;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getDestinationMessageCountStatement());
             s.setString(1, destination.getQualifiedName());
@@ -1118,7 +1050,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 result = rs.getInt(1);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -1130,7 +1061,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             long maxSeq, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (isPrioritizedMessages) {
                 s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesByPriorityStatement()));
@@ -1172,7 +1102,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         } catch (Exception e) {
             LOG.warn("Exception recovering next messages", e);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -1183,7 +1112,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getLastProducerSequenceIdStatement());
             s.setString(1, id.toString());
@@ -1194,7 +1122,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return seq;
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
