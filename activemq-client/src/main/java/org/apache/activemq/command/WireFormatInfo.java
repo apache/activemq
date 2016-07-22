@@ -318,6 +318,42 @@ public class WireFormatInfo implements Command, MarshallAware {
         setProperty("CacheSize", new Integer(cacheSize));
     }
 
+    /**
+     * @throws IOException
+     */
+    public String getProviderName() throws IOException {
+        Object o = getProperty("ProviderName");
+        return o == null ? null : o.toString();
+    }
+
+    public void setProviderName(String providerName) throws IOException {
+        setProperty("ProviderName", providerName);
+    }
+
+    /**
+     * @throws IOException
+     */
+    public String getProviderVersion() throws IOException {
+        Object o = getProperty("ProviderVersion");
+        return o == null ? null : o.toString();
+    }
+
+    public void setProviderVersion(String providerVersion) throws IOException {
+        setProperty("ProviderVersion", providerVersion);
+    }
+
+    /**
+     * @throws IOException
+     */
+    public String getPlatformDetails() throws IOException {
+        Object o = getProperty("PlatformDetails");
+        return o == null ? null : o.toString();
+    }
+
+    public void setPlatformDetails(String platformDetails) throws IOException {
+        setProperty("PlatformDetails", platformDetails);
+    }
+
     @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processWireFormat(this);
