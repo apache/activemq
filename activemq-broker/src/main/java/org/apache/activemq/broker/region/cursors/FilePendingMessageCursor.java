@@ -483,7 +483,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     private void discardExpiredMessage(MessageReference reference) {
         LOG.debug("Discarding expired message {}", reference);
-        if (broker.isExpired(reference)) {
+        if (reference.isExpired() && broker.isExpired(reference)) {
             ConnectionContext context = new ConnectionContext(new NonCachedMessageEvaluationContext());
             context.setBroker(broker);
             ((Destination)reference.getRegionDestination()).messageExpired(context, null, new IndirectMessageReference(reference.getMessage()));

@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 
-import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.activemq.TestSupport.getDestination;

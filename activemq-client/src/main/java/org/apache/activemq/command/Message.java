@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.DeflaterOutputStream;
 
 import javax.jms.JMSException;
@@ -94,6 +95,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     private transient ActiveMQConnection connection;
     transient MessageDestination regionDestination;
     transient MemoryUsage memoryUsage;
+    transient AtomicBoolean processAsExpired = new AtomicBoolean(false);
 
     private BrokerId[] brokerPath;
     private BrokerId[] cluster;
@@ -836,5 +838,10 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         } catch (IOException e) {
         }
         return super.toString(overrideFields);
+    }
+
+    @Override
+    public boolean canProcessAsExpired() {
+        return processAsExpired.compareAndSet(false, true);
     }
 }

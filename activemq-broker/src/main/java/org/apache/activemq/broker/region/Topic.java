@@ -527,9 +527,11 @@ public class Topic extends BaseDestination implements Task {
                     // It could take while before we receive the commit
                     // operation.. by that time the message could have
                     // expired..
-                    if (broker.isExpired(message)) {
-                        getDestinationStatistics().getExpired().increment();
-                        broker.messageExpired(context, message, null);
+                    if (message.isExpired()) {
+                        if (broker.isExpired(message)) {
+                            getDestinationStatistics().getExpired().increment();
+                            broker.messageExpired(context, message, null);
+                        }
                         message.decrementReferenceCount();
                         return;
                     }

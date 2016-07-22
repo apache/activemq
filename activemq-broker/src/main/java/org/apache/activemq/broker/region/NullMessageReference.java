@@ -154,4 +154,9 @@ public final class NullMessageReference implements QueueMessageReference {
         return false;
     }
 
+    @Override
+    public boolean canProcessAsExpired() {
+        return false;
+    }
+
 }

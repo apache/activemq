@@ -498,5 +498,10 @@ public class OrderPendingListTest {
         public boolean isAdvisory() {
             return false;
         }
+
+        @Override
+        public boolean canProcessAsExpired() {
+            return false;
+        }
     }
 }

@@ -204,4 +204,9 @@ public class IndirectMessageReference implements QueueMessageReference {
     public boolean isAdvisory() {
        return message.isAdvisory();
     }
+
+    @Override
+    public boolean canProcessAsExpired() {
+        return message.canProcessAsExpired();
+    }
 }
