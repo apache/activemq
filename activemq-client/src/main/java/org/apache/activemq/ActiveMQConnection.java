@@ -685,7 +685,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                             RemoveInfo removeCommand = info.createRemoveCommand();
                             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
                             try {
-                                doSyncSendPacket(removeCommand, closeTimeout);
+                                syncSendPacket(removeCommand, closeTimeout);
                             } catch (JMSException e) {
                                 if (e.getCause() instanceof RequestTimedOutIOException) {
                                     // expected
@@ -1377,13 +1377,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         onException(new IOException("Force close due to SecurityException on connect", exception));
     }
 
-    public Response syncSendPacket(Command command) throws JMSException {
+    public Response syncSendPacket(Command command, int timeout) throws JMSException {
         if (isClosed()) {
             throw new ConnectionClosedException();
         } else {
 
             try {
-                Response response = (Response)this.transport.request(command);
+                Response response = (Response)(timeout > 0
+                        ? this.transport.request(command, timeout)
+                        : this.transport.request(command));
                 if (response.isException()) {
                     ExceptionResponse er = (ExceptionResponse)response;
                     if (er.getException() instanceof JMSException) {
@@ -1422,32 +1424,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *
      * @throws JMSException
      */
-    public Response syncSendPacket(Command command, int timeout) throws JMSException {
-        if (isClosed() || closing.get()) {
-            throw new ConnectionClosedException();
-        } else {
-            return doSyncSendPacket(command, timeout);
-        }
-    }
-
-    protected Response doSyncSendPacket(Command command, int timeout)
-            throws JMSException {
-        try {
-            Response response = (Response) (timeout > 0
-                    ? this.transport.request(command, timeout)
-                    : this.transport.request(command));
-            if (response != null && response.isException()) {
-                ExceptionResponse er = (ExceptionResponse)response;
-                if (er.getException() instanceof JMSException) {
-                    throw (JMSException)er.getException();
-                } else {
-                    throw JMSExceptionSupport.create(er.getException());
-                }
-            }
-            return response;
-        } catch (IOException e) {
-            throw JMSExceptionSupport.create(e);
-        }
+    public Response syncSendPacket(Command command) throws JMSException {
+        return syncSendPacket(command, 0);
     }
 
     /**
