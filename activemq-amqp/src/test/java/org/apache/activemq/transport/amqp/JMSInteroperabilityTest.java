@@ -29,6 +29,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -39,6 +40,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -166,7 +168,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
     @Test(timeout = 60000)
     public void testMessagePropertiesArePreservedAMQPToOpenWire() throws Exception {
 
-        // Raw Transformer doesn't expand message propeties.
+        // Raw Transformer doesn't expand message properties.
         assumeFalse(transformer.equals("raw"));
 
         boolean bool = true;
@@ -284,7 +286,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         // Now consumer the ObjectMessage
         Message received = amqpConsumer.receive(2000);
         assertNotNull(received);
-        assertTrue(received instanceof ObjectMessage);
+        assertTrue("Expected ObjectMessage but got " + received, received instanceof ObjectMessage);
         ObjectMessage incoming = (ObjectMessage) received;
 
         Object incomingObject = incoming.getObject();
@@ -297,7 +299,126 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         openwire.close();
     }
 
-    //----- Tests for OpenWire to Qpid JMS using ObjectMessage ---------------//
+    //----- Tests for OpenWire <-> Qpid JMS using ObjectMessage --------------//
+
+    @Test
+    public void testQpidToOpenWireObjectMessage() throws Exception {
+
+        // Raw Transformer doesn't expand message properties.
+        assumeFalse(!transformer.equals("jms"));
+
+        Connection openwire = createJMSConnection();
+        Connection amqp = createConnection();
+
+        openwire.start();
+        amqp.start();
+
+        Session openwireSession = openwire.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session amqpSession = amqp.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Destination queue = openwireSession.createQueue(getDestinationName());
+
+        MessageProducer amqpProducer = amqpSession.createProducer(queue);
+        MessageConsumer openwireConsumer = openwireSession.createConsumer(queue);
+
+        // Create and send the Message
+        ObjectMessage outgoing = amqpSession.createObjectMessage();
+        outgoing.setObject(UUID.randomUUID());
+        amqpProducer.send(outgoing);
+
+        // Now consumer the ObjectMessage
+        Message received = openwireConsumer.receive(2000);
+        assertNotNull(received);
+        LOG.info("Read new message: {}", received);
+        assertTrue(received instanceof ObjectMessage);
+        ObjectMessage incoming = (ObjectMessage) received;
+        Object payload = incoming.getObject();
+        assertNotNull(payload);
+        assertTrue(payload instanceof UUID);
+
+        amqp.close();
+        openwire.close();
+    }
+
+    @Test
+    public void testOpenWireToQpidObjectMessage() throws Exception {
+
+        // Raw Transformer doesn't expand message properties.
+        assumeFalse(!transformer.equals("jms"));
+
+        Connection openwire = createJMSConnection();
+        Connection amqp = createConnection();
+
+        openwire.start();
+        amqp.start();
+
+        Session openwireSession = openwire.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session amqpSession = amqp.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Destination queue = openwireSession.createQueue(getDestinationName());
+
+        MessageProducer openwireProducer = openwireSession.createProducer(queue);
+        MessageConsumer amqpConsumer = amqpSession.createConsumer(queue);
+
+        // Create and send the Message
+        ObjectMessage outgoing = amqpSession.createObjectMessage();
+        outgoing.setObject(UUID.randomUUID());
+        openwireProducer.send(outgoing);
+
+        // Now consumer the ObjectMessage
+        Message received = amqpConsumer.receive(2000);
+        assertNotNull(received);
+        LOG.info("Read new message: {}", received);
+        assertTrue(received instanceof ObjectMessage);
+        ObjectMessage incoming = (ObjectMessage) received;
+        Object payload = incoming.getObject();
+        assertNotNull(payload);
+        assertTrue(payload instanceof UUID);
+
+        amqp.close();
+        openwire.close();
+    }
+
+    @Test
+    public void testOpenWireToQpidObjectMessageWithOpenWireCompression() throws Exception {
+
+        // Raw Transformer doesn't expand message properties.
+        assumeFalse(!transformer.equals("jms"));
+
+        Connection openwire = createJMSConnection();
+        ((ActiveMQConnection) openwire).setUseCompression(true);
+
+        Connection amqp = createConnection();
+
+        openwire.start();
+        amqp.start();
+
+        Session openwireSession = openwire.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session amqpSession = amqp.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Destination queue = openwireSession.createQueue(getDestinationName());
+
+        MessageProducer openwireProducer = openwireSession.createProducer(queue);
+        MessageConsumer amqpConsumer = amqpSession.createConsumer(queue);
+
+        // Create and send the Message
+        ObjectMessage outgoing = amqpSession.createObjectMessage();
+        outgoing.setObject(UUID.randomUUID());
+        openwireProducer.send(outgoing);
+
+        // Now consumer the ObjectMessage
+        Message received = amqpConsumer.receive(2000);
+        assertNotNull(received);
+        LOG.info("Read new message: {}", received);
+        assertTrue(received instanceof ObjectMessage);
+        ObjectMessage incoming = (ObjectMessage) received;
+        Object payload = incoming.getObject();
+        assertNotNull(payload);
+        assertTrue(payload instanceof UUID);
+
+        amqp.close();
+        openwire.close();
+    }
 
     @SuppressWarnings("unchecked")
     @Test

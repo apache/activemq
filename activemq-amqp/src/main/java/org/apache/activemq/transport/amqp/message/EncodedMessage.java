@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,7 +22,7 @@ import org.apache.qpid.proton.message.Message;
 public class EncodedMessage {
 
     private final Binary data;
-    final long messageFormat;
+    private final long messageFormat;
 
     public EncodedMessage(long messageFormat, byte[] data, int offset, int length) {
         this.data = new Binary(data, offset, length);

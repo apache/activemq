@@ -16,32 +16,11 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import javax.jms.Message;
+public class InvalidContentTypeException extends Exception {
 
-public class AMQPNativeInboundTransformer extends AMQPRawInboundTransformer {
+    private static final long serialVersionUID = 1260362376856866687L;
 
-    public AMQPNativeInboundTransformer(ActiveMQJMSVendor vendor) {
-        super(vendor);
-    }
-
-    @Override
-    public String getTransformerName() {
-        return TRANSFORMER_NATIVE;
-    }
-
-    @Override
-    public InboundTransformer getFallbackTransformer() {
-        return new AMQPRawInboundTransformer(getVendor());
-    }
-
-    @Override
-    protected Message doTransform(EncodedMessage amqpMessage) throws Exception {
-        org.apache.qpid.proton.message.Message amqp = amqpMessage.decode();
-
-        Message result = super.doTransform(amqpMessage);
-
-        populateMessage(result, amqp);
-
-        return result;
+    public InvalidContentTypeException(String message) {
+        super(message);
     }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,7 +22,7 @@ import javax.jms.Message;
 
 public class AMQPRawInboundTransformer extends InboundTransformer {
 
-    public AMQPRawInboundTransformer(JMSVendor vendor) {
+    public AMQPRawInboundTransformer(ActiveMQJMSVendor vendor) {
         super(vendor);
     }
 
@@ -33,28 +33,27 @@ public class AMQPRawInboundTransformer extends InboundTransformer {
 
     @Override
     public InboundTransformer getFallbackTransformer() {
-        return null;  // No fallback from full raw transform
+        return null;  // No fallback from full raw transform, message likely dropped.
     }
 
     @Override
-    public Message transform(EncodedMessage amqpMessage) throws Exception {
-        BytesMessage rc = vendor.createBytesMessage();
-        rc.writeBytes(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength());
+    protected Message doTransform(EncodedMessage amqpMessage) throws Exception {
+        BytesMessage result = vendor.createBytesMessage(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength());
 
         // We cannot decode the message headers to check so err on the side of caution
         // and mark all messages as persistent.
-        rc.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-        rc.setJMSPriority(defaultPriority);
+        result.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
+        result.setJMSPriority(defaultPriority);
 
         final long now = System.currentTimeMillis();
-        rc.setJMSTimestamp(now);
+        result.setJMSTimestamp(now);
         if (defaultTtl > 0) {
-            rc.setJMSExpiration(now + defaultTtl);
+            result.setJMSExpiration(now + defaultTtl);
         }
 
-        rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
-        rc.setBooleanProperty(prefixVendor + "NATIVE", true);
+        result.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
+        result.setBooleanProperty(prefixVendor + "NATIVE", true);
 
-        return rc;
+        return result;
     }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,24 +20,25 @@ import javax.jms.Message;
 
 public abstract class OutboundTransformer {
 
-    JMSVendor vendor;
-    String prefixVendor;
+    protected final ActiveMQJMSVendor vendor;
 
-    String prefixDeliveryAnnotations = "DA_";
-    String prefixMessageAnnotations= "MA_";
-    String prefixFooter = "FT_";
+    protected String prefixVendor;
 
-    String messageFormatKey;
-    String nativeKey;
-    String firstAcquirerKey;
-    String prefixDeliveryAnnotationsKey;
-    String prefixMessageAnnotationsKey;
-    String contentTypeKey;
-    String contentEncodingKey;
-    String replyToGroupIDKey;
-    String prefixFooterKey;
+    protected String prefixDeliveryAnnotations = "DA_";
+    protected String prefixMessageAnnotations= "MA_";
+    protected String prefixFooter = "FT_";
 
-    public OutboundTransformer(JMSVendor vendor) {
+    protected String messageFormatKey;
+    protected String nativeKey;
+    protected String firstAcquirerKey;
+    protected String prefixDeliveryAnnotationsKey;
+    protected String prefixMessageAnnotationsKey;
+    protected String contentTypeKey;
+    protected String contentEncodingKey;
+    protected String replyToGroupIDKey;
+    protected String prefixFooterKey;
+
+    public OutboundTransformer(ActiveMQJMSVendor vendor) {
         this.vendor = vendor;
         this.setPrefixVendor("JMS_AMQP_");
     }
@@ -56,18 +57,13 @@ public abstract class OutboundTransformer {
         firstAcquirerKey = prefixVendor + "FirstAcquirer";
         prefixDeliveryAnnotationsKey = prefixVendor + prefixDeliveryAnnotations;
         prefixMessageAnnotationsKey = prefixVendor + prefixMessageAnnotations;
-        contentTypeKey = prefixVendor +"ContentType";
-        contentEncodingKey = prefixVendor +"ContentEncoding";
-        replyToGroupIDKey = prefixVendor +"ReplyToGroupID";
+        contentTypeKey = prefixVendor + "ContentType";
+        contentEncodingKey = prefixVendor + "ContentEncoding";
+        replyToGroupIDKey = prefixVendor + "ReplyToGroupID";
         prefixFooterKey = prefixVendor + prefixFooter;
-
     }
 
-    public JMSVendor getVendor() {
+    public ActiveMQJMSVendor getVendor() {
         return vendor;
-    }
-
-    public void setVendor(JMSVendor vendor) {
-        this.vendor = vendor;
     }
 }

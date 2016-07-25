@@ -157,23 +157,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
             EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), deliveryBytes.data, deliveryBytes.offset, deliveryBytes.length);
 
             InboundTransformer transformer = getTransformer();
-            ActiveMQMessage message = null;
-
-            while (transformer != null) {
-                try {
-                    message = (ActiveMQMessage) transformer.transform(em);
-                    break;
-                } catch (Exception e) {
-                    LOG.debug("Transform of message using [{}] transformer, failed", getTransformer().getTransformerName());
-                    LOG.trace("Transformation error:", e);
-
-                    transformer = transformer.getFallbackTransformer();
-                }
-            }
-
-            if (message == null) {
-                throw new IOException("Failed to transform incoming delivery, skipping.");
-            }
+            ActiveMQMessage message = (ActiveMQMessage) transformer.transform(em);
 
             current = null;
 
