@@ -55,6 +55,7 @@ public class JDBCCleanupLimitedPoolTest {
         derby = new EmbeddedDataSource();
         derby.setDatabaseName("derbyDb");
         derby.setCreateDatabase("create");
+        derby.getConnection().close();
 
         broker = createBroker();
         broker.start();
