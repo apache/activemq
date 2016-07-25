@@ -98,6 +98,10 @@ public class Journal {
         }
     }
 
+    public DataFileAccessorPool getAccessorPool() {
+        return accessorPool;
+    }
+
     public enum PreallocationStrategy {
         SPARSE_FILE,
         OS_KERNEL_COPY,
@@ -674,7 +678,7 @@ public class Journal {
         }
     }
 
-    protected synchronized void cleanup() {
+    public synchronized void cleanup() {
         if (accessorPool != null) {
             accessorPool.disposeUnused();
         }

@@ -275,7 +275,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         if (started.compareAndSet(false, true)) {
             journal = new Journal() {
                 @Override
-                protected void cleanup() {
+                public void cleanup() {
                     super.cleanup();
                     txStoreCleanup();
                 }

@@ -646,6 +646,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             if (recoveryPosition != null) {
                 int redoCounter = 0;
+                int dataFileRotationTracker = recoveryPosition.getDataFileId();
                 LOG.info("Recovering from the journal @" + recoveryPosition);
                 while (recoveryPosition != null) {
                     try {
@@ -663,9 +664,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         }
                     }
                     recoveryPosition = journal.getNextLocation(recoveryPosition);
-                     if (LOG.isInfoEnabled() && redoCounter % 100000 == 0) {
-                         LOG.info("@" + recoveryPosition +  ", "  + redoCounter + " entries recovered ..");
-                     }
+                    // hold on to the minimum number of open files during recovery
+                    if (recoveryPosition != null && dataFileRotationTracker != recoveryPosition.getDataFileId()) {
+                        dataFileRotationTracker = recoveryPosition.getDataFileId();
+                        journal.cleanup();
+                    }
+                    if (LOG.isInfoEnabled() && redoCounter % 100000 == 0) {
+                        LOG.info("@" + recoveryPosition + ", " + redoCounter + " entries recovered ..");
+                    }
                 }
                 if (LOG.isInfoEnabled()) {
                     long end = System.currentTimeMillis();
