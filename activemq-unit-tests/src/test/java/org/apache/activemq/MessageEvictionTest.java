@@ -202,7 +202,6 @@ public class MessageEvictionTest {
                    for (int i=0; i< numMessages; i++) {
                        producer.send(session.createTextMessage(payload));
                        sent.incrementAndGet();
-                       TimeUnit.MILLISECONDS.sleep(10);
                    }
                    producer.close();
                    sendDone.countDown();

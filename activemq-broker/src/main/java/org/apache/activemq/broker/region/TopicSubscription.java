@@ -232,12 +232,14 @@ public class TopicSubscription extends AbstractSubscription {
             while (matched.hasNext()) {
                 MessageReference node = matched.next();
                 node.decrementReferenceCount();
-                if (broker.isExpired(node)) {
+                if (node.isExpired()) {
                     matched.remove();
                     getSubscriptionStatistics().getDispatched().increment();
                     node.decrementReferenceCount();
-                    ((Destination)node.getRegionDestination()).getDestinationStatistics().getExpired().increment();
-                    broker.messageExpired(getContext(), node, this);
+                    if (broker.isExpired(node)) {
+                        ((Destination) node.getRegionDestination()).getDestinationStatistics().getExpired().increment();
+                        broker.messageExpired(getContext(), node, this);
+                    }
                     break;
                 }
             }
