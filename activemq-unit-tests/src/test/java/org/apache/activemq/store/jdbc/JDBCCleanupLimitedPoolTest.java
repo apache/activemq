@@ -92,7 +92,7 @@ public class JDBCCleanupLimitedPoolTest {
     @Test
     public void testNoDeadlockOnXaPoolExhaustion() throws Exception {
         final CountDownLatch done = new CountDownLatch(1);
-        final CountDownLatch doneCommit = new CountDownLatch(2000);
+        final CountDownLatch doneCommit = new CountDownLatch(1000);
 
         final ActiveMQXAConnectionFactory factory = new ActiveMQXAConnectionFactory(broker.getTransportConnectorByScheme("tcp").getPublishableConnectString());
 
@@ -141,7 +141,7 @@ public class JDBCCleanupLimitedPoolTest {
         });
 
         executorService.shutdown();
-        boolean allComplete = executorService.awaitTermination(20, TimeUnit.SECONDS);
+        boolean allComplete = executorService.awaitTermination(40, TimeUnit.SECONDS);
         done.countDown();
         assertTrue("all complete", allComplete);
         executorService.shutdownNow();
