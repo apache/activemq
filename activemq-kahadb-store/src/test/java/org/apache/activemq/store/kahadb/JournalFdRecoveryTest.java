@@ -18,6 +18,8 @@ package org.apache.activemq.store.kahadb;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
@@ -28,7 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.management.Attribute;
@@ -36,8 +40,11 @@ import javax.management.ObjectName;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JournalFdRecoveryTest {
@@ -80,6 +87,12 @@ public class JournalFdRecoveryTest {
         broker.setDataDirectory(KAHADB_DIRECTORY);
         broker.addConnector("tcp://localhost:0");
 
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry policyEntry = new PolicyEntry();
+        policyEntry.setUseCache(false);
+        policyMap.setDefaultEntry(policyEntry);
+        broker.setDestinationPolicy(policyMap);
+
         configurePersistence(broker);
 
         connectionUri = "vm://localhost?create=false";
@@ -113,6 +126,40 @@ public class JournalFdRecoveryTest {
         }
     }
 
+
+    @Test
+    public void testStopOnPageInIOError() throws Exception {
+        startBroker();
+
+        int sent = produceMessagesToConsumeMultipleDataFiles(50);
+
+        int numFiles = getNumberOfJournalFiles();
+        LOG.info("Num journal files: " + numFiles);
+
+        assertTrue("more than x files: " + numFiles, numFiles > 4);
+
+        File dataDir = broker.getPersistenceAdapter().getDirectory();
+
+        for (int i=2;i<4;i++) {
+            whackDataFile(dataDir, i);
+        }
+
+        final CountDownLatch gotShutdown = new CountDownLatch(1);
+        broker.addShutdownHook(new Runnable() {
+            @Override
+            public void run() {
+                gotShutdown.countDown();
+            }
+        });
+
+        int received = tryConsume(destination, sent);
+        assertNotEquals("not all message received", sent, received);
+        assertTrue("broker got shutdown on page in error", gotShutdown.await(5, TimeUnit.SECONDS));
+    }
+
+    private void whackDataFile(File dataDir, int i) throws Exception {
+        whackFile(dataDir, "db-" + i + ".log");
+    }
 
     @Test
     public void testRecoveryAfterCorruption() throws Exception {
@@ -160,8 +207,12 @@ public class JournalFdRecoveryTest {
         return result;
     }
 
-    private void whackIndex(File dataDir) {
-        File indexToDelete = new File(dataDir, "db.data");
+    private void whackIndex(File dataDir) throws Exception {
+        whackFile(dataDir, "db.data");
+    }
+
+    private void whackFile(File dataDir, String name) throws Exception {
+        File indexToDelete = new File(dataDir, name);
         LOG.info("Whacking index: " + indexToDelete);
         indexToDelete.delete();
     }
@@ -193,6 +244,29 @@ public class JournalFdRecoveryTest {
         }
 
         return sent;
+    }
+
+    private int tryConsume(Destination destination, int numToGet) throws Exception {
+        int got = 0;
+        Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
+        connection.start();
+        try {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer = session.createConsumer(destination);
+            for (int i = 0; i < numToGet; i++) {
+                if (consumer.receive(4000) == null) {
+                    // give up on timeout or error
+                    break;
+                }
+                got++;
+
+            }
+        } catch (JMSException ok) {
+        } finally {
+            connection.close();
+        }
+
+        return got;
     }
 
     private int produceMessagesToConsumeMultipleDataFiles(int numToSend) throws Exception {

@@ -1230,17 +1230,23 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
      * @throws IOException
      */
     Message loadMessage(Location location) throws IOException {
-        JournalCommand<?> command = load(location);
-        KahaAddMessageCommand addMessage = null;
-        switch (command.type()) {
-            case KAHA_UPDATE_MESSAGE_COMMAND:
-                addMessage = ((KahaUpdateMessageCommand)command).getMessage();
-                break;
-            default:
-                addMessage = (KahaAddMessageCommand) command;
+        try {
+            JournalCommand<?> command = load(location);
+            KahaAddMessageCommand addMessage = null;
+            switch (command.type()) {
+                case KAHA_UPDATE_MESSAGE_COMMAND:
+                    addMessage = ((KahaUpdateMessageCommand) command).getMessage();
+                    break;
+                default:
+                    addMessage = (KahaAddMessageCommand) command;
+            }
+            Message msg = (Message) wireFormat.unmarshal(new DataInputStream(addMessage.getMessage().newInput()));
+            return msg;
+        } catch (IOException ioe) {
+            LOG.error("Failed to load message at: {}", location , ioe);
+            brokerService.handleIOException(ioe);
+            throw ioe;
         }
-        Message msg = (Message) wireFormat.unmarshal(new DataInputStream(addMessage.getMessage().newInput()));
-        return msg;
     }
 
     // /////////////////////////////////////////////////////////////////

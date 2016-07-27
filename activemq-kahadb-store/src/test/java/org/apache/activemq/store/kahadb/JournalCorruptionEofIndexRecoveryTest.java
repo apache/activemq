@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -371,11 +372,15 @@ public class JournalCorruptionEofIndexRecoveryTest {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(destination);
         int count = 0;
-        while (count < max && consumer.receive(5000) != null) {
-            count++;
+        try {
+            while (count < max && consumer.receive(5000) != null) {
+                count++;
+            }
+        } catch (JMSException ok) {
+        } finally {
+            consumer.close();
+            connection.close();
         }
-        consumer.close();
-        connection.close();
         return count;
     }
 }
