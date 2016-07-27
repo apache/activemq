@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.activemq.store.kahadb.JournalCorruptionEofIndexRecoveryTest.drain;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -247,26 +248,8 @@ public class JournalFdRecoveryTest {
     }
 
     private int tryConsume(Destination destination, int numToGet) throws Exception {
-        int got = 0;
-        Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
-        connection.start();
-        try {
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            MessageConsumer consumer = session.createConsumer(destination);
-            for (int i = 0; i < numToGet; i++) {
-                if (consumer.receive(4000) == null) {
-                    // give up on timeout or error
-                    break;
-                }
-                got++;
-
-            }
-        } catch (JMSException ok) {
-        } finally {
-            connection.close();
-        }
-
-        return got;
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
+        return  drain(cf, destination, numToGet);
     }
 
     private int produceMessagesToConsumeMultipleDataFiles(int numToSend) throws Exception {

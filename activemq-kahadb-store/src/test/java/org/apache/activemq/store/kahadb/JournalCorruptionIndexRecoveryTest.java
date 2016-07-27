@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import static org.apache.activemq.store.kahadb.JournalCorruptionEofIndexRecoveryTest.drain;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -36,6 +37,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.junit.After;
@@ -265,16 +267,7 @@ public class JournalCorruptionIndexRecoveryTest {
     }
 
     private int drainQueue(int max) throws Exception {
-        Connection connection = cf.createConnection();
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createConsumer(destination);
-        int count = 0;
-        while (count < max && consumer.receive(5000) != null) {
-            count++;
-        }
-        consumer.close();
-        connection.close();
-        return count;
+        return drain(cf, destination, max);
     }
+
 }

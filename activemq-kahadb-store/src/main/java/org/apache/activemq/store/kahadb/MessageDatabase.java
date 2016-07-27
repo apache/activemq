@@ -751,8 +751,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     private Location recoverProducerAudit() throws IOException {
         if (metadata.producerSequenceIdTrackerLocation != null) {
-            KahaProducerAuditCommand audit = (KahaProducerAuditCommand) load(metadata.producerSequenceIdTrackerLocation);
             try {
+                KahaProducerAuditCommand audit = (KahaProducerAuditCommand) load(metadata.producerSequenceIdTrackerLocation);
                 ObjectInputStream objectIn = new ObjectInputStream(audit.getAudit().newInput());
                 int maxNumProducers = getMaxFailoverProducersToTrack();
                 int maxAuditDepth = getFailoverProducersAuditDepth();
@@ -773,8 +773,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @SuppressWarnings("unchecked")
     private Location recoverAckMessageFileMap() throws IOException {
         if (metadata.ackMessageFileMapLocation != null) {
-            KahaAckMessageFileMapCommand audit = (KahaAckMessageFileMapCommand) load(metadata.ackMessageFileMapLocation);
             try {
+                KahaAckMessageFileMapCommand audit = (KahaAckMessageFileMapCommand) load(metadata.ackMessageFileMapLocation);
                 ObjectInputStream objectIn = new ObjectInputStream(audit.getAckMessageFileMap().newInput());
                 metadata.ackMessageFileMap = (Map<Integer, Set<Integer>>) objectIn.readObject();
                 return getNextInitializedLocation(metadata.ackMessageFileMapLocation);
@@ -3226,6 +3226,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             journal = createJournal();
         }
         return journal;
+    }
+
+    protected Metadata getMetadata() {
+        return metadata;
     }
 
     public boolean isFailIfDatabaseIsLocked() {
