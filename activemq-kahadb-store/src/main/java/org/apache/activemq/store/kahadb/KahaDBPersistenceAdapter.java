@@ -433,7 +433,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
 
     /**
      * Get the enableJournalDiskSyncs
-     *
+     * @deprecated use {@link #setEnableJournalDiskSyncs} instead
      * @return the enableJournalDiskSyncs
      */
     public boolean isEnableJournalDiskSyncs() {
@@ -443,11 +443,40 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     /**
      * Set the enableJournalDiskSyncs
      *
+     * @deprecated use {@link #setEnableJournalDiskSyncs} instead
      * @param enableJournalDiskSyncs
      *            the enableJournalDiskSyncs to set
      */
     public void setEnableJournalDiskSyncs(boolean enableJournalDiskSyncs) {
         this.letter.setEnableJournalDiskSyncs(enableJournalDiskSyncs);
+    }
+
+    /**
+     * @return
+     */
+    public String getJournalDiskSyncStrategy() {
+        return letter.getJournalDiskSyncStrategy();
+    }
+
+    /**
+     * @param journalDiskSyncStrategy
+     */
+    public void setJournalDiskSyncStrategy(String journalDiskSyncStrategy) {
+        letter.setJournalDiskSyncStrategy(journalDiskSyncStrategy);
+    }
+
+    /**
+     * @return
+     */
+    public long getJournalDiskSyncInterval() {
+        return letter.getJournalDiskSyncInterval();
+    }
+
+    /**
+     * @param journalDiskSyncInterval
+     */
+    public void setJournalDiskSyncInterval(long journalDiskSyncInterval) {
+        letter.setJournalDiskSyncInterval(journalDiskSyncInterval);
     }
 
     /**
