@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
 import org.apache.activemq.util.ByteSequence;
@@ -53,6 +54,7 @@ class DataFileAppender implements FileAppender {
     protected final CountDownLatch shutdownDone = new CountDownLatch(1);
     protected int maxWriteBatchSize;
     protected final boolean syncOnComplete;
+    protected final boolean periodicSync;
 
     protected boolean running;
     private Thread thread;
@@ -107,6 +109,8 @@ class DataFileAppender implements FileAppender {
         this.inflightWrites = this.journal.getInflightWrites();
         this.maxWriteBatchSize = this.journal.getWriteBatchSize();
         this.syncOnComplete = this.journal.isEnableAsyncDiskSync();
+        this.periodicSync = JournalDiskSyncStrategy.PERIODIC.equals(
+                this.journal.getJournalDiskSyncStrategy());
     }
 
     @Override
@@ -338,6 +342,8 @@ class DataFileAppender implements FileAppender {
 
                 if (forceToDisk) {
                     file.sync();
+                } else if (periodicSync) {
+                    journal.currentFileNeedSync.set(true);
                 }
 
                 Journal.WriteCommand lastWrite = wb.writes.getTail();

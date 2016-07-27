@@ -25,7 +25,15 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -33,6 +41,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
@@ -75,6 +84,7 @@ public class Journal {
     public static final byte EOF_EOT = '4';
     public static final byte[] EOF_RECORD = createEofBatchAndLocationRecord();
 
+    protected final AtomicBoolean currentFileNeedSync = new AtomicBoolean();
     private ScheduledExecutorService scheduler;
 
     // tackle corruption when checksum is disabled or corrupt with zeros, minimize data loss
@@ -113,6 +123,12 @@ public class Journal {
         ENTIRE_JOURNAL,
         ENTIRE_JOURNAL_ASYNC,
         NONE;
+    }
+
+    public enum JournalDiskSyncStrategy {
+        ALWAYS,
+        PERIODIC,
+        NEVER;
     }
 
     private static byte[] createBatchControlRecordHeader() {
@@ -195,12 +211,13 @@ public class Journal {
     protected boolean enableAsyncDiskSync = true;
     private int nextDataFileId = 1;
     private Object dataFileIdLock = new Object();
-    private  final AtomicReference<DataFile> currentDataFile = new AtomicReference<>(null);
+    private final AtomicReference<DataFile> currentDataFile = new AtomicReference<>(null);
     private volatile DataFile nextDataFile;
 
     protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
     protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
     private File osKernelCopyTemplateFile = null;
+    protected JournalDiskSyncStrategy journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
 
     public interface DataFileRemovedListener {
         void fileRemoved(DataFile datafile);
@@ -580,6 +597,7 @@ public class Journal {
                 dataFile = newDataFile();
             }
             synchronized (currentDataFile) {
+                syncCurrentDataFile();
                 fileMap.put(dataFile.getDataFileId(), dataFile);
                 fileByFileMap.put(dataFile.getFile(), dataFile);
                 dataFiles.addLast(dataFile);
@@ -589,6 +607,23 @@ public class Journal {
         }
         if (PreallocationScope.ENTIRE_JOURNAL_ASYNC == preallocationScope) {
             preAllocateNextDataFileFuture = scheduler.submit(preAllocateNextDataFileTask);
+        }
+    }
+
+    public void syncCurrentDataFile() throws IOException {
+        synchronized (currentDataFile) {
+            DataFile dataFile = currentDataFile.get();
+            if (dataFile != null && isJournalDiskSyncPeriodic()) {
+                if (currentFileNeedSync.compareAndSet(true, false)) {
+                    LOG.trace("Syncing Journal file: {}", dataFile.getFile().getName());
+                    RecoverableRandomAccessFile file = dataFile.openRandomAccessFile();
+                    try {
+                        file.sync();
+                    } finally {
+                        file.close();
+                    }
+                }
+            }
         }
     }
 
@@ -670,6 +705,7 @@ public class Journal {
         // the appender can be calling back to to the journal blocking a close AMQ-5620
         appender.close();
         synchronized (currentDataFile) {
+            syncCurrentDataFile();
             fileMap.clear();
             fileByFileMap.clear();
             dataFiles.clear();
@@ -1049,6 +1085,18 @@ public class Journal {
 
     public boolean isEnableAsyncDiskSync() {
         return enableAsyncDiskSync;
+    }
+
+    public JournalDiskSyncStrategy getJournalDiskSyncStrategy() {
+        return journalDiskSyncStrategy;
+    }
+
+    public void setJournalDiskSyncStrategy(JournalDiskSyncStrategy journalDiskSyncStrategy) {
+        this.journalDiskSyncStrategy = journalDiskSyncStrategy;
+    }
+
+    public boolean isJournalDiskSyncPeriodic() {
+        return JournalDiskSyncStrategy.PERIODIC.equals(journalDiskSyncStrategy);
     }
 
     public void setDataFileRemovedListener(DataFileRemovedListener dataFileRemovedListener) {

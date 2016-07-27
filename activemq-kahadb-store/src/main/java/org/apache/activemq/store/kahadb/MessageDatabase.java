@@ -92,6 +92,7 @@ import org.apache.activemq.store.kahadb.disk.index.BTreeVisitor;
 import org.apache.activemq.store.kahadb.disk.index.ListIndex;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.journal.TargetedDataFileAppender;
 import org.apache.activemq.store.kahadb.disk.page.Page;
@@ -252,10 +253,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected ScheduledExecutorService scheduler;
     private final Object schedulerLock = new Object();
 
-    protected boolean enableJournalDiskSyncs = true;
+    protected String journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS.name();
     protected boolean archiveDataLogs;
     protected File directoryArchive;
     protected AtomicLong journalSize = new AtomicLong(0);
+    long journalDiskSyncInterval = 1000;
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
@@ -373,7 +375,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 });
 
                 // Short intervals for check-point and cleanups
-                long delay = Math.min(checkpointInterval > 0 ? checkpointInterval : cleanupInterval, 500);
+                long delay;
+                if (journal.isJournalDiskSyncPeriodic()) {
+                    delay = Math.min(journalDiskSyncInterval > 0 ? journalDiskSyncInterval : checkpointInterval, 500);
+                } else {
+                    delay = Math.min(checkpointInterval > 0 ? checkpointInterval : cleanupInterval, 500);
+                }
 
                 scheduler.scheduleWithFixedDelay(new CheckpointRunner(), 0, delay, TimeUnit.MILLISECONDS);
             }
@@ -384,6 +391,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         private long lastCheckpoint = System.currentTimeMillis();
         private long lastCleanup = System.currentTimeMillis();
+        private long lastSync = System.currentTimeMillis();
 
         @Override
         public void run() {
@@ -391,6 +399,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 // Decide on cleanup vs full checkpoint here.
                 if (opened.get()) {
                     long now = System.currentTimeMillis();
+                    if (journal.isJournalDiskSyncPeriodic() &&
+                            journalDiskSyncInterval > 0 && (now - lastSync >= journalDiskSyncInterval)) {
+                        journal.syncCurrentDataFile();
+                        lastSync = now;
+                    }
                     if (cleanupInterval > 0 && (now - lastCleanup >= cleanupInterval)) {
                         checkpointCleanup(true);
                         lastCleanup = now;
@@ -3110,6 +3123,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         manager.setPreallocationScope(Journal.PreallocationScope.valueOf(preallocationScope.trim().toUpperCase()));
         manager.setPreallocationStrategy(
                 Journal.PreallocationStrategy.valueOf(preallocationStrategy.trim().toUpperCase()));
+        manager.setJournalDiskSyncStrategy(
+                Journal.JournalDiskSyncStrategy.valueOf(journalDiskSyncStrategy.trim().toUpperCase()));
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
             manager.setDirectoryArchive(getDirectoryArchive());
@@ -3166,12 +3181,41 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return enableIndexWriteAsync;
     }
 
+    /**
+     * @deprecated use {@link #getJournalDiskSyncStrategy} instead
+     * @return
+     */
     public boolean isEnableJournalDiskSyncs() {
-        return enableJournalDiskSyncs;
+        return journalDiskSyncStrategy != null && JournalDiskSyncStrategy.ALWAYS.name().equals(
+                journalDiskSyncStrategy.trim().toUpperCase());
     }
 
+    /**
+     * @deprecated use {@link #setEnableJournalDiskSyncs} instead
+     * @param syncWrites
+     */
     public void setEnableJournalDiskSyncs(boolean syncWrites) {
-        this.enableJournalDiskSyncs = syncWrites;
+        if (syncWrites) {
+            journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS.name();
+        } else {
+            journalDiskSyncStrategy = JournalDiskSyncStrategy.NEVER.name();
+        }
+    }
+
+    public String getJournalDiskSyncStrategy() {
+        return journalDiskSyncStrategy;
+    }
+
+    public void setJournalDiskSyncStrategy(String journalDiskSyncStrategy) {
+        this.journalDiskSyncStrategy = journalDiskSyncStrategy;
+    }
+
+    public long getJournalDiskSyncInterval() {
+        return journalDiskSyncInterval;
+    }
+
+    public void setJournalDiskSyncInterval(long journalDiskSyncInterval) {
+        this.journalDiskSyncInterval = journalDiskSyncInterval;
     }
 
     public long getCheckpointInterval() {
