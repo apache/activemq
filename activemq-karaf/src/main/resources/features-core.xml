@@ -36,6 +36,12 @@
         <bundle dependency="false">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
     </feature>
+    
+    <feature name="activemq-cf" description="ActiveMQ ConnectionFactory from config" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature>activemq-client</feature>
+        <feature>scr</feature>
+        <bundle>mvn:org.apache.activemq/activemq-cf/${project.version}</bundle>
+    </feature>
 
     <!-- All bundles needed by the broker -->
     <feature name="activemq" description="ActiveMQ broker libraries" version="${project.version}" resolver="(obr)" start-level="50">
