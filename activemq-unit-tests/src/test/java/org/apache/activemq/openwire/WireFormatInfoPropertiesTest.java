@@ -31,6 +31,7 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.junit.Test;
@@ -42,8 +43,7 @@ public class WireFormatInfoPropertiesTest {
     static final Logger LOG = LoggerFactory.getLogger(WireFormatInfoPropertiesTest.class);
 
     protected BrokerService master;
-
-    protected final String brokerUri = "tcp://localhost:61616";
+    protected String brokerUri;
 
     @Test
     public void testClientProperties() throws Exception{
@@ -104,7 +104,8 @@ public class WireFormatInfoPropertiesTest {
 
     private BrokerService createBrokerService() throws Exception {
         BrokerService service = new BrokerService();
-        service.addConnector(brokerUri);
+        TransportConnector connector = service.addConnector("tcp://localhost:0");
+        brokerUri = connector.getPublishableConnectString();
         service.setPersistent(false);
         service.setUseJmx(false);
         service.setBrokerName("Master");

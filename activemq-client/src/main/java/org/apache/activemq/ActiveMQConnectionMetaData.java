@@ -157,7 +157,7 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
      * @return String containing the platform details
      */
     private static String getPlatformDetails() {
-        String details = "unknown";
+        String details = "java";
         try {
             StringBuilder platformInfo = new StringBuilder(128);
 
