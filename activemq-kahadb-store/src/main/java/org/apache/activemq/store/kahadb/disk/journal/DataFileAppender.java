@@ -284,6 +284,12 @@ class DataFileAppender implements FileAppender {
 
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
+                        if (periodicSync) {
+                            if (logger.isTraceEnabled()) {
+                                logger.trace("Syning file {} on rotate", dataFile.getFile().getName());
+                            }
+                            file.sync();
+                        }
                         dataFile.closeRandomAccessFile(file);
                     }
                     dataFile = wb.dataFile;
@@ -342,8 +348,6 @@ class DataFileAppender implements FileAppender {
 
                 if (forceToDisk) {
                     file.sync();
-                } else if (periodicSync) {
-                    journal.currentFileNeedSync.set(true);
                 }
 
                 Journal.WriteCommand lastWrite = wb.writes.getTail();
@@ -368,6 +372,12 @@ class DataFileAppender implements FileAppender {
         } finally {
             try {
                 if (file != null) {
+                    if (periodicSync) {
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Syning file {} on close", dataFile.getFile().getName());
+                        }
+                        file.sync();
+                    }
                     dataFile.closeRandomAccessFile(file);
                 }
             } catch (Throwable ignore) {

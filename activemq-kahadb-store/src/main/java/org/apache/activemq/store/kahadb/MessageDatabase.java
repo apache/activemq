@@ -56,6 +56,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.activemq.ActiveMQMessageAuditNoSync;
@@ -288,6 +289,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private int journalLogOnLastCompactionCheck;
     private boolean enableSubscriptionStatistics = false;
 
+    //only set when using JournalDiskSyncStrategy.PERIODIC
+    protected final AtomicReference<Location> lastAsyncJournalUpdate = new AtomicReference<>();
+
     @Override
     public void doStart() throws Exception {
         load();
@@ -392,6 +396,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         private long lastCheckpoint = System.currentTimeMillis();
         private long lastCleanup = System.currentTimeMillis();
         private long lastSync = System.currentTimeMillis();
+        private Location lastAsyncUpdate = null;
 
         @Override
         public void run() {
@@ -401,7 +406,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     long now = System.currentTimeMillis();
                     if (journal.isJournalDiskSyncPeriodic() &&
                             journalDiskSyncInterval > 0 && (now - lastSync >= journalDiskSyncInterval)) {
-                        journal.syncCurrentDataFile();
+                        Location currentUpdate = lastAsyncJournalUpdate.get();
+                        if (currentUpdate != null && !currentUpdate.equals(lastAsyncUpdate)) {
+                            lastAsyncUpdate = currentUpdate;
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("Writing trace command to trigger journal sync");
+                            }
+                            store(new KahaTraceCommand(), true, null, null);
+                        }
                         lastSync = now;
                     }
                     if (cleanupInterval > 0 && (now - lastCleanup >= cleanupInterval)) {
@@ -1095,6 +1107,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 long start = System.currentTimeMillis();
                 location = onJournalStoreComplete == null ? journal.write(sequence, sync) : journal.write(sequence, onJournalStoreComplete) ;
                 long start2 = System.currentTimeMillis();
+                //Track the last async update so we know if we need to sync at the next checkpoint
+                if (!sync && journal.isJournalDiskSyncPeriodic()) {
+                    lastAsyncJournalUpdate.set(location);
+                }
                 process(data, location, before);
 
                 long end = System.currentTimeMillis();

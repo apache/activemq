@@ -14,13 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.kahadb.disk.journal;
+package org.apache.activemq.store.kahadb;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.ConnectionContext;
@@ -28,10 +30,10 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.store.kahadb.disk.journal.FileAppender;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
-import org.apache.activemq.util.Wait;
-import org.apache.activemq.util.Wait.Condition;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,56 +61,23 @@ public class JournalSyncStrategyTest  {
     @Test
     public void testPeriodicSync()throws Exception {
         store = configureStore(JournalDiskSyncStrategy.PERIODIC);
+        store.setJournalDiskSyncInterval(800);
         store.start();
         final Journal journal = store.getJournal();
         assertTrue(journal.isJournalDiskSyncPeriodic());
         assertFalse(store.isEnableJournalDiskSyncs());
+        assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.PERIODIC.name());
+        assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.PERIODIC);
+        assertEquals(store.getJournalDiskSyncInterval(), 800);
 
-        MessageStore messageStore = store.createQueueMessageStore(new ActiveMQQueue("test"));
+        Location l = store.lastAsyncJournalUpdate.get();
 
         //write a message to the store
+        MessageStore messageStore = store.createQueueMessageStore(new ActiveMQQueue("test"));
         writeMessage(messageStore, 1);
 
-        //Make sure the flag was set to true
-        assertTrue(Wait.waitFor(new Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return journal.currentFileNeedSync.get();
-            }
-        }));
-
-        //Make sure a disk sync was done by the executor because a message was added
-        //which will cause the flag to be set to false
-        assertTrue(Wait.waitFor(new Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return !journal.currentFileNeedSync.get();
-            }
-        }));
-
-    }
-
-    @Test
-    public void testSyncRotate()throws Exception {
-        store = configureStore(JournalDiskSyncStrategy.PERIODIC);
-        //Set a long interval to make sure it isn't called in this test
-        store.setJournalDiskSyncInterval(10 * 1000);
-        store.start();
-
-        final Journal journal = store.getJournal();
-        assertTrue(journal.isJournalDiskSyncPeriodic());
-        assertFalse(store.isEnableJournalDiskSyncs());
-        assertEquals(10 * 1000, store.getJournalDiskSyncInterval());
-        journal.currentFileNeedSync.set(true);        //Make sure a disk sync was done by the executor because a message was added
-
-        //get the current file but pass in a size greater than the
-        //journal length to trigger a rotation so we can verify that it was synced
-        journal.getCurrentDataFile(2 * defaultJournalLength);
-
-        //verify a sync was called (which will set this flag to false)
-        assertFalse(journal.currentFileNeedSync.get());
+        //make sure message write causes the lastAsyncJournalUpdate to be set with a new value
+        assertFalse(store.lastAsyncJournalUpdate.get().equals(l));
     }
 
     @Test
@@ -117,6 +86,12 @@ public class JournalSyncStrategyTest  {
         store.start();
         assertFalse(store.getJournal().isJournalDiskSyncPeriodic());
         assertTrue(store.isEnableJournalDiskSyncs());
+        assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.ALWAYS.name());
+        assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.ALWAYS);
+
+        MessageStore messageStore = store.createQueueMessageStore(new ActiveMQQueue("test"));
+        writeMessage(messageStore, 1);
+        assertNull(store.lastAsyncJournalUpdate.get());
     }
 
     @Test
@@ -125,6 +100,12 @@ public class JournalSyncStrategyTest  {
         store.start();
         assertFalse(store.getJournal().isJournalDiskSyncPeriodic());
         assertFalse(store.isEnableJournalDiskSyncs());
+        assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.NEVER.name());
+        assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.NEVER);
+
+        MessageStore messageStore = store.createQueueMessageStore(new ActiveMQQueue("test"));
+        writeMessage(messageStore, 1);
+        assertNull(store.lastAsyncJournalUpdate.get());
     }
 
     private KahaDBStore configureStore(JournalDiskSyncStrategy strategy) throws Exception {
