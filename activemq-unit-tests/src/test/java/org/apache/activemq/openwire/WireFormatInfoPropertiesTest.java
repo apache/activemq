@@ -69,8 +69,6 @@ public class WireFormatInfoPropertiesTest {
             assertTrue(clientWf.get().getProperties().containsKey("PlatformDetails"));
             assertTrue(clientWf.get().getProviderName().equals(ActiveMQConnectionMetaData.PROVIDER_NAME));
             assertTrue(clientWf.get().getPlatformDetails().equals(ActiveMQConnectionMetaData.PLATFORM_DETAILS));
-            // the version won't be valid until runtime
-            assertTrue(clientWf.get().getProviderVersion() == null);
         } finally {
             stopBroker(service);
         }
