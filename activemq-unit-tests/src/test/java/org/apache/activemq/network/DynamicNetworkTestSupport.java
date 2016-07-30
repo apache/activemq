@@ -30,8 +30,11 @@ import javax.jms.Session;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
@@ -96,24 +99,24 @@ public abstract class DynamicNetworkTestSupport {
     }
 
     protected void waitForConsumerCount(final DestinationStatistics destinationStatistics, final int count) throws Exception {
-        Wait.waitFor(new Wait.Condition() {
+        assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 //should only be 1 for the composite destination creation
                 return count == destinationStatistics.getConsumers().getCount();
             }
-        });
+        }));
     }
 
     protected void waitForDispatchFromLocalBroker(final DestinationStatistics destinationStatistics, final int count) throws Exception {
-        Wait.waitFor(new Wait.Condition() {
+        assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return count == destinationStatistics.getDequeues().getCount() &&
                        count == destinationStatistics.getDispatched().getCount() &&
                        count == destinationStatistics.getForwards().getCount();
             }
-        });
+        }));
     }
 
     protected void assertLocalBrokerStatistics(final DestinationStatistics localStatistics, final int count) {
@@ -126,14 +129,30 @@ public abstract class DynamicNetworkTestSupport {
         MessageConsumer createConsumer() throws JMSException;
     }
 
-    protected void assertNCSubscriptionsCount(final BrokerService brokerService,
+    protected void assertNCDurableSubsCount(final BrokerService brokerService,
             final ActiveMQTopic dest, final int count) throws Exception {
         assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return count == getNCSubscriptions(brokerService, dest).size();
+                return count == getNCDurableSubs(brokerService, dest).size();
             }
         }, 10000, 500));
+    }
+
+    protected void assertConsumersCount(final BrokerService brokerService,
+            final ActiveMQTopic dest, final int count) throws Exception {
+        assertTrue(Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return count == getConsumers(brokerService, dest).size();
+            }
+        }, 10000, 500));
+    }
+
+    protected List<Subscription> getConsumers(final BrokerService brokerService,
+            final ActiveMQTopic dest) throws Exception {
+        Topic destination = (Topic) brokerService.getDestination(dest);
+        return destination.getConsumers();
     }
 
     protected List<DurableTopicSubscription> getSubscriptions(final BrokerService brokerService,
@@ -151,10 +170,17 @@ public abstract class DynamicNetworkTestSupport {
         return subs;
     }
 
-    protected List<DurableTopicSubscription> getNCSubscriptions(final BrokerService brokerService,
+    protected List<DurableTopicSubscription> getNCDurableSubs(final BrokerService brokerService,
             final ActiveMQTopic dest) throws Exception {
         List<DurableTopicSubscription> subs = new ArrayList<>();
-        Topic destination = (Topic) brokerService.getDestination(dest);
+        Destination d = brokerService.getDestination(dest);
+        Topic destination = null;
+        if (d instanceof DestinationFilter){
+            destination = ((DestinationFilter) d).getAdaptor(Topic.class);
+        } else {
+            destination = (Topic) d;
+        }
+
         for (SubscriptionKey key : destination.getDurableTopicSubs().keySet()) {
             if (key.getSubscriptionName().startsWith(DemandForwardingBridge.DURABLE_SUB_PREFIX)) {
                 DurableTopicSubscription sub = destination.getDurableTopicSubs().get(key);
@@ -165,5 +191,29 @@ public abstract class DynamicNetworkTestSupport {
         }
         return subs;
     }
+
+    protected void removeSubscription(final BrokerService brokerService, final ActiveMQTopic topic,
+            final String subName) throws Exception {
+        final RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
+        info.setClientId(clientId);
+        info.setSubscriptionName(subName);
+
+        final ConnectionContext context = new ConnectionContext();
+        context.setBroker(brokerService.getBroker());
+        context.setClientId(clientId);
+
+        brokerService.getBroker().removeSubscription(context, info);
+    }
+
+    protected void assertSubscriptionsCount(final BrokerService brokerService,
+            final ActiveMQTopic dest, final int count) throws Exception {
+        assertTrue(Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return count == getSubscriptions(brokerService, dest).size();
+            }
+        }, 10000, 500));
+    }
+
 
 }

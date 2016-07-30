@@ -21,9 +21,11 @@ import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -99,6 +101,7 @@ import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.StringToListOfActiveMQDestinationConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,6 +134,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected ActiveMQDestination[] durableDestinations;
     protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByLocalId = new ConcurrentHashMap<>();
     protected final ConcurrentMap<ConsumerId, DemandSubscription> subscriptionMapByRemoteId = new ConcurrentHashMap<>();
+    protected final Set<ConsumerId> forcedDurableRemoteId = Collections.newSetFromMap(new ConcurrentHashMap<ConsumerId, Boolean>());
     protected final BrokerId localBrokerPath[] = new BrokerId[]{null};
     protected final CountDownLatch startedLatch = new CountDownLatch(2);
     protected final CountDownLatch localStartedLatch = new CountDownLatch(1);
@@ -549,6 +553,21 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     // set our properties
                     Properties props = new Properties();
                     IntrospectionSupport.getProperties(configuration, props, null);
+
+                    String dynamicallyIncludedDestinationsKey = "dynamicallyIncludedDestinations";
+                    String staticallyIncludedDestinationsKey = "staticallyIncludedDestinations";
+
+                    if (!configuration.getDynamicallyIncludedDestinations().isEmpty()) {
+                        props.put(dynamicallyIncludedDestinationsKey,
+                                StringToListOfActiveMQDestinationConverter.
+                                convertFromActiveMQDestination(configuration.getDynamicallyIncludedDestinations(), true));
+                    }
+                    if (!configuration.getStaticallyIncludedDestinations().isEmpty()) {
+                        props.put(staticallyIncludedDestinationsKey,
+                                StringToListOfActiveMQDestinationConverter.
+                                convertFromActiveMQDestination(configuration.getStaticallyIncludedDestinations(), true));
+                    }
+
                     props.remove("networkTTL");
                     String str = MarshallingSupport.propertiesToString(props);
                     brokerInfo.setNetworkProperties(str);
@@ -858,6 +877,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         } else if (data.getClass() == RemoveInfo.class) {
             ConsumerId id = (ConsumerId) ((RemoveInfo) data).getObjectId();
             removeDemandSubscription(id);
+
+            if (forcedDurableRemoteId.remove(id)) {
+                for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
+                    DemandSubscription ds = i.next();
+                    boolean removed = ds.removeForcedDurableConsumer(id);
+                    if (removed) {
+                        cleanupDurableSub(ds, i);
+                    }
+                }
+           }
+
         } else if (data.getClass() == RemoveSubscriptionInfo.class) {
             RemoveSubscriptionInfo info = ((RemoveSubscriptionInfo) data);
             SubscriptionInfo subscriptionInfo = new SubscriptionInfo(info.getClientId(), info.getSubscriptionName());
@@ -873,7 +903,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void cleanupDurableSub(final DemandSubscription ds,
             Iterator<DemandSubscription> i) throws IOException {
-        if (ds != null && ds.getLocalDurableSubscriber() != null && ds.getDurableRemoteSubs().isEmpty()) {
+        if (ds != null && ds.getLocalDurableSubscriber() != null && ds.getDurableRemoteSubs().isEmpty()
+                && ds.getForcedDurableConsumersSize() == 0) {
 
             // deactivate subscriber
             RemoveInfo removeInfo = new RemoveInfo(ds.getLocalInfo().getConsumerId());
@@ -1196,7 +1227,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         dests = dynamicallyIncludedDestinations;
         if (dests != null && dests.length > 0) {
-            return matchesDynamicallyIncludedDestinations(destination);
+            for (ActiveMQDestination dest : dests) {
+                DestinationFilter inclusionFilter = DestinationFilter.parseFilter(dest);
+                if (dest != null && inclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         return true;
@@ -1214,6 +1252,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         return false;
+    }
+
+    protected ActiveMQDestination findMatchingDestination(ActiveMQDestination[] dests, ActiveMQDestination destination) {
+        if (dests != null && dests.length > 0) {
+            for (ActiveMQDestination dest : dests) {
+                DestinationFilter inclusionFilter = DestinationFilter.parseFilter(dest);
+                if (dest != null && inclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
+                    return dest;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

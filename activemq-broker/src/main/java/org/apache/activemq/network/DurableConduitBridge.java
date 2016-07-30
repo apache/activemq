@@ -17,7 +17,9 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
+import java.util.Map;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
@@ -26,6 +28,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.TypeConversionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,13 +95,16 @@ public class DurableConduitBridge extends ConduitBridge {
 
     @Override
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
-        if (addToAlreadyInterestedConsumers(info)) {
+        boolean isForcedDurable = isForcedDurable(info);
+
+        if (addToAlreadyInterestedConsumers(info, isForcedDurable)) {
             return null; // don't want this subscription added
         }
         //add our original id to ourselves
         info.addNetworkConsumerId(info.getConsumerId());
+        ConsumerId forcedDurableId = isForcedDurable ? info.getConsumerId() : null;
 
-        if (info.isDurable()) {
+        if(info.isDurable() || isForcedDurable) {
             // set the subscriber name to something reproducible
             info.setSubscriptionName(getSubscriberName(info.getDestination()));
             // and override the consumerId with something unique so that it won't
@@ -107,7 +113,46 @@ public class DurableConduitBridge extends ConduitBridge {
                                consumerIdGenerator.getNextSequenceId()));
         }
         info.setSelector(null);
-        return doCreateDemandSubscription(info);
+        DemandSubscription demandSubscription = doCreateDemandSubscription(info);
+        if (forcedDurableId != null) {
+            demandSubscription.addForcedDurableConsumer(forcedDurableId);
+            forcedDurableRemoteId.add(forcedDurableId);
+        }
+        return demandSubscription;
+    }
+
+
+    private boolean isForcedDurable(ConsumerInfo info) {
+        if (info.isDurable()) {
+            return false;
+        }
+
+        ActiveMQDestination destination = info.getDestination();
+        if (AdvisorySupport.isAdvisoryTopic(destination) || destination.isTemporary() ||
+                destination.isQueue()) {
+            return false;
+        }
+
+        ActiveMQDestination matching = findMatchingDestination(dynamicallyIncludedDestinations, destination);
+        if (matching != null) {
+            return isDestForcedDurable(matching);
+        }
+        matching = findMatchingDestination(staticallyIncludedDestinations, destination);
+        if (matching != null) {
+            return isDestForcedDurable(matching);
+        }
+        return false;
+    }
+
+    private boolean isDestForcedDurable(ActiveMQDestination destination) {
+        final Map<String, String> options = destination.getOptions();
+
+        boolean isForceDurable = false;
+        if (options != null) {
+            isForceDurable = (boolean) TypeConversionSupport.convert(options.get("forceDurable"), boolean.class);
+        }
+
+        return isForceDurable;
     }
 
     protected String getSubscriberName(ActiveMQDestination dest) {

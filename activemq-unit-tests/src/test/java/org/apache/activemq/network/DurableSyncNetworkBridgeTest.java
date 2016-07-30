@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.network;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.net.URI;
 import java.util.Arrays;
@@ -30,12 +28,10 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
@@ -98,12 +94,12 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         sub1.close();
 
         assertSubscriptionsCount(broker1, topic, 1);
-        assertNCSubscriptionsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
 
         removeSubscription(broker1, topic, subName);
 
         assertSubscriptionsCount(broker1, topic, 0);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
     }
 
@@ -114,17 +110,17 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         sub1.close();
 
         assertSubscriptionsCount(broker1, topic, 1);
-        assertNCSubscriptionsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
 
         restartBrokers(true);
 
         assertSubscriptionsCount(broker1, topic, 1);
-        assertNCSubscriptionsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
 
         removeSubscription(broker1, topic, subName);
 
         assertSubscriptionsCount(broker1, topic, 0);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
     }
 
@@ -135,7 +131,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         sub1.close();
 
         assertSubscriptionsCount(broker1, topic, 1);
-        assertNCSubscriptionsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
 
         doTearDown();
         restartBroker(broker1, false);
@@ -146,9 +142,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //Test that on successful reconnection of the bridge that
         //the NC sub will be removed
         restartBroker(broker2, true);
-        assertNCSubscriptionsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
         restartBroker(broker1, true);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
     }
 
@@ -160,7 +156,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         sub1.close();
 
         assertSubscriptionsCount(broker1, topic, 1);
-        assertNCSubscriptionsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
 
         doTearDown();
         restartBroker(broker1, false);
@@ -176,13 +172,13 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         //before sync, the old NC should exist
         restartBroker(broker2, true);
-        assertNCSubscriptionsCount(broker2, topic, 1);
-        assertNCSubscriptionsCount(broker2, topic2, 0);
+        assertNCDurableSubsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic2, 0);
 
         //After sync, remove old NC and create one for topic 2
         restartBroker(broker1, true);
-        assertNCSubscriptionsCount(broker2, topic, 0);
-        assertNCSubscriptionsCount(broker2, topic2, 1);
+        assertNCDurableSubsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic2, 1);
 
     }
 
@@ -193,7 +189,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         final ActiveMQTopic excludeTopic = new ActiveMQTopic(excludeTopicName);
 
         assertSubscriptionsCount(broker1, topic, 0);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
         doTearDown();
         restartBroker(broker1, false);
@@ -207,9 +203,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic2, 1);
 
         restartBrokers(true);
-        assertNCSubscriptionsCount(broker2, topic, 1);
-        assertNCSubscriptionsCount(broker2, topic2, 1);
-        assertNCSubscriptionsCount(broker2, excludeTopic, 0);
+        assertNCDurableSubsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic2, 1);
+        assertNCDurableSubsCount(broker2, excludeTopic, 0);
 
     }
 
@@ -223,7 +219,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
 
         assertSubscriptionsCount(broker1, topic, 0);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
         doTearDown();
         restartBroker(broker1, false);
@@ -235,7 +231,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //Since we are using an old version of openwire, the NC should
         //not be added
         restartBrokers(true);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
     }
 
@@ -246,7 +242,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
 
         assertSubscriptionsCount(broker1, topic, 0);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
         doTearDown();
         restartBroker(broker1, false);
@@ -256,7 +252,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic, 1);
 
         restartBrokers(true);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
     }
 
     @Test
@@ -266,7 +262,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
 
         assertSubscriptionsCount(broker1, topic, 0);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
         doTearDown();
         restartBroker(broker1, false);
@@ -276,10 +272,10 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic, 1);
 
         restartBrokers(true);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
         //bring online again
         session1.createDurableSubscriber(topic, subName);
-        assertNCSubscriptionsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
 
     }
 
@@ -290,7 +286,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         session1.createDurableSubscriber(topic, subName).close();
         assertSubscriptionsCount(broker1, topic, 1);
-        assertNCSubscriptionsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
 
         doTearDown();
         restartBroker(broker1, false);
@@ -301,8 +297,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic, 1);
 
         restartBrokers(true);
-        assertNCSubscriptionsCount(broker2, topic, 1);
-        assertNCSubscriptionsCount(broker2, excludeTopic, 0);
+        assertNCDurableSubsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, excludeTopic, 0);
 
     }
 
@@ -314,7 +310,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         final ActiveMQTopic excludeTopic = new ActiveMQTopic(excludeTopicName);
 
         assertSubscriptionsCount(broker1, topic, 0);
-        assertNCSubscriptionsCount(broker2, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
 
         doTearDown();
         restartBrokers(false);
@@ -342,32 +338,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         session1.createDurableSubscriber(excludeTopic, "sub-exclude");
 
         Thread.sleep(1000);
-        assertNCSubscriptionsCount(broker2, topic, 1);
-        assertNCSubscriptionsCount(broker2, excludeTopic, 0);
+        assertNCDurableSubsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, excludeTopic, 0);
 
-    }
-
-    protected void removeSubscription(final BrokerService brokerService, final ActiveMQTopic topic,
-            final String subName) throws Exception {
-        final RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
-        info.setClientId(clientId);
-        info.setSubscriptionName(subName);
-
-        final ConnectionContext context = new ConnectionContext();
-        context.setBroker(brokerService.getBroker());
-        context.setClientId(clientId);
-
-        brokerService.getBroker().removeSubscription(context, info);
-    }
-
-    protected void assertSubscriptionsCount(final BrokerService brokerService,
-            final ActiveMQTopic dest, final int count) throws Exception {
-        assertTrue(Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return count == getSubscriptions(brokerService, dest).size();
-            }
-        }, 10000, 500));
     }
 
     protected void restartBroker(BrokerService broker, boolean startNetworkConnector) throws Exception {
@@ -387,7 +360,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     protected void doSetUp(boolean deleteAllMessages, boolean startNetworkConnector, File localDataDir,
             File remoteDataDir) throws Exception {
         included = new ActiveMQTopic(testTopicName);
-        doSetUpRemoteBroker(deleteAllMessages, remoteDataDir);
+        doSetUpRemoteBroker(deleteAllMessages, remoteDataDir, 0);
         doSetUpLocalBroker(deleteAllMessages, startNetworkConnector, localDataDir);
         //Give time for advisories to propagate
         Thread.sleep(1000);
@@ -399,8 +372,13 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     }
 
     protected void restartRemoteBroker() throws Exception {
+        int port = 0;
+        if (remoteBroker != null) {
+            List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
+            port = transportConnectors.get(0).getConnectUri().getPort();
+        }
         stopRemoteBroker();
-        doSetUpRemoteBroker(false, remoteBroker.getDataDirectoryFile());
+        doSetUpRemoteBroker(false, remoteBroker.getDataDirectoryFile(), port);
     }
 
     protected void doSetUpLocalBroker(boolean deleteAllMessages, boolean startNetworkConnector,
@@ -438,8 +416,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         }
     }
 
-    protected void doSetUpRemoteBroker(boolean deleteAllMessages, File dataDir) throws Exception {
-        remoteBroker = createRemoteBroker(dataDir);
+    protected void doSetUpRemoteBroker(boolean deleteAllMessages, File dataDir, int port) throws Exception {
+        remoteBroker = createRemoteBroker(dataDir, port);
         remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         remoteBroker.start();
         remoteBroker.waitUntilStarted();
@@ -494,7 +472,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     protected AdvisoryBroker remoteAdvisoryBroker;
 
-    protected BrokerService createRemoteBroker(File dataDir) throws Exception {
+    protected BrokerService createRemoteBroker(File dataDir, int port) throws Exception {
         BrokerService brokerService = new BrokerService();
         brokerService.setBrokerName("remoteBroker");
         brokerService.setUseJmx(false);
@@ -502,7 +480,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         remoteAdvisoryBroker = (AdvisoryBroker) brokerService.getBroker().getAdaptor(AdvisoryBroker.class);
 
-        brokerService.addConnector("tcp://localhost:0?wireFormat.version=" + remoteBrokerWireFormatVersion);
+        brokerService.addConnector("tcp://localhost:" + port + "?wireFormat.version=" + remoteBrokerWireFormatVersion);
 
         return brokerService;
     }
