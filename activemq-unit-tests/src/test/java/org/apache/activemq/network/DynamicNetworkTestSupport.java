@@ -17,8 +17,11 @@
 package org.apache.activemq.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -28,9 +31,13 @@ import javax.jms.Session;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -52,6 +59,31 @@ public abstract class DynamicNetworkTestSupport {
 
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder(new File("target"));
+
+    protected void doTearDown() throws Exception {
+        stopLocalBroker();
+        stopRemoteBroker();
+    }
+
+    protected void stopLocalBroker() throws Exception {
+        if (localConnection != null) {
+            localConnection.close();
+        }
+        if (localBroker != null) {
+            localBroker.stop();
+            localBroker.waitUntilStopped();
+        }
+    }
+
+    protected void stopRemoteBroker() throws Exception {
+        if (remoteConnection != null) {
+            remoteConnection.close();
+        }
+        if (remoteBroker != null) {
+            remoteBroker.stop();
+            remoteBroker.waitUntilStopped();
+        }
+    }
 
     protected RemoveSubscriptionInfo getRemoveSubscriptionInfo(final ConnectionContext context,
             final BrokerService brokerService) throws Exception {
@@ -92,6 +124,46 @@ public abstract class DynamicNetworkTestSupport {
 
     protected interface ConsumerCreator {
         MessageConsumer createConsumer() throws JMSException;
+    }
+
+    protected void assertNCSubscriptionsCount(final BrokerService brokerService,
+            final ActiveMQTopic dest, final int count) throws Exception {
+        assertTrue(Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return count == getNCSubscriptions(brokerService, dest).size();
+            }
+        }, 10000, 500));
+    }
+
+    protected List<DurableTopicSubscription> getSubscriptions(final BrokerService brokerService,
+            final ActiveMQTopic dest) throws Exception {
+        List<DurableTopicSubscription> subs = new ArrayList<>();
+        Topic destination = (Topic) brokerService.getDestination(dest);
+        for (SubscriptionKey key : destination.getDurableTopicSubs().keySet()) {
+            if (!key.getSubscriptionName().startsWith(DemandForwardingBridge.DURABLE_SUB_PREFIX)) {
+                DurableTopicSubscription sub = destination.getDurableTopicSubs().get(key);
+                if (sub != null) {
+                    subs.add(sub);
+                }
+            }
+        }
+        return subs;
+    }
+
+    protected List<DurableTopicSubscription> getNCSubscriptions(final BrokerService brokerService,
+            final ActiveMQTopic dest) throws Exception {
+        List<DurableTopicSubscription> subs = new ArrayList<>();
+        Topic destination = (Topic) brokerService.getDestination(dest);
+        for (SubscriptionKey key : destination.getDurableTopicSubs().keySet()) {
+            if (key.getSubscriptionName().startsWith(DemandForwardingBridge.DURABLE_SUB_PREFIX)) {
+                DurableTopicSubscription sub = destination.getDurableTopicSubs().get(key);
+                if (sub != null) {
+                    subs.add(sub);
+                }
+            }
+        }
+        return subs;
     }
 
 }

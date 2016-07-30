@@ -1289,22 +1289,6 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         doTearDown();
     }
 
-    protected void doTearDown() throws Exception {
-        if (localConnection != null) {
-            localConnection.close();
-        }
-        if (remoteConnection != null) {
-            remoteConnection.close();
-        }
-        if (localBroker != null) {
-            localBroker.stop();
-        }
-        if (remoteBroker != null) {
-            remoteBroker.stop();
-        }
-    }
-
-
     protected void doSetUp(boolean deleteAllMessages,
             VirtualDestination[] remoteVirtualDests) throws Exception {
         doSetUp(deleteAllMessages, remoteVirtualDests, true);
