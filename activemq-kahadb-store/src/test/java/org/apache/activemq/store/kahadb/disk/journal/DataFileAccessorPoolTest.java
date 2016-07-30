@@ -16,18 +16,23 @@
  */
 package org.apache.activemq.store.kahadb.disk.journal;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.File;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.rules.TemporaryFolder;
 
 public class DataFileAccessorPoolTest {
     private Mockery context;
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Before
     public void setUp() throws Exception {
@@ -47,7 +52,7 @@ public class DataFileAccessorPoolTest {
 
         context.checking(new Expectations(){{exactly(1).of(journal).getInflightWrites();}});
 
-        DataFile dataFile = new DataFile(new File("aa"), 1);
+        DataFile dataFile = new DataFile(new File(temporaryFolder.getRoot(), "aa"), 1);
         underTest.closeDataFileAccessor(underTest.openDataFileAccessor(dataFile));
 
         assertEquals("one in the pool", 1, underTest.size());
