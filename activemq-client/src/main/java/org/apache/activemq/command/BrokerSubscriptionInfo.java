@@ -19,7 +19,8 @@ package org.apache.activemq.command;
 import org.apache.activemq.state.CommandVisitor;
 
 /**
- * Used to represent a durable subscription.
+ * Used to represent the durable subscriptions contained by the broker
+ * This is used to synchronize durable subs on bridge creation
  *
  * @openwire:marshaller code="92"
  *

@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
@@ -32,12 +33,16 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -60,6 +65,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     private BrokerService broker2;
     private Session session1;
     private final FLOW flow;
+
+    @Rule
+    public Timeout globalTimeout = new Timeout(30, TimeUnit.SECONDS);
 
     @Parameters
     public static Collection<Object[]> data() {
@@ -208,6 +216,43 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertNCDurableSubsCount(broker2, excludeTopic, 0);
 
     }
+
+    @Test
+    public void testSyncLoadTest() throws Exception {
+        String subName = this.subName;
+        //Create 1000 subs
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 10; j++) {
+                session1.createDurableSubscriber(new ActiveMQTopic("include.test." + i), subName + i + j).close();
+            }
+        }
+        for (int i = 0; i < 100; i++) {
+            assertNCDurableSubsCount(broker2, new ActiveMQTopic("include.test." + i), 1);
+        }
+
+        doTearDown();
+        restartBroker(broker1, false);
+
+        //with bridge off, remove 100 subs
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                removeSubscription(broker1, new ActiveMQTopic("include.test." + i), subName + i + j);
+            }
+        }
+
+        //restart test that 900 are resynced and 100 are deleted
+        restartBrokers(true);
+
+        for (int i = 0; i < 10; i++) {
+            assertNCDurableSubsCount(broker2, new ActiveMQTopic("include.test." + i), 0);
+        }
+
+        for (int i = 10; i < 100; i++) {
+            assertNCDurableSubsCount(broker2, new ActiveMQTopic("include.test." + i), 1);
+        }
+
+    }
+
 
     /**
      * Using an older version of openwire should not sync but the network bridge
@@ -395,10 +440,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         localConnection.setClientID("clientId");
         localConnection.start();
 
-        if (startNetworkConnector) {        // brokerService.setPlugins(new BrokerPlugin[] {new
-            // JavaRuntimeConfigurationPlugin()});
-            // brokerService.setUseVirtualDestSubs(true);
-            // brokerService.setUseVirtualDestSubsOnCreation(isUsevirtualDestinationSubscriptionsOnCreation);
+        if (startNetworkConnector) {
             Wait.waitFor(new Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
@@ -439,8 +481,12 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     protected BrokerService createLocalBroker(File dataDir, boolean startNetworkConnector) throws Exception {
         BrokerService brokerService = new BrokerService();
         brokerService.setMonitorConnectionSplits(true);
-        brokerService.setDataDirectoryFile(dataDir);
         brokerService.setBrokerName("localBroker");
+        brokerService.setDataDirectoryFile(dataDir);
+        KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
+        adapter.setDirectory(dataDir);
+        adapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.PERIODIC.name());
+        brokerService.setPersistenceAdapter(adapter);
 
         if (startNetworkConnector) {
             brokerService.addNetworkConnector(configureLocalNetworkConnector());
@@ -477,10 +523,15 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         brokerService.setBrokerName("remoteBroker");
         brokerService.setUseJmx(false);
         brokerService.setDataDirectoryFile(dataDir);
+        KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
+        adapter.setDirectory(dataDir);
+        adapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.PERIODIC.name());
+        brokerService.setPersistenceAdapter(adapter);
 
         remoteAdvisoryBroker = (AdvisoryBroker) brokerService.getBroker().getAdaptor(AdvisoryBroker.class);
 
-        brokerService.addConnector("tcp://localhost:" + port + "?wireFormat.version=" + remoteBrokerWireFormatVersion);
+        //Need a larger cache size in order to handle all of the durables
+        brokerService.addConnector("tcp://localhost:" + port + "?wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
 
         return brokerService;
     }
