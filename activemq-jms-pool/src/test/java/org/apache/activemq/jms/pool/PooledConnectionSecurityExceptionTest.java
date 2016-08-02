@@ -272,6 +272,8 @@ public class PooledConnectionSecurityExceptionTest {
 
         MessageProducer producer = session.createProducer(queue);
         producer.close();
+
+        connection.close();
     }
 
     public String getName() {
