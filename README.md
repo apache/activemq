@@ -8,14 +8,14 @@ Getting Started
 To help you get started, try the following links:
 
 Getting Started
-http://activemq.apache.org/version-5-getting-started.html
+- http://activemq.apache.org/version-5-getting-started.html
 
 Building
-http://activemq.apache.org/version-5-getting-started.html#GettingStarted-WindowsSourceInstallation
-http://activemq.apache.org/version-5-getting-started.html#GettingStarted-UnixSourceInstallation
+- http://activemq.apache.org/version-5-getting-started.html#GettingStarted-WindowsSourceInstallation
+- http://activemq.apache.org/version-5-getting-started.html#GettingStarted-UnixSourceInstallation
 
 Examples
-http://activemq.apache.org/examples.html
+- http://activemq.apache.org/examples.html
 
 We welcome contributions of all kinds, for details of how you can help
 http://activemq.apache.org/contributing.html
@@ -32,7 +32,7 @@ Licensing
 =======================================================================
 
    This software is licensed under the terms you may find in the file 
-   named "LICENSE.txt" in this directory.
+   named "LICENSE" in this directory.
 
    This distribution includes cryptographic software.  The country in 
    which you currently reside may have restrictions on the import, 
@@ -58,6 +58,6 @@ Licensing
    
    ActiveMQ supports the use of SSL TCP connections when used with 
    with a JVM supporting the Java Cryptography extensions
-   <http://java.sun.com/javase/technologies/security/>.  ActiveMQ does 
-   not include these libraries itself, but is designed to use them.
+   <http://www.oracle.com/technetwork/java/javase/tech/index-jsp-136007.html>.
+   ActiveMQ does not include these libraries itself, but is designed to use them.
 
