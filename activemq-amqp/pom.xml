@@ -168,6 +168,12 @@
       <version>${netty-all-version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.fusesource.stompjms</groupId>
+      <artifactId>stompjms-client</artifactId>
+      <version>${stompjms-version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <profiles>
