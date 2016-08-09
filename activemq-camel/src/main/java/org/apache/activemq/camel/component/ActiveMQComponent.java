@@ -297,4 +297,13 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
         }
         return answer;
     }
+
+    /**
+     * We don't want to ever auto-wire the connection factory from the spring app context.
+     * @return false
+     */
+    public boolean getAllowAutoWiredConnectionFactory() {
+        return false;
+    }
+
 }
