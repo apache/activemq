@@ -17,8 +17,13 @@
 package org.apache.activemq.state;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Vector;
@@ -44,6 +49,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -62,6 +68,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
     private static final int MESSAGE_PULL_SIZE = 400;
     protected final ConcurrentMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>();
+    
+    // TransactionId -> ArrayList of connections states participating in a transaction
+    private final static ConcurrentMap<TransactionId, List<ConnectionState>> XA_TRANSACTION_CONNECTIONS = new ConcurrentHashMap<>();
 
     private boolean trackTransactions;
     private boolean restoreSessions = true;
@@ -100,10 +109,14 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
         @Override
         public void onResponse(Command response) {
-            ConnectionId connectionId = info.getConnectionId();
-            ConnectionState cs = connectionStates.get(connectionId);
-            if (cs != null) {
-                cs.removeTransactionState(info.getTransactionId());
+            TransactionId transactionId = info.getTransactionId();
+            List<ConnectionState> connections = XA_TRANSACTION_CONNECTIONS.remove(transactionId);
+            if (connections == null) {
+                LOG.warn("Tracked transaction {} disappeared from transaction list", transactionId);
+                return;
+            }
+            for (ConnectionState connection : connections) {
+                connection.removeTransactionState(transactionId);
             }
         }
     }
@@ -483,7 +496,18 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     @Override
     public Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId) throws Exception {
         if (id != null) {
-            connectionStates.remove(id);
+            ConnectionState cs = connectionStates.remove(id);
+            if (cs != null) {
+                Collection<TransactionState> transactionStates = cs.getTransactionStates();
+                for (TransactionState transactionState : transactionStates) {
+                    List<ConnectionState> txConnections = XA_TRANSACTION_CONNECTIONS.get(transactionState.getId());
+                    if (txConnections == null) {
+                        LOG.warn("Tracked transaction {} is gone from transaction list", transactionState.getId());
+                    } else {
+                        txConnections.remove(cs);
+                    }
+                }
+            }
         }
         return TRACKED_RESPONSE_MARKER;
     }
@@ -523,12 +547,25 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     public Response processBeginTransaction(TransactionInfo info) {
         if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
+            TransactionId transactionId = info.getTransactionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
-                    cs.addTransactionState(info.getTransactionId());
-                    TransactionState state = cs.getTransactionState(info.getTransactionId());
+                    cs.addTransactionState(transactionId);
+                    TransactionState state = cs.getTransactionState(transactionId);
                     state.addCommand(info);
+                    
+                    List<ConnectionState> connections = XA_TRANSACTION_CONNECTIONS.get(transactionId);
+                    if (connections == null) {
+                        connections = Collections.synchronizedList(new ArrayList<ConnectionState>());
+                        List<ConnectionState> swap = XA_TRANSACTION_CONNECTIONS.putIfAbsent(transactionId, connections);
+                        if (swap != null) {
+                            // there was concurrent write to that key, so we keep the list that is already present
+                            connections = swap;
+                        }
+                    }
+                    // add the state to connections participating in that transaction
+                    connections.add(cs);
                 }
             }
             return TRACKED_RESPONSE_MARKER;
