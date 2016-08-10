@@ -18,6 +18,7 @@ package org.apache.activemq.store.kahadb;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -81,6 +82,13 @@ public class JournalFdRecoveryTest {
     }
 
     private void doStartBroker(boolean delete) throws Exception {
+        doCreateBroker(delete);
+        LOG.info("Starting broker..");
+        broker.start();
+    }
+
+    private void doCreateBroker(boolean delete) throws Exception {
+
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(delete);
         broker.setPersistent(true);
@@ -98,9 +106,6 @@ public class JournalFdRecoveryTest {
 
         connectionUri = "vm://localhost?create=false";
         cf = new ActiveMQConnectionFactory(connectionUri);
-
-        broker.start();
-        LOG.info("Starting broker..");
     }
 
     protected void configurePersistence(BrokerService brokerService) throws Exception {
@@ -192,6 +197,42 @@ public class JournalFdRecoveryTest {
 
         long afterRecovery = totalOpenFileDescriptorCount(broker);
         LOG.info("Num Open files with broker recovered: " + afterRecovery);
+
+    }
+
+    @Test
+    public void testRecoveryWithMissingMssagesWithValidAcks() throws Exception {
+
+        doCreateBroker(true);
+        adapter.setCheckpointInterval(50000);
+        adapter.setCleanupInterval(50000);
+        broker.start();
+
+        int toSend = 50;
+        produceMessagesToConsumeMultipleDataFiles(toSend);
+
+        int numFiles = getNumberOfJournalFiles();
+        LOG.info("Num files: " + numFiles);
+        assertTrue("more than x files: " + numFiles, numFiles > 5);
+        assertEquals("Drain", 30, tryConsume(destination, 30));
+
+        LOG.info("Num files after stopped: " + getNumberOfJournalFiles());
+
+        File dataDir = broker.getPersistenceAdapter().getDirectory();
+        broker.stop();
+        broker.waitUntilStopped();
+
+        whackDataFile(dataDir, 4);
+
+        whackIndex(dataDir);
+
+        doStartBroker(false);
+
+        LOG.info("Num files after restarted: " + getNumberOfJournalFiles());
+
+        assertEquals("Empty?", 18, tryConsume(destination, 20));
+
+        assertEquals("no queue size ", 0l,  ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics().getMessages().getCount());
 
     }
 
