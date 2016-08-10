@@ -433,7 +433,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
 
     /**
      * Get the enableJournalDiskSyncs
-     * @deprecated use {@link #setEnableJournalDiskSyncs} instead
+     * @deprecated use {@link #getJournalDiskSyncStrategy} instead
      * @return the enableJournalDiskSyncs
      */
     public boolean isEnableJournalDiskSyncs() {
@@ -443,7 +443,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     /**
      * Set the enableJournalDiskSyncs
      *
-     * @deprecated use {@link #setEnableJournalDiskSyncs} instead
+     * @deprecated use {@link #setJournalDiskSyncStrategy} instead
      * @param enableJournalDiskSyncs
      *            the enableJournalDiskSyncs to set
      */
