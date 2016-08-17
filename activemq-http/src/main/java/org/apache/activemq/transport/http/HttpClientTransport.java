@@ -124,8 +124,6 @@ public class HttpClientTransport extends HttpTransportSupport {
         HttpResponse answer = null;
         try {
             client = getSendHttpClient();
-            HttpParams params = client.getParams();
-            HttpConnectionParams.setSoTimeout(params, soTimeout);
             answer = client.execute(httpMethod);
             int status = answer.getStatusLine().getStatusCode();
             if (status != HttpStatus.SC_OK) {
@@ -341,6 +339,10 @@ public class HttpClientTransport extends HttpTransportSupport {
                     new UsernamePasswordCredentials(getProxyUser(), getProxyPassword()));
             }
         }
+
+        HttpParams params = client.getParams();
+        HttpConnectionParams.setSoTimeout(params, soTimeout);
+
         return client;
     }
 
