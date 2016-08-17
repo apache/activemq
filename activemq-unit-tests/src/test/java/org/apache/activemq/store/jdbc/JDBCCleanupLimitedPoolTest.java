@@ -18,6 +18,7 @@ package org.apache.activemq.store.jdbc;
 
 import org.apache.activemq.ActiveMQXAConnection;
 import org.apache.activemq.ActiveMQXAConnectionFactory;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.IOHelper;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -142,6 +143,9 @@ public class JDBCCleanupLimitedPoolTest {
 
         executorService.shutdown();
         boolean allComplete = executorService.awaitTermination(40, TimeUnit.SECONDS);
+        if (!allComplete) {
+            TestSupport.dumpAllThreads("Why-at-count-" + doneCommit.getCount() +"-");
+        }
         done.countDown();
         assertTrue("all complete", allComplete);
         executorService.shutdownNow();
