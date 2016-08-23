@@ -606,11 +606,48 @@ public class JMSMappingOutboundTransformerTest {
     }
 
     @Test
+    public void testConvertTextMessageContentNotStoredCreatesBodyUsingOriginalEncodingWithDataSection() throws Exception {
+        String contentString = "myTextMessageContent";
+        ActiveMQTextMessage outbound = createTextMessage(contentString);
+        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_DATA);
+        outbound.onSend();
+
+        ActiveMQJMSVendor vendor = createVendor();
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+
+        Message amqp = transformer.convert(outbound);
+
+        assertNotNull(amqp.getBody());
+        assertTrue(amqp.getBody() instanceof Data);
+        assertTrue(((Data) amqp.getBody()).getValue() instanceof Binary);
+
+        Binary data = ((Data) amqp.getBody()).getValue();
+        String contents = new String(data.getArray(), data.getArrayOffset(), data.getLength(), StandardCharsets.UTF_8);
+        assertEquals(contentString, contents);
+    }
+
+    @Test
     public void testConvertTextMessageCreatesAmqpValueStringBody() throws Exception {
         String contentString = "myTextMessageContent";
         ActiveMQTextMessage outbound = createTextMessage(contentString);
         outbound.onSend();
         outbound.storeContent();
+
+        ActiveMQJMSVendor vendor = createVendor();
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+
+        Message amqp = transformer.convert(outbound);
+
+        assertNotNull(amqp.getBody());
+        assertTrue(amqp.getBody() instanceof AmqpValue);
+        assertEquals(contentString, ((AmqpValue) amqp.getBody()).getValue());
+    }
+
+    @Test
+    public void testConvertTextMessageContentNotStoredCreatesAmqpValueStringBody() throws Exception {
+        String contentString = "myTextMessageContent";
+        ActiveMQTextMessage outbound = createTextMessage(contentString);
+        outbound.onSend();
 
         ActiveMQJMSVendor vendor = createVendor();
         JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);

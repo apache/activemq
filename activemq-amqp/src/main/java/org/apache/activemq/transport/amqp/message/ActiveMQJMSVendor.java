@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.message;
 
 import java.io.DataInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -343,6 +344,8 @@ public class ActiveMQJMSVendor {
                 // Message includes a size prefix of four bytes for the OpenWire marshaler
                 result = new Binary(contents.getData(), contents.getOffset() + 4, contents.getLength() - 4);
             }
+        } else if (textMessage.getText() != null) {
+            result = new Binary(textMessage.getText().getBytes(StandardCharsets.UTF_8));
         }
 
         return result;
