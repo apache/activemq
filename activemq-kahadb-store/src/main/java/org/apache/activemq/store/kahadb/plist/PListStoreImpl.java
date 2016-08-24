@@ -54,6 +54,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     static final int OPEN_STATE = 2;
 
     private File directory;
+    private File indexDirectory;
     PageFile pageFile;
     private Journal journal;
     private LockFile lockFile;
@@ -202,6 +203,14 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         this.directory = directory;
     }
 
+    public File getIndexDirectory() {
+        return indexDirectory != null ? indexDirectory : directory;
+    }
+
+    public void setIndexDirectory(File indexDirectory) {
+        this.indexDirectory = indexDirectory;
+    }
+
     public long size() {
         synchronized (this) {
             if (!initialized) {
@@ -277,13 +286,17 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                 }
                 IOHelper.mkdirs(this.directory);
                 IOHelper.deleteChildren(this.directory);
+                if (this.indexDirectory != null) {
+                    IOHelper.mkdirs(this.indexDirectory);
+                    IOHelper.deleteChildren(this.indexDirectory);
+                }
                 lock();
                 this.journal = new Journal();
                 this.journal.setDirectory(directory);
                 this.journal.setMaxFileLength(getJournalMaxFileLength());
                 this.journal.setWriteBatchSize(getJournalMaxWriteBatchSize());
                 this.journal.start();
-                this.pageFile = new PageFile(directory, "tmpDB");
+                this.pageFile = new PageFile(getIndexDirectory(), "tmpDB");
                 this.pageFile.setEnablePageCaching(getIndexEnablePageCaching());
                 this.pageFile.setPageSize(getIndexPageSize());
                 this.pageFile.setWriteBatchSize(getIndexWriteBatchSize());
@@ -485,6 +498,9 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
+        if (indexDirectory != null) {
+            path += "|" + indexDirectory.getAbsolutePath();
+        }
         return "PListStore:[" + path + "]";
     }
 }
