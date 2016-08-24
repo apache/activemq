@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class PListTestSupport {
     static final Logger LOG = LoggerFactory.getLogger(PListTestSupport.class);
-    private PListStore store;
+    protected PListStore store;
     private PList plist;
     final ByteSequence payload = new ByteSequence(new byte[400]);
     final String idSeed = new String("Seed" + new byte[1024]);
