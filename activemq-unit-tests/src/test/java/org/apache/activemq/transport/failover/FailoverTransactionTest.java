@@ -809,15 +809,10 @@ public class FailoverTransactionTest extends TestSupport {
                     LOG.info("committing consumer1 session: " + receivedMessages.size() + " messsage(s)");
                     try {
                         consumerSession1.commit();
-                    } catch (JMSException expectedSometimes) {
-                        LOG.info("got exception ex on commit", expectedSometimes);
-                        if (expectedSometimes instanceof TransactionRolledBackException) {
-                            gotTransactionRolledBackException.set(true);
-                            // ok, message one was not replayed so we expect the rollback
-                        } else {
-                            throw expectedSometimes;
-                        }
-
+                    } catch (TransactionRolledBackException expected) {
+                        LOG.info("got exception ex on commit", expected);
+                        gotTransactionRolledBackException.set(true);
+                        // ok, message one was not replayed so we expect the rollback
                     }
                     commitDoneLatch.countDown();
                     LOG.info("done async commit");
@@ -837,24 +832,17 @@ public class FailoverTransactionTest extends TestSupport {
 
         LOG.info("received message count: " + receivedMessages.size());
 
-        // new transaction
-        Message msg = consumer1.receive(gotTransactionRolledBackException.get() ? 5000 : 20000);
-        LOG.info("post: from consumer1 received: " + msg);
-        if (gotTransactionRolledBackException.get()) {
-            assertNotNull("should be available again after commit rollback ex", msg);
-        } else {
-            assertNull("should be nothing left for consumer as receive should have committed", msg);
-        }
-        consumerSession1.commit();
-
-        if (gotTransactionRolledBackException.get() ||
-                !gotTransactionRolledBackException.get() && receivedMessages.size() == 1) {
-            // just one message successfully consumed or none consumed
-            // consumer2 should get other message
-            msg = consumer2.receive(10000);
-            LOG.info("post: from consumer2 received: " + msg);
-            assertNotNull("got second message on consumer2", msg);
-            consumerSession2.commit();
+        // new transaction to get both messages from either consumer
+        for (int i=0; i<2; i++) {
+            Message msg = consumer1.receive(5000);
+            LOG.info("post: from consumer1 received: " + msg);
+            consumerSession1.commit();
+            if (msg == null) {
+                msg = consumer2.receive(10000);
+                LOG.info("post: from consumer2 received: " + msg);
+                consumerSession2.commit();
+            }
+            assertNotNull("got message [" + i + "]", msg);
         }
 
         for (Connection c : connections) {
@@ -877,7 +865,7 @@ public class FailoverTransactionTest extends TestSupport {
         connection.start();
         Session sweeperSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer sweeper = sweeperSession.createConsumer(destination);
-        msg = sweeper.receive(1000);
+        Message msg = sweeper.receive(1000);
         LOG.info("Sweep received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();

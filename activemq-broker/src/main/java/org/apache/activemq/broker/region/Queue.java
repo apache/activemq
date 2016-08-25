@@ -96,6 +96,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import static org.apache.activemq.broker.region.cursors.AbstractStoreCursor.gotToTheStore;
+
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
  * subscriptions.
@@ -1970,14 +1972,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         resultList.addMessageLast(ref);
                     } else {
                         ref.decrementReferenceCount();
-                        // store should have trapped duplicate in it's index, also cursor audit
-                        // we need to remove the duplicate from the store in the knowledge that the original message may be inflight
+                        // store should have trapped duplicate in it's index, or cursor audit trapped insert
+                        // or producerBrokerExchange suppressed send.
                         // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
-                        LOG.warn("{}, duplicate message {} paged in, is cursor audit disabled? Removing from store and redirecting to dlq", this, ref.getMessage());
+                        LOG.warn("{}, duplicate message {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessage());
                         if (store != null) {
                             ConnectionContext connectionContext = createConnectionContext();
-                            store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
-                            broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from store for " + destination));
+                            dropMessage(ref);
+                            if (gotToTheStore(ref.getMessage())) {
+                                LOG.debug("Duplicate message {} from cursor, removing from store", this, ref.getMessage());
+                                store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
+                            }
+                            broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from cursor for " + destination));
                         }
                     }
                 }

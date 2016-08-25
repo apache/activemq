@@ -121,12 +121,26 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
         } else {
             LOG.warn("{} - cursor got duplicate send {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
-            if (message.getMessageId().getEntryLocator() instanceof Long) {
-                // JDBC will store a duplicate (with new sequence id) - it needs an ack  (AMQ4952Test)
+            if (gotToTheStore(message)) {
                 duplicate(message);
             }
         }
         return recovered;
+    }
+
+    public static boolean gotToTheStore(Message message) throws Exception {
+        if (message.isRecievedByDFBridge()) {
+            // concurrent store and dispatch - wait to see if the message gets to the store to see
+            // if the index suppressed it (original still present), or whether it was stored and needs to be removed
+            Object possibleFuture = message.getMessageId().getFutureOrSequenceLong();
+            if (possibleFuture instanceof Future) {
+                ((Future) possibleFuture).get();
+            }
+            // need to access again after wait on future
+            Object sequence = message.getMessageId().getFutureOrSequenceLong();
+            return (sequence != null && sequence instanceof Long && Long.compare((Long) sequence, -1l) != 0);
+        }
+        return true;
     }
 
     // track for processing outside of store index lock so we can dlq
