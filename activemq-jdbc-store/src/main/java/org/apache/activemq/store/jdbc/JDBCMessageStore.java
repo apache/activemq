@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class JDBCMessageStore extends AbstractMessageStore {
 
@@ -98,6 +98,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
     public void addMessage(final ConnectionContext context, final Message message) throws IOException {
         MessageId messageId = message.getMessageId();
         if (audit != null && audit.isDuplicate(message)) {
@@ -133,6 +134,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
                 pendingAdditions.add(sequence);
 
                 c.onCompletion(new Runnable() {
+                    @Override
                     public void run() {
                         // jdbc close or jms commit - while futureOrSequenceLong==null ordered
                         // work will remain pending on the Queue
@@ -207,6 +209,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
     public Message getMessage(MessageId messageId) throws IOException {
         // Get a connection and pull the message out of the DB
         TransactionContext c = persistenceAdapter.getTransactionContext();
@@ -245,6 +248,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
 
     	long seq = ack.getLastMessageId().getFutureOrSequenceLong() != null ?
@@ -263,6 +267,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
     public void recover(final MessageRecoveryListener listener) throws Exception {
 
         // Get all the Message ids out of the database.
@@ -270,14 +275,30 @@ public class JDBCMessageStore extends AbstractMessageStore {
         try {
             c = persistenceAdapter.getTransactionContext();
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
+                @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                    Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
-                    msg.getMessageId().setBrokerSequenceId(sequenceId);
-                    return listener.recoverMessage(msg);
+                    if (listener.hasSpace()) {
+                        Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
+                        msg.getMessageId().setBrokerSequenceId(sequenceId);
+                        return listener.recoverMessage(msg);
+                    } else {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Message recovery limit reached for MessageRecoveryListener");
+                        }
+                        return false;
+                    }
                 }
 
+                @Override
                 public boolean recoverMessageReference(String reference) throws Exception {
-                    return listener.recoverMessageReference(new MessageId(reference));
+                    if (listener.hasSpace()) {
+                        return listener.recoverMessageReference(new MessageId(reference));
+                    } else {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Message recovery limit reached for MessageRecoveryListener");
+                        }
+                        return false;
+                    }
                 }
             });
         } catch (SQLException e) {
@@ -291,6 +312,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     /**
      * @see org.apache.activemq.store.MessageStore#removeAllMessages(ConnectionContext)
      */
+    @Override
     public void removeAllMessages(ConnectionContext context) throws IOException {
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -328,6 +350,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
      * @see org.apache.activemq.store.MessageStore#recoverNextMessages(int,
      *      org.apache.activemq.store.MessageRecoveryListener)
      */
+    @Override
     public void recoverNextMessages(int maxReturned, final MessageRecoveryListener listener) throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -337,6 +360,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             adapter.doRecoverNextMessages(c, destination, perPriorityLastRecovered, minPendingSequeunceId(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
+                @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
@@ -346,6 +370,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
                         return true;
                 }
 
+                @Override
                 public boolean recoverMessageReference(String reference) throws Exception {
                     if (listener.hasSpace()) {
                         listener.recoverMessageReference(new MessageId(reference));
@@ -370,6 +395,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     /**
      * @see org.apache.activemq.store.MessageStore#resetBatching()
      */
+    @Override
     public void resetBatching() {
         if (LOG.isTraceEnabled()) {
             LOG.trace(this + " resetBatching. last recovered: " + Arrays.toString(perPriorityLastRecovered));
@@ -401,6 +427,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     }
 
 
+    @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         super.setPrioritizedMessages(prioritizedMessages);
     }
