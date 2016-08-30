@@ -52,6 +52,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
     private static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
     private static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");
     private static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
+    private static final Symbol DELAYED_DELIVERY = Symbol.valueOf("DELAYED_DELIVERY");
 
     @Parameters(name="{0}")
     public static Collection<Object[]> data() {
@@ -95,6 +96,10 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
                 Symbol[] offered = connection.getRemoteOfferedCapabilities();
                 if (!contains(offered, ANONYMOUS_RELAY)) {
                     markAsInvalid("Broker did not indicate it support anonymous relay");
+                }
+
+                if (!contains(offered, DELAYED_DELIVERY)) {
+                    markAsInvalid("Broker did not indicate it support delayed message delivery");
                 }
 
                 Map<Symbol, Object> properties = connection.getRemoteProperties();
