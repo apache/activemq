@@ -38,11 +38,13 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
     protected SyncCreateDataSource sharedDs;
     protected String MASTER_URL = "tcp://localhost:62001";
     protected String SLAVE_URL  = "tcp://localhost:62002";
+    protected String findStatement;
 
     protected void setUp() throws Exception {
         // startup db
         sharedDs = new SyncCreateDataSource((EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory()));
         super.setUp();
+        findStatement = ((JDBCPersistenceAdapter) master.getPersistenceAdapter()).getStatements().getFindMessageStatement();
     }
 
     protected void tearDown() throws Exception {
