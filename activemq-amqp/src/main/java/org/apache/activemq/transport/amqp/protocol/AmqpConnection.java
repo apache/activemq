@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp.protocol;
 import static org.apache.activemq.transport.amqp.AmqpSupport.ANONYMOUS_RELAY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONTAINER_ID;
+import static org.apache.activemq.transport.amqp.AmqpSupport.DELAYED_DELIVERY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.INVALID_FIELD;
 import static org.apache.activemq.transport.amqp.AmqpSupport.PLATFORM;
 import static org.apache.activemq.transport.amqp.AmqpSupport.PRODUCT;
@@ -186,7 +187,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
      * @return the capabilities that are offered to new clients on connect.
      */
     protected Symbol[] getConnectionCapabilitiesOffered() {
-        return new Symbol[]{ ANONYMOUS_RELAY };
+        return new Symbol[]{ ANONYMOUS_RELAY, DELAYED_DELIVERY };
     }
 
     /**
