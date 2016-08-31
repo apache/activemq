@@ -31,6 +31,7 @@ import javax.net.ssl.SSLSocketFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.spring.SpringSslContext;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
@@ -80,7 +81,11 @@ public class OpenWireConnectionTimeoutTest {
                 {"tcp"},
                 {"ssl"},
                 {"nio"},
-                {"nio+ssl"}
+                {"nio+ssl"},
+                {"auto"},
+                {"auto+ssl"},
+                {"auto+nio"},
+                {"auto+nio+ssl"}
             });
     }
 
@@ -118,7 +123,7 @@ public class OpenWireConnectionTimeoutTest {
     }
 
     public String getAdditionalConfig() {
-        return "?transport.connectAttemptTimeout=1200";
+        return "?transport.connectAttemptTimeout=1200&protocolDetectionTimeOut=1200";
     }
 
     @Test(timeout = 90000)
@@ -144,7 +149,8 @@ public class OpenWireConnectionTimeoutTest {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
              @Override
              public boolean isSatisified() throws Exception {
-                 return 1 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
+                 TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByScheme(getConnectorScheme()).getServer();
+                 return 1 == server.getCurrentTransportCount().get();
              }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
 
@@ -152,7 +158,8 @@ public class OpenWireConnectionTimeoutTest {
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return 0 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
+                TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByScheme(getConnectorScheme()).getServer();
+                return 0 == server.getCurrentTransportCount().get();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
 
@@ -164,10 +171,14 @@ public class OpenWireConnectionTimeoutTest {
 
         switch (connectorScheme) {
             case "tcp":
+            case "auto":
             case "nio":
+            case "auto+nio":
                 break;
             case "ssl":
+            case "auto+ssl":
             case "nio+ssl":
+            case "auto+nio+ssl":
                 useSsl = true;;
                 break;
             default:
@@ -221,6 +232,18 @@ public class OpenWireConnectionTimeoutTest {
                 break;
             case "nio+ssl":
                 connector = brokerService.addConnector("nio+ssl://0.0.0.0:0" + getAdditionalConfig());
+                break;
+            case "auto":
+                connector = brokerService.addConnector("auto://0.0.0.0:0" + getAdditionalConfig());
+                break;
+            case "auto+nio":
+                connector = brokerService.addConnector("auto+nio://0.0.0.0:0" + getAdditionalConfig());
+                break;
+            case "auto+ssl":
+                connector = brokerService.addConnector("auto+ssl://0.0.0.0:0" + getAdditionalConfig());
+                break;
+            case "auto+nio+ssl":
+                connector = brokerService.addConnector("auto+nio+ssl://0.0.0.0:0" + getAdditionalConfig());
                 break;
             default:
                 throw new IOException("Invalid OpenWire connector scheme passed to test.");

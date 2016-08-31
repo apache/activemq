@@ -19,6 +19,7 @@ package org.apache.activemq.usecases;
 import java.net.URI;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
@@ -30,11 +31,91 @@ import org.slf4j.LoggerFactory;
 public class NetworkAsyncStartTest extends JmsMultipleBrokersTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(NetworkAsyncStartTest.class);
 
-    private String brokerBUri = "tcp://localhost:61617";
-    private String brokerCUri = "tcp://localhost:61618";
+    private String brokerBDomain = "localhost:61617";
+    private String brokerCDomain = "localhost:61618";
     int bridgeCount=0;
 
-    public void testAsyncNetworkStartup() throws Exception {
+    public static final String KEYSTORE_TYPE = "jks";
+    public static final String PASSWORD = "password";
+    public static final String SERVER_KEYSTORE = "src/test/resources/server.keystore";
+    public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
+
+    static {
+        System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
+        System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
+        System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);
+        System.setProperty("javax.net.ssl.keyStore", SERVER_KEYSTORE);
+        System.setProperty("javax.net.ssl.keyStoreType", KEYSTORE_TYPE);
+        System.setProperty("javax.net.ssl.keyStorePassword", PASSWORD);
+    }
+
+    public void testAsyncNetworkStartupTcp() throws Exception {
+        testAsyncNetworkStartup("tcp");
+    }
+
+    public void testAsyncNetworkStartupWithSlowConnectionCreationTcp() throws Exception {
+        testAsyncNetworkStartupWithSlowConnectionCreation("tcp");
+    }
+
+    public void testAsyncNetworkStartupNio() throws Exception {
+        testAsyncNetworkStartup("nio");
+    }
+
+    public void testAsyncNetworkStartupWithSlowConnectionCreationNio() throws Exception {
+        testAsyncNetworkStartupWithSlowConnectionCreation("nio");
+    }
+
+    public void testAsyncNetworkStartupAuto() throws Exception {
+        testAsyncNetworkStartup("auto");
+    }
+
+    public void testAsyncNetworkStartupWithSlowConnectionCreationAuto() throws Exception {
+        testAsyncNetworkStartupWithSlowConnectionCreation("auto");
+    }
+
+    public void testAsyncNetworkStartupAutoNio() throws Exception {
+        testAsyncNetworkStartup("auto+nio");
+    }
+
+    public void testAsyncNetworkStartupWithSlowConnectionCreationAutoNio() throws Exception {
+        testAsyncNetworkStartupWithSlowConnectionCreation("auto+nio");
+    }
+
+    public void testAsyncNetworkStartupSsl() throws Exception {
+        testAsyncNetworkStartup("ssl");
+    }
+
+    public void testAsyncNetworkStartupWithSlowConnectionCreationSsl() throws Exception {
+        testAsyncNetworkStartupWithSlowConnectionCreation("ssl");
+    }
+
+    public void testAsyncNetworkStartupAutoSsl() throws Exception {
+        testAsyncNetworkStartup("auto+ssl");
+    }
+
+    public void testAsyncNetworkStartupWithSlowConnectionCreationAutoSsl() throws Exception {
+        testAsyncNetworkStartupWithSlowConnectionCreation("auto+ssl");
+    }
+
+    public void testAsyncNetworkStartupNioSsl() throws Exception {
+        testAsyncNetworkStartup("nio+ssl");
+    }
+
+    public void testAsyncNetworkStartupWithSlowConnectionCreationNioSsl() throws Exception {
+        testAsyncNetworkStartupWithSlowConnectionCreation("nio+ssl");
+    }
+
+    public void testAsyncNetworkStartupAutoNioSsl() throws Exception {
+        testAsyncNetworkStartup("auto+nio+ssl");
+    }
+
+    public void testAsyncNetworkStartupWithSlowConnectionCreationAutoNioSsl() throws Exception {
+        testAsyncNetworkStartupWithSlowConnectionCreation("auto+nio+ssl");
+    }
+
+    protected void testAsyncNetworkStartup(String transport) throws Exception {
+        String brokerBUri = transport + "://" + brokerBDomain;
+        String brokerCUri = transport + "://" + brokerCDomain;
 
         BrokerService brokerA = brokers.get("BrokerA").broker;
         bridgeBroker(brokerA, brokerBUri);
@@ -60,7 +141,9 @@ public class NetworkAsyncStartTest extends JmsMultipleBrokersTestSupport {
         assertTrue("got bridge to B&C", waitForBridgeFormation(brokerA, 1, 1));
     }
 
-    public void testAsyncNetworkStartupWithSlowConnectionCreation() throws Exception {
+    protected void testAsyncNetworkStartupWithSlowConnectionCreation(String transport) throws Exception {
+        String brokerBUri = transport + "://" + brokerBDomain;
+        String brokerCUri = transport + "://" + brokerCDomain;
 
         final BrokerService brokerA = brokers.get("BrokerA").broker;
 
@@ -81,6 +164,7 @@ public class NetworkAsyncStartTest extends JmsMultipleBrokersTestSupport {
 
         Executor e = Executors.newCachedThreadPool();
         e.execute(new Runnable() {
+            @Override
             public void run() {
                 LOG.info("starting A");
                 try {

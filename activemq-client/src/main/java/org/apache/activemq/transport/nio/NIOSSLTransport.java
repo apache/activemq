@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.CountDownLatch;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
@@ -159,6 +160,11 @@ public class NIOSSLTransport extends NIOTransport {
             selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
                 @Override
                 public void onSelect(SelectorSelection selection) {
+                    try {
+                        initialized.await();
+                    } catch (InterruptedException error) {
+                        onException(IOExceptionSupport.create(error));
+                    }
                     serviceRead();
                 }
 
@@ -184,13 +190,28 @@ public class NIOSSLTransport extends NIOTransport {
         }
     }
 
-    protected void doInit() throws Exception {
+    final protected CountDownLatch initialized = new CountDownLatch(1);
 
+    protected void doInit() throws Exception {
+        taskRunnerFactory.execute(new Runnable() {
+
+            @Override
+            public void run() {
+                //Need to start in new thread to let startup finish first
+                //We can trigger a read because we know the channel is ready since the SSL handshake
+                //already happened
+                serviceRead();
+                initialized.countDown();
+            }
+        });
     }
+
+    //Only used for the auto transport to abort the openwire init method early if already initialized
+    boolean openWireInititialized = false;
 
     protected void doOpenWireInit() throws Exception {
         //Do this later to let wire format negotiation happen
-        if (initBuffer != null && this.wireFormat instanceof OpenWireFormat) {
+        if (initBuffer != null && !openWireInititialized && this.wireFormat instanceof OpenWireFormat) {
             initBuffer.buffer.flip();
             if (initBuffer.buffer.hasRemaining()) {
                 nextFrameSize = -1;
@@ -198,6 +219,7 @@ public class NIOSSLTransport extends NIOTransport {
                 processCommand(initBuffer.buffer);
                 processCommand(initBuffer.buffer);
                 initBuffer.buffer.clear();
+                openWireInititialized = true;
             }
         }
     }
@@ -460,6 +482,8 @@ public class NIOSSLTransport extends NIOTransport {
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
+        initialized.countDown();
+
         if (taskRunnerFactory != null) {
             taskRunnerFactory.shutdownNow();
             taskRunnerFactory = null;
@@ -489,6 +513,7 @@ public class NIOSSLTransport extends NIOTransport {
     /**
      * @return peer certificate chain associated with the ssl socket
      */
+    @Override
     public X509Certificate[] getPeerCertificates() {
 
         X509Certificate[] clientCertChain = null;
