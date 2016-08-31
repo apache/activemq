@@ -69,12 +69,11 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
      */
 
     @Override
-    protected void doInit() {
+    protected void doInit() throws Exception {
         if (initBuffer != null) {
             nextFrameSize = -1;
-            serviceRead();
-
         }
+        super.doInit();
     }
 
     @Override

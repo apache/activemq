@@ -118,7 +118,7 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
             sslEngine.beginHandshake();
             handshakeStatus = sslEngine.getHandshakeStatus();
             doHandshake();
-           // detectReadyState();
+
         } catch (Exception e) {
             try {
                 if(outputStream != null) {

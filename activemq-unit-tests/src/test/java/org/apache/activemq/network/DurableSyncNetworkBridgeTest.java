@@ -77,6 +77,20 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         });
     }
 
+    public static final String KEYSTORE_TYPE = "jks";
+    public static final String PASSWORD = "password";
+    public static final String SERVER_KEYSTORE = "src/test/resources/server.keystore";
+    public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
+
+    static {
+        System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
+        System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
+        System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);
+        System.setProperty("javax.net.ssl.keyStore", SERVER_KEYSTORE);
+        System.setProperty("javax.net.ssl.keyStoreType", KEYSTORE_TYPE);
+        System.setProperty("javax.net.ssl.keyStorePassword", PASSWORD);
+    }
+
 
     public DurableSyncNetworkBridgeTest(final FLOW flow) {
         this.flow = flow;
@@ -492,7 +506,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
             brokerService.addNetworkConnector(configureLocalNetworkConnector());
         }
 
-        brokerService.addConnector("tcp://localhost:0");
+        //Use auto+nio+ssl to test out the transport works with bridging
+        brokerService.addConnector("auto+nio+ssl://localhost:0");
 
         return brokerService;
     }
@@ -531,7 +546,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         remoteAdvisoryBroker = (AdvisoryBroker) brokerService.getBroker().getAdaptor(AdvisoryBroker.class);
 
         //Need a larger cache size in order to handle all of the durables
-        brokerService.addConnector("tcp://localhost:" + port + "?wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
+        //Use auto+nio+ssl to test out the transport works with bridging
+        brokerService.addConnector("auto+nio+ssl://localhost:" + port + "?wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
 
         return brokerService;
     }

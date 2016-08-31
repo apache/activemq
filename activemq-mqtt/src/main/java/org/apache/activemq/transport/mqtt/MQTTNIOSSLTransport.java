@@ -74,6 +74,7 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
             initBuffer.buffer.flip();
             processCommand(initBuffer.buffer);
         }
+        super.doInit();
     }
 
 
