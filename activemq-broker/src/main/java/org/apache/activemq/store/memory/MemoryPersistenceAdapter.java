@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
- *
  */
 public class MemoryPersistenceAdapter implements PersistenceAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryPersistenceAdapter.class);
@@ -96,7 +95,8 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     /**
      * Cleanup method to remove any state associated with the given destination
      *
-     * @param destination Destination to forget
+     * @param destination
+     *        Destination to forget
      */
     @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
@@ -106,7 +106,8 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     /**
      * Cleanup method to remove any state associated with the given destination
      *
-     * @param destination Destination to forget
+     * @param destination
+     *        Destination to forget
      */
     @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
@@ -176,10 +177,10 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
 
     protected MemoryMessageStore asMemoryMessageStore(Object value) {
         if (value instanceof MemoryMessageStore) {
-            return (MemoryMessageStore)value;
+            return (MemoryMessageStore) value;
         }
         if (value instanceof ProxyMessageStore) {
-            MessageStore delegate = ((ProxyMessageStore)value).getDelegate();
+            MessageStore delegate = ((ProxyMessageStore) value).getDelegate();
             if (delegate instanceof MemoryMessageStore) {
                 return (MemoryMessageStore) delegate;
             }
@@ -189,8 +190,8 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     }
 
     /**
-     * @param usageManager The UsageManager that is controlling the broker's
-     *                memory usage.
+     * @param usageManager
+     *        The UsageManager that is controlling the broker's memory usage.
      */
     @Override
     public void setUsageManager(SystemUsage usageManager) {
@@ -210,7 +211,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     }
 
     @Override
-    public File getDirectory(){
+    public File getDirectory() {
         return null;
     }
 
@@ -219,7 +220,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     }
 
     @Override
-    public long size(){
+    public long size() {
         return 0;
     }
 

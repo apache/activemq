@@ -123,7 +123,7 @@ public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursor
 
         //The expected value is only 100 because for durables a LRUCache is being used
         //with a max size of 100
-        verifyStoreStats(dest, 100, publishedMessageSize.get());
+        verifyStoreStats(dest, 0, publishedMessageSize.get());
 
         connection.stop();
     }
