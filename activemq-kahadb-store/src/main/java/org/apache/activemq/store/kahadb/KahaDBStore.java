@@ -421,6 +421,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                         removeMessage(context, ack);
                     } else {
+                        indexLock.writeLock().lock();
+                        try {
+                            metadata.producerSequenceIdTracker.isDuplicate(ack.getLastMessageId());
+                        } finally {
+                            indexLock.writeLock().unlock();
+                        }
                         synchronized (asyncTaskMap) {
                             asyncTaskMap.remove(key);
                         }
