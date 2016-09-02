@@ -22,9 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -47,7 +44,6 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.impl.Log4jLoggerAdapter;
 
 /**
  * Test to demostrate a message trapped in the JDBC store and not
@@ -69,6 +65,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
     private BrokerService broker;
     private TestTransactionContext testTransactionContext;
     private TestJDBCPersistenceAdapter jdbc;
+    private java.sql.Connection checkOnStoreConnection;
 
     protected BrokerService createBroker(boolean withJMX) throws Exception {
         BrokerService broker = new BrokerService();
@@ -76,6 +73,8 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
         broker.setUseJmx(withJMX);
 
         EmbeddedDataSource embeddedDataSource = (EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory());
+        checkOnStoreConnection = embeddedDataSource.getConnection();
+
 
         //wire in a TestTransactionContext (wrapper to TransactionContext) that has an executeBatch()
         // method that can be configured to throw a SQL exception on demand
@@ -118,31 +117,37 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
         broker.start();
         broker.waitUntilStarted();
 
-        LOG.info("***Broker started...");
+        try {
+            LOG.info("***Broker started...");
 
-        // failover but timeout in 5 seconds so the test does not hang
-        String failoverTransportURL = "failover:(" + transportUrl
-                + ")?timeout=5000";
+            // failover but timeout in 5 seconds so the test does not hang
+            String failoverTransportURL = "failover:(" + transportUrl
+                    + ")?timeout=5000";
 
 
-        sendMessage(MY_TEST_Q, failoverTransportURL);
+            sendMessage(MY_TEST_Q, failoverTransportURL);
 
-        //check db contents
-        ArrayList<Long> dbSeq = dbMessageCount();
-        LOG.info("*** after send: db contains message seq " +dbSeq );
+            //check db contents
+            ArrayList<Long> dbSeq = dbMessageCount(checkOnStoreConnection);
+            LOG.info("*** after send: db contains message seq " + dbSeq);
 
-        List<TextMessage> consumedMessages = consumeMessages(MY_TEST_Q,failoverTransportURL);
+            List<TextMessage> consumedMessages = consumeMessages(MY_TEST_Q, failoverTransportURL);
 
-        assertEquals("number of consumed messages",3,consumedMessages.size());
+            assertEquals("number of consumed messages", 3, consumedMessages.size());
 
-        //check db contents
-        dbSeq = dbMessageCount();
-        LOG.info("*** after consume - db contains message seq " + dbSeq);
+            //check db contents
+            dbSeq = dbMessageCount(checkOnStoreConnection);
+            LOG.info("*** after consume - db contains message seq " + dbSeq);
 
-        assertEquals("number of messages in DB after test",0,dbSeq.size());
+            assertEquals("number of messages in DB after test", 0, dbSeq.size());
 
-        broker.stop();
-        broker.waitUntilStopped();
+        } finally {
+            try {
+                checkOnStoreConnection.close();
+            } catch (Exception ignored) {}
+            broker.stop();
+            broker.waitUntilStopped();
+        }
     }
 
 
@@ -212,7 +217,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
             producer.send(m);
 
             //check db contents
-            ArrayList<Long> dbSeq = dbMessageCount();
+            ArrayList<Long> dbSeq = dbMessageCount(checkOnStoreConnection);
             LOG.info("*** after send 2 - db contains message seq " + dbSeq);
             assertEquals("number of messages in DB after send 2",2,dbSeq.size());
 
@@ -233,10 +238,10 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
      * @return
      * @throws SQLException
      * @throws IOException
+     * @param checkOnStoreConnection
      */
-    private ArrayList<Long> dbMessageCount() throws SQLException, IOException {
-        java.sql.Connection conn = ((JDBCPersistenceAdapter) broker.getPersistenceAdapter()).getDataSource().getConnection();
-        PreparedStatement statement = conn.prepareStatement("SELECT MSGID_SEQ FROM ACTIVEMQ_MSGS");
+    private ArrayList<Long> dbMessageCount(java.sql.Connection checkOnStoreConnection) throws SQLException, IOException {
+        PreparedStatement statement = checkOnStoreConnection.prepareStatement("SELECT MSGID_SEQ FROM ACTIVEMQ_MSGS");
 
         try{
 
@@ -251,8 +256,6 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
 
         }finally{
             statement.close();
-            conn.close();
-
         }
 
     }
