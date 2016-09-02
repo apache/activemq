@@ -97,7 +97,6 @@ public class AutoSslTransportFactory extends SslTransportFactory implements Brok
      * @throws IOException
      * @throws URISyntaxException
      */
-   // @Override
     protected AutoSslTransportServer createAutoSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         AutoSslTransportServer server = new AutoSslTransportServer(this, location, serverSocketFactory,
                 this.brokerService, enabledProtocols) {

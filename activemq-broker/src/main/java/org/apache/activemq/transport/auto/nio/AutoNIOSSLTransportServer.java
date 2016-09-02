@@ -5,11 +5,11 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLContext;
@@ -25,9 +25,8 @@ import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -46,8 +45,6 @@ import org.slf4j.LoggerFactory;
  * limitations under the License.
  */
 public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AutoNIOSSLTransportServer.class);
 
     private SSLContext context;
 
@@ -110,6 +107,11 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         final AutoInitNioSSLTransport in = new AutoInitNioSSLTransport(wireFormatFactory.createWireFormat(), socket);
         if (context != null) {
             in.setSslContext(context);
+        }
+        //We need to set the transport options on the init transport so that the SSL options are set
+        if (transportOptions != null) {
+            //Clone the map because we will need to set the options later on the actual transport
+            IntrospectionSupport.setProperties(in, new HashMap<>(transportOptions));
         }
         in.start();
         SSLEngine engine = in.getSslSession();

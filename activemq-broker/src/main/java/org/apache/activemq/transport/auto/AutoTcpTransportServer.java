@@ -273,7 +273,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         }
 
         WireFormat format = protocolInfo.detectedWireFormatFactory.createWireFormat();
-        Transport transport = createTransport(socket, format,protocolInfo.detectedTransportFactory);
+        Transport transport = createTransport(socket, format, protocolInfo.detectedTransportFactory);
 
         return new TransportInfo(format, transport, protocolInfo.detectedTransportFactory);
     }

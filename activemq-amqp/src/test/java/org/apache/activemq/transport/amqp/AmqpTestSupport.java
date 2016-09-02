@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +42,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
@@ -147,10 +150,23 @@ public class AmqpTestSupport {
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
 
+        ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
+
+        addAdditionalPlugins(plugins);
+
+        if (!plugins.isEmpty()) {
+            BrokerPlugin[] array = new BrokerPlugin[plugins.size()];
+            brokerService.setPlugins(plugins.toArray(array));
+        }
+
         addTranportConnectors();
     }
 
     protected void performAdditionalConfiguration(BrokerService brokerService) throws Exception {
+
+    }
+
+    protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
 
     }
 

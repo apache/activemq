@@ -35,6 +35,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.tcp.SslTransportServer;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -47,10 +48,12 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
 
     private BrokerContext brokerContext = null;
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "stomp";
     }
 
+    @Override
     protected SslTransportServer createSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new SslTransportServer(this, location, serverSocketFactory) {
 
@@ -74,6 +77,27 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
         };
     }
 
+    @Override
+    public SslTransport createTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer)
+            throws IOException {
+
+        return new SslTransport(wireFormat, (SSLSocket)socket, initBuffer) {
+
+            private X509Certificate[] cachedPeerCerts;
+
+            @Override
+            public void doConsume(Object command) {
+                StompFrame frame = (StompFrame) command;
+                if (cachedPeerCerts == null) {
+                    cachedPeerCerts = getPeerCertificates();
+                }
+                frame.setTransportContext(cachedPeerCerts);
+                super.doConsume(command);
+            }
+        };
+    }
+
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = new StompTransportFilter(transport, format, brokerContext);
@@ -94,6 +118,7 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
         return transport;
     }
 
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerContext = brokerService.getBrokerContext();
     }
