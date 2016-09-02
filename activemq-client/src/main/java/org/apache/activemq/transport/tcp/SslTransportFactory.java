@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.tcp;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -26,11 +27,13 @@ import java.util.Map;
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -159,5 +162,12 @@ public class SslTransportFactory extends TcpTransportFactory {
         } else {
             return SSLSocketFactory.getDefault();
         }
+    }
+
+    @Override
+    public SslTransport createTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer)
+            throws IOException {
+
+        return new SslTransport(wireFormat, (SSLSocket)socket, initBuffer);
     }
 }

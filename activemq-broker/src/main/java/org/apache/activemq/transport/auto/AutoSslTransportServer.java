@@ -23,14 +23,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
 
-import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
@@ -53,20 +49,6 @@ public class AutoSslTransportServer extends AutoTcpTransportServer {
 
     // Specifies if sockets created from this server should wantClientAuth.
     private boolean wantClientAuth;
-
-//    /**
-//     * Creates a ssl transport server for the specified url using the provided
-//     * serverSocketFactory
-//     *
-//     * @param transportFactory The factory used to create transports when connections arrive.
-//     * @param location The location of the broker to bind to.
-//     * @param serverSocketFactory The factory used to create this server.
-//     * @throws IOException passed up from TcpTransportFactory.
-//     * @throws URISyntaxException passed up from TcpTransportFactory.
-//     */
-//    public SslTransportServer(SslTransportFactory transportFactory, URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-//        super(transportFactory, location, serverSocketFactory);
-//    }
 
     public AutoSslTransportServer(SslTransportFactory transportFactory,
             URI location, SSLServerSocketFactory serverSocketFactory,
@@ -137,8 +119,10 @@ public class AutoSslTransportServer extends AutoTcpTransportServer {
      * @throws IOException
      */
     @Override
-    protected TcpTransport createTransport(Socket socket, WireFormat format) throws IOException {
-        return new SslTransport(format, (SSLSocket)socket, this.initBuffer);
+    protected TcpTransport createTransport(Socket socket, WireFormat format,
+            TcpTransportFactory detectedTransportFactory) throws IOException {
+
+        return detectedTransportFactory.createTransport(format, socket, this.initBuffer);
     }
 
     @Override
