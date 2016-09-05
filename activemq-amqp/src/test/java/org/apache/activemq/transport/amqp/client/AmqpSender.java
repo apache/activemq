@@ -135,7 +135,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             public void run() {
                 try {
                     doSend(message, sendRequest);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(sendRequest);
                 } catch (Exception e) {
                     sendRequest.onFailure(e);
                     session.getConnection().fireClientException(e);
@@ -165,7 +165,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
                 public void run() {
                     checkClosed();
                     close(request);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(request);
                 }
             });
 

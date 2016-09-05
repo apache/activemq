@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,27 +16,41 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import java.io.Serializable;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_DATA;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_NULL;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_ORIGINAL_ENCODING_KEY;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_SEQUENCE;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_BINARY;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_LIST;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_MAP;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_NULL;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_STRING;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.OCTET_STREAM_CONTENT_TYPE;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.SERIALIZED_JAVA_OBJECT_CONTENT_TYPE;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.getCharsetForTextualContent;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.isContentType;
+
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import javax.jms.BytesMessage;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.ObjectMessage;
 import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
 
+import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.Section;
+import org.apache.qpid.proton.message.Message;
 
 public class JMSMappingInboundTransformer extends InboundTransformer {
 
-    public JMSMappingInboundTransformer(JMSVendor vendor) {
+    public JMSMappingInboundTransformer(ActiveMQJMSVendor vendor) {
         super(vendor);
     }
 
@@ -50,70 +64,113 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
         return new AMQPNativeInboundTransformer(getVendor());
     }
 
-    @SuppressWarnings({ "unchecked" })
     @Override
-    public Message transform(EncodedMessage amqpMessage) throws Exception {
-        org.apache.qpid.proton.message.Message amqp = amqpMessage.decode();
+    protected javax.jms.Message doTransform(EncodedMessage amqpMessage) throws Exception {
+        Message amqp = amqpMessage.decode();
 
-        Message rc;
-        final Section body = amqp.getBody();
+        javax.jms.Message result = createMessage(amqp, amqpMessage);
+
+        result.setJMSDeliveryMode(defaultDeliveryMode);
+        result.setJMSPriority(defaultPriority);
+        result.setJMSExpiration(defaultTtl);
+
+        populateMessage(result, amqp);
+
+        result.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
+        result.setBooleanProperty(prefixVendor + "NATIVE", false);
+
+        return result;
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    private javax.jms.Message createMessage(Message message, EncodedMessage original) throws Exception {
+
+        Section body = message.getBody();
+        javax.jms.Message result;
+
         if (body == null) {
-            rc = vendor.createMessage();
+            if (isContentType(SERIALIZED_JAVA_OBJECT_CONTENT_TYPE, message)) {
+                result = vendor.createObjectMessage();
+            } else if (isContentType(OCTET_STREAM_CONTENT_TYPE, message) || isContentType(null, message)) {
+                result = vendor.createBytesMessage();
+            } else {
+                Charset charset = getCharsetForTextualContent(message.getContentType());
+                if (charset != null) {
+                    result = vendor.createTextMessage();
+                } else {
+                    result = vendor.createMessage();
+                }
+            }
+
+            result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_NULL);
         } else if (body instanceof Data) {
-            Binary d = ((Data) body).getValue();
-            BytesMessage m = vendor.createBytesMessage();
-            m.writeBytes(d.getArray(), d.getArrayOffset(), d.getLength());
-            rc = m;
+            Binary payload = ((Data) body).getValue();
+
+            if (isContentType(SERIALIZED_JAVA_OBJECT_CONTENT_TYPE, message)) {
+                result = vendor.createObjectMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+            } else if (isContentType(OCTET_STREAM_CONTENT_TYPE, message)) {
+                result = vendor.createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+            } else {
+                Charset charset = getCharsetForTextualContent(message.getContentType());
+                if (StandardCharsets.UTF_8.equals(charset)) {
+                    ByteBuffer buf = ByteBuffer.wrap(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+
+                    try {
+                        CharBuffer chars = charset.newDecoder().decode(buf);
+                        result = vendor.createTextMessage(String.valueOf(chars));
+                    } catch (CharacterCodingException e) {
+                        result = vendor.createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                    }
+                } else {
+                    result = vendor.createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                }
+            }
+
+            result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_DATA);
         } else if (body instanceof AmqpSequence) {
             AmqpSequence sequence = (AmqpSequence) body;
             StreamMessage m = vendor.createStreamMessage();
             for (Object item : sequence.getValue()) {
                 m.writeObject(item);
             }
-            rc = m;
+
+            result = m;
+            result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_SEQUENCE);
         } else if (body instanceof AmqpValue) {
             Object value = ((AmqpValue) body).getValue();
-            if (value == null) {
-                rc = vendor.createObjectMessage();
-            }
-            if (value instanceof String) {
-                TextMessage m = vendor.createTextMessage();
-                m.setText((String) value);
-                rc = m;
+            if (value == null || value instanceof String) {
+                result = vendor.createTextMessage((String) value);
+
+                result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, value == null ? AMQP_VALUE_NULL : AMQP_VALUE_STRING);
             } else if (value instanceof Binary) {
-                Binary d = (Binary) value;
-                BytesMessage m = vendor.createBytesMessage();
-                m.writeBytes(d.getArray(), d.getArrayOffset(), d.getLength());
-                rc = m;
+                Binary payload = (Binary) value;
+
+                if (isContentType(SERIALIZED_JAVA_OBJECT_CONTENT_TYPE, message)) {
+                    result = vendor.createObjectMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                } else {
+                    result = vendor.createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                }
+
+                result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_BINARY);
             } else if (value instanceof List) {
                 StreamMessage m = vendor.createStreamMessage();
                 for (Object item : (List<Object>) value) {
                     m.writeObject(item);
                 }
-                rc = m;
+                result = m;
+                result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_LIST);
             } else if (value instanceof Map) {
-                MapMessage m = vendor.createMapMessage();
-                final Set<Map.Entry<String, Object>> set = ((Map<String, Object>) value).entrySet();
-                for (Map.Entry<String, Object> entry : set) {
-                    m.setObject(entry.getKey(), entry.getValue());
-                }
-                rc = m;
+                result = vendor.createMapMessage((Map<String, Object>) value);
+                result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_MAP);
             } else {
-                ObjectMessage m = vendor.createObjectMessage();
-                m.setObject((Serializable) value);
-                rc = m;
+                // Trigger fall-back to native encoder which generates BytesMessage with the
+                // original message stored in the message body.
+                throw new AmqpProtocolException("Unable to encode to ActiveMQ JMS Message", false);
             }
         } else {
             throw new RuntimeException("Unexpected body type: " + body.getClass());
         }
-        rc.setJMSDeliveryMode(defaultDeliveryMode);
-        rc.setJMSPriority(defaultPriority);
-        rc.setJMSExpiration(defaultTtl);
 
-        populateMessage(rc, amqp);
-
-        rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
-        rc.setBooleanProperty(prefixVendor + "NATIVE", false);
-        return rc;
+        return result;
     }
 }

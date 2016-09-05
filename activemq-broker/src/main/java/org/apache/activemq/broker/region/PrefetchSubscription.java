@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -317,19 +318,17 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     final MessageReference node = iter.next();
                     Destination nodeDest = (Destination) node.getRegionDestination();
                     MessageId messageId = node.getMessageId();
-                    if (ack.getFirstMessageId() == null
-                            || ack.getFirstMessageId().equals(messageId)) {
+                    if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
                         inAckRange = true;
                     }
                     if (inAckRange) {
-                        if (node.isExpired()) {
-                            if (broker.isExpired(node)) {
-                                Destination regionDestination = nodeDest;
-                                regionDestination.messageExpired(context, this, node);
-                            }
-                            iter.remove();
-                            nodeDest.getDestinationStatistics().getInflight().decrement();
+                        Destination regionDestination = nodeDest;
+                        if (broker.isExpired(node)) {
+                            regionDestination.messageExpired(context, this, node);
                         }
+                        iter.remove();
+                        nodeDest.getDestinationStatistics().getInflight().decrement();
+
                         if (ack.getLastMessageId().equals(messageId)) {
                             if (usePrefetchExtension && getPrefetchSize() != 0) {
                                 // allow  batch to exceed prefetch
@@ -639,31 +638,32 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     public List<MessageReference> remove(ConnectionContext context, Destination destination, List<MessageReference> dispatched) throws Exception {
-        List<MessageReference> rc = new ArrayList<MessageReference>();
+        LinkedList<MessageReference> redispatch = new LinkedList<MessageReference>();
         synchronized(pendingLock) {
             super.remove(context, destination);
             // Here is a potential problem concerning Inflight stat:
             // Messages not already committed or rolled back may not be removed from dispatched list at the moment
             // Except if each commit or rollback callback action comes before remove of subscriber.
-            rc.addAll(pending.remove(context, destination));
+            redispatch.addAll(pending.remove(context, destination));
 
             if (dispatched == null) {
-                return rc;
+                return redispatch;
             }
 
             // Synchronized to DispatchLock if necessary
             if (dispatched == this.dispatched) {
                 synchronized(dispatchLock) {
-                    updateDestinationStats(rc, destination, dispatched);
+                    addReferencesAndUpdateRedispatch(redispatch, destination, dispatched);
                 }
             } else {
-                updateDestinationStats(rc, destination, dispatched);
+                addReferencesAndUpdateRedispatch(redispatch, destination, dispatched);
             }
         }
-        return rc;
+
+        return redispatch;
     }
 
-    private void updateDestinationStats(List<MessageReference> rc, Destination destination, List<MessageReference> dispatched) {
+    private void addReferencesAndUpdateRedispatch(LinkedList<MessageReference> redispatch, Destination destination, List<MessageReference> dispatched) {
         ArrayList<MessageReference> references = new ArrayList<MessageReference>();
         for (MessageReference r : dispatched) {
             if (r.getRegionDestination() == destination) {
@@ -671,13 +671,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 getSubscriptionStatistics().getInflightMessageSize().addSize(-r.getSize());
             }
         }
-        rc.addAll(references);
+        redispatch.addAll(0, references);
         destination.getDestinationStatistics().getInflight().subtract(references.size());
         dispatched.removeAll(references);
     }
 
     // made public so it can be used in MQTTProtocolConverter
     public void dispatchPending() throws IOException {
+        List<Destination> slowConsumerTargets = null;
+
         synchronized(pendingLock) {
             try {
                 int numberToDispatch = countBeforeFull();
@@ -721,12 +723,16 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     }
                 } else if (!isSlowConsumer()) {
                     setSlowConsumer(true);
-                    for (Destination dest :destinations) {
-                        dest.slowConsumer(context, this);
-                    }
+                    slowConsumerTargets = destinations;
                 }
             } finally {
                 pending.release();
+            }
+        }
+
+        if (slowConsumerTargets != null) {
+            for (Destination dest : slowConsumerTargets) {
+                dest.slowConsumer(context, this);
             }
         }
     }

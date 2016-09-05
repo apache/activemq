@@ -36,14 +36,9 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.qpid.jms.JmsConnection;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 
 public class JMSClientProducerFlowSendFailIfNoSpace extends JMSClientTestSupport {
-
-    @Rule
-    public TestName name = new TestName();
 
     // used to test sendFailIfNoSpace on SystemUsage
     protected final AtomicBoolean gotResourceException = new AtomicBoolean(false);

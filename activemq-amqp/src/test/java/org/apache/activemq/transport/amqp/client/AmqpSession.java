@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp.client;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableSession;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -92,7 +93,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 sender.setStateInspector(getStateInspector());
                 sender.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -124,7 +125,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 sender.setStateInspector(getStateInspector());
                 sender.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -178,12 +179,33 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpReceiver createReceiver(String address, String selector, boolean noLocal) throws Exception {
+        return createReceiver(address, selector, noLocal, false);
+    }
+
+    /**
+     * Create a receiver instance using the given address
+     *
+     * @param address
+     *        the address to which the receiver will subscribe for its messages.
+     * @param selector
+     *        the JMS selector to use for the subscription
+     * @param noLocal
+     *        should the subscription have messages from its connection filtered.
+     * @param presettle
+     *        should the receiver be created with a settled sender mode.
+     *
+     * @return a newly created receiver that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpReceiver createReceiver(String address, String selector, boolean noLocal, boolean presettle) throws Exception {
         checkClosed();
 
         final ClientFuture request = new ClientFuture();
         final AmqpReceiver receiver = new AmqpReceiver(AmqpSession.this, address, getNextReceiverId());
 
         receiver.setNoLocal(noLocal);
+        receiver.setPresettle(presettle);
         if (selector != null && !selector.isEmpty()) {
             receiver.setSelector(selector);
         }
@@ -195,7 +217,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -227,7 +249,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -308,7 +330,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -345,7 +367,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
                 checkClosed();
                 receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
-                pumpToProtonTransport();
+                pumpToProtonTransport(request);
             }
         });
 
@@ -427,8 +449,8 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         return connection.getProtonConnection();
     }
 
-    void pumpToProtonTransport() {
-        connection.pumpToProtonTransport();
+    void pumpToProtonTransport(AsyncResult request) {
+        connection.pumpToProtonTransport(request);
     }
 
     AmqpTransactionId getTransactionId() {

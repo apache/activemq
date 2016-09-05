@@ -46,6 +46,7 @@ import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Test;
@@ -106,6 +107,7 @@ public class AMQ2832Test {
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(5000);
         adapter.setCleanupInterval(5000);
+        adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
 
         if (recover) {
             adapter.setForceRecoverIndex(true);
@@ -302,6 +304,7 @@ public class AMQ2832Test {
 
         Collection<DataFile> files =
             ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
+        LOG.info("Data files: " + files);
         int reality = 0;
         for (DataFile file : files) {
             if (file != null) {

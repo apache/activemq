@@ -631,12 +631,15 @@ public class MDBTest {
                 super.onMessage(message);
                 try {
                     long now = System.currentTimeMillis();
-                    if ((now - timeReceived.getAndSet(now)) > 1000) {
+                    if (timeReceived.get() == 0) {
+                        timeReceived.set(now);
+                    }
+                    if ((now - timeReceived.getAndSet(now)) >= 1000) {
                         failed.set(true);
                     }
                     messageDelivered.countDown();
                     if (!messageDelivered.await(1, TimeUnit.MILLISECONDS)) {
-                        throw new RuntimeException("ex on first delivery");
+                        throw new RuntimeException("ex on delivery: " + messageDelivered.getCount());
                     } else {
                         try {
                             assertTrue(message.getJMSRedelivered());
@@ -694,13 +697,13 @@ public class MDBTest {
         } catch (Exception e) {
 
         }
-        timeReceived.set(System.currentTimeMillis());
+        timeReceived.set(0);
         // Send the broker a message to that endpoint
         MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
         producer.send(session.createTextMessage("Hello!"));
         connection.close();
 
-        // Wait for the message to be delivered twice.
+        // Wait for the message to be delivered.
         assertTrue(messageDelivered.await(10000, TimeUnit.MILLISECONDS));
         assertFalse("Delivery policy delay not working", failed.get());
 

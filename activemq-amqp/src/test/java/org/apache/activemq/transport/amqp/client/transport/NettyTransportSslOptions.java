@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -30,7 +30,7 @@ public class NettyTransportSslOptions extends NettyTransportOptions {
     public static final String DEFAULT_STORE_TYPE = "jks";
     public static final String DEFAULT_CONTEXT_PROTOCOL = "TLS";
     public static final boolean DEFAULT_TRUST_ALL = false;
-    public static final boolean DEFAULT_VERIFY_HOST = true;
+    public static final boolean DEFAULT_VERIFY_HOST = false;
     public static final List<String> DEFAULT_DISABLED_PROTOCOLS = Collections.unmodifiableList(Arrays.asList(new String[]{"SSLv2Hello", "SSLv3"}));
     public static final int DEFAULT_SSL_PORT = 5671;
 
@@ -259,6 +259,11 @@ public class NettyTransportSslOptions extends NettyTransportOptions {
 
     public void setDefaultSslPort(int defaultSslPort) {
         this.defaultSslPort = defaultSslPort;
+    }
+
+    @Override
+    public boolean isSSL() {
+        return true;
     }
 
     @Override

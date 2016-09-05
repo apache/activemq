@@ -16,17 +16,23 @@
  */
 package org.apache.activemq.jndi;
 
+import org.apache.activemq.ActiveMQXAConnectionFactory;
+
 import javax.jms.XAConnectionFactory;
+import javax.naming.Context;
 import javax.naming.NamingException;
 
 public class XAConnectionFactoryTest extends ActiveMQInitialContextFactoryTest {
     
     public void testConnectionFactoriesIsXA() throws NamingException {
-        assertTrue("connection factory implements XA", context.lookup(getConnectionFactoryLookupName()) instanceof XAConnectionFactory);
+        Object factory = context.lookup(getConnectionFactoryLookupName());
+        assertTrue("connection factory implements XA", factory instanceof XAConnectionFactory);
+        assertTrue("is always sync send", ((ActiveMQXAConnectionFactory)factory).isAlwaysSyncSend());
     }
     
     protected void configureEnvironment() {
         environment.put("xa", "true");
+        environment.put(Context.PROVIDER_URL, "vm://locahost?jms.alwaysSyncSend=true");
         super.configureEnvironment();
     }
 }

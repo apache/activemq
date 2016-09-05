@@ -95,7 +95,7 @@ public class FilesystemBlobTest extends EmbeddedBrokerTestSupport {
     @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
-            connection.stop();
+            connection.close();
         }
         super.tearDown();
 

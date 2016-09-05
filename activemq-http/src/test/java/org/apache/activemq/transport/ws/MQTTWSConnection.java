@@ -85,14 +85,16 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     }
 
     public void connect(String clientId) throws Exception {
-        checkConnected();
-
         CONNECT command = new CONNECT();
-
         command.clientId(new UTF8Buffer(clientId));
         command.cleanSession(false);
         command.version(3);
         command.keepAlive((short) 0);
+        connect(command);
+    }
+
+    public void connect(CONNECT command) throws Exception {
+        checkConnected();
 
         ByteSequence payload = wireFormat.marshal(command.encode());
         connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
@@ -250,9 +252,6 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jetty.websocket.api.WebSocketListener#onWebSocketClose(int, java.lang.String)
-     */
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         LOG.trace("MQTT WS Connection closed, code:{} message:{}", statusCode, reason);
@@ -263,14 +262,9 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
 
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jetty.websocket.api.WebSocketListener#onWebSocketConnect(org.eclipse.jetty.websocket.api.Session)
-     */
     @Override
-    public void onWebSocketConnect(
-            org.eclipse.jetty.websocket.api.Session session) {
+    public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session) {
         this.connection = session;
         this.connectLatch.countDown();
     }
-
 }

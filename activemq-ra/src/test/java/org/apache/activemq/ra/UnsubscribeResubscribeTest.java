@@ -29,6 +29,7 @@ import javax.resource.ResourceException;
 import javax.transaction.xa.XAException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,6 +50,13 @@ public class UnsubscribeResubscribeTest {
         managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
         managedConnectionFactory.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
         managedConnectionFactory.setClientid("clientId");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (connection != null) {
+            connection.close();
+        }
     }
 
     private void getConnection() throws ResourceException, JMSException {

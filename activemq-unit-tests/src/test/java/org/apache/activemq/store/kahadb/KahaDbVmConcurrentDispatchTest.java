@@ -33,14 +33,16 @@ public class KahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDispatch
     private final boolean concurrentDispatch;
     private static boolean[] concurrentDispatchVals = booleanVals;
 
-      @Parameters(name="Type:{0}; ReduceMemoryFootPrint:{1}; ConcurrentDispatch:{2}")
+      @Parameters(name="Type:{0}; ReduceMemoryFootPrint:{1}; ConcurrentDispatch:{2}; UseTopic:{3}")
       public static Collection<Object[]> data() {
           List<Object[]> values = new ArrayList<>();
 
           for (MessageType mt : MessageType.values()) {
               for (boolean rmfVal : reduceMemoryFootPrintVals) {
                   for (boolean cdVal : concurrentDispatchVals) {
-                      values.add(new Object[] {mt, rmfVal, cdVal});
+                      for (boolean tpVal : useTopicVals) {
+                          values.add(new Object[] {mt, rmfVal, cdVal, tpVal});
+                      }
                   }
               }
           }
@@ -54,15 +56,19 @@ public class KahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDispatch
      * @param concurrentDispatch
      */
     public KahaDbVmConcurrentDispatchTest(MessageType messageType, boolean reduceMemoryFootPrint,
-            boolean concurrentDispatch) {
-        super(messageType, reduceMemoryFootPrint);
+            boolean concurrentDispatch, boolean useTopic) {
+        super(messageType, reduceMemoryFootPrint, useTopic);
         this.concurrentDispatch = concurrentDispatch;
     }
 
     @Override
     protected void configurePersistenceAdapter(BrokerService broker) throws IOException {
         KahaDBPersistenceAdapter ad = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-        ad.setConcurrentStoreAndDispatchQueues(concurrentDispatch);
+        if (useTopic) {
+            ad.setConcurrentStoreAndDispatchTopics(concurrentDispatch);
+        } else {
+            ad.setConcurrentStoreAndDispatchQueues(concurrentDispatch);
+        }
     }
 
 }

@@ -23,7 +23,6 @@
     <!-- Bundles needed if only client will be deployed in the container -->
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}" resolver="(obr)" start-level="50">
         <feature version="[3.2,4)">spring</feature>
-        <feature>spring-dm</feature>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
@@ -36,6 +35,12 @@
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
         <bundle dependency="false">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
+    </feature>
+    
+    <feature name="activemq-cf" description="ActiveMQ ConnectionFactory from config" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature>activemq-client</feature>
+        <feature>scr</feature>
+        <bundle>mvn:org.apache.activemq/activemq-cf/${project.version}</bundle>
     </feature>
 
     <!-- All bundles needed by the broker -->

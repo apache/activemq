@@ -41,6 +41,7 @@ public class DemandSubscription {
     private final AtomicInteger dispatched = new AtomicInteger(0);
     private final AtomicBoolean activeWaiter = new AtomicBoolean();
     private final Set<SubscriptionInfo> durableRemoteSubs = new CopyOnWriteArraySet<SubscriptionInfo>();
+    private final Set<ConsumerId> forcedDurableConsumers = new CopyOnWriteArraySet<ConsumerId>();
     private SubscriptionInfo localDurableSubscriber;
 
     private NetworkBridgeFilter networkBridgeFilter;
@@ -104,6 +105,18 @@ public class DemandSubscription {
      */
     public ConsumerInfo getRemoteInfo() {
         return remoteInfo;
+    }
+
+    public boolean addForcedDurableConsumer(ConsumerId id) {
+        return forcedDurableConsumers.add(id);
+    }
+
+    public boolean removeForcedDurableConsumer(ConsumerId id) {
+        return forcedDurableConsumers.remove(id);
+    }
+
+    public int getForcedDurableConsumersSize() {
+        return forcedDurableConsumers.size();
     }
 
     public void waitForCompletion() {

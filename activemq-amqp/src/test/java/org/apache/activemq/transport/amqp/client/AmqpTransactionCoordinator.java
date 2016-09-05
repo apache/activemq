@@ -30,7 +30,6 @@ import javax.jms.TransactionRolledBackException;
 
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.IOExceptionSupport;
-import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -110,7 +109,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractResource<Sender> {
 
                 // Clear state data
                 pendingDelivery.settle();
-                pendingRequests.remove(txId.getTxId());
+                pendingRequests.remove(txId);
                 deliveries.remove();
             }
 
@@ -165,7 +164,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractResource<Sender> {
         Message message = Message.Factory.create();
         Discharge discharge = new Discharge();
         discharge.setFail(!commit);
-        discharge.setTxnId((Binary) txId.getRemoteTxId());
+        discharge.setTxnId(txId.getRemoteTxId());
         message.setBody(new AmqpValue(discharge));
 
         Delivery pendingDelivery = getEndpoint().delivery(tagGenerator.getNextTag());

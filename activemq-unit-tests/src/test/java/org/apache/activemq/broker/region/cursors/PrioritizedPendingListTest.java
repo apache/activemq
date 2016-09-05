@@ -349,5 +349,10 @@ public class PrioritizedPendingListTest {
         public boolean isAdvisory() {
             return false;
         }
+
+        @Override
+        public boolean canProcessAsExpired() {
+            return false;
+        }
     }
 }

@@ -18,6 +18,12 @@ package org.apache.activemq.store.kahadb.plist;
 
 import org.apache.activemq.store.PListStore;
 import org.apache.activemq.store.PListTestSupport;
+import org.junit.Test;
+
+import java.io.File;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -64,5 +70,24 @@ public class PListImplTest extends PListTestSupport {
         store.setIndexEnablePageCaching(enablePageCache);
         store.setIndexPageSize(2*1024);
         return store;
+    }
+
+    @Test
+    public void testIndexDir() throws Exception {
+        PListStoreImpl pListStore = (PListStoreImpl)store;
+        assertEquals(pListStore.getDirectory(), pListStore.getIndexDirectory());
+    }
+
+    @Test
+    public void testSetIndexDir() throws Exception {
+        PListStoreImpl pListStore = (PListStoreImpl)store;
+        final File directory = pListStore.getDirectory();
+        pListStore.stop();
+        pListStore = createPListStore();
+        pListStore.setLazyInit(false);
+        pListStore.setIndexDirectory(new File(directory, "indexDir"));
+        pListStore.start();
+        assertNotEquals(pListStore.getDirectory(), pListStore.getIndexDirectory());
+        pListStore.stop();
     }
 }

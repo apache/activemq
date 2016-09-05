@@ -87,10 +87,10 @@ public class StompNIOSSLTransport extends NIOSSLTransport {
     protected void doInit() throws Exception {
         if (initBuffer != null) {
             nextFrameSize = -1;
-           // System.out.println("length1: " + initBuffer.array().length);
             receiveCounter += initBuffer.readSize;
             initBuffer.buffer.flip();
             processCommand(initBuffer.buffer);
         }
+        super.doInit();
     }
 }

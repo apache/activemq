@@ -33,4 +33,25 @@ public class HttpTransportUtils {
         remoteAddress.append(request.getRemotePort());
         return remoteAddress.toString();
     }
+
+    public static String generateWsRemoteAddress(HttpServletRequest request, String schemePrefix) {
+        if (request == null) {
+            throw new IllegalArgumentException("HttpServletRequest must not be null.");
+        }
+
+        StringBuilder remoteAddress = new StringBuilder();
+        String scheme = request.getScheme();
+        if (scheme != null && scheme.equalsIgnoreCase("https")) {
+            scheme = schemePrefix + "+wss://";
+        } else {
+            scheme = schemePrefix + "+ws://";
+        }
+
+        remoteAddress.append(scheme);
+        remoteAddress.append(request.getRemoteAddr());
+        remoteAddress.append(":");
+        remoteAddress.append(request.getRemotePort());
+
+        return remoteAddress.toString();
+    }
 }

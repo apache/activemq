@@ -35,10 +35,10 @@ public class AmqpWireFormatTest {
         wireFormat.setAllowNonSaslConnections(false);
 
         AmqpHeader nonSaslHeader = new AmqpHeader();
-        assertFalse(wireFormat.isHeaderValid(nonSaslHeader));
+        assertFalse(wireFormat.isHeaderValid(nonSaslHeader, false));
         AmqpHeader saslHeader = new AmqpHeader();
         saslHeader.setProtocolId(3);
-        assertTrue(wireFormat.isHeaderValid(saslHeader));
+        assertTrue(wireFormat.isHeaderValid(saslHeader, false));
     }
 
     @Test
@@ -46,10 +46,21 @@ public class AmqpWireFormatTest {
         wireFormat.setAllowNonSaslConnections(true);
 
         AmqpHeader nonSaslHeader = new AmqpHeader();
-        assertTrue(wireFormat.isHeaderValid(nonSaslHeader));
+        assertTrue(wireFormat.isHeaderValid(nonSaslHeader, false));
         AmqpHeader saslHeader = new AmqpHeader();
         saslHeader.setProtocolId(3);
-        assertTrue(wireFormat.isHeaderValid(saslHeader));
+        assertTrue(wireFormat.isHeaderValid(saslHeader, false));
+    }
+
+    @Test
+    public void testNonSaslHeaderAfterSaslAuthenticationIsAccepted() {
+        wireFormat.setAllowNonSaslConnections(false);
+
+        AmqpHeader nonSaslHeader = new AmqpHeader();
+        assertTrue(wireFormat.isHeaderValid(nonSaslHeader, true));
+        AmqpHeader saslHeader = new AmqpHeader();
+        saslHeader.setProtocolId(3);
+        assertTrue(wireFormat.isHeaderValid(saslHeader, false));
     }
 
     @Test

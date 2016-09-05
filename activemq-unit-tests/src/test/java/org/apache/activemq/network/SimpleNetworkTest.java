@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -90,7 +91,7 @@ public class SimpleNetworkTest {
             Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
             Message msg = consumer1.receive(3000);
-            assertNotNull(msg);
+            assertNotNull("not null? message: " + i, msg);
             ActiveMQMessage amqMessage = (ActiveMQMessage) msg;
             assertTrue(amqMessage.isCompressed());
         }
@@ -211,6 +212,11 @@ public class SimpleNetworkTest {
             producer.send(test);
         }
         Thread.sleep(1000);
+
+        //Make sure stats are set
+        assertEquals(MESSAGE_COUNT,
+                localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount());
+
         // close everything down and restart
         doTearDown();
         doSetUp(false);

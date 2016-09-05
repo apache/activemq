@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,11 +16,9 @@
  */
 package org.apache.activemq.broker;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
@@ -28,11 +26,17 @@ import javax.jms.InvalidClientIDException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LinkStealingTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LinkStealingTest.class);
 
     private BrokerService brokerService;
     private final AtomicReference<Throwable> removeException = new AtomicReference<Throwable>();
@@ -45,15 +49,14 @@ public class LinkStealingTest {
     public void setUp() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
-        brokerService.setPlugins(new BrokerPlugin[]{
-            new BrokerPluginSupport() {
-                @Override
-                public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-                    removeException.set(error);
-                    super.removeConnection(context, info, error);
-                }
+        brokerService.setPlugins(new BrokerPlugin[] { new BrokerPluginSupport() {
+            @Override
+            public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
+                LOG.info("Remove Connection called for connection [{}] with error: {}", info.getConnectionId(), error);
+                removeException.set(error);
+                super.removeConnection(context, info, error);
             }
-        });
+        }});
 
         stealableConnectionURI = brokerService.addConnector("tcp://0.0.0.0:0?allowLinkStealing=true").getPublishableConnectString();
         unstealableConnectionURI = brokerService.addConnector("tcp://0.0.0.0:0?allowLinkStealing=false").getPublishableConnectString();
@@ -65,50 +68,58 @@ public class LinkStealingTest {
     public void tearDown() throws Exception {
         if (brokerService != null) {
             brokerService.stop();
+            brokerService = null;
         }
     }
 
-    @Test(timeout=60000)
+    @Test(timeout = 60000)
     public void testStealLinkFails() throws Exception {
-
         final String clientID = "ThisIsAClientId";
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(unstealableConnectionURI);
         Connection connection1 = factory.createConnection();
         connection1.setClientID(clientID);
         connection1.start();
 
-        AtomicBoolean exceptionFlag = new AtomicBoolean();
         try {
             Connection connection2 = factory.createConnection();
             connection2.setClientID(clientID);
             connection2.start();
+            fail("Should not have been able to steal the link.");
         } catch (InvalidClientIDException e) {
-            exceptionFlag.set(true);
+            LOG.info("Caught expected error on trying to steal link: {}", e.getMessage());
+            LOG.trace("Error: ", e);
         }
-
-        assertTrue(exceptionFlag.get());
     }
 
-    @Test(timeout=60000)
+    @Test(timeout = 60000)
     public void testStealLinkSuccess() throws Exception {
-
         final String clientID = "ThisIsAClientId";
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(stealableConnectionURI);
         Connection connection1 = factory.createConnection();
         connection1.setClientID(clientID);
         connection1.start();
 
-        AtomicBoolean exceptionFlag = new AtomicBoolean();
         try {
             Connection connection2 = factory.createConnection();
             connection2.setClientID(clientID);
             connection2.start();
         } catch (InvalidClientIDException e) {
-            e.printStackTrace();
-            exceptionFlag.set(true);
+            LOG.info("Should not have failed while stealing the link: {}", e.getMessage());
+            LOG.info("Error details: ", e);
+            fail("Shouldn't have failed when stealing the link");
+        } catch (Throwable error) {
+            LOG.info("Unexpected exception ", error);
+            fail("Unexcpected exception causes test failure");
         }
 
-        assertFalse(exceptionFlag.get());
-        assertNotNull(removeException.get());
+        //Need to wait because removeConnection might not be called yet
+        assertTrue(Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return removeException.get() != null;
+            }
+        }, 5000, 100));
+
+        LOG.info("removeException: {}", removeException.get().getMessage());
     }
 }

@@ -1048,45 +1048,46 @@ public class PageFile {
             this.checkpointLatch = null;
         }
 
-        // First land the writes in the recovery file
-        if (enableRecoveryFile) {
-            Checksum checksum = new Adler32();
-
-            recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
-
-            for (PageWrite w : batch) {
-                try {
-                    checksum.update(w.getDiskBound(), 0, pageSize);
-                } catch (Throwable t) {
-                    throw IOExceptionSupport.create("Cannot create recovery file. Reason: " + t, t);
-                }
-                recoveryFile.writeLong(w.page.getPageId());
-                recoveryFile.write(w.getDiskBound(), 0, pageSize);
-            }
-
-            // Can we shrink the recovery buffer??
-            if (recoveryPageCount > recoveryFileMaxPageCount) {
-                int t = Math.max(recoveryFileMinPageCount, batch.size());
-                recoveryFile.setLength(recoveryFileSizeForPages(t));
-            }
-
-            // Record the page writes in the recovery buffer.
-            recoveryFile.seek(0);
-            // Store the next tx id...
-            recoveryFile.writeLong(nextTxid.get());
-            // Store the checksum for thw write batch so that on recovery we
-            // know if we have a consistent
-            // write batch on disk.
-            recoveryFile.writeLong(checksum.getValue());
-            // Write the # of pages that will follow
-            recoveryFile.writeInt(batch.size());
-
-            if (enableDiskSyncs) {
-                recoveryFile.sync();
-            }
-        }
-
         try {
+
+            // First land the writes in the recovery file
+            if (enableRecoveryFile) {
+                Checksum checksum = new Adler32();
+
+                recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
+
+                for (PageWrite w : batch) {
+                    try {
+                        checksum.update(w.getDiskBound(), 0, pageSize);
+                    } catch (Throwable t) {
+                        throw IOExceptionSupport.create("Cannot create recovery file. Reason: " + t, t);
+                    }
+                    recoveryFile.writeLong(w.page.getPageId());
+                    recoveryFile.write(w.getDiskBound(), 0, pageSize);
+                }
+
+                // Can we shrink the recovery buffer??
+                if (recoveryPageCount > recoveryFileMaxPageCount) {
+                    int t = Math.max(recoveryFileMinPageCount, batch.size());
+                    recoveryFile.setLength(recoveryFileSizeForPages(t));
+                }
+
+                // Record the page writes in the recovery buffer.
+                recoveryFile.seek(0);
+                // Store the next tx id...
+                recoveryFile.writeLong(nextTxid.get());
+                // Store the checksum for thw write batch so that on recovery we
+                // know if we have a consistent
+                // write batch on disk.
+                recoveryFile.writeLong(checksum.getValue());
+                // Write the # of pages that will follow
+                recoveryFile.writeInt(batch.size());
+
+                if (enableDiskSyncs) {
+                    recoveryFile.sync();
+                }
+            }
+
             for (PageWrite w : batch) {
                 writeFile.seek(toOffset(w.page.getPageId()));
                 writeFile.write(w.getDiskBound(), 0, pageSize);

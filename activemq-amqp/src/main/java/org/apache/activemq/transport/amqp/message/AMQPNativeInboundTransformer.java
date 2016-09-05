@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,7 +20,7 @@ import javax.jms.Message;
 
 public class AMQPNativeInboundTransformer extends AMQPRawInboundTransformer {
 
-    public AMQPNativeInboundTransformer(JMSVendor vendor) {
+    public AMQPNativeInboundTransformer(ActiveMQJMSVendor vendor) {
         super(vendor);
     }
 
@@ -35,12 +35,13 @@ public class AMQPNativeInboundTransformer extends AMQPRawInboundTransformer {
     }
 
     @Override
-    public Message transform(EncodedMessage amqpMessage) throws Exception {
+    protected Message doTransform(EncodedMessage amqpMessage) throws Exception {
         org.apache.qpid.proton.message.Message amqp = amqpMessage.decode();
 
-        Message rc = super.transform(amqpMessage);
+        Message result = super.doTransform(amqpMessage);
 
-        populateMessage(rc, amqp);
-        return rc;
+        populateMessage(result, amqp);
+
+        return result;
     }
 }

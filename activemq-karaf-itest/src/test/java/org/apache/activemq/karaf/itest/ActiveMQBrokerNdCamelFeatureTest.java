@@ -35,8 +35,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfi
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
-//@RunWith(PaxExam.class)
-@Ignore
+@RunWith(PaxExam.class)
 public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
 
     @Configuration

@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.junit.ActiveMQTestRunner;
+import org.apache.activemq.junit.Repeat;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
@@ -46,10 +48,12 @@ import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test various behaviors of AMQP receivers with the broker.
  */
+@RunWith(ActiveMQTestRunner.class)
 public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Override
@@ -193,6 +197,34 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
+    @Repeat(repetitions = 1)
+    public void testPresettledReceiverReadsAllMessages() throws Exception {
+        final int MSG_COUNT = 100;
+        sendMessages(getTestName(), MSG_COUNT, false);
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), null, false, true);
+
+        QueueViewMBean queueView = getProxyToQueue(getTestName());
+        assertEquals(MSG_COUNT, queueView.getQueueSize());
+        assertEquals(0, queueView.getDispatchCount());
+
+        receiver.flow(MSG_COUNT);
+        for (int i = 0; i < MSG_COUNT; ++i) {
+            assertNotNull(receiver.receive(5, TimeUnit.SECONDS));
+        }
+        receiver.close();
+
+        assertEquals(0, queueView.getQueueSize());
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    @Repeat(repetitions = 1)
     public void testTwoQueueReceiversOnSameConnectionReadMessagesNoDispositions() throws Exception {
         int MSG_COUNT = 4;
         sendMessages(getTestName(), MSG_COUNT, false);
@@ -337,34 +369,6 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         receiver2.close();
 
         assertEquals(MSG_COUNT - 2, queueView.getQueueSize());
-
-        connection.close();
-    }
-
-    @Test(timeout = 60000)
-    public void testReceiverCanDrainMessages() throws Exception {
-        int MSG_COUNT = 20;
-        sendMessages(getTestName(), MSG_COUNT, false);
-
-        AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
-        AmqpSession session = connection.createSession();
-
-        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
-
-        QueueViewMBean queueView = getProxyToQueue(getTestName());
-        assertEquals(MSG_COUNT, queueView.getQueueSize());
-        assertEquals(0, queueView.getDispatchCount());
-
-        receiver.drain(MSG_COUNT);
-        for (int i = 0; i < MSG_COUNT; ++i) {
-            AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
-            assertNotNull(message);
-            message.accept();
-        }
-        receiver.close();
-
-        assertEquals(0, queueView.getQueueSize());
 
         connection.close();
     }

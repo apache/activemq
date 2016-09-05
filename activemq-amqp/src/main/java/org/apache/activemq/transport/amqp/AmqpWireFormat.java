@@ -40,6 +40,7 @@ public class AmqpWireFormat implements WireFormat {
     public static final int DEFAULT_CONNECTION_TIMEOUT = 30000;
     public static final int DEFAULT_IDLE_TIMEOUT = 30000;
     public static final int DEFAULT_PRODUCER_CREDIT = 1000;
+    public static final boolean DEFAULT_ALLOW_NON_SASL_CONNECTIONS = false;
 
     private static final int SASL_PROTOCOL = 3;
 
@@ -50,6 +51,7 @@ public class AmqpWireFormat implements WireFormat {
     private int idelTimeout = DEFAULT_IDLE_TIMEOUT;
     private int producerCredit = DEFAULT_PRODUCER_CREDIT;
     private String transformer = InboundTransformer.TRANSFORMER_JMS;
+    private boolean allowNonSaslConnections = DEFAULT_ALLOW_NON_SASL_CONNECTIONS;
 
     private boolean magicRead = false;
     private ResetListener resetListener;
@@ -57,8 +59,6 @@ public class AmqpWireFormat implements WireFormat {
     public interface ResetListener {
         void onProtocolReset();
     }
-
-    private boolean allowNonSaslConnections = true;
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -121,17 +121,30 @@ public class AmqpWireFormat implements WireFormat {
      * Given an AMQP header validate that the AMQP magic is present and
      * if so that the version and protocol values align with what we support.
      *
+     * In the case where authentication occurs the client sends us two AMQP
+     * headers, the first being the SASL initial header which triggers the
+     * authentication process and then if that succeeds we should get a second
+     * AMQP header that does not contain the SASL protocol ID indicating the
+     * connection process should follow the normal path.  We validate that the
+     * header align with these expectations.
+     *
      * @param header
      *        the header instance received from the client.
+     * @param authenticated
+     *        has the client already authenticated already.
      *
      * @return true if the header is valid against the current WireFormat.
      */
-    public boolean isHeaderValid(AmqpHeader header) {
+    public boolean isHeaderValid(AmqpHeader header, boolean authenticated) {
         if (!header.hasValidPrefix()) {
             return false;
         }
 
-        if (!isAllowNonSaslConnections() && header.getProtocolId() != SASL_PROTOCOL) {
+        if (!(header.getProtocolId() == 0 || header.getProtocolId() == SASL_PROTOCOL)) {
+            return false;
+        }
+
+        if (!authenticated && !isAllowNonSaslConnections() && header.getProtocolId() != SASL_PROTOCOL) {
             return false;
         }
 

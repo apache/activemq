@@ -29,6 +29,8 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.util.DestinationPathSeparatorBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -57,6 +59,7 @@ import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
@@ -75,6 +78,7 @@ public class FailoverTransactionTest extends TestSupport {
     private static final String TRANSPORT_URI = "tcp://localhost:0";
     private String url;
     BrokerService broker;
+    final Random random = new Random();
 
     public static Test suite() {
         return suite(FailoverTransactionTest.class);
@@ -121,6 +125,12 @@ public class FailoverTransactionTest extends TestSupport {
         broker.setAdvisorySupport(false);
         broker.addConnector(bindAddress);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
+
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setUsePrefetchExtension(false);
+        policyMap.setDefaultEntry(defaultEntry);
+        broker.setDestinationPolicy(policyMap);
 
         url = broker.getTransportConnectors().get(0).getConnectUri().toString();
 
@@ -253,9 +263,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session2.createConsumer(destination);
         msg = consumer.receive(1000);
-        if (msg == null) {
-            msg = consumer.receive(5000);
-        }
         LOG.info("Received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
@@ -353,9 +360,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session2.createConsumer(destination);
         msg = consumer.receive(1000);
-        if (msg == null) {
-            msg = consumer.receive(5000);
-        }
         LOG.info("Received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
@@ -468,9 +472,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session2.createConsumer(destination);
         msg = consumer.receive(1000);
-        if (msg == null) {
-            msg = consumer.receive(5000);
-        }
         LOG.info("Received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
@@ -592,9 +593,6 @@ public class FailoverTransactionTest extends TestSupport {
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session2.createConsumer(destination);
         msg = consumer.receive(1000);
-        if (msg == null) {
-            msg = consumer.receive(5000);
-        }
         LOG.info("Received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
@@ -616,7 +614,11 @@ public class FailoverTransactionTest extends TestSupport {
         broker.stop();
         startBroker(false, url);
 
-        session.commit();
+        try {
+            session.commit();
+            fail("expect ex for rollback only on async exc");
+        } catch (JMSException expected) {
+        }
 
         // without tracking producers, message will not be replayed on recovery
         assertNull("we got the message", consumer.receive(5000));
@@ -763,12 +765,12 @@ public class FailoverTransactionTest extends TestSupport {
         connection = cf.createConnection();
         connection.start();
         connections.add(connection);
-        final Session consumerSession1 = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        final Session consumerSession1 = connection.createSession(true, Session.SESSION_TRANSACTED);
 
         connection = cf.createConnection();
         connection.start();
         connections.add(connection);
-        final Session consumerSession2 = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        final Session consumerSession2 = connection.createSession(true, Session.SESSION_TRANSACTED);
 
         final MessageConsumer consumer1 = consumerSession1.createConsumer(destination);
         final MessageConsumer consumer2 = consumerSession2.createConsumer(destination);
@@ -788,7 +790,7 @@ public class FailoverTransactionTest extends TestSupport {
                     receivedMessages.add(msg);
 
                     // give some variance to the runs
-                    TimeUnit.SECONDS.sleep(pauseSeconds * 2);
+                    TimeUnit.SECONDS.sleep(random.nextInt(5));
 
                     // should not get a second message as there are two messages and two consumers
                     // and prefetch=1, but with failover and unordered connection restore it can get the second
@@ -807,15 +809,10 @@ public class FailoverTransactionTest extends TestSupport {
                     LOG.info("committing consumer1 session: " + receivedMessages.size() + " messsage(s)");
                     try {
                         consumerSession1.commit();
-                    } catch (JMSException expectedSometimes) {
-                        LOG.info("got exception ex on commit", expectedSometimes);
-                        if (expectedSometimes instanceof TransactionRolledBackException) {
-                            gotTransactionRolledBackException.set(true);
-                            // ok, message one was not replayed so we expect the rollback
-                        } else {
-                            throw expectedSometimes;
-                        }
-
+                    } catch (TransactionRolledBackException expected) {
+                        LOG.info("got exception ex on commit", expected);
+                        gotTransactionRolledBackException.set(true);
+                        // ok, message one was not replayed so we expect the rollback
                     }
                     commitDoneLatch.countDown();
                     LOG.info("done async commit");
@@ -835,24 +832,17 @@ public class FailoverTransactionTest extends TestSupport {
 
         LOG.info("received message count: " + receivedMessages.size());
 
-        // new transaction
-        Message msg = consumer1.receive(gotTransactionRolledBackException.get() ? 5000 : 20000);
-        LOG.info("post: from consumer1 received: " + msg);
-        if (gotTransactionRolledBackException.get()) {
-            assertNotNull("should be available again after commit rollback ex", msg);
-        } else {
-            assertNull("should be nothing left for consumer as receive should have committed", msg);
-        }
-        consumerSession1.commit();
-
-        if (gotTransactionRolledBackException.get() ||
-                !gotTransactionRolledBackException.get() && receivedMessages.size() == 1) {
-            // just one message successfully consumed or none consumed
-            // consumer2 should get other message
-            msg = consumer2.receive(10000);
-            LOG.info("post: from consumer2 received: " + msg);
-            assertNotNull("got second message on consumer2", msg);
-            consumerSession2.commit();
+        // new transaction to get both messages from either consumer
+        for (int i=0; i<2; i++) {
+            Message msg = consumer1.receive(5000);
+            LOG.info("post: from consumer1 received: " + msg);
+            consumerSession1.commit();
+            if (msg == null) {
+                msg = consumer2.receive(10000);
+                LOG.info("post: from consumer2 received: " + msg);
+                consumerSession2.commit();
+            }
+            assertNotNull("got message [" + i + "]", msg);
         }
 
         for (Connection c : connections) {
@@ -875,10 +865,7 @@ public class FailoverTransactionTest extends TestSupport {
         connection.start();
         Session sweeperSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer sweeper = sweeperSession.createConsumer(destination);
-        msg = sweeper.receive(1000);
-        if (msg == null) {
-            msg = sweeper.receive(5000);
-        }
+        Message msg = sweeper.receive(1000);
         LOG.info("Sweep received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();

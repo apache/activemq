@@ -276,6 +276,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     private void logSend(Message copy) {
+        copy.getSize();
         Logger perDestinationsLogger = LOG;
         if (isPerDestinationLogger()) {
             ActiveMQDestination destination = copy.getDestination();

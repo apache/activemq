@@ -115,9 +115,9 @@ public class AMQ4952Test {
 
     protected ActiveMQQueue QUEUE_NAME = new ActiveMQQueue("duptest.store");
 
-    private final CountDownLatch stopConsumerBroker = new CountDownLatch(1);
-    private final CountDownLatch consumerBrokerRestarted = new CountDownLatch(1);
-    private final CountDownLatch consumerRestartedAndMessageForwarded = new CountDownLatch(1);
+    private CountDownLatch stopConsumerBroker;
+    private CountDownLatch consumerBrokerRestarted;
+    private CountDownLatch consumerRestartedAndMessageForwarded;
 
     private EmbeddedDataSource localDataSource;
 
@@ -132,6 +132,15 @@ public class AMQ4952Test {
     @BeforeClass
     public static void dbHomeSysProp() throws Exception {
         System.setProperty("derby.system.home", new File(IOHelper.getDefaultDataDirectory()).getCanonicalPath());
+    }
+
+    public void repeat() throws Exception {
+        for (int i=0; i<10; i++) {
+            LOG.info("Iteration: " + i);
+            testConsumerBrokerRestart();
+            tearDown();
+            setUp();
+        }
     }
 
     @Test
@@ -155,7 +164,11 @@ public class AMQ4952Test {
                     MessageConsumer messageConsumer = consumerSession.createConsumer(QUEUE_NAME);
 
                     while (true) {
-                        TextMessage textMsg = (TextMessage) messageConsumer.receive(5000);
+                        TextMessage textMsg = (TextMessage) messageConsumer.receive(1000);
+
+                        if (textMsg == null) {
+                            textMsg = (TextMessage) messageConsumer.receive(4000);
+                        }
 
                         if (textMsg == null) {
                             return receivedMessageCount;
@@ -266,6 +279,10 @@ public class AMQ4952Test {
     @Before
     public void setUp() throws Exception {
         LOG.debug("Running with enableCursorAudit set to {}", this.enableCursorAudit);
+        stopConsumerBroker = new CountDownLatch(1);
+        consumerBrokerRestarted = new CountDownLatch(1);
+        consumerRestartedAndMessageForwarded = new CountDownLatch(1);
+
         doSetUp();
     }
 

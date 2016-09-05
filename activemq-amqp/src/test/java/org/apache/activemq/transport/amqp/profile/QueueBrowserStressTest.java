@@ -68,25 +68,21 @@ public class QueueBrowserStressTest extends JMSClientTestSupport {
                 }
             }
 
-            if (browser != null) {
-                LOG.debug("close browser for {}", queue.getQueueName());
-                try {
-                    browser.close();
-                } catch (JMSException e) {
-                    LOG.error("Error on browser close: {}", e);
-                }
-                browser = null;
+            LOG.debug("close browser for {}", queue.getQueueName());
+            try {
+                browser.close();
+            } catch (JMSException e) {
+                LOG.error("Error on browser close: {}", e);
             }
+            browser = null;
 
-            if (session != null) {
-                LOG.debug("close session for {}", queue.getQueueName());
-                try {
-                    session.close();
-                } catch (JMSException e) {
-                    LOG.error("Error on session close: {}", e);
-                }
-                session = null;
+            LOG.debug("close session for {}", queue.getQueueName());
+            try {
+                session.close();
+            } catch (JMSException e) {
+                LOG.error("Error on session close: {}", e);
             }
+            session = null;
         }
 
         LOG.info("Task complete, capture heap dump now");

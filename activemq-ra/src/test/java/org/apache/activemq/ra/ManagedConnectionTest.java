@@ -51,7 +51,6 @@ public class ManagedConnectionTest {
 
     @Before
     public void setUp() throws Exception {
-
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
         managedConnectionFactory.setServerUrl(DEFAULT_HOST);
         managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
@@ -60,7 +59,6 @@ public class ManagedConnectionTest {
         connectionFactory = (ConnectionFactory)managedConnectionFactory.createConnectionFactory(connectionManager);
         connection = (ManagedConnectionProxy)connectionFactory.createConnection();
         managedConnection = connection.getManagedConnection();
-
     }
 
     @After
@@ -106,7 +104,6 @@ public class ManagedConnectionTest {
         session.commit();
 
         assertTrue(test[0]);
-
     }
 
     @Test(timeout = 60000)
@@ -254,6 +251,7 @@ public class ManagedConnectionTest {
     public void testSamePropertiesButNotEqual() throws Exception {
         ManagedConnectionProxy newConnection = (ManagedConnectionProxy)connectionFactory.createConnection();
         assertNonEquality(managedConnection, newConnection.getManagedConnection());
+        newConnection.close();
     }
 
     private void assertEquality(ActiveMQManagedConnection leftCon, ActiveMQManagedConnection rightCon) {

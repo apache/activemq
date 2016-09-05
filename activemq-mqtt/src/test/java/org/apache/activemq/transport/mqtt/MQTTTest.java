@@ -64,7 +64,6 @@ import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.fusesource.mqtt.codec.PUBLISH;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1367,7 +1366,6 @@ public class MQTTTest extends MQTTTestSupport {
         jmsConn.close();
     }
 
-    @Ignore("Needs fix in MQTT client for string length decode.")
     @Test(timeout = 30 * 10000)
     public void testSubscribeWithLargeTopicFilter() throws Exception {
 

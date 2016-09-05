@@ -34,11 +34,11 @@ import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.activemq.util.TestUtils.createXid;
+
 // https://issues.apache.org/activemq/browse/AMQ-2880
 public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCXACommitExceptionTest.class);
-
-    private long txGenerator = System.currentTimeMillis();
 
     protected ActiveMQXAConnectionFactory factory;
 
@@ -126,33 +126,6 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
             }
         }
         return messagesReceived;
-    }
-
-    public Xid createXid() throws IOException {
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream os = new DataOutputStream(baos);
-        os.writeLong(++txGenerator);
-        os.close();
-        final byte[] bs = baos.toByteArray();
-
-        return new Xid() {
-            @Override
-            public int getFormatId() {
-                return 86;
-            }
-
-            @Override
-            public byte[] getGlobalTransactionId() {
-                return bs;
-            }
-
-            @Override
-            public byte[] getBranchQualifier() {
-                return bs;
-            }
-        };
-
     }
 
 

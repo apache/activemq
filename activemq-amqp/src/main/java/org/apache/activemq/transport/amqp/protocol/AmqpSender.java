@@ -81,7 +81,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     private final ConsumerInfo consumerInfo;
     private final boolean presettle;
 
-    private int currentCredit;
     private boolean draining;
     private long lastDeliveredSequenceId;
 
@@ -101,7 +100,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     public AmqpSender(AmqpSession session, Sender endpoint, ConsumerInfo consumerInfo) {
         super(session, endpoint);
 
-        this.currentCredit = endpoint.getRemoteCredit();
         this.consumerInfo = consumerInfo;
         this.presettle = getEndpoint().getRemoteSenderSettleMode() == SenderSettleMode.SETTLED;
     }
@@ -120,12 +118,18 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (!isClosed() && isOpened()) {
             RemoveInfo removeCommand = new RemoveInfo(getConsumerId());
             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-            sendToActiveMQ(removeCommand, null);
 
-            session.unregisterSender(getConsumerId());
+            sendToActiveMQ(removeCommand, new ResponseHandler() {
+
+                @Override
+                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    session.unregisterSender(getConsumerId());
+                    AmqpSender.super.detach();
+                }
+            });
+        } else {
+            super.detach();
         }
-
-        super.detach();
     }
 
     @Override
@@ -133,58 +137,81 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (!isClosed() && isOpened()) {
             RemoveInfo removeCommand = new RemoveInfo(getConsumerId());
             removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-            sendToActiveMQ(removeCommand, null);
 
-            if (consumerInfo.isDurable()) {
-                RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
-                rsi.setConnectionId(session.getConnection().getConnectionId());
-                rsi.setSubscriptionName(getEndpoint().getName());
-                rsi.setClientId(session.getConnection().getClientId());
+            sendToActiveMQ(removeCommand, new ResponseHandler() {
 
-                sendToActiveMQ(rsi, null);
-            }
+                @Override
+                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    if (consumerInfo.isDurable()) {
+                        RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
+                        rsi.setConnectionId(session.getConnection().getConnectionId());
+                        rsi.setSubscriptionName(getEndpoint().getName());
+                        rsi.setClientId(session.getConnection().getClientId());
 
-            session.unregisterSender(getConsumerId());
+                        sendToActiveMQ(rsi);
+                    }
+
+                    session.unregisterSender(getConsumerId());
+                    AmqpSender.super.close();
+                }
+            });
+        } else {
+            super.close();
         }
-
-        super.close();
     }
 
     @Override
     public void flow() throws Exception {
-        int updatedCredit = getEndpoint().getCredit();
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Flow: draining={}, drain={} credit={}, remoteCredit={}, queued={}",
+                      draining, getEndpoint().getDrain(),
+                      getEndpoint().getCredit(), getEndpoint().getRemoteCredit(), getEndpoint().getQueued());
+        }
 
-        LOG.trace("Flow: drain={} credit={}, remoteCredit={}",
-                  getEndpoint().getDrain(), getEndpoint().getCredit(), getEndpoint().getRemoteCredit());
-
-        if (getEndpoint().getDrain() && (updatedCredit != currentCredit || !draining)) {
-            currentCredit = updatedCredit >= 0 ? updatedCredit : 0;
-            draining = true;
+        if (getEndpoint().getDrain() && !draining) {
 
             // Revert to a pull consumer.
             ConsumerControl control = new ConsumerControl();
             control.setConsumerId(getConsumerId());
             control.setDestination(getDestination());
             control.setPrefetch(0);
-            sendToActiveMQ(control, null);
 
-            // Now request dispatch of the drain amount, we request immediate
-            // timeout and an completion message regardless so that we can know
-            // when we should marked the link as drained.
-            MessagePull pullRequest = new MessagePull();
-            pullRequest.setConsumerId(getConsumerId());
-            pullRequest.setDestination(getDestination());
-            pullRequest.setTimeout(-1);
-            pullRequest.setAlwaysSignalDone(true);
-            pullRequest.setQuantity(currentCredit);
-            sendToActiveMQ(pullRequest, null);
-        } else if (updatedCredit != currentCredit) {
-            currentCredit = updatedCredit >= 0 ? updatedCredit : 0;
+            LOG.trace("Flow: Pull case -> consumer control with prefetch (0) to control output");
+
+            sendToActiveMQ(control);
+
+            if (endpoint.getCredit() > 0) {
+                draining = true;
+
+                // Now request dispatch of the drain amount, we request immediate
+                // timeout and an completion message regardless so that we can know
+                // when we should marked the link as drained.
+                MessagePull pullRequest = new MessagePull();
+                pullRequest.setConsumerId(getConsumerId());
+                pullRequest.setDestination(getDestination());
+                pullRequest.setTimeout(-1);
+                pullRequest.setAlwaysSignalDone(true);
+                pullRequest.setQuantity(endpoint.getCredit());
+
+                LOG.trace("Pull case -> consumer pull request quantity = {}", endpoint.getCredit());
+
+                sendToActiveMQ(pullRequest);
+            } else {
+                LOG.trace("Pull case -> sending any Queued messages and marking drained");
+
+                pumpOutbound();
+                getEndpoint().drained();
+                session.pumpProtonToSocket();
+            }
+        } else {
             ConsumerControl control = new ConsumerControl();
             control.setConsumerId(getConsumerId());
             control.setDestination(getDestination());
-            control.setPrefetch(currentCredit);
-            sendToActiveMQ(control, null);
+            control.setPrefetch(getEndpoint().getCredit());
+
+            LOG.trace("Flow: update -> consumer control with prefetch {}", control.getPrefetch());
+
+            sendToActiveMQ(control);
         }
     }
 
@@ -260,11 +287,9 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     @Override
                     public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
                         if (response.isException()) {
-                            if (response.isException()) {
-                                Throwable exception = ((ExceptionResponse) response).getException();
-                                exception.printStackTrace();
-                                getEndpoint().close();
-                            }
+                            Throwable exception = ((ExceptionResponse) response).getException();
+                            exception.printStackTrace();
+                            getEndpoint().close();
                         }
                         session.pumpProtonToSocket();
                     }
@@ -401,8 +426,19 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     // It's the end of browse signal in response to a MessagePull
                     getEndpoint().drained();
                     draining = false;
-                    currentCredit = 0;
                 } else {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Sender:[{}] msgId={} draining={}, drain={}, credit={}, remoteCredit={}, queued={}",
+                                  getEndpoint().getName(), jms.getJMSMessageID(), draining, getEndpoint().getDrain(),
+                                  getEndpoint().getCredit(), getEndpoint().getRemoteCredit(), getEndpoint().getQueued());
+                    }
+
+                    if (draining && getEndpoint().getCredit() == 0) {
+                        LOG.trace("Sender:[{}] browse complete.", getEndpoint().getName());
+                        getEndpoint().drained();
+                        draining = false;
+                    }
+
                     jms.setRedeliveryCounter(md.getRedeliveryCounter());
                     jms.setReadOnlyBody(true);
                     final EncodedMessage amqp = outboundTransformer.transform(jms);
@@ -430,6 +466,17 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (tag != null && tag.length > 0 && delivery.remotelySettled()) {
             tagCache.returnTag(tag);
         }
+
+        int newCredit = Math.max(0, getEndpoint().getCredit() - 1);
+        LOG.trace("Sender:[{}] updating conumser prefetch:{} after delivery settled.",
+                  getEndpoint().getName(), newCredit);
+
+        ConsumerControl control = new ConsumerControl();
+        control.setConsumerId(getConsumerId());
+        control.setDestination(getDestination());
+        control.setPrefetch(newCredit);
+
+        sendToActiveMQ(control);
 
         if (ackType == -1) {
             // we are going to settle, but redeliver.. we we won't yet ack to ActiveMQ

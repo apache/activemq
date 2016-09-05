@@ -145,11 +145,15 @@ public class StompWSTransportTest extends WSTransportTestSupport {
                               "\n" + Stomp.NULL;
         wsStompConnection.sendRawFrame(connectFrame);
 
-        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        try {
+            String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
 
-        assertTrue(incoming.startsWith("ERROR"));
-        assertTrue(incoming.indexOf("heart-beat") >= 0);
-        assertTrue(incoming.indexOf("message:") >= 0);
+            assertTrue(incoming.startsWith("ERROR"));
+            assertTrue(incoming.indexOf("heart-beat") >= 0);
+            assertTrue(incoming.indexOf("message:") >= 0);
+        } catch (IOException ex) {
+            LOG.debug("Connection closed before Frame was read.");
+        }
 
         assertTrue("Connection should close", Wait.waitFor(new Wait.Condition() {
 
@@ -171,11 +175,15 @@ public class StompWSTransportTest extends WSTransportTestSupport {
                               "\n" + Stomp.NULL;
         wsStompConnection.sendRawFrame(connectFrame);
 
-        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        try {
+            String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
 
-        assertTrue(incoming.startsWith("ERROR"));
-        assertTrue(incoming.indexOf("heart-beat") >= 0);
-        assertTrue(incoming.indexOf("message:") >= 0);
+            assertTrue(incoming.startsWith("ERROR"));
+            assertTrue(incoming.indexOf("heart-beat") >= 0);
+            assertTrue(incoming.indexOf("message:") >= 0);
+        } catch (IOException ex) {
+            LOG.debug("Connection closed before Frame was read.");
+        }
 
         assertTrue("Connection should close", Wait.waitFor(new Wait.Condition() {
 
@@ -197,11 +205,15 @@ public class StompWSTransportTest extends WSTransportTestSupport {
                               "\n" + Stomp.NULL;
         wsStompConnection.sendRawFrame(connectFrame);
 
-        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        try {
+            String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
 
-        assertTrue(incoming.startsWith("ERROR"));
-        assertTrue(incoming.indexOf("heart-beat") >= 0);
-        assertTrue(incoming.indexOf("message:") >= 0);
+            assertTrue(incoming.startsWith("ERROR"));
+            assertTrue(incoming.indexOf("heart-beat") >= 0);
+            assertTrue(incoming.indexOf("message:") >= 0);
+        } catch (IOException ex) {
+            LOG.debug("Connection closed before Frame was read.");
+        }
 
         assertTrue("Connection should close", Wait.waitFor(new Wait.Condition() {
 

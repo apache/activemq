@@ -82,7 +82,7 @@ public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
             producer.send(message);
             LOG.info("Message {} sent at {}", i, new Date().toString());
             producer.close();
-            //wait a couple sec so cron start time is different for next message
+            // wait a couple sec so cron start time is different for next message
             Thread.sleep(2000);
         }
         SchedulerBroker sb = (SchedulerBroker) this.broker.getBroker().getAdaptor(SchedulerBroker.class);
@@ -90,8 +90,10 @@ public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
         List<Job> list = js.getAllJobs();
         assertEquals(COUNT, list.size());
         latch.await(2, TimeUnit.MINUTES);
-        //All should messages should have been received by now
+        // All should messages should have been received by now
         assertEquals(COUNT, count.get());
+
+        connection.close();
     }
 
     @Test
@@ -114,5 +116,7 @@ public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
 
         assertNotNull(consumer.receiveNoWait());
         assertNull(consumer.receiveNoWait());
+
+        connection.close();
     }
 }

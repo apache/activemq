@@ -233,4 +233,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         return delegate.getMessageSize(clientId, subscriberName);
     }
 
+    @Override
+    public MessageStoreSubscriptionStatistics getMessageStoreSubStatistics() {
+        return delegate.getMessageStoreSubStatistics();
+    }
 }

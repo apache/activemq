@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.cursors;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
@@ -114,4 +115,5 @@ public interface PendingList extends Iterable<MessageReference> {
     public void addAll(PendingList pendingList);
 
     public MessageReference get(MessageId messageId);
+
 }

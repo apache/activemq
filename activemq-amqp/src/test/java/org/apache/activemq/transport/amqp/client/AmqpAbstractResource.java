@@ -152,6 +152,19 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
         connection.fireClientException(error);
     }
 
+    @Override
+    public void locallyClosed(AmqpConnection connection, Exception error) {
+        if (endpoint != null) {
+            // TODO: if this is a producer/consumer link then we may only be detached,
+            // rather than fully closed, and should respond appropriately.
+            endpoint.close();
+        }
+
+        LOG.info("Resource {} was locally closed", this);
+
+        connection.fireClientException(error);
+    }
+
     public E getEndpoint() {
         return this.endpoint;
     }

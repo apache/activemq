@@ -68,12 +68,6 @@
 					<property name="logUrlOnStart" value="true" />
 				</bean>
 				<bean class="org.eclipse.jetty.webapp.WebAppContext">
-					<property name="contextPath" value="/fileserver" />
-					<property name="resourceBase" value="${activemq.home}/webapps/fileserver" />
-					<property name="logUrlOnStart" value="true" />
-					<property name="parentLoaderPriority" value="true" />
-				</bean>
-				<bean class="org.eclipse.jetty.webapp.WebAppContext">
 					<property name="contextPath" value="/demo" />
 					<property name="resourceBase" value="${activemq.home}/webapps-demo/demo" />
 					<property name="logUrlOnStart" value="true" />

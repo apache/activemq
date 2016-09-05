@@ -26,6 +26,7 @@ import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -110,6 +111,48 @@ public class JmsQueueBrowserExpirationTest {
         }
         LOG.info("Finished");
         browserConnection.close();
+    }
+
+   @Test(timeout=10000)
+   public void testDoNotReceiveExpiredMessage() throws Exception {
+      int WAIT_TIME = 1000;
+
+      Connection connection = factory.createConnection();
+      connection.start();
+
+      Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+      Queue producerQueue = session.createQueue("MyTestQueue");
+
+      MessageProducer producer = session.createProducer(producerQueue);
+      producer.setTimeToLive(WAIT_TIME);
+
+      TextMessage message = session.createTextMessage("Test message");
+      producer.send(producerQueue, message);
+
+      int count = getMessageCount(producerQueue, session);
+      assertEquals(1, count);
+
+      Thread.sleep(WAIT_TIME + 1000);
+
+      count = getMessageCount(producerQueue, session);
+      assertEquals(0, count);
+
+      producer.close();
+      session.close();
+      connection.close();
+   }
+
+    private int getMessageCount(Queue destination, Session session) throws Exception {
+        int result = 0;
+        QueueBrowser browser = session.createBrowser(destination);
+        Enumeration<?> enumeration = browser.getEnumeration();
+        while (enumeration.hasMoreElements()) {
+            ++result;
+            enumeration.nextElement();
+        }
+        browser.close();
+
+        return result;
     }
 
     private int browse(ActiveMQQueue queue, Connection connection) throws JMSException {

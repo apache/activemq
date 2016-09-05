@@ -261,7 +261,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             boolean finished = false;
 
             while (!finished) {
-                Message message = consumer.receive(1000);
+                Message message = consumer.receive(returnedMessages.isEmpty() ? 5000 : 1000);
                 if (message == null) {
                     finished = true;
                 }
@@ -292,7 +292,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             MessageConsumer consumer = session.createConsumer(new ActiveMQQueue(queueName));
             connection.start();
 
-            return consumer.receive(2000);
+            return consumer.receive(5000);
         } finally {
             if (connection != null) {
                 connection.close();

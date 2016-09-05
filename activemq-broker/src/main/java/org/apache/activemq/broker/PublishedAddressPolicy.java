@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.activemq.util.InetAddressUtil;
 
@@ -35,7 +36,8 @@ public class PublishedAddressPolicy {
 
     private String clusterClientUriQuery;
     private PublishedHostStrategy publishedHostStrategy = PublishedHostStrategy.DEFAULT;
-    private HashMap<Integer, Integer> portMapping = new HashMap<Integer, Integer>();
+    private Map<Integer, Integer> portMapping = new HashMap<Integer, Integer>();
+    private Map<String, String> hostMapping = new HashMap<String, String>();
 
     /**
      * Defines the value of the published host value.
@@ -75,6 +77,10 @@ public class PublishedAddressPolicy {
 
         String userInfo = getPublishedUserInfoValue(connectorURI.getUserInfo());
         String host = getPublishedHostValue(connectorURI.getHost());
+        if (hostMapping.containsKey(host)) {
+            host = hostMapping.get(host);
+        }
+
         int port = connectorURI.getPort();
         if (portMapping.containsKey(port)) {
             port = portMapping.get(port);
@@ -215,7 +221,22 @@ public class PublishedAddressPolicy {
     /**
      * @param portMapping map the ports in restrictive environments
      */
-    public void setPortMapping(HashMap<Integer, Integer> portMapping) {
+    public void setPortMapping(Map<Integer, Integer> portMapping) {
         this.portMapping = portMapping;
+    }
+
+    public Map<Integer, Integer>  getPortMapping() {
+        return this.portMapping;
+    }
+
+    /**
+     * @param hostMapping map the resolved hosts
+     */
+    public void setHostMapping(Map<String, String> hostMapping) {
+        this.hostMapping = hostMapping;
+    }
+
+    public Map<String, String> getHostMapping() {
+        return hostMapping;
     }
 }

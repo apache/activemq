@@ -265,7 +265,9 @@ public class BrokerTest extends BrokerTestSupport {
             messages.add(m1);
         }
 
-        for (int i = 0; i < 4; i++) {
+        // a browse is a snapshot - only guarantee to see messages produced before
+        // the browser
+        for (int i = 0; i < 1; i++) {
             Message m1 = messages.get(i);
             Message m2 = receiveMessage(connection2);
             assertNotNull("m2 is null for index: " + i, m2);
@@ -274,7 +276,11 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         assertNoMessagesLeft(connection1);
-        assertNoMessagesLeft(connection2);
+
+        connection1.request(closeConnectionInfo(connectionInfo1));
+        connection1.stop();
+        connection2.request(closeConnectionInfo(connectionInfo2));
+        connection2.stop();
     }
 
     

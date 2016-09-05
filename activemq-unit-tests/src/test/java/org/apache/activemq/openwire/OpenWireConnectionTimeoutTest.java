@@ -21,23 +21,17 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.spring.SpringSslContext;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
@@ -61,11 +55,25 @@ public class OpenWireConnectionTimeoutTest {
 
     @Rule public TestName name = new TestName();
 
+    public static final String KEYSTORE_TYPE = "jks";
+    public static final String PASSWORD = "password";
+    public static final String SERVER_KEYSTORE = "src/test/resources/server.keystore";
+    public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
+
     private Socket connection;
     protected String connectorScheme;
     protected int port;
     protected BrokerService brokerService;
     protected Vector<Throwable> exceptions = new Vector<Throwable>();
+
+    static {
+        System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
+        System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
+        System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);
+        System.setProperty("javax.net.ssl.keyStore", SERVER_KEYSTORE);
+        System.setProperty("javax.net.ssl.keyStoreType", KEYSTORE_TYPE);
+        System.setProperty("javax.net.ssl.keyStorePassword", PASSWORD);
+    }
 
     @Parameters(name="{0}")
     public static Collection<Object[]> data() {
@@ -73,7 +81,11 @@ public class OpenWireConnectionTimeoutTest {
                 {"tcp"},
                 {"ssl"},
                 {"nio"},
-                {"nio+ssl"}
+                {"nio+ssl"},
+                {"auto"},
+                {"auto+ssl"},
+                {"auto+nio"},
+                {"auto+nio+ssl"}
             });
     }
 
@@ -111,7 +123,7 @@ public class OpenWireConnectionTimeoutTest {
     }
 
     public String getAdditionalConfig() {
-        return "?transport.connectAttemptTimeout=1200";
+        return "?transport.connectAttemptTimeout=1200&protocolDetectionTimeOut=1200";
     }
 
     @Test(timeout = 90000)
@@ -137,7 +149,8 @@ public class OpenWireConnectionTimeoutTest {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
              @Override
              public boolean isSatisified() throws Exception {
-                 return 1 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
+                 TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByScheme(getConnectorScheme()).getServer();
+                 return 1 == server.getCurrentTransportCount().get();
              }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
 
@@ -145,7 +158,8 @@ public class OpenWireConnectionTimeoutTest {
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return 0 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
+                TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByScheme(getConnectorScheme()).getServer();
+                return 0 == server.getCurrentTransportCount().get();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
 
@@ -157,10 +171,14 @@ public class OpenWireConnectionTimeoutTest {
 
         switch (connectorScheme) {
             case "tcp":
+            case "auto":
             case "nio":
+            case "auto+nio":
                 break;
             case "ssl":
+            case "auto+ssl":
             case "nio+ssl":
+            case "auto+nio+ssl":
                 useSsl = true;;
                 break;
             default:
@@ -181,10 +199,6 @@ public class OpenWireConnectionTimeoutTest {
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(false);
         brokerService.getManagementContext().setCreateConnector(false);
-
-        SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
-        SSLContext.setDefault(ctx);
 
         // Setup SSL context...
         final File classesDir = new File(OpenWireConnectionTimeoutTest.class.getProtectionDomain().getCodeSource().getLocation().getFile());
@@ -219,6 +233,18 @@ public class OpenWireConnectionTimeoutTest {
             case "nio+ssl":
                 connector = brokerService.addConnector("nio+ssl://0.0.0.0:0" + getAdditionalConfig());
                 break;
+            case "auto":
+                connector = brokerService.addConnector("auto://0.0.0.0:0" + getAdditionalConfig());
+                break;
+            case "auto+nio":
+                connector = brokerService.addConnector("auto+nio://0.0.0.0:0" + getAdditionalConfig());
+                break;
+            case "auto+ssl":
+                connector = brokerService.addConnector("auto+ssl://0.0.0.0:0" + getAdditionalConfig());
+                break;
+            case "auto+nio+ssl":
+                connector = brokerService.addConnector("auto+nio+ssl://0.0.0.0:0" + getAdditionalConfig());
+                break;
             default:
                 throw new IOException("Invalid OpenWire connector scheme passed to test.");
         }
@@ -234,22 +260,6 @@ public class OpenWireConnectionTimeoutTest {
             brokerService.stop();
             brokerService.waitUntilStopped();
             brokerService = null;
-        }
-    }
-
-    public class DefaultTrustManager implements X509TrustManager {
-
-        @Override
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
         }
     }
 }

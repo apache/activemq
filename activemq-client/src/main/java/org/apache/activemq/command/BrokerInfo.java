@@ -26,9 +26,9 @@ import org.apache.activemq.util.MarshallingSupport;
  * so that the client knows which broker node he's talking to and also any peers
  * that the node has in his cluster. This is the broker helping the client out
  * in discovering other nodes in the cluster.
- * 
+ *
  * @openwire:marshaller code="2"
- * 
+ *
  */
 public class BrokerInfo extends BaseCommand {
     private static final String PASSIVE_SLAVE_KEY = "passiveSlave";
@@ -46,13 +46,13 @@ public class BrokerInfo extends BaseCommand {
     String brokerUploadUrl;
     String networkProperties;
     transient int refCount = 0;
-    
+
     public BrokerInfo copy() {
         BrokerInfo copy = new BrokerInfo();
         copy(copy);
         return copy;
     }
-    
+
     private void copy(BrokerInfo copy) {
         super.copy(copy);
         copy.brokerId = this.brokerId;
@@ -67,13 +67,14 @@ public class BrokerInfo extends BaseCommand {
         copy.connectionId = this.connectionId;
         copy.brokerUploadUrl = this.brokerUploadUrl;
         copy.networkProperties = this.networkProperties;
-    } 
+    }
 
     @Override
     public boolean isBrokerInfo() {
         return true;
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
@@ -122,6 +123,7 @@ public class BrokerInfo extends BaseCommand {
         this.brokerName = brokerName;
     }
 
+    @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processBrokerInfo(this);
     }
@@ -198,7 +200,7 @@ public class BrokerInfo extends BaseCommand {
 
     /**
      * The broker assigns a each connection it accepts a connection id.
-     * 
+     *
      * @openwire:property version=2
      */
     public long getConnectionId() {
@@ -212,7 +214,7 @@ public class BrokerInfo extends BaseCommand {
     /**
      * The URL to use when uploading BLOBs to the broker or some other external
      * file/http server
-     * 
+     *
      * @openwire:property version=3
      */
     public String getBrokerUploadUrl() {
@@ -237,7 +239,7 @@ public class BrokerInfo extends BaseCommand {
     public void setNetworkProperties(String networkProperties) {
         this.networkProperties = networkProperties;
     }
-    
+
     public boolean isPassiveSlave() {
         boolean result = false;
         Properties props = getProperties();
@@ -246,7 +248,7 @@ public class BrokerInfo extends BaseCommand {
         }
         return result;
     }
-    
+
     public void setPassiveSlave(boolean value) {
         Properties props = new Properties();
         props.put(PASSIVE_SLAVE_KEY, Boolean.toString(value));
@@ -256,7 +258,7 @@ public class BrokerInfo extends BaseCommand {
             e.printStackTrace();
         }
     }
-    
+
     public Properties getProperties() {
         Properties result = null;
         try {

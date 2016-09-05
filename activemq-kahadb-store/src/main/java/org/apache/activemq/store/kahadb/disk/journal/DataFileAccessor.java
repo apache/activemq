@@ -89,7 +89,7 @@ final class DataFileAccessor {
             return new ByteSequence(data, 0, data.length);
 
         } catch (RuntimeException e) {
-            throw new IOException("Invalid location: " + location + ", : " + e, e);
+            throw new IOException("Invalid location: " + location + " : " + e, e);
         }
     }
 

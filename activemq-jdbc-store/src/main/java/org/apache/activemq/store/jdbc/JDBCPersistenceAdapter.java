@@ -297,6 +297,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
         if (isCreateTablesOnStartup()) {
             TransactionContext transactionContext = getTransactionContext();
+            transactionContext.getExclusiveConnection();
             transactionContext.begin();
             try {
                 try {
@@ -344,6 +345,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         try {
             LOG.debug("Cleaning up old messages.");
             c = getTransactionContext();
+            c.getExclusiveConnection();
             getAdapter().doDeleteOldMessages(c);
         } catch (IOException e) {
             LOG.warn("Old message cleanup failed due to: " + e, e);
@@ -549,6 +551,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     @Override
     public void deleteAllMessages() throws IOException {
         TransactionContext c = getTransactionContext();
+        c.getExclusiveConnection();
         try {
             getAdapter().doDropTables(c);
             getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());

@@ -92,6 +92,18 @@ public interface AmqpResource extends AmqpEventSink {
     void remotelyClosed(AmqpConnection connection);
 
     /**
+     * Called to indicate that the local end has become closed but the resource
+     * was not awaiting a close.  This could happen during an open request where
+     * the remote does not set an error condition or during normal operation.
+     *
+     * @param connection
+     *        The connection that owns this resource.
+     * @param error
+     *        The error that triggered the local close of this resource.
+     */
+    void locallyClosed(AmqpConnection connection, Exception error);
+
+    /**
      * Sets the failed state for this Resource and triggers a failure signal for
      * any pending ProduverRequest.
      *

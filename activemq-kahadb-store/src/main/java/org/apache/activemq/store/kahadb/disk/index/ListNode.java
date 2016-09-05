@@ -203,7 +203,7 @@ public final class ListNode<Key, Value> {
             }
             try {
                 entryToRemove.unlink();
-                entryToRemove = null;
+
                 ListNode<Key, Value> toRemoveNode = null;
                 if (currentNode.entries.isEmpty()) {
                     // may need to free this node
@@ -237,7 +237,9 @@ public final class ListNode<Key, Value> {
                         currentNode = previousNode;
                     }
                 }
+
                 targetList.onRemove(entryToRemove);
+                entryToRemove = null;
 
                 if (toRemoveNode != null) {
                     tx.free(toRemoveNode.getPage());

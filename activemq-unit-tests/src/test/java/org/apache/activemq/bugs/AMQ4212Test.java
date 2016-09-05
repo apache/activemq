@@ -41,6 +41,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
@@ -79,6 +80,7 @@ public class AMQ4212Test {
         pa.setCheckpointInterval(TimeUnit.SECONDS.toMillis(5));
         pa.setCleanupInterval(TimeUnit.SECONDS.toMillis(5));
         pa.setForceRecoverIndex(recover);
+        pa.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
 
         service.setPersistenceAdapter(pa);
         service.start();

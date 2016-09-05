@@ -37,6 +37,7 @@ import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.tcp.TcpTransport;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.easymock.IMocksControl;
@@ -206,6 +207,7 @@ public class NetworkRouteTest {
         localBroker.oneway(remoteBrokerInfo);
         EasyMock.expect(localBroker.request(EasyMock.isA(Object.class)))
                 .andReturn(null);
+        EasyMock.expect(remoteBroker.narrow(TcpTransport.class)).andReturn(null);
         localBroker.oneway(EasyMock.isA(Object.class));
         ExpectationWaiter localInitWaiter = ExpectationWaiter.waiterForLastVoidCall();
 

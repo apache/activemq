@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp.protocol;
 import static org.apache.activemq.transport.amqp.AmqpSupport.ANONYMOUS_RELAY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONTAINER_ID;
+import static org.apache.activemq.transport.amqp.AmqpSupport.DELAYED_DELIVERY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.INVALID_FIELD;
 import static org.apache.activemq.transport.amqp.AmqpSupport.PLATFORM;
 import static org.apache.activemq.transport.amqp.AmqpSupport.PRODUCT;
@@ -34,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -173,6 +173,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
         this.protonTransport.bind(this.protonConnection);
         this.protonTransport.setChannelMax(CHANNEL_MAX);
+        this.protonTransport.setEmitFlowEventOnSend(false);
 
         this.protonConnection.collect(eventCollector);
 
@@ -186,7 +187,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
      * @return the capabilities that are offered to new clients on connect.
      */
     protected Symbol[] getConnectionCapabilitiesOffered() {
-        return new Symbol[]{ ANONYMOUS_RELAY };
+        return new Symbol[]{ ANONYMOUS_RELAY, DELAYED_DELIVERY };
     }
 
     /**
@@ -309,7 +310,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
             while (!done) {
                 ByteBuffer toWrite = protonTransport.getOutputBuffer();
                 if (toWrite != null && toWrite.hasRemaining()) {
-                    LOG.trace("Sending {} bytes out", toWrite.limit());
+                    LOG.trace("Server: Sending {} bytes out", toWrite.limit());
                     amqpTransport.sendToAmqp(toWrite);
                     protonTransport.outputConsumed();
                 } else {
@@ -327,7 +328,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         if (command.getClass() == AmqpHeader.class) {
             AmqpHeader header = (AmqpHeader) command;
 
-            if (amqpWireFormat.isHeaderValid(header)) {
+            if (amqpWireFormat.isHeaderValid(header, authenticator != null)) {
                 LOG.trace("Connection from an AMQP v1.0 client initiated. {}", header);
             } else {
                 LOG.warn("Connection attempt from non AMQP v1.0 client. {}", header);
@@ -355,6 +356,8 @@ public class AmqpConnection implements AmqpProtocolConverter {
             LOG.debug("Ignoring incoming AMQP data, transport is closed.");
             return;
         }
+
+        LOG.trace("Server: Received from client: {} bytes", frame.getLength());
 
         while (frame.length > 0) {
             try {
@@ -386,7 +389,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
             Event event = null;
             while ((event = eventCollector.peek()) != null) {
                 if (amqpTransport.isTrace()) {
-                    LOG.trace("Processing event: {}", event.getType());
+                    LOG.trace("Server: Processing event: {}", event.getType());
                 }
                 switch (event.getType()) {
                     case CONNECTION_REMOTE_OPEN:
@@ -484,7 +487,6 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
                         protonConnection.close();
                     } else {
-
                         if (amqpTransport.isUseInactivityMonitor() && amqpWireFormat.getIdleTimeout() > 0) {
                             LOG.trace("Connection requesting Idle timeout of: {} mills", amqpWireFormat.getIdleTimeout());
                             protonTransport.setIdleTimeout(amqpWireFormat.getIdleTimeout());
@@ -492,6 +494,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
                         protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
                         protonConnection.setProperties(getConnetionProperties());
+                        protonConnection.setContainer(brokerService.getBrokerName());
                         protonConnection.open();
 
                         configureInactivityMonitor();

@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.MessageId;
 
 /**
@@ -204,11 +203,27 @@ public class QueueDispatchPendingList implements PendingList {
         }
     }
 
-    public void addMessageForRedelivery(QueueMessageReference qmr) {
-        redeliveredWaitingDispatch.addMessageLast(qmr);
-    }
-
     public boolean hasRedeliveries(){
         return !redeliveredWaitingDispatch.isEmpty();
+    }
+
+    public void addForRedelivery(List<MessageReference> list, boolean noConsumers) {
+        if (noConsumers && redeliveredWaitingDispatch instanceof OrderedPendingList && willBeInOrder(list)) {
+            // a single consumer can expect repeatable redelivery order irrespective
+            // of transaction or prefetch boundaries
+            ((OrderedPendingList)redeliveredWaitingDispatch).insertAtHead(list);
+        } else {
+            for (MessageReference ref : list) {
+                redeliveredWaitingDispatch.addMessageLast(ref);
+            }
+        }
+    }
+
+    private boolean willBeInOrder(List<MessageReference> list) {
+        // for a single consumer inserting at head will be in order w.r.t brokerSequence but
+        // will not be if there were multiple consumers in the mix even if this is the last
+        // consumer to close (noConsumers==true)
+        return !redeliveredWaitingDispatch.isEmpty() && list != null && !list.isEmpty() &&
+            redeliveredWaitingDispatch.iterator().next().getMessageId().getBrokerSequenceId() > list.get(list.size() - 1).getMessageId().getBrokerSequenceId();
     }
 }

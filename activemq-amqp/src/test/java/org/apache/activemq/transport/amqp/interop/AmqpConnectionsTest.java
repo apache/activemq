@@ -25,6 +25,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.activemq.transport.amqp.AmqpSupport;
@@ -37,15 +39,34 @@ import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Test broker handling of AMQP connections with various configurations.
  */
+@RunWith(Parameterized.class)
 public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
     private static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
     private static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");
     private static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
+    private static final Symbol DELAYED_DELIVERY = Symbol.valueOf("DELAYED_DELIVERY");
+
+    @Parameters(name="{0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+            {"amqp", false},
+            {"amqp+ws", false},
+            {"amqp+ssl", true},
+            {"amqp+wss", true}
+        });
+    }
+
+    public AmqpConnectionsTest(String connectorScheme, boolean secure) {
+        super(connectorScheme, secure);
+    }
 
     @Test(timeout = 60000)
     public void testCanConnect() throws Exception {
@@ -77,6 +98,10 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
                     markAsInvalid("Broker did not indicate it support anonymous relay");
                 }
 
+                if (!contains(offered, DELAYED_DELIVERY)) {
+                    markAsInvalid("Broker did not indicate it support delayed message delivery");
+                }
+
                 Map<Symbol, Object> properties = connection.getRemoteProperties();
                 if (!properties.containsKey(QUEUE_PREFIX)) {
                     markAsInvalid("Broker did not send a queue prefix value");
@@ -98,6 +123,35 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
                     markAsInvalid("Broker did not send a queue platform name value");
                 } else {
                     LOG.info("Broker platform = {}", properties.get(PLATFORM));
+                }
+            }
+        });
+
+        AmqpConnection connection = client.connect();
+        assertNotNull(connection);
+
+        assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
+
+        connection.getStateInspector().assertValid();
+        connection.close();
+
+        assertEquals(0, getProxyToBroker().getCurrentConnectionsCount());
+    }
+
+    @Test(timeout = 60000)
+    public void testConnectionCarriesContainerId() throws Exception {
+        AmqpClient client = createAmqpClient();
+        assertNotNull(client);
+
+        client.setValidator(new AmqpValidator() {
+
+            @Override
+            public void inspectOpenedResource(Connection connection) {
+                String remoteContainer = connection.getRemoteContainer();
+                if (remoteContainer == null || !remoteContainer.equals(brokerService.getBrokerName())) {
+                    markAsInvalid("Broker did not send a valid container ID");
+                } else {
+                    LOG.info("Broker container ID = {}", remoteContainer);
                 }
             }
         });
@@ -163,31 +217,29 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
             @Override
             public void inspectClosedResource(Connection connection) {
                 ErrorCondition remoteError = connection.getRemoteCondition();
-                if (remoteError == null) {
+                if (remoteError == null || remoteError.getCondition() == null) {
                     markAsInvalid("Broker did not add error condition for duplicate client ID");
-                }
+                } else {
+                    if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
+                        markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    }
 
-                if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
-                    markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
-                }
-
-                if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
-                    markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
+                        markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    }
                 }
 
                 // Validate the info map contains a hint that the container/client id was the problem
                 Map<?, ?> infoMap = remoteError.getInfo();
-                if(infoMap == null) {
+                if (infoMap == null) {
                     markAsInvalid("Broker did not set an info map on condition");
-                }
-
-                if(!infoMap.containsKey(AmqpSupport.INVALID_FIELD)) {
+                } else if (!infoMap.containsKey(AmqpSupport.INVALID_FIELD)) {
                     markAsInvalid("Info map does not contain expected key");
-                }
-
-                Object value = infoMap.get(AmqpSupport.INVALID_FIELD);
-                if(!AmqpSupport.CONTAINER_ID.equals(value)) {
-                    markAsInvalid("Info map does not contain expected value: " + value);
+                } else {
+                    Object value = infoMap.get(AmqpSupport.INVALID_FIELD);
+                    if(!AmqpSupport.CONTAINER_ID.equals(value)) {
+                        markAsInvalid("Info map does not contain expected value: " + value);
+                    }
                 }
             }
         });

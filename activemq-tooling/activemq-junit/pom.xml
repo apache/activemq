@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.activemq.tooling</groupId>
     <artifactId>activemq-tooling</artifactId>
-    <version>5.14.0-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-junit</artifactId>
@@ -33,7 +33,6 @@
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-broker</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -44,13 +43,11 @@
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-spring</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-pool</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

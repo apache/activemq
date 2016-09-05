@@ -135,6 +135,15 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         destsList = getStaticallyIncludedDestinations();
         dests = destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setStaticallyIncludedDestinations(dests);
+        result.setDurableDestinations(getDurableTopicDestinations(durableDestinations));
+        return result;
+    }
+
+    protected Transport createLocalTransport() throws Exception {
+        return TransportFactory.connect(localURI);
+    }
+
+    public static ActiveMQDestination[] getDurableTopicDestinations(final Set<ActiveMQDestination> durableDestinations) {
         if (durableDestinations != null) {
 
             HashSet<ActiveMQDestination> topics = new HashSet<ActiveMQDestination>();
@@ -146,13 +155,9 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 
             ActiveMQDestination[] dest = new ActiveMQDestination[topics.size()];
             dest = topics.toArray(dest);
-            result.setDurableDestinations(dest);
+            return dest;
         }
-        return result;
-    }
-
-    protected Transport createLocalTransport() throws Exception {
-        return TransportFactory.connect(localURI);
+        return null;
     }
 
     @Override

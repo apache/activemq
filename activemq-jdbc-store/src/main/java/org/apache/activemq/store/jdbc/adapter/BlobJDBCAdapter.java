@@ -69,7 +69,6 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
                              long expiration, byte priority, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             // Add the Blob record.
             s = c.getConnection().prepareStatement(statements.getAddMessageStatement());
@@ -94,7 +93,6 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             }
 
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -127,7 +125,6 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
     public byte[] doGetMessage(TransactionContext c, MessageId id) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
 
             s = c.getConnection().prepareStatement(statements.getFindMessageStatement());
@@ -149,7 +146,6 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
                 return os.toByteArray();
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }

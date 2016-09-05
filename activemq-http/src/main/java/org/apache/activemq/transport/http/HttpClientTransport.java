@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.URI;
+import java.security.cert.X509Certificate;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -31,6 +32,7 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.wireformat.WireFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -122,8 +124,6 @@ public class HttpClientTransport extends HttpTransportSupport {
         HttpResponse answer = null;
         try {
             client = getSendHttpClient();
-            HttpParams params = client.getParams();
-            HttpConnectionParams.setSoTimeout(params, soTimeout);
             answer = client.execute(httpMethod);
             int status = answer.getStatusLine().getStatusCode();
             if (status != HttpStatus.SC_OK) {
@@ -346,6 +346,10 @@ public class HttpClientTransport extends HttpTransportSupport {
                     new UsernamePasswordCredentials(getProxyUser(), getProxyPassword()));
             }
         }
+
+        HttpParams params = client.getParams();
+        HttpConnectionParams.setSoTimeout(params, soTimeout);
+
         return client;
     }
 
@@ -403,4 +407,17 @@ public class HttpClientTransport extends HttpTransportSupport {
         this.minSendAsCompressedSize = minSendAsCompressedSize;
     }
 
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        return null;
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
+    }
+
+    @Override
+    public WireFormat getWireFormat() {
+        return getTextWireFormat();
+    }
 }

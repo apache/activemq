@@ -62,6 +62,7 @@ import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.MessageStoreStatistics;
+import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionIdTransformer;
@@ -420,6 +421,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                         removeMessage(context, ack);
                     } else {
+                        indexLock.writeLock().lock();
+                        try {
+                            metadata.producerSequenceIdTracker.isDuplicate(ack.getLastMessageId());
+                        } finally {
+                            indexLock.writeLock().unlock();
+                        }
                         synchronized (asyncTaskMap) {
                             asyncTaskMap.remove(key);
                         }
@@ -742,12 +749,21 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
     class KahaDBTopicMessageStore extends KahaDBMessageStore implements TopicMessageStore {
         private final AtomicInteger subscriptionCount = new AtomicInteger();
+        protected final MessageStoreSubscriptionStatistics messageStoreSubStats =
+                new MessageStoreSubscriptionStatistics(isEnableSubscriptionStatistics());
+
         public KahaDBTopicMessageStore(ActiveMQTopic destination) throws IOException {
             super(destination);
             this.subscriptionCount.set(getAllSubscriptions().length);
             if (isConcurrentStoreAndDispatchTopics()) {
                 asyncTopicMaps.add(asyncTaskMap);
             }
+        }
+
+        @Override
+        protected void recoverMessageStoreStatistics() throws IOException {
+            super.recoverMessageStoreStatistics();
+            this.recoverMessageStoreSubMetrics();
         }
 
         @Override
@@ -884,23 +900,29 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         @Override
         public int getMessageCount(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-            indexLock.writeLock().lock();
-            try {
-                return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
-                    @Override
-                    public Integer execute(Transaction tx) throws IOException {
-                        StoredDestination sd = getStoredDestination(dest, tx);
-                        LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
-                        if (cursorPos == null) {
-                            // The subscription might not exist.
-                            return 0;
-                        }
 
-                        return (int) getStoredMessageCount(tx, sd, subscriptionKey);
-                    }
-                });
-            } finally {
-                indexLock.writeLock().unlock();
+            if (isEnableSubscriptionStatistics()) {
+                return (int)this.messageStoreSubStats.getMessageCount(subscriptionKey).getCount();
+            } else {
+
+                indexLock.writeLock().lock();
+                try {
+                    return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
+                        @Override
+                        public Integer execute(Transaction tx) throws IOException {
+                            StoredDestination sd = getStoredDestination(dest, tx);
+                            LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
+                            if (cursorPos == null) {
+                                // The subscription might not exist.
+                                return 0;
+                            }
+
+                            return (int) getStoredMessageCount(tx, sd, subscriptionKey);
+                        }
+                    });
+                } finally {
+                    indexLock.writeLock().unlock();
+                }
             }
         }
 
@@ -908,23 +930,59 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         @Override
         public long getMessageSize(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-            indexLock.writeLock().lock();
-            try {
-                return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
-                    @Override
-                    public Integer execute(Transaction tx) throws IOException {
-                        StoredDestination sd = getStoredDestination(dest, tx);
-                        LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
-                        if (cursorPos == null) {
-                            // The subscription might not exist.
-                            return 0;
-                        }
+            if (isEnableSubscriptionStatistics()) {
+                return this.messageStoreSubStats.getMessageSize(subscriptionKey).getTotalSize();
+            } else {
+                indexLock.writeLock().lock();
+                try {
+                    return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
+                        @Override
+                        public Integer execute(Transaction tx) throws IOException {
+                            StoredDestination sd = getStoredDestination(dest, tx);
+                            LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
+                            if (cursorPos == null) {
+                                // The subscription might not exist.
+                                return 0;
+                            }
 
-                        return (int) getStoredMessageSize(tx, sd, subscriptionKey);
-                    }
-                });
-            } finally {
-                indexLock.writeLock().unlock();
+                            return (int) getStoredMessageSize(tx, sd, subscriptionKey);
+                        }
+                    });
+                } finally {
+                    indexLock.writeLock().unlock();
+                }
+            }
+        }
+
+
+        protected void recoverMessageStoreSubMetrics() throws IOException {
+            if (isEnableSubscriptionStatistics()) {
+
+                final MessageStoreSubscriptionStatistics statistics = getMessageStoreSubStatistics();
+                indexLock.writeLock().lock();
+                try {
+                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                        @Override
+                        public void execute(Transaction tx) throws IOException {
+                            StoredDestination sd = getStoredDestination(dest, tx);
+                            for (Iterator<Entry<String, KahaSubscriptionCommand>> iterator = sd.subscriptions
+                                    .iterator(tx); iterator.hasNext();) {
+                                Entry<String, KahaSubscriptionCommand> entry = iterator.next();
+
+                                String subscriptionKey = entry.getKey();
+                                LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
+                                if (cursorPos != null) {
+                                    long size = getStoredMessageSize(tx, sd, subscriptionKey);
+                                    statistics.getMessageCount(subscriptionKey)
+                                            .setCount(getStoredMessageCount(tx, sd, subscriptionKey));
+                                    statistics.getMessageSize(subscriptionKey).addSize(size > 0 ? size : 0);
+                                }
+                            }
+                        }
+                    });
+                } finally {
+                    indexLock.writeLock().unlock();
+                }
             }
         }
 
@@ -1031,6 +1089,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        @Override
+        public MessageStoreSubscriptionStatistics getMessageStoreSubStatistics() {
+            return messageStoreSubStats;
         }
     }
 
@@ -1173,17 +1236,23 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
      * @throws IOException
      */
     Message loadMessage(Location location) throws IOException {
-        JournalCommand<?> command = load(location);
-        KahaAddMessageCommand addMessage = null;
-        switch (command.type()) {
-            case KAHA_UPDATE_MESSAGE_COMMAND:
-                addMessage = ((KahaUpdateMessageCommand)command).getMessage();
-                break;
-            default:
-                addMessage = (KahaAddMessageCommand) command;
+        try {
+            JournalCommand<?> command = load(location);
+            KahaAddMessageCommand addMessage = null;
+            switch (command.type()) {
+                case KAHA_UPDATE_MESSAGE_COMMAND:
+                    addMessage = ((KahaUpdateMessageCommand) command).getMessage();
+                    break;
+                default:
+                    addMessage = (KahaAddMessageCommand) command;
+            }
+            Message msg = (Message) wireFormat.unmarshal(new DataInputStream(addMessage.getMessage().newInput()));
+            return msg;
+        } catch (IOException ioe) {
+            LOG.error("Failed to load message at: {}", location , ioe);
+            brokerService.handleIOException(ioe);
+            throw ioe;
         }
-        Message msg = (Message) wireFormat.unmarshal(new DataInputStream(addMessage.getMessage().newInput()));
-        return msg;
     }
 
     // /////////////////////////////////////////////////////////////////
@@ -1350,7 +1419,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     this.store.addMessage(context, message);
                     removeQueueTask(this.store, this.message.getMessageId());
                     this.future.complete();
-                } else if (cancelledTaskModMetric > 0 && this.store.canceledTasks++ % cancelledTaskModMetric == 0) {
+                } else if (cancelledTaskModMetric > 0 && (++this.store.canceledTasks) % cancelledTaskModMetric == 0) {
                     System.err.println(this.store.dest.getName() + " cancelled: "
                             + (this.store.canceledTasks / this.store.doneTasks) * 100);
                     this.store.canceledTasks = this.store.doneTasks = 0;

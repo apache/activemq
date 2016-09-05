@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,16 +18,16 @@ package org.apache.activemq.transport.mock;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.cert.X509Certificate;
+
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.wireformat.WireFormat;
 
-/**
- * 
- */
 public class MockTransport extends DefaultTransportListener implements Transport {
 
     protected Transport next;
@@ -37,8 +37,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         this.next = next;
     }
 
-    /**
-     */
+    @Override
     public synchronized void setTransportListener(TransportListener channelListener) {
         this.transportListener = channelListener;
         if (channelListener == null) {
@@ -50,8 +49,10 @@ public class MockTransport extends DefaultTransportListener implements Transport
 
     /**
      * @see org.apache.activemq.Service#start()
-     * @throws IOException if the next channel has not been set.
+     * @throws IOException
+     *         if the next channel has not been set.
      */
+    @Override
     public void start() throws Exception {
         if (getNext() == null) {
             throw new IOException("The next channel has not been set.");
@@ -65,6 +66,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     /**
      * @see org.apache.activemq.Service#stop()
      */
+    @Override
     public void stop() throws Exception {
         getNext().stop();
     }
@@ -84,6 +86,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     /**
      * @return Returns the packetListener.
      */
+    @Override
     public synchronized TransportListener getTransportListener() {
         return transportListener;
     }
@@ -93,18 +96,22 @@ public class MockTransport extends DefaultTransportListener implements Transport
         return getNext().toString();
     }
 
+    @Override
     public void oneway(Object command) throws IOException {
         getNext().oneway(command);
     }
 
+    @Override
     public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
         return getNext().asyncRequest(command, null);
     }
 
+    @Override
     public Object request(Object command) throws IOException {
         return getNext().request(command);
     }
 
+    @Override
     public Object request(Object command, int timeout) throws IOException {
         return getNext().request(command, timeout);
     }
@@ -114,6 +121,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         getTransportListener().onException(error);
     }
 
+    @Override
     public <T> T narrow(Class<T> target) {
         if (target.isAssignableFrom(getClass())) {
             return target.cast(this);
@@ -131,6 +139,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         setNext(filter);
     }
 
+    @Override
     public String getRemoteAddress() {
         return getNext().getRemoteAddress();
     }
@@ -138,35 +147,58 @@ public class MockTransport extends DefaultTransportListener implements Transport
     /**
      * @see org.apache.activemq.transport.Transport#isFaultTolerant()
      */
+    @Override
     public boolean isFaultTolerant() {
         return getNext().isFaultTolerant();
     }
 
-	public boolean isDisposed() {
-		return getNext().isDisposed();
-	}
-	
-	public boolean isConnected() {
-       return getNext().isConnected();
+    @Override
+    public boolean isDisposed() {
+        return getNext().isDisposed();
     }
 
-	public void reconnect(URI uri) throws IOException {
-		getNext().reconnect(uri);
-	}
+    @Override
+    public boolean isConnected() {
+        return getNext().isConnected();
+    }
 
+    @Override
+    public void reconnect(URI uri) throws IOException {
+        getNext().reconnect(uri);
+    }
+
+    @Override
     public int getReceiveCounter() {
         return getNext().getReceiveCounter();
     }
-    
 
+    @Override
     public boolean isReconnectSupported() {
         return getNext().isReconnectSupported();
     }
 
+    @Override
     public boolean isUpdateURIsSupported() {
         return getNext().isUpdateURIsSupported();
     }
-    public void updateURIs(boolean reblance,URI[] uris) throws IOException {
-       getNext().updateURIs(reblance,uris);
+
+    @Override
+    public void updateURIs(boolean reblance, URI[] uris) throws IOException {
+        getNext().updateURIs(reblance, uris);
+    }
+
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        return getNext().getPeerCertificates();
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
+        getNext().setPeerCertificates(certificates);
+    }
+
+    @Override
+    public WireFormat getWireFormat() {
+        return getNext().getWireFormat();
     }
 }

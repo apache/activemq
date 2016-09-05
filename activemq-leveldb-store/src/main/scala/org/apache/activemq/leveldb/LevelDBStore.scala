@@ -87,7 +87,7 @@ class LevelDBStoreTest(val store:LevelDBStore) extends LevelDBStoreTestMBean {
 
   import store._
   var suspendForce = false;
-  
+
   override def setSuspendForce(value: Boolean): Unit = this.synchronized {
     if( suspendForce!=value ) {
       suspendForce = value;
@@ -129,7 +129,7 @@ class LevelDBStoreTest(val store:LevelDBStore) extends LevelDBStoreTestMBean {
   }
 
   var suspendDelete = false;
-  
+
   override def setSuspendDelete(value: Boolean): Unit = this.synchronized {
     if( suspendDelete!=value ) {
       suspendDelete = value;
@@ -147,8 +147,8 @@ class LevelDBStoreTest(val store:LevelDBStore) extends LevelDBStoreTestMBean {
 
   override def getDeleteCalls = this.synchronized {
     db.client.log.recordLogTestSupport.deleteCall.threads.get()
-  }  
-  
+  }
+
 }
 
 class LevelDBStoreView(val store:LevelDBStore) extends LevelDBStoreViewMBean {
@@ -901,6 +901,12 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       super.asyncAddQueueMessage(context, message, false)
     }
 
+    var stats = new MessageStoreSubscriptionStatistics(false)
+
+    def getMessageStoreSubStatistics: MessageStoreSubscriptionStatistics = {
+        stats;
+    }
+
     def subscription_count = subscriptions.synchronized {
       subscriptions.size
     }
@@ -1008,7 +1014,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         case None => 0
       }
     }
-    
+
     def getMessageSize(clientId: String, subscriptionName: String): Long = {
       check_running
       return 0

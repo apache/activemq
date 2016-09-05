@@ -96,6 +96,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import static org.apache.activemq.broker.region.cursors.AbstractStoreCursor.gotToTheStore;
+
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
  * subscriptions.
@@ -132,7 +134,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private boolean allConsumersExclusiveByDefault = false;
     private final AtomicBoolean started = new AtomicBoolean();
 
-    private boolean resetNeeded;
+    private volatile boolean resetNeeded;
 
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         @Override
@@ -410,14 +412,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             browser.incrementQueueRef();
         }
 
-        void done() {
-            try {
-                browser.decrementQueueRef();
-            } catch (Exception e) {
-                LOG.warn("decrement ref on browser: " + browser, e);
-            }
-        }
-
         public QueueBrowserSubscription getBrowser() {
             return browser;
         }
@@ -556,7 +550,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
 
-                for (MessageReference ref : unAckedMessages) {
+                for (Iterator<MessageReference> unackedListIterator = unAckedMessages.iterator(); unackedListIterator.hasNext(); ) {
+                    MessageReference ref = unackedListIterator.next();
                     // AMQ-5107: don't resend if the broker is shutting down
                     if ( this.brokerService.isStopping() ) {
                         break;
@@ -578,10 +573,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             }
                         }
                     }
-                    if (!qmr.isDropped()) {
-                        dispatchPendingList.addMessageForRedelivery(qmr);
+                    if (qmr.isDropped()) {
+                        unackedListIterator.remove();
                     }
                 }
+                dispatchPendingList.addForRedelivery(unAckedMessages, strictOrderDispatch && consumers.isEmpty());
                 if (sub instanceof QueueBrowserSubscription) {
                     ((QueueBrowserSubscription)sub).decrementQueueRef();
                     browserDispatches.remove(sub);
@@ -1600,12 +1596,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 pagedInPendingDispatchLock.readLock().unlock();
             }
 
-            // Perhaps we should page always into the pagedInPendingDispatch
-            // list if
-            // !messages.isEmpty(), and then if
-            // !pagedInPendingDispatch.isEmpty()
-            // then we do a dispatch.
-            boolean hasBrowsers = browserDispatches.size() > 0;
+            boolean hasBrowsers = !browserDispatches.isEmpty();
 
             if (pageInMoreMessages || hasBrowsers || !dispatchPendingList.hasRedeliveries()) {
                 try {
@@ -1616,12 +1607,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
 
             if (hasBrowsers) {
-                PendingList alreadyDispatchedMessages = isPrioritizedMessages() ?
+                PendingList messagesInMemory = isPrioritizedMessages() ?
                         new PrioritizedPendingList() : new OrderedPendingList();
                 pagedInMessagesLock.readLock().lock();
-                try{
-                    alreadyDispatchedMessages.addAll(pagedInMessages);
-                }finally {
+                try {
+                    messagesInMemory.addAll(pagedInMessages);
+                } finally {
                     pagedInMessagesLock.readLock().unlock();
                 }
 
@@ -1634,9 +1625,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                         QueueBrowserSubscription browser = browserDispatch.getBrowser();
 
-                        LOG.debug("dispatch to browser: {}, already dispatched/paged count: {}", browser, alreadyDispatchedMessages.size());
+                        LOG.debug("dispatch to browser: {}, already dispatched/paged count: {}", browser, messagesInMemory.size());
                         boolean added = false;
-                        for (MessageReference node : alreadyDispatchedMessages) {
+                        for (MessageReference node : messagesInMemory) {
                             if (!((QueueMessageReference)node).isAcked() && !browser.isDuplicate(node.getMessageId()) && !browser.atMax()) {
                                 msgContext.setMessageReference(node);
                                 if (browser.matches(node, msgContext)) {
@@ -1746,7 +1737,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
-            getDestinationStatistics().getDequeues().increment();
             dropMessage(reference);
         } else {
             try {
@@ -1756,7 +1746,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                     @Override
                     public void afterCommit() throws Exception {
-                        getDestinationStatistics().getDequeues().increment();
                         dropMessage(reference);
                         wakeup();
                     }
@@ -1786,9 +1775,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private void dropMessage(QueueMessageReference reference) {
-        if (!reference.isDropped()) {
-            reference.drop();
-            destinationStatistics.getMessages().decrement();
+        //use dropIfLive so we only process the statistics at most one time
+        if (reference.dropIfLive()) {
+            getDestinationStatistics().getDequeues().increment();
+            getDestinationStatistics().getMessages().decrement();
             pagedInMessagesLock.writeLock().lock();
             try {
                 pagedInMessages.remove(reference);
@@ -1901,7 +1891,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         List<QueueMessageReference> result = null;
         PendingList resultList = null;
 
-        int toPageIn = Math.min(maxPageSize, messages.size());
+        int toPageIn = maxPageSize;
+        messagesLock.readLock().lock();
+        try {
+            toPageIn = Math.min(toPageIn, messages.size());
+        } finally {
+            messagesLock.readLock().unlock();
+        }
         int pagedInPendingSize = 0;
         pagedInPendingDispatchLock.readLock().lock();
         try {
@@ -1912,7 +1908,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         if (isLazyDispatch() && !force) {
             // Only page in the minimum number of messages which can be
             // dispatched immediately.
-            toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
+            toPageIn = Math.min(toPageIn, getConsumerMessageCountBeforeFull());
         }
 
         if (LOG.isDebugEnabled()) {
@@ -1976,14 +1972,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         resultList.addMessageLast(ref);
                     } else {
                         ref.decrementReferenceCount();
-                        // store should have trapped duplicate in it's index, also cursor audit
-                        // we need to remove the duplicate from the store in the knowledge that the original message may be inflight
+                        // store should have trapped duplicate in it's index, or cursor audit trapped insert
+                        // or producerBrokerExchange suppressed send.
                         // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
-                        LOG.warn("{}, duplicate message {} paged in, is cursor audit disabled? Removing from store and redirecting to dlq", this, ref.getMessage());
+                        LOG.warn("{}, duplicate message {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessage());
                         if (store != null) {
                             ConnectionContext connectionContext = createConnectionContext();
-                            store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
-                            broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from store for " + destination));
+                            dropMessage(ref);
+                            if (gotToTheStore(ref.getMessage())) {
+                                LOG.debug("Duplicate message {} from cursor, removing from store", this, ref.getMessage());
+                                store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
+                            }
+                            broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from cursor for " + destination));
                         }
                     }
                 }

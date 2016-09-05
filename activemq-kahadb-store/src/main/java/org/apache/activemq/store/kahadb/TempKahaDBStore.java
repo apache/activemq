@@ -46,6 +46,7 @@ import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
@@ -411,6 +412,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         @Override
         public long getMessageSize(String clientId, String subscriptionName) throws IOException {
             return 0;
+        }
+
+        private final MessageStoreSubscriptionStatistics stats = new MessageStoreSubscriptionStatistics(false);
+
+        @Override
+        public MessageStoreSubscriptionStatistics getMessageStoreSubStatistics() {
+            return stats;
         }
 
         @Override

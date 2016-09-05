@@ -665,7 +665,7 @@ case "$1" in
     exit $?
     ;;
   stop)
-    invoke_stop 
+    invoke_stop
     exit $?
     ;;
   kill)
@@ -673,6 +673,6 @@ case "$1" in
     exit $?
     ;;
   *)
-    invoke_task checknotforrunning
+    invoke_task
     exit $?
 esac

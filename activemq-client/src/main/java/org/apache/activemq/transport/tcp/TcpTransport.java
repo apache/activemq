@@ -1,5 +1,5 @@
-/**
-gxfdgvdfg * Licensed to the Apache Software Foundation (ASF) under one or more
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -29,6 +29,7 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -51,12 +52,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
- *
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- *
  */
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
+
     private static final Logger LOG = LoggerFactory.getLogger(TcpTransport.class);
+
     protected final URI remoteLocation;
     protected final URI localLocation;
     protected final WireFormat wireFormat;
@@ -753,5 +753,14 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     public WireFormat getWireFormat() {
         return wireFormat;
+    }
+
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        return null;
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
     }
 }

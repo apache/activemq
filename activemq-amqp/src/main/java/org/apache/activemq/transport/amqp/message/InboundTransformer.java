@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,6 +24,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 import org.apache.activemq.ScheduledMessage;
+import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Decimal128;
 import org.apache.qpid.proton.amqp.Decimal32;
@@ -41,30 +42,50 @@ import org.apache.qpid.proton.amqp.messaging.Properties;
 
 public abstract class InboundTransformer {
 
-    JMSVendor vendor;
+    protected final ActiveMQJMSVendor vendor;
 
     public static final String TRANSFORMER_NATIVE = "native";
     public static final String TRANSFORMER_RAW = "raw";
     public static final String TRANSFORMER_JMS = "jms";
 
-    String prefixVendor = "JMS_AMQP_";
-    String prefixDeliveryAnnotations = "DA_";
-    String prefixMessageAnnotations = "MA_";
-    String prefixFooter = "FT_";
+    protected String prefixVendor = "JMS_AMQP_";
+    protected String prefixDeliveryAnnotations = "DA_";
+    protected String prefixMessageAnnotations = "MA_";
+    protected String prefixFooter = "FT_";
 
-    int defaultDeliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
-    int defaultPriority = javax.jms.Message.DEFAULT_PRIORITY;
-    long defaultTtl = javax.jms.Message.DEFAULT_TIME_TO_LIVE;
+    protected int defaultDeliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
+    protected int defaultPriority = javax.jms.Message.DEFAULT_PRIORITY;
+    protected long defaultTtl = javax.jms.Message.DEFAULT_TIME_TO_LIVE;
 
-    public InboundTransformer(JMSVendor vendor) {
+    public InboundTransformer(ActiveMQJMSVendor vendor) {
         this.vendor = vendor;
     }
-
-    public abstract Message transform(EncodedMessage amqpMessage) throws Exception;
 
     public abstract String getTransformerName();
 
     public abstract InboundTransformer getFallbackTransformer();
+
+    public final Message transform(EncodedMessage amqpMessage) throws Exception {
+        InboundTransformer transformer = this;
+        Message message = null;
+
+        while (transformer != null) {
+            try {
+                message = transformer.doTransform(amqpMessage);
+                break;
+            } catch (Exception e) {
+                transformer = transformer.getFallbackTransformer();
+            }
+        }
+
+        if (message == null) {
+            throw new AmqpProtocolException("Failed to transform incoming delivery, skipping.", false);
+        }
+
+        return message;
+    }
+
+    protected abstract Message doTransform(EncodedMessage amqpMessage) throws Exception;
 
     public int getDefaultDeliveryMode() {
         return defaultDeliveryMode;
@@ -98,12 +119,8 @@ public abstract class InboundTransformer {
         this.prefixVendor = prefixVendor;
     }
 
-    public JMSVendor getVendor() {
+    public ActiveMQJMSVendor getVendor() {
         return vendor;
-    }
-
-    public void setVendor(JMSVendor vendor) {
-        this.vendor = vendor;
     }
 
     @SuppressWarnings("unchecked")
@@ -118,14 +135,17 @@ public abstract class InboundTransformer {
         } else {
             jms.setJMSDeliveryMode(defaultDeliveryMode);
         }
+
         if (header.getPriority() != null) {
             jms.setJMSPriority(header.getPriority().intValue());
         } else {
             jms.setJMSPriority(defaultPriority);
         }
+
         if (header.getFirstAcquirer() != null) {
             jms.setBooleanProperty(prefixVendor + "FirstAcquirer", header.getFirstAcquirer());
         }
+
         if (header.getDeliveryCount() != null) {
             vendor.setJMSXDeliveryCount(jms, header.getDeliveryCount().longValue());
         }
@@ -188,7 +208,7 @@ public abstract class InboundTransformer {
         final Properties properties = amqp.getProperties();
         if (properties != null) {
             if (properties.getMessageId() != null) {
-                jms.setJMSMessageID(properties.getMessageId().toString());
+                jms.setJMSMessageID(AMQPMessageIdHelper.INSTANCE.toBaseMessageIdString(properties.getMessageId()));
             }
             Binary userId = properties.getUserId();
             if (userId != null) {
@@ -204,7 +224,7 @@ public abstract class InboundTransformer {
                 jms.setJMSReplyTo(vendor.createDestination(properties.getReplyTo()));
             }
             if (properties.getCorrelationId() != null) {
-                jms.setJMSCorrelationID(properties.getCorrelationId().toString());
+                jms.setJMSCorrelationID(AMQPMessageIdHelper.INSTANCE.toBaseMessageIdString(properties.getCorrelationId()));
             }
             if (properties.getContentType() != null) {
                 jms.setStringProperty(prefixVendor + "ContentType", properties.getContentType().toString());
@@ -236,6 +256,7 @@ public abstract class InboundTransformer {
             if (header.getTtl() != null) {
                 ttl = header.getTtl().longValue();
             }
+
             if (ttl == 0) {
                 jms.setJMSExpiration(0);
             } else {

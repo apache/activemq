@@ -37,8 +37,9 @@ public class MultiKahaDBPendingMessageCursorTest extends
     /**
      * @param prioritizedMessages
      */
-    public MultiKahaDBPendingMessageCursorTest(boolean prioritizedMessages) {
-        super(prioritizedMessages);
+    public MultiKahaDBPendingMessageCursorTest(final boolean prioritizedMessages,
+            final boolean enableSubscriptionStatistics) {
+        super(prioritizedMessages, enableSubscriptionStatistics);
     }
 
     @Override
@@ -52,6 +53,7 @@ public class MultiKahaDBPendingMessageCursorTest extends
 
         KahaDBPersistenceAdapter kahaStore = new KahaDBPersistenceAdapter();
         kahaStore.setJournalMaxFileLength(1024 * 512);
+        kahaStore.setEnableSubscriptionStatistics(enableSubscriptionStatistics);
 
         //set up a store per destination
         FilteredKahaDBPersistenceAdapter filtered = new FilteredKahaDBPersistenceAdapter();

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -23,18 +23,21 @@ public class AutoOutboundTransformer extends JMSMappingOutboundTransformer {
 
     private final JMSMappingOutboundTransformer transformer;
 
-    public AutoOutboundTransformer(JMSVendor vendor) {
+    public AutoOutboundTransformer(ActiveMQJMSVendor vendor) {
         super(vendor);
+
         transformer = new JMSMappingOutboundTransformer(vendor);
     }
 
     @Override
     public EncodedMessage transform(Message msg) throws Exception {
-        if( msg == null )
+        if (msg == null) {
             return null;
-        if( msg.getBooleanProperty(prefixVendor + "NATIVE") ) {
-            if( msg instanceof BytesMessage ) {
-                return AMQPNativeOutboundTransformer.transform(this, (BytesMessage)msg);
+        }
+
+        if (msg.getBooleanProperty(prefixVendor + "NATIVE")) {
+            if (msg instanceof BytesMessage) {
+                return AMQPNativeOutboundTransformer.transform(this, (BytesMessage) msg);
             } else {
                 return null;
             }

@@ -160,6 +160,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
     private long warnAboutUnstartedConnectionTimeout = 500L;
     private int sendTimeout = 0;
+    private int connectResponseTimeout = 0;
     private boolean sendAcksAsync=true;
     private TransportListener transportListener;
     private ExceptionListener exceptionListener;
@@ -421,6 +422,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setConsumerExpiryCheckEnabled(isConsumerExpiryCheckEnabled());
         connection.setTrustedPackages(getTrustedPackages());
         connection.setTrustAllPackages(isTrustAllPackages());
+        connection.setConnectResponseTimeout(getConnectResponseTimeout());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -438,7 +440,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     //
     // /////////////////////////////////////////////
 
-    public String getBrokerURL() {
+	public String getBrokerURL() {
         return brokerURL == null ? null : brokerURL.toString();
     }
 
@@ -831,6 +833,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("alwaysSyncSend", Boolean.toString(isAlwaysSyncSend()));
         props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
         props.setProperty("sendTimeout", Integer.toString(getSendTimeout()));
+        props.setProperty("connectResponseTimeout", Integer.toString(getConnectResponseTimeout()));
         props.setProperty("sendAcksAsync",Boolean.toString(isSendAcksAsync()));
         props.setProperty("auditDepth", Integer.toString(getAuditDepth()));
         props.setProperty("auditMaximumProducerNumber", Integer.toString(getAuditMaximumProducerNumber()));
@@ -1275,4 +1278,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setTrustAllPackages(boolean trustAllPackages) {
         this.trustAllPackages = trustAllPackages;
     }
+
+	public int getConnectResponseTimeout() {
+		return connectResponseTimeout;
+	}
+
+	public void setConnectResponseTimeout(int connectResponseTimeout) {
+		this.connectResponseTimeout = connectResponseTimeout;
+	}
 }

@@ -34,6 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class AMQ3779Test {
@@ -44,7 +45,8 @@ public class AMQ3779Test {
     private BrokerService brokerService;
     private Appender appender;
     private final AtomicBoolean ok = new AtomicBoolean(false);
-
+    private final AtomicBoolean gotZeroSize = new AtomicBoolean(false);
+    
     @Before
     public void setUp() throws Exception {
         ok.set(false);
@@ -54,6 +56,10 @@ public class AMQ3779Test {
             public void doAppend(LoggingEvent event) {
                 if (event.getLoggerName().toString().contains(qName)) {
                     ok.set(true);
+                }
+
+                if (event.getMessage().toString().contains("Sending") && event.getMessage().toString().contains("size = 0")) {
+                    gotZeroSize.set(true);
                 }
             }
         };
@@ -100,5 +106,7 @@ public class AMQ3779Test {
         connection.close();
 
         assertTrue("got expected log message", ok.get());
+
+        assertFalse("did not get zero size in send message", gotZeroSize.get());
     }
 }

@@ -88,6 +88,8 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
 
         // Take all threads down
         executor.shutdownNow();
+
+        cf.stop();
     }
 
     static class TestRunner2 implements Callable<Boolean> {

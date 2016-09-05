@@ -19,25 +19,40 @@ package org.apache.activemq;
 import java.net.MalformedURLException;
 import java.util.Enumeration;
 
-import javax.jms.*;
+import javax.jms.BytesMessage;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.Message;
+import javax.jms.MessageEOFException;
+import javax.jms.ObjectMessage;
+import javax.jms.StreamMessage;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.blob.BlobDownloader;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQBlobMessage;
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMapMessage;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQStreamMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
 
 /**
  * A helper class for converting normal JMS interfaces into ActiveMQ specific
  * ones.
- * 
- * 
+ *
+ *
  */
 public final class ActiveMQMessageTransformation {
 
-    private ActiveMQMessageTransformation() {    
+    private ActiveMQMessageTransformation() {
     }
-    
+
     /**
      * Creates a an available JMS message from another provider.
-     * 
+     *
      * @param destination - Destination to be converted into ActiveMQ's
      *                implementation.
      * @return ActiveMQDestination - ActiveMQ's implementation of the
@@ -45,33 +60,14 @@ public final class ActiveMQMessageTransformation {
      * @throws JMSException if an error occurs
      */
     public static ActiveMQDestination transformDestination(Destination destination) throws JMSException {
-        ActiveMQDestination activeMQDestination = null;
-
-        if (destination != null) {
-            if (destination instanceof ActiveMQDestination) {
-                return (ActiveMQDestination)destination;
-
-            } else {
-                if (destination instanceof TemporaryQueue) {
-                    activeMQDestination = new ActiveMQTempQueue(((Queue)destination).getQueueName());
-                } else if (destination instanceof TemporaryTopic) {
-                    activeMQDestination = new ActiveMQTempTopic(((Topic)destination).getTopicName());
-                } else if (destination instanceof Queue) {
-                    activeMQDestination = new ActiveMQQueue(((Queue)destination).getQueueName());
-                } else if (destination instanceof Topic) {
-                    activeMQDestination = new ActiveMQTopic(((Topic)destination).getTopicName());
-                }
-            }
-        }
-
-        return activeMQDestination;
+        return ActiveMQDestination.transform(destination);
     }
 
     /**
      * Creates a fast shallow copy of the current ActiveMQMessage or creates a
      * whole new message instance from an available JMS message from another
      * provider.
-     * 
+     *
      * @param message - Message to be converted into ActiveMQ's implementation.
      * @param connection
      * @return ActiveMQMessage - ActiveMQ's implementation object of the
@@ -146,18 +142,18 @@ public final class ActiveMQMessageTransformation {
                 msg.setText(textMsg.getText());
                 activeMessage = msg;
             } else if (message instanceof BlobMessage) {
-            	BlobMessage blobMessage = (BlobMessage)message;
-            	ActiveMQBlobMessage msg = new ActiveMQBlobMessage();
-            	msg.setConnection(connection);
+                BlobMessage blobMessage = (BlobMessage)message;
+                ActiveMQBlobMessage msg = new ActiveMQBlobMessage();
+                msg.setConnection(connection);
                 if (connection != null){
-            	    msg.setBlobDownloader(new BlobDownloader(connection.getBlobTransferPolicy()));
+                    msg.setBlobDownloader(new BlobDownloader(connection.getBlobTransferPolicy()));
                 }
-            	try {
-					msg.setURL(blobMessage.getURL());
-				} catch (MalformedURLException e) {
-					
-				}
-            	activeMessage = msg;
+                try {
+                    msg.setURL(blobMessage.getURL());
+                } catch (MalformedURLException e) {
+
+                }
+                activeMessage = msg;
             } else {
                 activeMessage = new ActiveMQMessage();
                 activeMessage.setConnection(connection);
@@ -172,7 +168,7 @@ public final class ActiveMQMessageTransformation {
     /**
      * Copies the standard JMS and user defined properties from the givem
      * message to the specified message
-     * 
+     *
      * @param fromMessage the message to take the properties from
      * @param toMessage the message to add the properties to
      * @throws JMSException

@@ -227,20 +227,18 @@ public class TargetedDataFileAppender implements FileAppender {
             }
 
             // append 'unset' next batch (5 bytes) so read can always find eof
-            buff.writeInt(0);
-            buff.writeByte(0);
-
+            buff.write(Journal.EOF_RECORD);
             ByteSequence sequence = buff.toByteSequence();
 
             // Now we can fill in the batch control record properly.
             buff.reset();
             buff.skip(5 + Journal.BATCH_CONTROL_RECORD_MAGIC.length);
-            buff.writeInt(sequence.getLength() - Journal.BATCH_CONTROL_RECORD_SIZE - 5);
+            buff.writeInt(sequence.getLength() - Journal.BATCH_CONTROL_RECORD_SIZE - Journal.EOF_RECORD.length);
             if (journal.isChecksum()) {
                 Checksum checksum = new Adler32();
                 checksum.update(sequence.getData(),
                                 sequence.getOffset() + Journal.BATCH_CONTROL_RECORD_SIZE,
-                                sequence.getLength() - Journal.BATCH_CONTROL_RECORD_SIZE - 5);
+                                sequence.getLength() - Journal.BATCH_CONTROL_RECORD_SIZE - Journal.EOF_RECORD.length);
                 buff.writeLong(checksum.getValue());
             }
 

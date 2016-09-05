@@ -23,19 +23,24 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
@@ -43,13 +48,13 @@ import java.util.zip.Checksum;
 
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
-import org.apache.activemq.store.kahadb.disk.util.SchedulerTimerTask;
 import org.apache.activemq.store.kahadb.disk.util.Sequence;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +78,12 @@ public class Journal {
     public static final byte[] BATCH_CONTROL_RECORD_MAGIC = bytes("WRITE BATCH");
     public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE + BATCH_CONTROL_RECORD_MAGIC.length + 4 + 8;
     public static final byte[] BATCH_CONTROL_RECORD_HEADER = createBatchControlRecordHeader();
+    public static final byte[] EMPTY_BATCH_CONTROL_RECORD = createEmptyBatchControlRecordHeader();
+    public static final int EOF_INT = ByteBuffer.wrap(new byte[]{'-', 'q', 'M', 'a'}).getInt();
+    public static final byte EOF_EOT = '4';
+    public static final byte[] EOF_RECORD = createEofBatchAndLocationRecord();
+
+    private ScheduledExecutorService scheduler;
 
     // tackle corruption when checksum is disabled or corrupt with zeros, minimize data loss
     public void corruptRecoveryLocation(Location recoveryPosition) throws IOException {
@@ -95,6 +106,10 @@ public class Journal {
         }
     }
 
+    public DataFileAccessorPool getAccessorPool() {
+        return accessorPool;
+    }
+
     public enum PreallocationStrategy {
         SPARSE_FILE,
         OS_KERNEL_COPY,
@@ -103,7 +118,15 @@ public class Journal {
     }
 
     public enum PreallocationScope {
-        ENTIRE_JOURNAL;
+        ENTIRE_JOURNAL,
+        ENTIRE_JOURNAL_ASYNC,
+        NONE;
+    }
+
+    public enum JournalDiskSyncStrategy {
+        ALWAYS,
+        PERIODIC,
+        NEVER;
     }
 
     private static byte[] createBatchControlRecordHeader() {
@@ -119,13 +142,39 @@ public class Journal {
         }
     }
 
+    private static byte[] createEmptyBatchControlRecordHeader() {
+        try (DataByteArrayOutputStream os = new DataByteArrayOutputStream();) {
+            os.writeInt(BATCH_CONTROL_RECORD_SIZE);
+            os.writeByte(BATCH_CONTROL_RECORD_TYPE);
+            os.write(BATCH_CONTROL_RECORD_MAGIC);
+            os.writeInt(0);
+            os.writeLong(0l);
+            ByteSequence sequence = os.toByteSequence();
+            sequence.compact();
+            return sequence.getData();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create empty batch control record header.", e);
+        }
+    }
+
+    private static byte[] createEofBatchAndLocationRecord() {
+        try (DataByteArrayOutputStream os = new DataByteArrayOutputStream();) {
+            os.writeInt(EOF_INT);
+            os.writeByte(EOF_EOT);
+            ByteSequence sequence = os.toByteSequence();
+            sequence.compact();
+            return sequence.getData();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create eof header.", e);
+        }
+    }
+
     public static final String DEFAULT_DIRECTORY = ".";
     public static final String DEFAULT_ARCHIVE_DIRECTORY = "data-archive";
     public static final String DEFAULT_FILE_PREFIX = "db-";
     public static final String DEFAULT_FILE_SUFFIX = ".log";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
     public static final int DEFAULT_CLEANUP_INTERVAL = 1000 * 30;
-    public static final int PREFERED_DIFF = 1024 * 512;
     public static final int DEFAULT_MAX_WRITE_BATCH_SIZE = 1024 * 1024 * 4;
 
     private static final Logger LOG = LoggerFactory.getLogger(Journal.class);
@@ -151,18 +200,22 @@ public class Journal {
     protected LinkedNodeList<DataFile> dataFiles = new LinkedNodeList<DataFile>();
 
     protected final AtomicReference<Location> lastAppendLocation = new AtomicReference<Location>();
-    protected Runnable cleanupTask;
+    protected ScheduledFuture cleanupTask;
     protected AtomicLong totalLength = new AtomicLong();
     protected boolean archiveDataLogs;
     private ReplicationTarget replicationTarget;
     protected boolean checksum;
     protected boolean checkForCorruptionOnStartup;
     protected boolean enableAsyncDiskSync = true;
-    private Timer timer;
     private int nextDataFileId = 1;
+    private Object dataFileIdLock = new Object();
+    private final AtomicReference<DataFile> currentDataFile = new AtomicReference<>(null);
+    private volatile DataFile nextDataFile;
 
     protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
     protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
+    private File osKernelCopyTemplateFile = null;
+    protected JournalDiskSyncStrategy journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
 
     public interface DataFileRemovedListener {
         void fileRemoved(DataFile datafile);
@@ -204,12 +257,14 @@ public class Journal {
 
             // Sort the list so that we can link the DataFiles together in the
             // right order.
-            List<DataFile> l = new ArrayList<DataFile>(fileMap.values());
+            LinkedList<DataFile> l = new LinkedList<>(fileMap.values());
             Collections.sort(l);
             for (DataFile df : l) {
                 if (df.getLength() == 0) {
                     // possibly the result of a previous failed write
                     LOG.info("ignoring zero length, partially initialised journal data file: " + df);
+                    continue;
+                } else if (l.getLast().equals(df) && isUnusedPreallocated(df)) {
                     continue;
                 }
                 dataFiles.addLast(df);
@@ -221,12 +276,30 @@ public class Journal {
             }
         }
 
-        nextDataFileId = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
+        if (preallocationScope != PreallocationScope.NONE && preallocationStrategy == PreallocationStrategy.OS_KERNEL_COPY) {
+            // create a template file that will be used to pre-allocate the journal files
+            if (osKernelCopyTemplateFile == null) {
+                osKernelCopyTemplateFile = createJournalTemplateFile();
+            }
+        }
 
-        getOrCreateCurrentWriteFile();
+        scheduler = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread schedulerThread = new Thread(r);
+                schedulerThread.setName("ActiveMQ Journal Scheduled executor");
+                schedulerThread.setDaemon(true);
+                return schedulerThread;
+            }
+        });
 
-        if (preallocationStrategy != PreallocationStrategy.SPARSE_FILE && maxFileLength != DEFAULT_MAX_FILE_LENGTH) {
-            LOG.warn("You are using a preallocation strategy and journal maxFileLength which should be benchmarked accordingly to not introduce unexpected latencies.");
+        // init current write file
+        if (dataFiles.isEmpty()) {
+            nextDataFileId = 1;
+            rotateWriteFile();
+        } else {
+            currentDataFile.set(dataFiles.getTail());
+            nextDataFileId = currentDataFile.get().dataFileId + 1;
         }
 
         if( lastAppendLocation.get()==null ) {
@@ -239,23 +312,20 @@ public class Journal {
             totalLength.addAndGet(lastAppendLocation.get().getOffset() - maxFileLength);
         }
 
-        cleanupTask = new Runnable() {
+        cleanupTask = scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 cleanup();
             }
-        };
+        }, DEFAULT_CLEANUP_INTERVAL, DEFAULT_CLEANUP_INTERVAL, TimeUnit.MILLISECONDS);
 
-        this.timer = new Timer("KahaDB Scheduler", true);
-        TimerTask task = new SchedulerTimerTask(cleanupTask);
-        this.timer.scheduleAtFixedRate(task, DEFAULT_CLEANUP_INTERVAL,DEFAULT_CLEANUP_INTERVAL);
         long end = System.currentTimeMillis();
         LOG.trace("Startup took: "+(end-start)+" ms");
     }
 
     public void preallocateEntireJournalDataFile(RecoverableRandomAccessFile file) {
 
-        if (PreallocationScope.ENTIRE_JOURNAL == preallocationScope) {
+        if (PreallocationScope.NONE != preallocationScope) {
 
             if (PreallocationStrategy.OS_KERNEL_COPY == preallocationStrategy) {
                 doPreallocationKernelCopy(file);
@@ -266,58 +336,68 @@ public class Journal {
             } else {
                 doPreallocationSparseFile(file);
             }
-        } else {
-            LOG.info("Using journal preallocation scope of batch allocation");
         }
     }
 
     private void doPreallocationSparseFile(RecoverableRandomAccessFile file) {
+        final ByteBuffer journalEof = ByteBuffer.wrap(EOF_RECORD);
         try {
-            file.seek(maxFileLength - 1);
-            file.write((byte)0x00);
+            FileChannel channel = file.getChannel();
+            channel.position(0);
+            channel.write(journalEof);
+            channel.position(maxFileLength - 5);
+            journalEof.rewind();
+            channel.write(journalEof);
+            channel.force(false);
+            channel.position(0);
+        } catch (ClosedByInterruptException ignored) {
+            LOG.trace("Could not preallocate journal file with sparse file", ignored);
         } catch (IOException e) {
-            LOG.error("Could not preallocate journal file with sparse file! Will continue without preallocation", e);
+            LOG.error("Could not preallocate journal file with sparse file", e);
         }
     }
 
     private void doPreallocationZeros(RecoverableRandomAccessFile file) {
         ByteBuffer buffer = ByteBuffer.allocate(maxFileLength);
-
+        buffer.put(EOF_RECORD);
+        buffer.rewind();
         try {
             FileChannel channel = file.getChannel();
             channel.write(buffer);
             channel.force(false);
             channel.position(0);
+        } catch (ClosedByInterruptException ignored) {
+            LOG.trace("Could not preallocate journal file with zeros", ignored);
         } catch (IOException e) {
-            LOG.error("Could not preallocate journal file with zeros! Will continue without preallocation", e);
+            LOG.error("Could not preallocate journal file with zeros", e);
         }
     }
 
     private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
-        // create a template file that will be used to pre-allocate the journal files
-        File templateFile = createJournalTemplateFile();
-
-        RandomAccessFile templateRaf = null;
         try {
-            templateRaf = new RandomAccessFile(templateFile, "rw");
-            templateRaf.setLength(maxFileLength);
-            templateRaf.getChannel().force(true);
+            RandomAccessFile templateRaf = new RandomAccessFile(osKernelCopyTemplateFile, "rw");
             templateRaf.getChannel().transferTo(0, getMaxFileLength(), file.getChannel());
             templateRaf.close();
-            templateFile.delete();
+        } catch (ClosedByInterruptException ignored) {
+            LOG.trace("Could not preallocate journal file with kernel copy", ignored);
         } catch (FileNotFoundException e) {
-            LOG.error("Could not find the template file on disk at " + templateFile.getAbsolutePath(), e);
+            LOG.error("Could not find the template file on disk at " + osKernelCopyTemplateFile.getAbsolutePath(), e);
         } catch (IOException e) {
-            LOG.error("Could not transfer the template file to journal, transferFile=" + templateFile.getAbsolutePath(), e);
+            LOG.error("Could not transfer the template file to journal, transferFile=" + osKernelCopyTemplateFile.getAbsolutePath(), e);
         }
     }
 
     private File createJournalTemplateFile() {
         String fileName = "db-log.template";
         File rc = new File(directory, fileName);
-        if (rc.exists()) {
-            LOG.trace("deleting journal template file because it already exists...");
-            rc.delete();
+        try (RandomAccessFile templateRaf = new RandomAccessFile(rc, "rw");) {
+            templateRaf.getChannel().write(ByteBuffer.wrap(EOF_RECORD));
+            templateRaf.setLength(maxFileLength);
+            templateRaf.getChannel().force(true);
+        } catch (FileNotFoundException e) {
+            LOG.error("Could not find the template file on disk at " + osKernelCopyTemplateFile.getAbsolutePath(), e);
+        } catch (IOException e) {
+            LOG.error("Could not transfer the template file to journal, transferFile=" + osKernelCopyTemplateFile.getAbsolutePath(), e);
         }
         return rc;
     }
@@ -325,6 +405,8 @@ public class Journal {
     private void doPreallocationChunkedZeros(RecoverableRandomAccessFile file) {
 
         ByteBuffer buffer = ByteBuffer.allocate(PREALLOC_CHUNK_SIZE);
+        buffer.put(EOF_RECORD);
+        buffer.rewind();
 
         try {
             FileChannel channel = file.getChannel();
@@ -341,6 +423,8 @@ public class Journal {
 
             channel.force(false);
             channel.position(0);
+        } catch (ClosedByInterruptException ignored) {
+            LOG.trace("Could not preallocate journal file with zeros", ignored);
         } catch (IOException e) {
             LOG.error("Could not preallocate journal file with zeros! Will continue without preallocation", e);
         }
@@ -354,6 +438,24 @@ public class Journal {
         }
     }
 
+    public boolean isUnusedPreallocated(DataFile dataFile) throws IOException {
+        int firstBatchRecordSize = -1;
+        if (preallocationScope == PreallocationScope.ENTIRE_JOURNAL_ASYNC) {
+            Location location = new Location();
+            location.setDataFileId(dataFile.getDataFileId());
+            location.setOffset(0);
+
+            DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
+            try {
+                firstBatchRecordSize = checkBatchRecord(reader, location.getOffset());
+            } catch (Exception ignored) {
+            } finally {
+                accessorPool.closeDataFileAccessor(reader);
+            }
+        }
+        return firstBatchRecordSize == 0;
+    }
+
     protected Location recoveryCheck(DataFile dataFile) throws IOException {
         Location location = new Location();
         location.setDataFileId(dataFile.getDataFileId());
@@ -364,6 +466,10 @@ public class Journal {
             while (true) {
                 int size = checkBatchRecord(reader, location.getOffset());
                 if (size >= 0 && location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size <= dataFile.getLength()) {
+                    if (size == 0) {
+                        // eof batch record
+                        break;
+                    }
                     location.setOffset(location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size);
                 } else {
 
@@ -433,6 +539,12 @@ public class Journal {
 
             reader.readFully(offset, controlRecord);
 
+            // check for journal eof
+            if (Arrays.equals(EOF_RECORD, Arrays.copyOfRange(controlRecord, 0, EOF_RECORD.length))) {
+                // eof batch
+                return 0;
+            }
+
             // Assert that it's a batch record.
             for (int i = 0; i < BATCH_CONTROL_RECORD_HEADER.length; i++) {
                 if (controlIs.readByte() != BATCH_CONTROL_RECORD_HEADER[i]) {
@@ -476,42 +588,67 @@ public class Journal {
         return totalLength.get();
     }
 
-    synchronized DataFile getOrCreateCurrentWriteFile() throws IOException {
-        if (dataFiles.isEmpty()) {
-            rotateWriteFile();
+    private void rotateWriteFile() throws IOException {
+       synchronized (dataFileIdLock) {
+            DataFile dataFile = nextDataFile;
+            if (dataFile == null) {
+                dataFile = newDataFile();
+            }
+            synchronized (currentDataFile) {
+                fileMap.put(dataFile.getDataFileId(), dataFile);
+                fileByFileMap.put(dataFile.getFile(), dataFile);
+                dataFiles.addLast(dataFile);
+                currentDataFile.set(dataFile);
+            }
+            nextDataFile = null;
         }
-
-        DataFile current = dataFiles.getTail();
-
-        if (current != null) {
-            return current;
-        } else {
-            return rotateWriteFile();
+        if (PreallocationScope.ENTIRE_JOURNAL_ASYNC == preallocationScope) {
+            preAllocateNextDataFileFuture = scheduler.submit(preAllocateNextDataFileTask);
         }
     }
 
-    synchronized DataFile rotateWriteFile() {
+    private Runnable preAllocateNextDataFileTask = new Runnable() {
+        @Override
+        public void run() {
+            if (nextDataFile == null) {
+                synchronized (dataFileIdLock){
+                    try {
+                        nextDataFile = newDataFile();
+                    } catch (IOException e) {
+                        LOG.warn("Failed to proactively allocate data file", e);
+                    }
+                }
+            }
+        }
+    };
+
+    private volatile Future preAllocateNextDataFileFuture;
+
+    private DataFile newDataFile() throws IOException {
         int nextNum = nextDataFileId++;
         File file = getFile(nextNum);
         DataFile nextWriteFile = new DataFile(file, nextNum);
-        fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
-        fileByFileMap.put(file, nextWriteFile);
-        dataFiles.addLast(nextWriteFile);
+        preallocateEntireJournalDataFile(nextWriteFile.appendRandomAccessFile());
         return nextWriteFile;
     }
 
-    public synchronized DataFile reserveDataFile() {
-        int nextNum = nextDataFileId++;
-        File file = getFile(nextNum);
-        DataFile reservedDataFile = new DataFile(file, nextNum);
-        fileMap.put(reservedDataFile.getDataFileId(), reservedDataFile);
-        fileByFileMap.put(file, reservedDataFile);
-        if (dataFiles.isEmpty()) {
-            dataFiles.addLast(reservedDataFile);
-        } else {
-            dataFiles.getTail().linkBefore(reservedDataFile);
+
+    public DataFile reserveDataFile() {
+        synchronized (dataFileIdLock) {
+            int nextNum = nextDataFileId++;
+            File file = getFile(nextNum);
+            DataFile reservedDataFile = new DataFile(file, nextNum);
+            synchronized (currentDataFile) {
+                fileMap.put(reservedDataFile.getDataFileId(), reservedDataFile);
+                fileByFileMap.put(file, reservedDataFile);
+                if (dataFiles.isEmpty()) {
+                    dataFiles.addLast(reservedDataFile);
+                } else {
+                    dataFiles.getTail().linkBefore(reservedDataFile);
+                }
+            }
+            return reservedDataFile;
         }
-        return reservedDataFile;
     }
 
     public File getFile(int nextNum) {
@@ -520,9 +657,12 @@ public class Journal {
         return file;
     }
 
-    synchronized DataFile getDataFile(Location item) throws IOException {
+    DataFile getDataFile(Location item) throws IOException {
         Integer key = Integer.valueOf(item.getDataFileId());
-        DataFile dataFile = fileMap.get(key);
+        DataFile dataFile = null;
+        synchronized (currentDataFile) {
+            dataFile = fileMap.get(key);
+        }
         if (dataFile == null) {
             LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
             throw new IOException("Could not locate data file " + getFile(item.getDataFileId()));
@@ -530,29 +670,21 @@ public class Journal {
         return dataFile;
     }
 
-    synchronized File getFile(Location item) throws IOException {
-        Integer key = Integer.valueOf(item.getDataFileId());
-        DataFile dataFile = fileMap.get(key);
-        if (dataFile == null) {
-            LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
-            throw new IOException("Could not locate data file " + getFile(item.getDataFileId()));
-        }
-        return dataFile.getFile();
-    }
-
     public void close() throws IOException {
         synchronized (this) {
             if (!started) {
                 return;
             }
-            if (this.timer != null) {
-                this.timer.cancel();
+            cleanupTask.cancel(true);
+            if (preAllocateNextDataFileFuture != null) {
+                preAllocateNextDataFileFuture.cancel(true);
             }
+            ThreadPoolUtils.shutdownGraceful(scheduler, 4000);
             accessorPool.close();
         }
         // the appender can be calling back to to the journal blocking a close AMQ-5620
         appender.close();
-        synchronized (this) {
+        synchronized (currentDataFile) {
             fileMap.clear();
             fileByFileMap.clear();
             dataFiles.clear();
@@ -561,7 +693,7 @@ public class Journal {
         }
     }
 
-    protected synchronized void cleanup() {
+    public synchronized void cleanup() {
         if (accessorPool != null) {
             accessorPool.disposeUnused();
         }
@@ -579,37 +711,52 @@ public class Journal {
             result &= dataFile.delete();
         }
 
-        totalLength.set(0);
-        fileMap.clear();
-        fileByFileMap.clear();
-        lastAppendLocation.set(null);
-        dataFiles = new LinkedNodeList<DataFile>();
+        if (preAllocateNextDataFileFuture != null) {
+            preAllocateNextDataFileFuture.cancel(true);
+        }
+        synchronized (dataFileIdLock) {
+            if (nextDataFile != null) {
+                nextDataFile.delete();
+                nextDataFile = null;
+            }
+        }
 
+        totalLength.set(0);
+        synchronized (currentDataFile) {
+            fileMap.clear();
+            fileByFileMap.clear();
+            lastAppendLocation.set(null);
+            dataFiles = new LinkedNodeList<DataFile>();
+        }
         // reopen open file handles...
         accessorPool = new DataFileAccessorPool(this);
         appender = new DataFileAppender(this);
         return result;
     }
 
-    public synchronized void removeDataFiles(Set<Integer> files) throws IOException {
+    public void removeDataFiles(Set<Integer> files) throws IOException {
         for (Integer key : files) {
             // Can't remove the data file (or subsequent files) that is currently being written to.
             if (key >= lastAppendLocation.get().getDataFileId()) {
                 continue;
             }
-            DataFile dataFile = fileMap.get(key);
+            DataFile dataFile = null;
+            synchronized (currentDataFile) {
+                dataFile = fileMap.remove(key);
+                if (dataFile != null) {
+                    fileByFileMap.remove(dataFile.getFile());
+                    dataFile.unlink();
+                }
+            }
             if (dataFile != null) {
                 forceRemoveDataFile(dataFile);
             }
         }
     }
 
-    private synchronized void forceRemoveDataFile(DataFile dataFile) throws IOException {
+    private void forceRemoveDataFile(DataFile dataFile) throws IOException {
         accessorPool.disposeDataFileAccessors(dataFile);
-        fileByFileMap.remove(dataFile.getFile());
-        fileMap.remove(dataFile.getDataFileId());
         totalLength.addAndGet(-dataFile.getLength());
-        dataFile.unlink();
         if (archiveDataLogs) {
             File directoryArchive = getDirectoryArchive();
             if (directoryArchive.exists()) {
@@ -657,13 +804,15 @@ public class Journal {
         return directory.toString();
     }
 
-    public synchronized Location getNextLocation(Location location) throws IOException, IllegalStateException {
-
+    public Location getNextLocation(Location location) throws IOException, IllegalStateException {
         Location cur = null;
         while (true) {
             if (cur == null) {
                 if (location == null) {
-                    DataFile head = dataFiles.getHead();
+                    DataFile head = null;
+                    synchronized (currentDataFile) {
+                        head = dataFiles.getHead();
+                    }
                     if (head == null) {
                         return null;
                     }
@@ -687,7 +836,9 @@ public class Journal {
 
             // Did it go into the next file??
             if (dataFile.getLength() <= cur.getOffset()) {
-                dataFile = dataFile.getNext();
+                synchronized (currentDataFile) {
+                    dataFile = dataFile.getNext();
+                }
                 if (dataFile == null) {
                     return null;
                 } else {
@@ -708,9 +859,14 @@ public class Journal {
             if (corruptedRange != null) {
                 // skip corruption
                 cur.setSize((int) corruptedRange.range());
-            } else if (cur.getType() == 0) {
+            } else if (cur.getSize() == EOF_INT && cur.getType() == EOF_EOT ||
+                    (cur.getType() == 0 && cur.getSize() == 0)) {
                 // eof - jump to next datafile
-                cur.setOffset(maxFileLength);
+                // EOF_INT and EOF_EOT replace 0,0 - we need to react to both for
+                // replay of existing journals
+                // possibly journal is larger than maxFileLength after config change
+                cur.setSize(EOF_RECORD.length);
+                cur.setOffset(Math.max(maxFileLength, dataFile.getLength()));
             } else if (cur.getType() == USER_RECORD_TYPE) {
                 // Only return user records.
                 return cur;
@@ -718,7 +874,7 @@ public class Journal {
         }
     }
 
-    public synchronized ByteSequence read(Location location) throws IOException, IllegalStateException {
+    public ByteSequence read(Location location) throws IOException, IllegalStateException {
         DataFile dataFile = getDataFile(location);
         DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         ByteSequence rc = null;
@@ -816,34 +972,24 @@ public class Journal {
         this.archiveDataLogs = archiveDataLogs;
     }
 
-    public synchronized DataFile getDataFileById(int dataFileId) {
-        if (dataFiles.isEmpty()) {
-            return null;
-        }
-
-        return fileMap.get(Integer.valueOf(dataFileId));
-    }
-
-    public synchronized DataFile getCurrentDataFile() {
-        if (dataFiles.isEmpty()) {
-            return null;
-        }
-
-        DataFile current = dataFiles.getTail();
-
-        if (current != null) {
-            return current;
-        } else {
-            return null;
+    public DataFile getDataFileById(int dataFileId) {
+        synchronized (currentDataFile) {
+            return fileMap.get(Integer.valueOf(dataFileId));
         }
     }
 
-    public synchronized Integer getCurrentDataFileId() {
-        DataFile current = getCurrentDataFile();
-        if (current != null) {
-            return current.getDataFileId();
-        } else {
-            return null;
+    public DataFile getCurrentDataFile(int capacity) throws IOException {
+        synchronized (currentDataFile) {
+            if (currentDataFile.get().getLength() + capacity >= maxFileLength) {
+                rotateWriteFile();
+            }
+            return currentDataFile.get();
+        }
+    }
+
+    public Integer getCurrentDataFileId() {
+        synchronized (currentDataFile) {
+            return currentDataFile.get().getDataFileId();
         }
     }
 
@@ -853,11 +999,15 @@ public class Journal {
      * @return files currently being used
      */
     public Set<File> getFiles() {
-        return fileByFileMap.keySet();
+        synchronized (currentDataFile) {
+            return fileByFileMap.keySet();
+        }
     }
 
-    public synchronized Map<Integer, DataFile> getFileMap() {
-        return new TreeMap<Integer, DataFile>(fileMap);
+    public Map<Integer, DataFile> getFileMap() {
+        synchronized (currentDataFile) {
+            return new TreeMap<Integer, DataFile>(fileMap);
+        }
     }
 
     public long getDiskSize() {
@@ -914,6 +1064,18 @@ public class Journal {
 
     public boolean isEnableAsyncDiskSync() {
         return enableAsyncDiskSync;
+    }
+
+    public JournalDiskSyncStrategy getJournalDiskSyncStrategy() {
+        return journalDiskSyncStrategy;
+    }
+
+    public void setJournalDiskSyncStrategy(JournalDiskSyncStrategy journalDiskSyncStrategy) {
+        this.journalDiskSyncStrategy = journalDiskSyncStrategy;
+    }
+
+    public boolean isJournalDiskSyncPeriodic() {
+        return JournalDiskSyncStrategy.PERIODIC.equals(journalDiskSyncStrategy);
     }
 
     public void setDataFileRemovedListener(DataFileRemovedListener dataFileRemovedListener) {

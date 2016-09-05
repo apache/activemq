@@ -31,27 +31,38 @@ public abstract class TransportBrokerTestSupport extends BrokerTest {
     protected TransportConnector connector;
     private ArrayList<StubConnection> connections = new ArrayList<StubConnection>();
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService service = super.createBroker();
         connector = service.addConnector(getBindLocation());
         return service;
     }
-    
+
     protected abstract String getBindLocation();
 
+    @Override
     protected void tearDown() throws Exception {
         for (Iterator<StubConnection> iter = connections.iterator(); iter.hasNext();) {
-            StubConnection connection = iter.next();
-            connection.stop();
-            iter.remove();
+            try {
+                StubConnection connection = iter.next();
+                connection.stop();
+                iter.remove();
+            } catch (Exception ex) {
+            }
         }
-        if( connector!=null ) {
-            connector.stop();
+
+        if (connector != null) {
+            try {
+                connector.stop();
+            } catch (Exception ex) {
+            }
         }
+
         super.tearDown();
     }
 
@@ -59,12 +70,13 @@ public abstract class TransportBrokerTestSupport extends BrokerTest {
         return new URI(getBindLocation());
     }
 
+    @Override
     protected StubConnection createConnection() throws Exception {
         URI bindURI = getBindURI();
-        
+
         // Note: on platforms like OS X we cannot bind to the actual hostname, so we
-        // instead use the original host name (typically localhost) to bind to 
-        
+        // instead use the original host name (typically localhost) to bind to
+
         URI actualURI = connector.getServer().getConnectURI();
         URI connectURI = new URI(actualURI.getScheme(), actualURI.getUserInfo(), bindURI.getHost(), actualURI.getPort(), actualURI.getPath(), bindURI
                 .getQuery(), bindURI.getFragment());

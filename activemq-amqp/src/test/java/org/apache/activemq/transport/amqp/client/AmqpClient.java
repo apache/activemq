@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.activemq.transport.amqp.client.transport.NettyTransport;
 import org.apache.activemq.transport.amqp.client.transport.NettyTransportFactory;
+import org.apache.activemq.transport.amqp.client.transport.NettyTransport;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

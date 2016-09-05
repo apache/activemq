@@ -34,6 +34,7 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,6 +56,18 @@ public class PooledConnectionFailoverTest extends JmsPoolTestSupport {
         pooledConnFact.setConnectionFactory(directConnFact);
         pooledConnFact.setMaxConnections(1);
         pooledConnFact.setReconnectOnException(true);
+    }
+
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        try {
+            pooledConnFact.stop();
+        } catch (Exception ex) {
+            // ignored
+        }
+
+        super.tearDown();
     }
 
     @Test

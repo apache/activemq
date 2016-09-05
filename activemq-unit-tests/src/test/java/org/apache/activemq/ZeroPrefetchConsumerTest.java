@@ -336,6 +336,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         MessageConsumer consumer = session.createConsumer(brokerZeroQueue);
 
         TextMessage answer = (TextMessage)consumer.receive(5000);
+        assertNotNull("Consumer should have read a message", answer);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
     }
 
@@ -393,12 +394,14 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
     @Override
     protected void tearDown() throws Exception {
-        connection.close();
+        try {
+            connection.close();
+        } catch (Exception ex) {}
+
         super.tearDown();
     }
 
     protected Queue createQueue() {
         return new ActiveMQQueue(getDestinationString() + "?consumer.prefetchSize=0");
     }
-
 }

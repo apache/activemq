@@ -111,7 +111,7 @@ public class AmqpTransactionContext {
                     }
                 }
 
-                session.pumpToProtonTransport();
+                session.pumpToProtonTransport(request);
             }
         });
 
@@ -153,7 +153,7 @@ public class AmqpTransactionContext {
                 try {
                     LOG.info("Attempting to commit TX:[{}]", transactionId);
                     coordinator.discharge(transactionId, request, true);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(request);
                 } catch (Exception e) {
                     request.onFailure(e);
                 }
@@ -198,7 +198,7 @@ public class AmqpTransactionContext {
                 try {
                     LOG.info("Attempting to roll back TX:[{}]", transactionId);
                     coordinator.discharge(transactionId, request, false);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(request);
                 } catch (Exception e) {
                     request.onFailure(e);
                 }

@@ -33,14 +33,16 @@ public class MultiKahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDis
     private final boolean concurrentDispatch;
     private static boolean[] concurrentDispatchVals = booleanVals;
 
-      @Parameters(name="Type:{0}; ReduceMemoryFootPrint:{1}; ConcurrentDispatch:{2}")
+      @Parameters(name="Type:{0}; ReduceMemoryFootPrint:{1}; ConcurrentDispatch:{2}; UseTopic:{3}")
       public static Collection<Object[]> data() {
           List<Object[]> values = new ArrayList<>();
 
           for (MessageType mt : MessageType.values()) {
               for (boolean rmfVal : reduceMemoryFootPrintVals) {
                   for (boolean cdVal : concurrentDispatchVals) {
-                      values.add(new Object[] {mt, rmfVal, cdVal});
+                      for (boolean tpVal : useTopicVals) {
+                          values.add(new Object[] {mt, rmfVal, cdVal, tpVal});
+                      }
                   }
               }
           }
@@ -54,8 +56,8 @@ public class MultiKahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDis
      * @param concurrentDispatch
      */
     public MultiKahaDbVmConcurrentDispatchTest(MessageType messageType, boolean reduceMemoryFootPrint,
-            boolean concurrentDispatch) {
-        super(messageType, reduceMemoryFootPrint);
+            boolean concurrentDispatch, boolean useTopic) {
+        super(messageType, reduceMemoryFootPrint, useTopic);
         this.concurrentDispatch = concurrentDispatch;
     }
 
@@ -66,7 +68,11 @@ public class MultiKahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDis
         persistenceAdapter.setDirectory(dataFileDir.getRoot());
 
         KahaDBPersistenceAdapter kahaStore = new KahaDBPersistenceAdapter();
-        kahaStore.setConcurrentStoreAndDispatchQueues(concurrentDispatch);
+        if (useTopic) {
+            kahaStore.setConcurrentStoreAndDispatchTopics(concurrentDispatch);
+        } else {
+            kahaStore.setConcurrentStoreAndDispatchQueues(concurrentDispatch);
+        }
 
         FilteredKahaDBPersistenceAdapter filtered = new FilteredKahaDBPersistenceAdapter();
         filtered.setPersistenceAdapter(kahaStore);

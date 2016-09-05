@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -36,6 +37,7 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 
 public abstract class AbstractMQTTSocket extends TransportSupport implements MQTTTransport, BrokerServiceAware {
 
+    protected ReentrantLock protocolLock = new ReentrantLock();
     protected volatile MQTTProtocolConverter protocolConverter = null;
     protected MQTTWireFormat wireFormat = new MQTTWireFormat();
     protected final MQTTInactivityMonitor mqttInactivityMonitor = new MQTTInactivityMonitor(this, wireFormat);
@@ -53,16 +55,24 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
 
     @Override
     public void oneway(Object command) throws IOException {
+        protocolLock.lock();
         try {
             getProtocolConverter().onActiveMQCommand((Command)command);
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
+        } finally {
+            protocolLock.unlock();
         }
     }
 
     @Override
     public void sendToActiveMQ(Command command) {
-        doConsume(command);
+        protocolLock.lock();
+        try {
+            doConsume(command);
+        } finally {
+            protocolLock.unlock();
+        }
     }
 
     @Override

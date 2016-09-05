@@ -16,13 +16,15 @@
  */
 package org.apache.activemq.util;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.net.ServerSocketFactory;
+import javax.transaction.xa.Xid;
 
 public class TestUtils {
 
@@ -65,4 +67,32 @@ public class TestUtils {
 
         return ports;
     }
+
+    private static AtomicLong txGenerator = new AtomicLong(System.currentTimeMillis());
+    public static Xid createXid() throws IOException {
+
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(baos);
+        os.writeLong(txGenerator.incrementAndGet());
+        os.close();
+        final byte[] bs = baos.toByteArray();
+
+        return new Xid() {
+            @Override
+            public int getFormatId() {
+                return 86;
+            }
+
+            @Override
+            public byte[] getGlobalTransactionId() {
+                return bs;
+            }
+
+            @Override
+            public byte[] getBranchQualifier() {
+                return bs;
+            }
+        };
+    }
+
 }

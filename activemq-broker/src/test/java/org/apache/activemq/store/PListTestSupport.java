@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class PListTestSupport {
     static final Logger LOG = LoggerFactory.getLogger(PListTestSupport.class);
-    private PListStore store;
+    protected PListStore store;
     private PList plist;
     final ByteSequence payload = new ByteSequence(new byte[400]);
     final String idSeed = new String("Seed" + new byte[1024]);
@@ -253,7 +253,7 @@ public abstract class PListTestSupport {
                          synchronized (plistLocks(candidate)) {
                              Object last = candidate.addLast(String.valueOf(i), payload);
                              getFirst(candidate);
-                            assertTrue(candidate.remove(last));
+                             assertTrue(candidate.remove(last));
                          }
                     }
                 } catch (Exception error) {
@@ -273,7 +273,8 @@ public abstract class PListTestSupport {
         executor.execute(new B());
 
         executor.shutdown();
-        boolean finishedInTime = executor.awaitTermination(30, TimeUnit.SECONDS);
+        boolean finishedInTime = executor.awaitTermination(5, TimeUnit.MINUTES);
+        LOG.info("Tested completion finished in time? -> {}", finishedInTime ? "YES" : "NO");
 
         assertTrue("no exceptions", exceptions.isEmpty());
         assertTrue("finished ok", finishedInTime);

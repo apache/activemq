@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.util.ByteSequence;

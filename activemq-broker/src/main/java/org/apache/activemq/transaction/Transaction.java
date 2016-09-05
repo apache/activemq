@@ -24,7 +24,10 @@ import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import javax.jms.TransactionRolledBackException;
 import javax.transaction.xa.XAException;
+
+import org.apache.activemq.TransactionContext;
 import org.apache.activemq.command.TransactionId;
 import org.slf4j.Logger;
 
@@ -41,6 +44,7 @@ public abstract class Transaction {
     public static final byte PREPARED_STATE = 2; // can go to: 3
     public static final byte FINISHED_STATE = 3;
     boolean committed = false;
+    boolean rollbackOnly = false;
 
     private final ArrayList<Synchronization> synchronizations = new ArrayList<Synchronization>();
     private byte state = START_STATE;
@@ -103,16 +107,16 @@ public abstract class Transaction {
         case IN_USE_STATE:
             break;
         default:
-            XAException xae = new XAException("Prepare cannot be called now.");
-            xae.errorCode = XAException.XAER_PROTO;
+            XAException xae = newXAException("Prepare cannot be called now", XAException.XAER_PROTO);
             throw xae;
         }
 
-        // // Run the prePrepareTasks
-        // for (Iterator iter = prePrepareTasks.iterator(); iter.hasNext();) {
-        // Callback r = (Callback) iter.next();
-        // r.execute();
-        // }
+        if (rollbackOnly) {
+            XAException xae = newXAException("COMMIT FAILED: Transaction marked rollback only", XAException.XA_RBROLLBACK);
+            TransactionRolledBackException transactionRolledBackException = new TransactionRolledBackException(xae.getLocalizedMessage());
+            xae.initCause(transactionRolledBackException);
+            throw xae;
+        }
     }
     
     protected void fireBeforeCommit() throws Exception {
@@ -184,8 +188,7 @@ public abstract class Transaction {
             // I guess this could happen. Post commit task failed
             // to execute properly.
             getLog().warn("PRE COMMIT FAILED: ", e);
-            XAException xae = new XAException("PRE COMMIT FAILED");
-            xae.errorCode = XAException.XAER_RMERR;
+            XAException xae = newXAException("PRE COMMIT FAILED", XAException.XAER_RMERR);
             xae.initCause(e);
             throw xae;
         }
@@ -199,10 +202,27 @@ public abstract class Transaction {
             // I guess this could happen. Post commit task failed
             // to execute properly.
             getLog().warn("POST COMMIT FAILED: ", e);
-            XAException xae = new XAException("POST COMMIT FAILED");
-            xae.errorCode = XAException.XAER_RMERR;
+            XAException xae = newXAException("POST COMMIT FAILED",  XAException.XAER_RMERR);
             xae.initCause(e);
             throw xae;
         }
     }
+
+    public static XAException newXAException(String s, int errorCode) {
+        XAException xaException = new XAException(s + " " + TransactionContext.xaErrorCodeMarker + errorCode);
+        xaException.errorCode = errorCode;
+        return xaException;
+    }
+
+    public void setRollbackOnly(Throwable cause) {
+        if (!rollbackOnly) {
+            getLog().trace("setting rollback only, cause:", cause);
+            rollbackOnly = true;
+        }
+    }
+
+    public boolean isRollbackOnly() {
+        return rollbackOnly;
+    }
+
 }

@@ -57,10 +57,11 @@ public class PooledConnectionTest extends JmsPoolTestSupport {
             conn.setClientID("newID");
             conn.start();
             conn.close();
-            cf = null;
         } catch (IllegalStateException ise) {
             LOG.error("Repeated calls to ActiveMQConnection.setClientID(\"newID\") caused " + ise.getMessage());
             fail("Repeated calls to ActiveMQConnection.setClientID(\"newID\") caused " + ise.getMessage());
+        } finally {
+            ((PooledConnectionFactory) cf).stop();
         }
 
         // 2nd test: call setClientID() twice with different IDs
@@ -76,6 +77,7 @@ public class PooledConnectionTest extends JmsPoolTestSupport {
             LOG.debug("Correctly received " + ise);
         } finally {
             conn.close();
+            ((PooledConnectionFactory) cf).stop();
         }
 
         // 3rd test: try to call setClientID() after start()
@@ -90,6 +92,7 @@ public class PooledConnectionTest extends JmsPoolTestSupport {
             LOG.debug("Correctly received " + ise);
         } finally {
             conn.close();
+            ((PooledConnectionFactory) cf).stop();
         }
 
         LOG.debug("Test finished.");

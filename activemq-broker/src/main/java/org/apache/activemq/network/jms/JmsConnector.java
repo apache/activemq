@@ -593,7 +593,9 @@ public abstract class JmsConnector implements Service {
         do {
             if (attempt > 0) {
                 try {
-                    Thread.sleep(policy.getNextDelay(attempt));
+                    long nextDelay = policy.getNextDelay(attempt);
+                    LOG.debug("Bridge reconnect attempt {} waiting {}ms before next attempt.", attempt, nextDelay);
+                    Thread.sleep(nextDelay);
                 } catch(InterruptedException e) {
                 }
             }
@@ -625,9 +627,11 @@ public abstract class JmsConnector implements Service {
                 return;
             } catch(Exception e) {
                 LOG.debug("Failed to establish initial {} connection for JmsConnector [{}]", new Object[]{ (local ? "local" : "foreign"), attempt }, e);
+            } finally {
+                attempt++;
             }
         }
-        while ((maxRetries == INFINITE || maxRetries > ++attempt) && !connectionService.isShutdown());
+        while ((maxRetries == INFINITE || maxRetries > attempt) && !connectionService.isShutdown());
 
         this.failed.set(true);
     }

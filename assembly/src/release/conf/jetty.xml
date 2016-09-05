@@ -67,11 +67,6 @@
 					<property name="resourceBase" value="${activemq.home}/webapps/admin" />
 					<property name="logUrlOnStart" value="true" />
 				</bean>
-				<!-- Enable embedded file server for Blob messages -->
-				<!-- <bean class="org.eclipse.jetty.webapp.WebAppContext"> <property name="contextPath" 
-					value="/fileserver" /> <property name="resourceBase" value="${activemq.home}/webapps/fileserver" 
-					/> <property name="logUrlOnStart" value="true" /> <property name="parentLoaderPriority" 
-					value="true" /> </bean> -->
 				<bean class="org.eclipse.jetty.webapp.WebAppContext">
 					<property name="contextPath" value="/api" />
 					<property name="resourceBase" value="${activemq.home}/webapps/api" />

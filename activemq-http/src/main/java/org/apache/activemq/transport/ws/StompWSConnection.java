@@ -129,10 +129,6 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
         }
     }
 
-
-    /* (non-Javadoc)
-     * @see org.eclipse.jetty.websocket.api.WebSocketListener#onWebSocketClose(int, java.lang.String)
-     */
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         LOG.trace("STOMP WS Connection closed, code:{} message:{}", statusCode, reason);
@@ -140,15 +136,10 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
         this.connection = null;
         this.closeCode = statusCode;
         this.closeMessage = reason;
-
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jetty.websocket.api.WebSocketListener#onWebSocketConnect(org.eclipse.jetty.websocket.api.Session)
-     */
     @Override
-    public void onWebSocketConnect(
-            org.eclipse.jetty.websocket.api.Session session) {
+    public void onWebSocketConnect(org.eclipse.jetty.websocket.api.Session session) {
         this.connection = session;
         this.connectLatch.countDown();
     }

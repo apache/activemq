@@ -735,19 +735,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public boolean isExpired(MessageReference messageReference) {
-        boolean expired = false;
-        if (messageReference.isExpired()) {
-            try {
-                // prevent duplicate expiry processing
-                Message message = messageReference.getMessage();
-                synchronized (message) {
-                    expired = stampAsExpired(message);
-                }
-            } catch (IOException e) {
-                LOG.warn("unexpected exception on message expiry determination for: {}", messageReference, e);
-            }
-        }
-        return expired;
+        return messageReference.canProcessAsExpired();
     }
 
     private boolean stampAsExpired(Message message) throws IOException {

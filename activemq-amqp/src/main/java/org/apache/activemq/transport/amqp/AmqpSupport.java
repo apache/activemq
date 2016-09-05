@@ -51,6 +51,7 @@ public class AmqpSupport {
 
     // Symbols used to announce connection information to remote peer.
     public static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
+    public static final Symbol DELAYED_DELIVERY = Symbol.valueOf("DELAYED_DELIVERY");
     public static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
     public static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");
     public static final Symbol CONNECTION_OPEN_FAILED = Symbol.valueOf("amqp:connection-establishment-failed");
@@ -102,7 +103,7 @@ public class AmqpSupport {
     public static Map.Entry<Symbol, DescribedType> findFilter(Map<Symbol, Object> filters, Object[] filterIds) {
 
         if (filterIds == null || filterIds.length == 0) {
-            throw new IllegalArgumentException("Invalid Filter Ids array passed: " + filterIds);
+            throw new IllegalArgumentException("Invalid empty Filter Ids array passed: ");
         }
 
         if (filters == null || filters.isEmpty()) {

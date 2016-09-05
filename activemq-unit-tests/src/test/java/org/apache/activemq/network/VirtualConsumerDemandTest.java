@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
@@ -39,6 +40,7 @@ import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.virtual.CompositeQueue;
@@ -240,9 +242,18 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
      */
     @Test(timeout = 60 * 1000)
     public void testDynamicFlow() throws Exception {
+        testDynamicFlow(false);
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testDynamicFlowForceDurable() throws Exception {
+        testDynamicFlow(true);
+    }
+
+    protected void testDynamicFlow(boolean forceDurable) throws Exception {
         Assume.assumeTrue(isUseVirtualDestSubsOnCreation);
 
-        doSetUp(true, null);
+        doSetUp(true, null, true, forceDurable);
 
         MessageConsumer advisoryConsumer = getVirtualDestinationAdvisoryConsumer(testTopicName);
 
@@ -262,6 +273,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                 new ActiveMQQueue("include.test.bar.bridge")).getDestinationStatistics();
 
         waitForConsumerCount(destinationStatistics, 1);
+        assertNCDurableSubsCount(localBroker, included, forceDurable ? 1 : 0);
         includedProducer.send(test);
 
         waitForDispatchFromLocalBroker(destinationStatistics, 1);
@@ -271,7 +283,6 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         assertRemoteAdvisoryCount(advisoryConsumer, 1);
         assertAdvisoryBrokerCounts(1,1,1);
     }
-
 
     /**
      * Test that dynamic flow works for virtual destinations when a second composite
@@ -1006,7 +1017,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        doSetUp(true, new VirtualDestination[] {compositeTopic}, false);
+        doSetUp(true, new VirtualDestination[] {compositeTopic}, false, false);
 
         MessageConsumer advisoryConsumer = getVirtualDestinationAdvisoryConsumer(testTopicName);
 
@@ -1034,7 +1045,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
                 new ActiveMQQueue("include.test.bar.bridge"));
 
-        doSetUp(true, new VirtualDestination[] {compositeTopic}, false);
+        doSetUp(true, new VirtualDestination[] {compositeTopic}, false, false);
 
         MessageConsumer advisoryConsumer = getVirtualDestinationAdvisoryConsumer(testTopicName);
 
@@ -1289,34 +1300,18 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         doTearDown();
     }
 
-    protected void doTearDown() throws Exception {
-        if (localConnection != null) {
-            localConnection.close();
-        }
-        if (remoteConnection != null) {
-            remoteConnection.close();
-        }
-        if (localBroker != null) {
-            localBroker.stop();
-        }
-        if (remoteBroker != null) {
-            remoteBroker.stop();
-        }
-    }
-
-
     protected void doSetUp(boolean deleteAllMessages,
             VirtualDestination[] remoteVirtualDests) throws Exception {
-        doSetUp(deleteAllMessages, remoteVirtualDests, true);
+        doSetUp(deleteAllMessages, remoteVirtualDests, true, false);
     }
 
     protected void doSetUp(boolean deleteAllMessages,
-            VirtualDestination[] remoteVirtualDests, boolean startNetworkConnector) throws Exception {
+            VirtualDestination[] remoteVirtualDests, boolean startNetworkConnector, boolean forceDurable) throws Exception {
         remoteBroker = createRemoteBroker(isUseVirtualDestSubsOnCreation, remoteVirtualDests);
         remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         remoteBroker.start();
         remoteBroker.waitUntilStarted();
-        localBroker = createLocalBroker(startNetworkConnector);
+        localBroker = createLocalBroker(startNetworkConnector, forceDurable);
         localBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         localBroker.start();
         localBroker.waitUntilStarted();
@@ -1340,13 +1335,16 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
 
 
     protected NetworkConnector connector;
-    protected BrokerService createLocalBroker(boolean startNetworkConnector) throws Exception {
+    protected BrokerService createLocalBroker(boolean startNetworkConnector, boolean forceDurable) throws Exception {
         BrokerService brokerService = new BrokerService();
         brokerService.setMonitorConnectionSplits(true);
         brokerService.setDataDirectoryFile(tempFolder.newFolder());
         brokerService.setBrokerName("localBroker");
 
-        connector = new DiscoveryNetworkConnector(new URI("static:(tcp://localhost:61617)"));
+        List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
+        URI remoteURI = transportConnectors.get(0).getConnectUri();
+        String uri = "static:(" + remoteURI + ")";
+        connector = new DiscoveryNetworkConnector(new URI(uri));
         connector.setName("networkConnector");
         connector.setDynamicOnly(false);
         connector.setDecreaseNetworkConsumerPriority(false);
@@ -1354,7 +1352,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         connector.setDuplex(isDuplex);
         connector.setUseVirtualDestSubs(true);
         connector.setDynamicallyIncludedDestinations(Lists.newArrayList(new ActiveMQQueue(testQueueName),
-                new ActiveMQTopic(testTopicName), new ActiveMQTopic("VirtualTopic.>")));
+                new ActiveMQTopic(testTopicName + (forceDurable ? "?forceDurable=true" : "")), new ActiveMQTopic("VirtualTopic.>")));
         connector.setExcludedDestinations(Lists.newArrayList(new ActiveMQQueue("exclude.test.foo"),
                 new ActiveMQTopic("exclude.test.bar")));
 
@@ -1362,7 +1360,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
             brokerService.addNetworkConnector(connector);
         }
 
-        brokerService.addConnector("tcp://localhost:61616");
+        brokerService.addConnector("tcp://localhost:0");
 
         return brokerService;
     }
@@ -1390,7 +1388,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         remoteAdvisoryBroker = (AdvisoryBroker)
                 brokerService.getBroker().getAdaptor(AdvisoryBroker.class);
 
-        brokerService.addConnector("tcp://localhost:61617");
+        brokerService.addConnector("tcp://localhost:0");
 
         return brokerService;
     }

@@ -26,15 +26,19 @@ import java.util.Properties;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
+import org.apache.camel.osgi.CamelContextFactoryBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
-import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.Resource;
-import org.springframework.osgi.context.support.OsgiBundleXmlApplicationContext;
 
 public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
@@ -74,14 +78,34 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             Thread.currentThread().setContextClassLoader(BrokerService.class.getClassLoader());
             Resource resource = Utils.resourceFromString(config);
 
-            // when camel is embedded it needs a bundle context
-            OsgiBundleXmlApplicationContext ctx = new OsgiBundleXmlApplicationContext(new String[]{resource.getURL().toExternalForm()}) {
-                @Override
-                protected void initBeanDefinitionReader(XmlBeanDefinitionReader reader) {
-                    reader.setValidating(false);
-                }
-            };
-            ctx.setBundleContext(bundleContext);
+            ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
+                    new String[]{resource.getURL().toExternalForm()}, false);
+
+            if (isCamelContextFactoryBeanExist()) {
+
+                ctx.addBeanFactoryPostProcessor(new BeanFactoryPostProcessor() {
+
+                    @Override
+                    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+
+                        beanFactory.addBeanPostProcessor(new BeanPostProcessor() {
+
+                            @Override
+                            public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+                                if (bean instanceof CamelContextFactoryBean) {
+                                    ((CamelContextFactoryBean) bean).setBundleContext(bundleContext);
+                                }
+                                return bean;
+                            }
+
+                            @Override
+                            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+                                return bean;
+                            }
+                        });
+                    }
+                });
+            }
 
             // Handle properties in configuration
             PropertyPlaceholderConfigurer configurator = new PropertyPlaceholderConfigurer();
@@ -118,6 +142,15 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             brokers.put(pid, broker);
         } catch (Exception e) {
             throw new ConfigurationException(null, "Cannot start the broker", e);
+        }
+    }
+
+    private boolean isCamelContextFactoryBeanExist() {
+        try {
+            Class.forName("org.apache.camel.osgi.CamelContextFactoryBean");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
         }
     }
 

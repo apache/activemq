@@ -38,7 +38,6 @@ import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,5 +172,7 @@ public class DestinationGCTest {
         producer.close();
 
         assertFalse(brokerService.getDestination(q).canGC());
+
+        connection.close();
     }
 }

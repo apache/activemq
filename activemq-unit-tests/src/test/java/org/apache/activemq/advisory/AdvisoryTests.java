@@ -355,8 +355,7 @@ public class AdvisoryTests {
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
-        return cf;
+        return new ActiveMQConnectionFactory(broker.getTransportConnectorByName("OpenWire").getPublishableConnectString());
     }
 
     protected BrokerService createBroker() throws Exception {
@@ -386,7 +385,7 @@ public class AdvisoryTests {
 
         answer.setDestinationPolicy(pMap);
         answer.addConnector("nio://localhost:0");
-        answer.addConnector(bindAddress);
+        answer.addConnector("tcp://localhost:0").setName("OpenWire");
         answer.setDeleteAllMessagesOnStartup(true);
     }
 

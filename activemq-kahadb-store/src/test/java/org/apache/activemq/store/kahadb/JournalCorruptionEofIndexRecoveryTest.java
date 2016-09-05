@@ -28,7 +28,9 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -41,6 +43,7 @@ import org.apache.activemq.store.kahadb.MessageDatabase.MessageKeys;
 import org.apache.activemq.store.kahadb.MessageDatabase.StoredDestination;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
@@ -128,8 +131,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
         adapter.setCheckForCorruptJournalFiles(true);
         adapter.setIgnoreMissingJournalfiles(ignoreMissingJournalFiles);
 
-        adapter.setPreallocationStrategy("zeros");
-        adapter.setPreallocationScope("entire_journal");
+        adapter.setPreallocationStrategy(Journal.PreallocationStrategy.ZEROS.name());
+        adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC.name());
     }
 
     @After
@@ -231,6 +234,48 @@ public class JournalCorruptionEofIndexRecoveryTest {
         assertEquals("Drain", numToSend, drainQueue(numToSend));
     }
 
+
+    @Test
+    public void testRecoveryAfterProducerAuditLocationCorrupt() throws Exception {
+        doTestRecoveryAfterLocationCorrupt(false);
+    }
+
+    @Test
+    public void testRecoveryAfterAckMapLocationCorrupt() throws Exception {
+        doTestRecoveryAfterLocationCorrupt(true);
+    }
+
+    private void doTestRecoveryAfterLocationCorrupt(boolean aOrB) throws Exception {
+        startBroker();
+
+        produceMessagesToConsumeMultipleDataFiles(50);
+
+        int numFiles = getNumberOfJournalFiles();
+
+        assertTrue("more than x files: " + numFiles, numFiles > 4);
+
+        KahaDBStore store = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore();
+        store.checkpointCleanup(true);
+        Location toCorrupt = aOrB ? store.getMetadata().ackMessageFileMapLocation : store.getMetadata().producerSequenceIdTrackerLocation;
+        corruptLocation(toCorrupt);
+
+        restartBroker(false, false);
+
+        assertEquals("missing no message", 50, broker.getAdminView().getTotalMessageCount());
+        assertEquals("Drain", 50, drainQueue(50));
+    }
+
+    private void corruptLocation(Location toCorrupt) throws IOException {
+
+        DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(new Integer(toCorrupt.getDataFileId()));
+
+        RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
+
+        randomAccessFile.seek(toCorrupt.getOffset());
+        randomAccessFile.writeInt(3);
+        dataFile.closeRandomAccessFile(randomAccessFile);
+    }
+
     private void corruptBatchCheckSumSplash(int id) throws Exception{
         Collection<DataFile> files =
                 ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
@@ -259,6 +304,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         corruptOrderIndex(id, size);
 
         randomAccessFile.getChannel().force(true);
+        dataFile.closeRandomAccessFile(randomAccessFile);
     }
 
     private void corruptBatchEndEof(int id) throws Exception{
@@ -365,16 +411,31 @@ public class JournalCorruptionEofIndexRecoveryTest {
     }
 
     private int drainQueue(int max) throws Exception {
+        return drain(cf, destination, max);
+    }
+
+    public static int drain(ConnectionFactory cf, Destination destination, int max) throws Exception {
         Connection connection = cf.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createConsumer(destination);
+        MessageConsumer consumer = null;
         int count = 0;
-        while (count < max && consumer.receive(5000) != null) {
-            count++;
+        try {
+            consumer = session.createConsumer(destination);
+            while (count < max && consumer.receive(4000) != null) {
+                count++;
+            }
+        } catch (JMSException ok) {
+        } finally {
+            if (consumer != null) {
+                try {
+                    consumer.close();
+                } catch (JMSException ok) {}
+            }
+            try {
+                connection.close();
+            } catch (JMSException ok) {}
         }
-        consumer.close();
-        connection.close();
         return count;
     }
 }

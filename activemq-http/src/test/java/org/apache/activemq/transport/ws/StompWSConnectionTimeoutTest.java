@@ -43,12 +43,8 @@ public class StompWSConnectionTimeoutTest extends WSTransportTestSupport {
         super.setUp();
         wsStompConnection = new StompWSConnection();
 
-//        WebSocketClientFactory clientFactory = new WebSocketClientFactory();
-//        clientFactory.start();
         wsClient = new WebSocketClient();
         wsClient.start();
-
-
 
         wsClient.connect(wsStompConnection, wsConnectUri);
         if (!wsStompConnection.awaitConnection(30, TimeUnit.SECONDS)) {

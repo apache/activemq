@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,7 +19,7 @@ package org.apache.activemq.transport.amqp.client.transport;
 /**
  * Encapsulates all the TCP Transport options in one configuration object.
  */
-public class NettyTransportOptions {
+public class NettyTransportOptions implements Cloneable {
 
     public static final int DEFAULT_SEND_BUFFER_SIZE = 64 * 1024;
     public static final int DEFAULT_RECEIVE_BUFFER_SIZE = DEFAULT_SEND_BUFFER_SIZE;
@@ -161,6 +161,10 @@ public class NettyTransportOptions {
 
     public void setDefaultTcpPort(int defaultTcpPort) {
         this.defaultTcpPort = defaultTcpPort;
+    }
+
+    public boolean isSSL() {
+        return false;
     }
 
     @Override

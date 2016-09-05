@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadb;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -31,6 +32,10 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 
 /**
  * @author chirino
@@ -191,6 +196,38 @@ public class KahaDBTest extends TestCase {
         assertTrue( count < 1000 );
 
         broker.stop();
+    }
+
+    public void testNoReplayOnStopStart() throws Exception {
+        KahaDBStore kaha = createStore(true);
+        BrokerService broker = createBroker(kaha);
+        sendMessages(100);
+        broker.stop();
+        broker.waitUntilStopped();
+
+        kaha = createStore(false);
+        kaha.setCheckForCorruptJournalFiles(true);
+
+        final AtomicBoolean didSomeRecovery = new AtomicBoolean(false);
+        DefaultTestAppender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel() == Level.INFO && event.getRenderedMessage().contains("Recovering from the journal @")) {
+                    didSomeRecovery.set(true);
+                }
+            }
+        };
+
+        Logger.getRootLogger().addAppender(appender);
+
+        broker = createBroker(kaha);
+
+        int count = receiveMessages();
+        assertEquals("Expected to received all messages.", count, 100);
+        broker.stop();
+
+        Logger.getRootLogger().addAppender(appender);
+        assertFalse("Did not replay any records from the journal", didSomeRecovery.get());
     }
 
     private void assertExistsAndDelete(File file) {

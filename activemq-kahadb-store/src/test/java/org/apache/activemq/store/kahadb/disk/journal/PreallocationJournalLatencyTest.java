@@ -39,10 +39,13 @@ public class PreallocationJournalLatencyTest {
 
         TimeStatisticImpl sparse = executeTest(Journal.PreallocationStrategy.SPARSE_FILE.name());
         TimeStatisticImpl chunked_zeros = executeTest(Journal.PreallocationStrategy.CHUNKED_ZEROS.name());
-        TimeStatisticImpl zeros = executeTest(Journal.PreallocationStrategy.ZEROS.name());
+        //TimeStatisticImpl zeros = executeTest(Journal.PreallocationStrategy.ZEROS.name());
+        TimeStatisticImpl kernel = executeTest(Journal.PreallocationStrategy.OS_KERNEL_COPY.name());
+
         LOG.info("  sparse: " + sparse);
         LOG.info(" chunked: " + chunked_zeros);
-        LOG.info("   zeros: " + zeros);
+        //LOG.info("   zeros: " + zeros);
+        LOG.info("  kernel: " + kernel);
 
     }
 
@@ -50,11 +53,13 @@ public class PreallocationJournalLatencyTest {
         int randInt = rand.nextInt(100);
         File dataDirectory = new File("./target/activemq-data/kahadb" + randInt);
 
-        KahaDBStore store = new KahaDBStore();
-        store.setJournalMaxFileLength(16*1204*1024);
+        final KahaDBStore store = new KahaDBStore();
+        store.setCheckpointInterval(5000);
+        store.setJournalMaxFileLength(32*1204*1024);
         store.deleteAllMessages();
         store.setDirectory(dataDirectory);
         store.setPreallocationStrategy(preallocationStrategy);
+        store.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC.name());
         store.start();
 
         final File journalLog = new File(dataDirectory, "db-1.log");
@@ -66,7 +71,7 @@ public class PreallocationJournalLatencyTest {
         }));
 
         final Journal journal = store.getJournal();
-        ByteSequence byteSequence = new ByteSequence(new byte[8*1024]);
+        ByteSequence byteSequence = new ByteSequence(new byte[16*1024]);
 
         TimeStatisticImpl timeStatistic = new TimeStatisticImpl("append", "duration");
         for (int i=0;i<5000; i++) {

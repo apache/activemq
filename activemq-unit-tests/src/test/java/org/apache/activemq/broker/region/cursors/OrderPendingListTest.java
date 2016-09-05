@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -268,6 +269,53 @@ public class OrderPendingListTest {
         list.addAll(null);
     }
 
+    @Test
+    public void testInsertAtHead() throws Exception {
+        OrderedPendingList underTest = new OrderedPendingList();
+
+        TestPendingList source = new TestPendingList();
+        source.addMessageLast(new TestMessageReference(1));
+        source.addMessageLast(new TestMessageReference(2));
+        source.addMessageLast(new TestMessageReference(3));
+        source.addMessageLast(new TestMessageReference(4));
+        source.addMessageLast(new TestMessageReference(5));
+
+        assertTrue(underTest.isEmpty());
+        assertEquals(5, source.size());
+
+        LinkedList linkedList = new LinkedList();
+        linkedList.addAll(source.values());
+        underTest.insertAtHead(linkedList);
+        assertEquals(5, underTest.size());
+
+        underTest.insertAtHead(null);
+
+        linkedList.clear();
+
+        Iterator<MessageReference> iterator = underTest.iterator();
+        for (int i=0; i < 2 && iterator.hasNext(); i++ ) {
+            MessageReference ref = iterator.next();
+            linkedList.addLast(ref);
+            iterator.remove();
+            assertEquals(ref.getMessageId().getProducerSequenceId(), i + 1);
+        }
+
+        assertEquals(3, underTest.size());
+
+        underTest.insertAtHead(linkedList);
+        assertEquals(5, underTest.size());
+
+        iterator = underTest.iterator();
+        for (int i=0; iterator.hasNext(); i++ ) {
+            MessageReference ref = iterator.next();
+            linkedList.addLast(ref);
+            iterator.remove();
+            assertEquals(ref.getMessageId().getProducerSequenceId(), i + 1);
+        }
+        assertEquals(0, underTest.size());
+
+    }
+
     static class TestPendingList implements PendingList {
 
         private final LinkedList<MessageReference> theList = new LinkedList<MessageReference>();
@@ -448,6 +496,11 @@ public class OrderPendingListTest {
 
         @Override
         public boolean isAdvisory() {
+            return false;
+        }
+
+        @Override
+        public boolean canProcessAsExpired() {
             return false;
         }
     }

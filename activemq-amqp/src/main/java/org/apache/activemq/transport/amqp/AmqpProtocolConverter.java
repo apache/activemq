@@ -22,13 +22,13 @@ import org.apache.activemq.command.Command;
 
 /**
  * Interface that defines the API for any AMQP protocol converter ised to
- * map AMQP mechanincs to ActiveMQ and back.
+ * map AMQP mechanics to ActiveMQ and back.
  */
 public interface AmqpProtocolConverter {
 
     /**
      * A new incoming data packet from the remote peer is handed off to the
-     * protocol converter for porcessing.  The type can vary and be either an
+     * protocol converter for processing.  The type can vary and be either an
      * AmqpHeader at the handshake phase or a byte buffer containing the next
      * incoming frame data from the remote.
      *
@@ -70,9 +70,9 @@ public interface AmqpProtocolConverter {
      * empty frames or closing connections due to remote end being inactive
      * for to long.
      *
-     * @returns the amount of milliseconds to wait before performaing another check.
+     * @returns the amount of milliseconds to wait before performing another check.
      *
-     * @throws IOException if an error occurs on writing heatbeats to the wire.
+     * @throws IOException if an error occurs on writing heart-beats to the wire.
      */
     long keepAlive() throws IOException;
 

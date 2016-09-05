@@ -117,7 +117,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
                         ActiveMQMessage mqMessage = (ActiveMQMessage) message;
                         MessageId id = mqMessage.getMessageId();
                         dbConnection = sharedDs.getConnection();
-                        PreparedStatement s = dbConnection.prepareStatement(((JDBCPersistenceAdapter) connectedToBroker().getPersistenceAdapter()).getStatements().getFindMessageStatement());
+                        PreparedStatement s = dbConnection.prepareStatement(findStatement);
                         s.setString(1, id.getProducerId().toString());
                         s.setLong(2, id.getProducerSequenceId());
                         ResultSet rs = s.executeQuery();
@@ -143,7 +143,4 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
         }
     }
 
-    private BrokerService connectedToBroker() {
-        return ((ActiveMQConnection)receiveConnection).getBrokerInfo().getBrokerName().equals("master") ? master : slave.get();
-    }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 package org.apache.activemq.transport.amqp.client.transport;
-
-import io.netty.handler.ssl.SslHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,6 +41,8 @@ import javax.net.ssl.X509TrustManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.handler.ssl.SslHandler;
 
 /**
  * Static class that provides various utility methods used by Transport implementations.

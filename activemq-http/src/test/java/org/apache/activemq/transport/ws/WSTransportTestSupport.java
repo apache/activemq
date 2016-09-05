@@ -55,7 +55,7 @@ public class WSTransportTestSupport {
     @Before
     public void setUp() throws Exception {
         LOG.info("========== Starting test: {} ==========", name.getMethodName());
-        broker = createBroker(true);
+        broker = createBroker(true, true);
     }
 
     @After
@@ -69,18 +69,16 @@ public class WSTransportTestSupport {
         LOG.info("========== Finished test: {} ==========", name.getMethodName());
     }
 
-//    protected String getWSConnectorURI() {
-//        return "ws://127.0.0.1:" + getProxyPort() +
-//            "?allowLinkStealing=" + isAllowLinkStealing() +
-//            "&websocket.maxTextMessageSize=99999&" +
-//            "transport.maxIdleTime=1001";
-//    }
+    protected String getWSConnectionURI() {
+        return "ws://127.0.0.1:" + getProxyPort();
+    }
 
     protected String getWSConnectorURI() {
         return "ws://127.0.0.1:" + getProxyPort() +
-            "?allowLinkStealing=" + isAllowLinkStealing() +
-            "&websocket.maxTextMessageSize=99999&" +
-            "transport.idleTimeout=1001";
+               "?allowLinkStealing=" + isAllowLinkStealing() +
+               "&websocket.maxTextMessageSize=99999" +
+               "&transport.idleTimeout=1001" +
+               "&trace=true&transport.trace=true";
     }
 
     protected boolean isAllowLinkStealing() {
@@ -91,7 +89,7 @@ public class WSTransportTestSupport {
 
     }
 
-    protected BrokerService createBroker(boolean deleteMessages) throws Exception {
+    protected BrokerService createBroker(boolean deleteMessages, boolean advisorySupport) throws Exception {
 
         BrokerService broker = new BrokerService();
 
@@ -105,6 +103,7 @@ public class WSTransportTestSupport {
 
         wsConnectUri = broker.addConnector(getWSConnectorURI()).getPublishableConnectURI();
 
+        broker.setAdvisorySupport(advisorySupport);
         broker.setUseJmx(true);
         broker.getManagementContext().setCreateConnector(false);
         broker.setPersistent(isPersistent());

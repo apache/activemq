@@ -88,20 +88,15 @@ public class LocalTransaction extends Transaction {
         }
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
-        // Sync on transaction store to avoid out of order messages in the cursor
-        // https://issues.apache.org/activemq/browse/AMQ-2594
-        synchronized (transactionStore) {
-           transactionStore.rollback(getTransactionId());
-
-            try {
-                fireAfterRollback();
-            } catch (Throwable e) {
-                LOG.warn("POST ROLLBACK FAILED: ", e);
-                XAException xae = new XAException("POST ROLLBACK FAILED");
-                xae.errorCode = XAException.XAER_RMERR;
-                xae.initCause(e);
-                throw xae;
-            }
+        transactionStore.rollback(getTransactionId());
+        try {
+            fireAfterRollback();
+        } catch (Throwable e) {
+            LOG.warn("POST ROLLBACK FAILED: ", e);
+            XAException xae = new XAException("POST ROLLBACK FAILED");
+            xae.errorCode = XAException.XAER_RMERR;
+            xae.initCause(e);
+            throw xae;
         }
     }
 
