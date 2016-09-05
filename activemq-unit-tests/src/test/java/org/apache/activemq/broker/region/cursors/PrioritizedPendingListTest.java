@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.broker.region.cursors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
@@ -187,7 +187,9 @@ public class PrioritizedPendingListTest {
         Iterator<MessageReference> iter = list.iterator();
         int lastId = list.size();
         while (iter.hasNext()) {
-            assertEquals(lastId--, iter.next().getMessage().getPriority());
+            MessageReference nextMessage = iter.next();
+            assertNotNull(nextMessage);
+            assertEquals(lastId--, nextMessage.getMessage().getPriority());
         }
     }
 
@@ -213,6 +215,30 @@ public class PrioritizedPendingListTest {
         for (MessageReference messageReference : list.values()) {
             assertEquals(lastId--, messageReference.getMessage().getPriority());
         }
+    }
+
+    @Test
+    public void testFullRangeIteration() {
+        PrioritizedPendingList list = new PrioritizedPendingList();
+
+        int totalElements = 0;
+
+        for (int i = 0; i < 10; ++i) {
+            list.addMessageFirst(new TestMessageReference(totalElements++, i));
+            list.addMessageFirst(new TestMessageReference(totalElements++, i));
+        }
+
+        assertTrue(list.size() == totalElements);
+
+        int totalIterated = 0;
+        Iterator<MessageReference> iter = list.iterator();
+        while (iter.hasNext()) {
+            MessageReference nextMessage = iter.next();
+            assertNotNull(nextMessage);
+            totalIterated++;
+        }
+
+        assertEquals(totalElements, totalIterated);
     }
 
     static class TestMessageReference implements MessageReference {

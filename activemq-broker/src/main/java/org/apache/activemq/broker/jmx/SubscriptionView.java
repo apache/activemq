@@ -267,6 +267,15 @@ public class SubscriptionView implements SubscriptionViewMBean {
     }
 
     /**
+     * @return whether or not the subscriber is configured for async dispatch
+     */
+    @Override
+    public boolean isDispatchAsync() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.isDispatchAsync() : false;
+    }
+
+    /**
      * @return the maximum number of pending messages allowed in addition to the
      *         prefetch size. If enabled to a non-zero value then this will
      *         perform eviction of messages for slow consumers on non-durable

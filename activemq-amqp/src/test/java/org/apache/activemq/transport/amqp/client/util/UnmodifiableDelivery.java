@@ -160,4 +160,9 @@ public class UnmodifiableDelivery implements Delivery {
     public void setDefaultDeliveryState(DeliveryState state) {
         throw new UnsupportedOperationException("Cannot alter the Delivery");
     }
+
+    @Override
+    public void setMessageFormat(int messageFormat) {
+        throw new UnsupportedOperationException("Cannot alter the Delivery");
+    }
 }

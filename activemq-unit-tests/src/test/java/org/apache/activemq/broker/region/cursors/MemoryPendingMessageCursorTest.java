@@ -27,6 +27,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.util.SubscriptionKey;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +38,15 @@ import org.slf4j.LoggerFactory;
  * AMQ-5748
  *
  */
+@RunWith(Parameterized.class)
 public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursorTest {
     protected static final Logger LOG = LoggerFactory
             .getLogger(MemoryPendingMessageCursorTest.class);
+
+
+   public MemoryPendingMessageCursorTest(boolean prioritizedMessages) {
+       super(prioritizedMessages);
+   }
 
     @Override
     protected void initPersistence(BrokerService brokerService) throws IOException {

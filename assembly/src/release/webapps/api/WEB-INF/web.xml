@@ -38,10 +38,11 @@
 
     <servlet>
         <servlet-name>jolokia-agent</servlet-name>
-        <servlet-class>org.jolokia.http.AgentServlet</servlet-class>        
+        <servlet-class>org.jolokia.http.AgentServlet</servlet-class>
+        <!-- Uncomment this if you want jolokia multicast discovery to be enabled         
         <init-param>
           <param-name>discoveryEnabled</param-name>
-          <param-value>false</param-value>
+          <param-value>true</param-value>
         </init-param>      
         <init-param>
           <param-name>discoveryAgentUrl</param-name>
@@ -50,6 +51,12 @@
         <init-param>
           <param-name>agentDescription</param-name>
           <param-value>Apache ActiveMQ</param-value>
+        </init-param>
+        -->
+        <!-- turn off returning exceptions and stacktraces from jolokia -->
+        <init-param>
+          <param-name>allowErrorDetails</param-name>
+          <param-value>false</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup> 
     </servlet>

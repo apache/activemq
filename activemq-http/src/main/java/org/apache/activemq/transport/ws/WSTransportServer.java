@@ -29,6 +29,7 @@ import org.apache.activemq.transport.WebTransportServerSupport;
 import org.apache.activemq.transport.ws.jetty9.WSServlet;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -61,9 +62,14 @@ public class WSTransportServer extends WebTransportServerSupport {
         URI boundTo = bind();
 
         ServletContextHandler contextHandler =
-                new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
+                new ServletContextHandler(server, "/", ServletContextHandler.SECURITY);
 
         ServletHolder holder = new ServletHolder();
+
+        //AMQ-6182 - disabling trace by default
+        configureTraceMethod((ConstraintSecurityHandler) contextHandler.getSecurityHandler(),
+                httpOptions.isEnableTrace());
+
         Map<String, Object> webSocketOptions = IntrospectionSupport.extractProperties(transportOptions, "websocket.");
         for(Map.Entry<String,Object> webSocketEntry : webSocketOptions.entrySet()) {
             Object value = webSocketEntry.getValue();
@@ -99,7 +105,9 @@ public class WSTransportServer extends WebTransportServerSupport {
     }
 
     private Servlet createWSServlet() throws Exception {
-        return new WSServlet();
+        WSServlet servlet = new WSServlet();
+        servlet.setTransportOptions(transportOptions);
+        return servlet;
     }
 
     private int getConnectorLocalPort() throws Exception {
@@ -132,7 +140,7 @@ public class WSTransportServer extends WebTransportServerSupport {
     public void setTransportOption(Map<String, Object> transportOptions) {
         Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(transportOptions, "transport.");
         socketConnectorFactory.setTransportOptions(socketOptions);
-        super.setTransportOption(transportOptions);
+        super.setTransportOption(socketOptions);
     }
 
     @Override

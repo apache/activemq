@@ -143,8 +143,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             copy.properties = properties;
         }
 
-        copy.content = content;
-        copy.marshalledProperties = marshalledProperties;
+        copy.content = copyByteSequence(content);
+        copy.marshalledProperties = copyByteSequence(marshalledProperties);
         copy.dataStructure = dataStructure;
         copy.readOnlyProperties = readOnlyProperties;
         copy.readOnlyBody = readOnlyBody;
@@ -163,6 +163,13 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         // lets not copy the following fields
         // copy.targetConsumerId = targetConsumerId;
         // copy.referenceCount = referenceCount;
+    }
+
+    private ByteSequence copyByteSequence(ByteSequence content) {
+        if (content != null) {
+            return new ByteSequence(content.getData(), content.getOffset(), content.getLength());
+        }
+        return null;
     }
 
     public Object getProperty(String name) throws IOException {

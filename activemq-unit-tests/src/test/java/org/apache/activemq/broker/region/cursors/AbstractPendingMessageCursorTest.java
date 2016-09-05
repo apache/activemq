@@ -16,8 +16,13 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Connection;
@@ -46,6 +51,7 @@ import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +71,25 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected String defaultQueueName = "test.queue";
     protected String defaultTopicName = "test.topic";
     protected static int maxMessageSize = 1000;
+    protected boolean prioritizedMessages;
+
+    @Parameters(name="prioritizedMessages={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                // use priority messages
+                {true},
+                // don't use priority messages
+                {false}
+        });
+    }
+
+    /**
+     * @param prioritizedMessages
+     */
+    public AbstractPendingMessageCursorTest(boolean prioritizedMessages) {
+        super();
+        this.prioritizedMessages = prioritizedMessages;
+    }
 
     @Before
     public void startBroker() throws Exception {
@@ -84,6 +109,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         PolicyEntry policy = new PolicyEntry();
         policy.setTopicPrefetch(100);
         policy.setDurableTopicPrefetch(100);
+        policy.setPrioritizedMessages(isPrioritizedMessages());
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         broker.setDestinationPolicy(pMap);
@@ -111,6 +137,10 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     }
 
     protected abstract void initPersistence(BrokerService brokerService) throws IOException;
+
+    protected boolean isPrioritizedMessages() {
+        return prioritizedMessages;
+    }
 
     @Test
     public void testQueueMessageSize() throws Exception {
@@ -276,6 +306,10 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         verifyPendingStats(dest, subKey, 200, publishedMessageSize.get());
         verifyStoreStats(dest, 200, publishedMessageSize.get());
 
+        //should be equal in this case
+        assertEquals(dest.getDurableTopicSubs().get(subKey).getPendingMessageSize(),
+                dest.getMessageStore().getMessageStoreStatistics().getMessageSize().getTotalSize());
+
         //consume all messages
         consumeDurableTestMessages(connection, "sub1", 200, publishedMessageSize);
 
@@ -349,12 +383,12 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected void verifyPendingStats(final org.apache.activemq.broker.region.Queue queue,
             final int count, final long minimumSize, final int storeCount, final long minimumStoreSize) throws Exception {
 
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return queue.getPendingMessageCount() == count;
             }
-        });
+        }));
 
         verifySize(count, new MessageSizeCalculator() {
             @Override
@@ -370,12 +404,12 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
 
         final TopicSubscription sub = (TopicSubscription) topic.getConsumers().get(0);
 
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return sub.getPendingQueueSize() == count;
             }
-        });
+        }));
 
         verifySize(count, new MessageSizeCalculator() {
             @Override
@@ -391,12 +425,12 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
         final DurableTopicSubscription sub = topic.getDurableTopicSubs().get(subKey);
 
         //verify message count
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return sub.getPendingQueueSize() == count;
             }
-        });
+        }));
 
         //verify message size
         verifySize(count, new MessageSizeCalculator() {
@@ -411,12 +445,12 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
             final int storeCount, final long minimumStoreSize) throws Exception {
         final MessageStore messageStore = dest.getMessageStore();
 
-        Wait.waitFor(new Condition() {
+        assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return messageStore.getMessageCount() == storeCount;
             }
-        });
+        }));
         verifySize(storeCount, new MessageSizeCalculator() {
             @Override
             public long getMessageSize() throws Exception {
@@ -430,19 +464,19 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected void verifySize(final int count, final MessageSizeCalculator messageSizeCalculator,
             final long minimumSize) throws Exception {
         if (count > 0) {
-            Wait.waitFor(new Condition() {
+            assertTrue(Wait.waitFor(new Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
                     return messageSizeCalculator.getMessageSize() > minimumSize ;
                 }
-            });
+            }));
         } else {
-            Wait.waitFor(new Condition() {
+            assertTrue(Wait.waitFor(new Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
                     return messageSizeCalculator.getMessageSize() == 0;
                 }
-            });
+            }));
         }
     }
 

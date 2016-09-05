@@ -66,7 +66,6 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionIdTransformer;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.activemq.store.kahadb.MessageDatabase.Metadata;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
 import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
@@ -326,10 +325,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         return task;
     }
 
+    // with asyncTaskMap locked
     protected void addQueueTask(KahaDBMessageStore store, StoreQueueTask task) throws IOException {
-        synchronized (store.asyncTaskMap) {
-            store.asyncTaskMap.put(new AsyncJobKey(task.getMessage().getMessageId(), store.getDestination()), task);
-        }
+        store.asyncTaskMap.put(new AsyncJobKey(task.getMessage().getMessageId(), store.getDestination()), task);
         this.queueExecutor.execute(task);
     }
 
@@ -385,14 +383,17 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public ListenableFuture<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message)
                 throws IOException {
             if (isConcurrentStoreAndDispatchQueues()) {
+                message.beforeMarshall(wireFormat);
                 StoreQueueTask result = new StoreQueueTask(this, context, message);
                 ListenableFuture<Object> future = result.getFuture();
                 message.getMessageId().setFutureOrSequenceLong(future);
                 message.setRecievedByDFBridge(true); // flag message as concurrentStoreAndDispatch
                 result.aquireLocks();
-                addQueueTask(this, result);
-                if (indexListener != null) {
-                    indexListener.onAdd(new IndexListener.MessageContext(context, message, null));
+                synchronized (asyncTaskMap) {
+                    addQueueTask(this, result);
+                    if (indexListener != null) {
+                        indexListener.onAdd(new IndexListener.MessageContext(context, message, null));
+                    }
                 }
                 return future;
             } else {
@@ -753,6 +754,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public ListenableFuture<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message)
                 throws IOException {
             if (isConcurrentStoreAndDispatchTopics()) {
+                message.beforeMarshall(wireFormat);
                 StoreTopicTask result = new StoreTopicTask(this, context, message, subscriptionCount.get());
                 result.aquireLocks();
                 addTopicTask(this, result);

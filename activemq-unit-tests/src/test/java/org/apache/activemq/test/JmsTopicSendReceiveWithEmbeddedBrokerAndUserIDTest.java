@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -23,12 +23,10 @@ import javax.jms.Message;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
     private static final Logger LOG = LoggerFactory.getLogger(JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest.class);
 
@@ -42,9 +40,9 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
     }
 
     @Override
-    protected void configureBroker(BrokerService answer) throws Exception {
+    protected TransportConnector configureBroker(BrokerService answer) throws Exception {
         answer.setPopulateJMSXUserID(true);
-        super.configureBroker(answer);
+        return super.configureBroker(answer);
     }
 
     @Override
@@ -76,9 +74,6 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
     }
 
     public void testSpoofedJMSXUserIdIsIgnored() throws Exception {
-        Thread.sleep(1000);
-        messages.clear();
-
         for (int i = 0; i < data.length; i++) {
             Message message = createMessage(i);
             configureMessage(message);
@@ -93,9 +88,6 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
     }
 
     public void testSpoofedJMSXUserIdIsIgnoredAsObjectProperty() throws Exception {
-        Thread.sleep(1000);
-        messages.clear();
-
         for (int i = 0; i < data.length; i++) {
             Message message = createMessage(i);
             configureMessage(message);

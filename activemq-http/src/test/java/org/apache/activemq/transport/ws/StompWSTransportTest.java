@@ -283,6 +283,10 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         service.shutdownNow();
         service.awaitTermination(5, TimeUnit.SECONDS);
 
-        wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
+        try {
+            wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
+        } catch (Exception ex) {
+            LOG.info("Caught exception on write of disconnect", ex);
+        }
     }
 }

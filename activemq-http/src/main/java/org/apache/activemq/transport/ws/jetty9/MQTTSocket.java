@@ -80,7 +80,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
         try {
             getProtocolConverter().onMQTTCommand(new DISCONNECT().encode());
         } catch (Exception e) {
-            LOG.warn("Failed to close WebSocket", e);
+            LOG.debug("Failed to close MQTT WebSocket cleanly", e);
         }
     }
 

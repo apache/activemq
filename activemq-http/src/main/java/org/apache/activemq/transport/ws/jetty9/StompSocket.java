@@ -64,11 +64,11 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     public void onWebSocketClose(int arg0, String arg1) {
         try {
             if (protocolLock.tryLock() || protocolLock.tryLock(ORDERLY_CLOSE_TIMEOUT, TimeUnit.SECONDS)) {
-                LOG.info("Stomp WebSocket closed: code[{}] message[{}]", arg0, arg1);
+                LOG.debug("Stomp WebSocket closed: code[{}] message[{}]", arg0, arg1);
                 protocolConverter.onStompCommand(new StompFrame(Stomp.Commands.DISCONNECT));
             }
         } catch (Exception e) {
-            LOG.warn("Failed to close WebSocket", e);
+            LOG.debug("Failed to close STOMP WebSocket cleanly", e);
         } finally {
             if (protocolLock.isHeldByCurrentThread()) {
                 protocolLock.unlock();

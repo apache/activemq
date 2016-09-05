@@ -72,12 +72,8 @@ class MemoryTopicSub {
     synchronized void recoverSubscription(MessageRecoveryListener listener) throws Exception {
         for (Iterator<Entry<MessageId, Message>> iter = map.entrySet().iterator(); iter.hasNext();) {
             Entry<MessageId, Message> entry = iter.next();
-            Object msg = entry.getValue();
-            if (msg.getClass() == MessageId.class) {
-                listener.recoverMessageReference((MessageId)msg);
-            } else {
-                listener.recoverMessage((Message)msg);
-            }
+            Message msg = entry.getValue();
+            listener.recoverMessage(msg);
         }
     }
 
@@ -91,13 +87,9 @@ class MemoryTopicSub {
             Entry<MessageId, Message> entry = iter.next();
             if (pastLackBatch) {
                 count++;
-                Object msg = entry.getValue();
-                lastId = (MessageId)entry.getKey();
-                if (msg.getClass() == MessageId.class) {
-                    listener.recoverMessageReference((MessageId)msg);
-                } else {
-                    listener.recoverMessage((Message)msg);
-                }
+                Message msg = entry.getValue();
+                lastId = entry.getKey();
+                listener.recoverMessage(msg);
             } else {
                 pastLackBatch = entry.getKey().equals(lastBatch);
             }

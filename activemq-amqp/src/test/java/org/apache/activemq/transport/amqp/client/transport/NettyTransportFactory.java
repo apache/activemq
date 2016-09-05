@@ -19,7 +19,7 @@ package org.apache.activemq.transport.amqp.client.transport;
 import java.net.URI;
 import java.util.Map;
 
-import org.apache.qpid.jms.util.PropertyUtil;
+import org.apache.activemq.transport.amqp.client.util.PropertyUtil;
 
 /**
  * Factory for creating the Netty based TCP Transport.

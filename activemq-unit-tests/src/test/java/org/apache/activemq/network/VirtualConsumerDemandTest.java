@@ -545,6 +545,59 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
     }
 
     /**
+     * This tests that having 2 composite destinations (1 included for dynamic flow and 1 not)
+     * will allow messages to flow and that deleting 1 destination dosen't clear out the virtual
+     * consumer map except for what should be cleared.
+     *
+     */
+    @Test(timeout = 60 * 1000)
+    public void testTwoCompositeTopicsRemove1() throws Exception {
+        Assume.assumeTrue(isUseVirtualDestSubsOnCreation);
+
+        doSetUp(true, null);
+
+        //configure a virtual destination that forwards messages from topic testQueueName
+        //to queue "include.test.bar.bridge" and "include.test.bar.bridge2"
+        CompositeTopic compositeTopic1 = createCompositeTopic(testTopicName,
+                new ActiveMQQueue("include.test.bar.bridge"));
+        CompositeTopic compositeTopic2 = createCompositeTopic(testTopicName + 2,
+                new ActiveMQQueue("include.test.bar.bridge2"));
+
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic1, compositeTopic2}, true);
+
+        MessageProducer includedProducer = localSession.createProducer(included);
+        Message test = localSession.createTextMessage("test");
+        Thread.sleep(1000);
+
+        final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
+        final DestinationStatistics remoteDestStatistics = remoteBroker.getDestination(
+                new ActiveMQQueue("include.test.bar.bridge")).getDestinationStatistics();
+
+        waitForConsumerCount(destinationStatistics, 1);
+
+        includedProducer.send(test);
+
+        waitForDispatchFromLocalBroker(destinationStatistics, 1);
+        assertLocalBrokerStatistics(destinationStatistics, 1);
+        assertEquals("remote dest messages", 1, remoteDestStatistics.getMessages().getCount());
+
+        //verify there are 2 virtual destinations but only 1 consumer and broker dest
+        assertAdvisoryBrokerCounts(2,1,1);
+        runtimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic1}, true);
+        Thread.sleep(2000);
+        //verify there is is only 1 virtual dest after deletion
+        assertAdvisoryBrokerCounts(1,1,1);
+
+        includedProducer.send(test);
+
+        //make sure messages are still forwarded even after 1 composite topic was deleted
+        waitForDispatchFromLocalBroker(destinationStatistics, 2);
+        assertLocalBrokerStatistics(destinationStatistics, 2);
+        assertEquals("remote dest messages", 2, remoteDestStatistics.getMessages().getCount());
+
+    }
+
+    /**
      * Test that demand is destroyed after removing both targets from the composite Topic
      * @throws Exception
      */
@@ -1375,7 +1428,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         ActiveMQMessage message = null;
         while ((message = (ActiveMQMessage) advisoryConsumer.receive(1000)) != null) {
             available++;
-            LOG.debug("advisory data structure: {}", message.getDataStructure());
+            LOG.info("advisory data structure: {}", message.getDataStructure());
         }
         assertEquals(count, available);
     }

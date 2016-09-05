@@ -91,6 +91,9 @@ public class MQTTProtocolConverter {
     public static final int V3_1 = 3;
     public static final int V3_1_1 = 4;
 
+    public static final String SINGLE_LEVEL_WILDCARD = "+";
+    public static final String MULTI_LEVEL_WILDCARD = "#";
+
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
     private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD = 0.5;
@@ -237,6 +240,21 @@ public class MQTTProtocolConverter {
         }
         this.connect = connect;
 
+        // The Server MUST respond to the CONNECT Packet with a CONNACK return code 0x01
+        // (unacceptable protocol level) and then disconnect the Client if the Protocol Level
+        // is not supported by the Server [MQTT-3.1.2-2].
+        if (connect.version() < 3 || connect.version() > 4) {
+            CONNACK ack = new CONNACK();
+            ack.code(CONNACK.Code.CONNECTION_REFUSED_UNACCEPTED_PROTOCOL_VERSION);
+            try {
+                getMQTTTransport().sendToMQTT(ack.encode());
+                getMQTTTransport().onException(IOExceptionSupport.create("Unsupported or invalid protocol version", null));
+            } catch (IOException e) {
+                getMQTTTransport().onException(IOExceptionSupport.create(e));
+            }
+            return;
+        }
+
         String clientId = "";
         if (connect.clientId() != null) {
             clientId = connect.clientId().toString();
@@ -248,6 +266,15 @@ public class MQTTProtocolConverter {
         }
         String passswd = null;
         if (connect.password() != null) {
+
+            if (userName == null && connect.version() != V3_1) {
+                // [MQTT-3.1.2-22]: If the user name is not present then the
+                // password must also be absent.
+                // [MQTT-3.1.4-1]: would seem to imply we don't send a CONNACK here.
+                getMQTTTransport().onException(IOExceptionSupport.create("Password given without a user name", null));
+                return;
+            }
+
             passswd = connect.password().toString();
         }
 
@@ -355,6 +382,7 @@ public class MQTTProtocolConverter {
         if (topics != null) {
             byte[] qos = new byte[topics.length];
             for (int i = 0; i < topics.length; i++) {
+                MQTTProtocolSupport.validate(topics[i].name().toString());
                 try {
                     qos[i] = findSubscriptionStrategy().onSubscribe(topics[i]);
                 } catch (IOException e) {
@@ -371,6 +399,7 @@ public class MQTTProtocolConverter {
             }
         } else {
             LOG.warn("No topics defined for Subscription " + command);
+            throw new MQTTProtocolException("SUBSCRIBE command received with no topic filter");
         }
     }
 
@@ -382,16 +411,20 @@ public class MQTTProtocolConverter {
         UTF8Buffer[] topics = command.topics();
         if (topics != null) {
             for (UTF8Buffer topic : topics) {
+                MQTTProtocolSupport.validate(topic.toString());
                 try {
                     findSubscriptionStrategy().onUnSubscribe(topic.toString());
                 } catch (IOException e) {
                     throw new MQTTProtocolException("Failed to process unsubscribe request", true, e);
                 }
             }
+            UNSUBACK ack = new UNSUBACK();
+            ack.messageId(command.messageId());
+            sendToMQTT(ack.encode());
+        } else {
+            LOG.warn("No topics defined for Subscription " + command);
+            throw new MQTTProtocolException("UNSUBSCRIBE command received with no topic filter");
         }
-        UNSUBACK ack = new UNSUBACK();
-        ack.messageId(command.messageId());
-        sendToMQTT(ack.encode());
     }
 
     /**
@@ -449,6 +482,12 @@ public class MQTTProtocolConverter {
         checkConnected();
         LOG.trace("MQTT Rcv PUBLISH message:{} client:{} connection:{}",
                   command.messageId(), clientId, connectionInfo.getConnectionId());
+        //Both version 3.1 and 3.1.1 do not allow the topic name to contain a wildcard in the publish packet
+        if (containsMqttWildcard(command.topicName().toString())) {
+            // [MQTT-3.3.2-2]: The Topic Name in the PUBLISH Packet MUST NOT contain wildcard characters
+            getMQTTTransport().onException(IOExceptionSupport.create("The topic name must not contain wildcard characters.", null));
+            return;
+        }
         ActiveMQMessage message = convertMessage(command);
         message.setProducerId(producerId);
         message.onSend();
@@ -809,6 +848,11 @@ public class MQTTProtocolConverter {
             }
         }
         return clientId;
+    }
+
+    protected boolean containsMqttWildcard(String value) {
+        return value != null && (value.contains(SINGLE_LEVEL_WILDCARD) ||
+                value.contains(MULTI_LEVEL_WILDCARD));
     }
 
     protected MQTTSubscriptionStrategy findSubscriptionStrategy() throws IOException {

@@ -82,7 +82,9 @@ public final class ThreadPoolUtils {
      * {@link #shutdownNow(java.util.concurrent.ExecutorService)} which
      * forces a shutdown. The parameter <tt>shutdownAwaitTermination</tt>
      * is used as timeout value waiting for orderly shutdown to
-     * complete normally, before going aggressively.
+     * complete normally, before going aggressively.  If the shutdownAwaitTermination
+     * value is negative the shutdown waits indefinitely for the ExecutorService
+     * to complete its shutdown.
      *
      * @param executorService the executor service to shutdown
      * @param shutdownAwaitTermination timeout in millis to wait for orderly shutdown
@@ -130,6 +132,19 @@ public final class ThreadPoolUtils {
                         Thread.currentThread().interrupt();
                     }
                 }
+            } else  if (shutdownAwaitTermination < 0) {
+                try {
+                    awaitTermination(executorService);
+                } catch (InterruptedException e) {
+                    warned = true;
+                    LOG.warn("Forcing shutdown of ExecutorService: {} due interrupted.", executorService);
+                    // we were interrupted during shutdown, so force shutdown
+                    try {
+                        executorService.shutdownNow();
+                    } finally {
+                        Thread.currentThread().interrupt();
+                    }
+                }
             }
 
             // if we logged at WARN level, then report at INFO level when we are complete so the end user can see this in the log
@@ -139,6 +154,29 @@ public final class ThreadPoolUtils {
             } else if (LOG.isDebugEnabled()) {
                 LOG.debug("Shutdown of ExecutorService: {} is shutdown: {} and terminated: {} took: {}.",
                         new Object[]{executorService, executorService.isShutdown(), executorService.isTerminated(), TimeUtils.printDuration(watch.taken())});
+            }
+        }
+    }
+
+    /**
+     * Awaits the termination of the thread pool indefinitely (Use with Caution).
+     * <p/>
+     * This implementation will log every 2nd second at INFO level that we are waiting, so the end user
+     * can see we are not hanging in case it takes longer time to terminate the pool.
+     *
+     * @param executorService            the thread pool
+     *
+     * @throws InterruptedException is thrown if we are interrupted during the waiting
+     */
+    public static void awaitTermination(ExecutorService executorService) throws InterruptedException {
+        // log progress every 5th second so end user is aware of we are shutting down
+        StopWatch watch = new StopWatch();
+        final long interval = 2000;
+        while (true) {
+            if (executorService.awaitTermination(interval, TimeUnit.MILLISECONDS)) {
+                return;
+            } else {
+                LOG.info("Waited {} for ExecutorService: {} to terminate...", TimeUtils.printDuration(watch.taken()), executorService);
             }
         }
     }

@@ -316,7 +316,7 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public int getMaxBrowsePageSize() {
-        return this.maxBrowsePageSize > 0 ? this.maxBrowsePageSize : getMaxPageSize();
+        return this.maxBrowsePageSize;
     }
 
     @Override
@@ -523,6 +523,7 @@ public abstract class BaseDestination implements Destination {
      */
     @Override
     public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
+        this.lastActiveTime = 0L;
         if (advisoryForDelivery) {
             broker.messageDelivered(context, messageReference);
         }
@@ -777,7 +778,7 @@ public abstract class BaseDestination implements Destination {
     @Override
     public boolean canGC() {
         boolean result = false;
-        if (isGcIfInactive()&& this.lastActiveTime != 0l) {
+        if (isGcIfInactive() && this.lastActiveTime != 0l && destinationStatistics.messages.getCount() == 0L ) {
             if ((System.currentTimeMillis() - this.lastActiveTime) >= getInactiveTimeoutBeforeGC()) {
                 result = true;
             }

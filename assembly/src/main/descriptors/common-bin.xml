@@ -260,6 +260,9 @@
       <includes>
         <!-- mqtt -->
         <include>org.fusesource.mqtt-client:mqtt-client</include>
+
+        <!-- junit integration -->
+        <include>org.apache.activemq.tooling:activemq-junit</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -272,7 +275,7 @@
         <include>org.eclipse.jetty.aggregate:jetty-all</include>
         <include>org.apache.tomcat:tomcat-servlet-api</include>
         <include>org.apache.tomcat:tomcat-websocket-api</include>
-        
+
         <!-- JSP support -->
         <!-- Jetty JSP api-->
         <include>org.eclipse.jetty:apache-jsp</include>
@@ -282,9 +285,9 @@
         <include>org.eclipse.jetty:apache-jstl</include>
         <include>org.apache.taglibs:taglibs-standard-spec</include>
         <!-- jstl and el impl -->
-        <include>org.mortbay.jasper:apache-el</include>       
+        <include>org.mortbay.jasper:apache-el</include>
         <include>org.apache.taglibs:taglibs-standard-impl</include>
-        
+
         <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
         <include>org.ow2.asm:asm</include>
         <include>org.eclipse.jetty.orbit:org.eclipse.jdt.core</include>

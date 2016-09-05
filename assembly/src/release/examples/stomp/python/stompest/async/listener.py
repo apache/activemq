@@ -23,6 +23,7 @@ from twisted.internet import defer, reactor
 
 from stompest.config import StompConfig
 from stompest.async import Stomp
+from stompest.async.listener import SubscriptionListener
 
 user = os.getenv('ACTIVEMQ_USER') or 'admin'
 password = os.getenv('ACTIVEMQ_PASSWORD') or 'password'
@@ -42,7 +43,7 @@ class Listener(object):
         
         self.count = 0
         self.start = time.time()
-        client.subscribe(destination, self.handleFrame, headers={'ack': 'auto', 'id': 'required-for-STOMP-1.1'}, ack=False)
+        client.subscribe(destination, listener=SubscriptionListener(self.handleFrame), headers={'ack': 'auto', 'id': 'required-for-STOMP-1.1'})
         
     @defer.inlineCallbacks
     def handleFrame(self, client, frame):

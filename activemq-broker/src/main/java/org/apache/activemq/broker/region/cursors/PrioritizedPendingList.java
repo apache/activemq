@@ -16,19 +16,18 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
-import java.util.ArrayList;
+import static org.apache.activemq.broker.region.cursors.OrderedPendingList.getValues;
+
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.management.SizeStatisticImpl;
-
-
-import static org.apache.activemq.broker.region.cursors.OrderedPendingList.getValues;
 
 public class PrioritizedPendingList implements PendingList {
 
@@ -121,38 +120,58 @@ public class PrioritizedPendingList implements PendingList {
         return lists[getPriority(msg)];
     }
 
-    private class PrioritizedPendingListIterator implements Iterator<MessageReference> {
-        private int index = 0;
-        private int currentIndex = 0;
-        List<PendingNode> list = new ArrayList<PendingNode>(size());
+    private final class PrioritizedPendingListIterator implements Iterator<MessageReference> {
+
+        private final Deque<Iterator<MessageReference>> iterators = new ArrayDeque<Iterator<MessageReference>>();
+
+        private Iterator<MessageReference> current;
+        private MessageReference currentMessage;
 
         PrioritizedPendingListIterator() {
-            for (int i = MAX_PRIORITY - 1; i >= 0; i--) {
-                OrderedPendingList orderedPendingList = lists[i];
-                if (!orderedPendingList.isEmpty()) {
-                    list.addAll(orderedPendingList.getAsList());
+            for (OrderedPendingList list : lists) {
+                if (!list.isEmpty()) {
+                    iterators.push(list.iterator());
                 }
             }
+
+            current = iterators.poll();
         }
+
         @Override
         public boolean hasNext() {
-            return list.size() > index;
+            while (current != null) {
+                if (current.hasNext()) {
+                    return true;
+                } else {
+                    current = iterators.poll();
+                }
+            }
+
+            return false;
         }
 
         @Override
         public MessageReference next() {
-            PendingNode node = list.get(this.index);
-            this.currentIndex = this.index;
-            this.index++;
-            return node.getMessage();
+            MessageReference result = null;
+
+            while (current != null) {
+                if (current.hasNext()) {
+                    result = currentMessage = current.next();
+                    break;
+                } else {
+                    current = iterators.poll();
+                }
+            }
+
+            return result;
         }
 
         @Override
         public void remove() {
-            PendingNode node = list.get(this.currentIndex);
-            if (node != null) {
-                pendingMessageHelper.removeFromMap(node.getMessage());
-                node.getList().removeNode(node);
+            if (currentMessage != null) {
+                pendingMessageHelper.removeFromMap(currentMessage);
+                current.remove();
+                currentMessage = null;
             }
         }
     }

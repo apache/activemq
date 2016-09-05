@@ -122,7 +122,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
-        return getConnection().getExceptionListener();
+        return pool.getParentExceptionListener();
     }
 
     @Override
@@ -132,7 +132,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public void setExceptionListener(ExceptionListener exceptionListener) throws JMSException {
-        getConnection().setExceptionListener(exceptionListener);
+        pool.setParentExceptionListener(exceptionListener);
     }
 
     @Override

@@ -17,7 +17,7 @@
 --%>
 <queues>
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
-<queue name="${row.name}">
+<queue name="<c:out value="${row.name}" />">
 
   <stats size="${row.queueSize}"
          consumerCount="${row.consumerCount}"
@@ -26,8 +26,8 @@
 
 
   <feed>
-    <atom><c:url value="queueBrowse/${row.name}?view=rss&amp;feedType=atom_1.0"/></atom>
-    <rss><c:url value="queueBrowse/${row.name}?view=rss&amp;feedType=rss_2.0"/></rss>
+    <atom><c:out value="queueBrowse/${row.name}?view=rss&amp;feedType=atom_1.0"/></atom>
+    <rss><c:out value="queueBrowse/${row.name}?view=rss&amp;feedType=rss_2.0"/></rss>
   </feed>
 </queue>
 </c:forEach>

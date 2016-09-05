@@ -18,11 +18,13 @@ package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.jms.pool.IntrospectionSupport;
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.transport.mqtt.MQTTInactivityMonitor;
 import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
@@ -42,6 +44,7 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
     protected volatile int receiveCounter;
     protected final String remoteAddress;
     protected X509Certificate[] peerCertificates;
+    private Map<String, Object> transportOptions;
 
     public AbstractMQTTSocket(String remoteAddress) {
         super();
@@ -132,14 +135,18 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
             synchronized(this) {
                 if (protocolConverter == null) {
                     protocolConverter = new MQTTProtocolConverter(this, brokerService);
+                    IntrospectionSupport.setProperties(protocolConverter, transportOptions);
                 }
             }
         }
-
         return protocolConverter;
     }
 
     protected boolean transportStartedAtLeastOnce() {
         return socketTransportStarted.getCount() == 0;
+    }
+
+    public void setTransportOptions(Map<String, Object> transportOptions) {
+        this.transportOptions = transportOptions;
     }
 }

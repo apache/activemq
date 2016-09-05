@@ -46,9 +46,22 @@
         <property name="pathSpec" value="*.action" />
     </bean>
 
+    <bean id="rewriteHandler" class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
+        <property name="rules">
+            <list>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                  <property name="pattern" value="*"/>
+                  <property name="name" value="X-FRAME-OPTIONS"/>
+                  <property name="value" value="SAMEORIGIN"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+    
 	<bean id="secHandlerCollection" class="org.eclipse.jetty.server.handler.HandlerCollection">
 		<property name="handlers">
 			<list>
+                <ref bean="rewriteHandler"/>
 				<bean class="org.eclipse.jetty.webapp.WebAppContext">
 					<property name="contextPath" value="/admin" />
 					<property name="resourceBase" value="${activemq.home}/webapps/admin" />

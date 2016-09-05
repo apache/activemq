@@ -23,6 +23,13 @@
 # invoke the init-script without a argument an review help section "Configuration of this script"
 # /etc/default/activemq <activemq user home>/.activemqrc <activemq installation dir>/bin/env
 
+# Active MQ installation dirs
+# ACTIVEMQ_HOME="<Installationdir>/"
+# ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
+# ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+# ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+# ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
+
 # Set jvm memory configuration (minimal/maximum amount of memory)
 ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
 
@@ -75,8 +82,10 @@ if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
 fi
 
 # Set additional JSE arguments
-#ACTIVEMQ_SSL_OPTS="-Dcom.sun.security.enableCRLDP=true -Docsp.enable=true -Docsp.responderURL=http://ocsp.example.net:80"
-ACTIVEMQ_SSL_OPTS=""
+if [ -z "$ACTIVEMQ_SSL_OPTS" ] ; then
+    #ACTIVEMQ_SSL_OPTS="-Djava.security.properties=$ACTIVEMQ_CONF/java.security"
+    ACTIVEMQ_SSL_OPTS=""
+fi
 
 # Uncomment to enable remote debugging
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
@@ -86,13 +95,6 @@ ACTIVEMQ_SSL_OPTS=""
 if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
     ACTIVEMQ_KILL_MAXSECONDS=30
 fi
-
-# Active MQ installation dirs
-# ACTIVEMQ_HOME="<Installationdir>/"
-# ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
-# ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
-# ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
-# ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
 
 # Configure a user with non root privileges, if no user is specified do not change user
 # (the entire activemq installation should be owned by this user)

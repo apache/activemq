@@ -27,9 +27,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -67,7 +70,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     private static final Logger LOG = LoggerFactory.getLogger(TcpTransportServer.class);
     protected ServerSocket serverSocket;
-    protected SelectorSelection selector;
+    protected Selector selector;
     protected int backlog = 5000;
     protected WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
     protected final TcpTransportFactory transportFactory;
@@ -303,46 +306,57 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         if (chan != null) {
             try {
                 chan.configureBlocking(false);
-                selector = SelectorManager.getInstance().register(chan, new SelectorManager.Listener() {
-                    @Override
-                    public void onSelect(SelectorSelection sel) {
-                        try {
-                            SocketChannel sc = chan.accept();
-                            if (sc != null) {
-                                if (isStopped() || getAcceptListener() == null) {
-                                    sc.close();
-                                } else {
-                                    if (useQueueForAccept) {
-                                        socketQueue.put(sc.socket());
+                selector = Selector.open();
+                chan.register(selector, SelectionKey.OP_ACCEPT);
+                while (!isStopped()) {
+                    int count = selector.select(10);
+
+                    if (count == 0) {
+                        continue;
+                    }
+
+                    Set<SelectionKey> keys = selector.selectedKeys();
+
+                    for (Iterator<SelectionKey> i = keys.iterator(); i.hasNext(); ) {
+                        final SelectionKey key = i.next();
+                        if (key.isAcceptable()) {
+                            try {
+                                SocketChannel sc = chan.accept();
+                                if (sc != null) {
+                                    if (isStopped() || getAcceptListener() == null) {
+                                        sc.close();
                                     } else {
-                                        handleSocket(sc.socket());
+                                        if (useQueueForAccept) {
+                                            socketQueue.put(sc.socket());
+                                        } else {
+                                            handleSocket(sc.socket());
+                                        }
                                     }
                                 }
+
+                            } catch (SocketTimeoutException ste) {
+                                // expect this to happen
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                if (!isStopping()) {
+                                    onAcceptError(e);
+                                } else if (!isStopped()) {
+                                    LOG.warn("run()", e);
+                                    onAcceptError(e);
+                                }
                             }
-                        } catch (Exception e) {
-                            onError(sel, e);
                         }
+                        i.remove();
                     }
-                    @Override
-                    public void onError(SelectorSelection sel, Throwable error) {
-                        Exception e = null;
-                        if (error instanceof Exception) {
-                            e = (Exception)error;
-                        } else {
-                            e = new Exception(error);
-                        }
-                        if (!isStopping()) {
-                            onAcceptError(e);
-                        } else if (!isStopped()) {
-                            LOG.warn("run()", e);
-                            onAcceptError(e);
-                        }
-                    }
-                });
-                selector.setInterestOps(SelectionKey.OP_ACCEPT);
-                selector.enable();
+
+                }
             } catch (IOException ex) {
-                selector = null;
+                if (selector != null) {
+                    try {
+                        selector.close();
+                    } catch (IOException ioe) {}
+                    selector = null;
+                }
             }
         } else {
             while (!isStopped()) {
@@ -459,7 +473,6 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (selector != null) {
-            selector.disable();
             selector.close();
             selector = null;
         }

@@ -87,9 +87,7 @@ public class TransactedStoreUsageSuspendResumeTest {
                 do {
                     Message message = consumer.receive(5000);
                     if (message != null) {
-                        if ((messagesReceivedCountDown.getCount() % (MAX_MESSAGES / 5)) == 0) {
-                            session.commit();
-                        }
+                        session.commit();
                         messagesReceivedCountDown.countDown();
                     }
                     if (messagesReceivedCountDown.getCount() % 500 == 0) {
@@ -119,6 +117,7 @@ public class TransactedStoreUsageSuspendResumeTest {
         KahaDBPersistenceAdapter kahaDB = new KahaDBPersistenceAdapter();
         kahaDB.setJournalMaxFileLength(256 * 1024);
         kahaDB.setCleanupInterval(10*1000);
+        kahaDB.setCompactAcksAfterNoGC(5);
         broker.setPersistenceAdapter(kahaDB);
 
         broker.getSystemUsage().getStoreUsage().setLimit(7*1024*1024);
@@ -148,9 +147,9 @@ public class TransactedStoreUsageSuspendResumeTest {
             }
         });
         sendExecutor.shutdown();
-        sendExecutor.awaitTermination(5, TimeUnit.MINUTES);
+        sendExecutor.awaitTermination(10, TimeUnit.MINUTES);
 
-        boolean allMessagesReceived = messagesReceivedCountDown.await(5, TimeUnit.MINUTES);
+        boolean allMessagesReceived = messagesReceivedCountDown.await(10, TimeUnit.MINUTES);
         if (!allMessagesReceived) {
             LOG.info("Giving up - not all received on time...");
             LOG.info("System Mem Usage: " + broker.getSystemUsage().getMemoryUsage());
@@ -162,7 +161,7 @@ public class TransactedStoreUsageSuspendResumeTest {
         assertTrue("Got all messages: " + messagesReceivedCountDown, allMessagesReceived);
 
         // give consumers a chance to exit gracefully
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(5);
     }
 
     private void sendMessages() throws Exception {

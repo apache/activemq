@@ -81,8 +81,8 @@ public class DstatCommand extends AbstractJmxCommand {
         String query = JmxMBeansUtil.createQueryString(queryString, "*");
         List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
-        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
+        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s  %10s";
+        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d  %10d";
 
         // sort list so the names is A..Z
         Collections.sort(queueList, new ObjectInstanceComparator());
@@ -118,8 +118,8 @@ public class DstatCommand extends AbstractJmxCommand {
         String query = JmxMBeansUtil.createQueryString(queryString, "Queue");
         List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
-        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
+        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s  %10s";
+        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d  %10d";
 
         context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Forward #", "Memory %"));
 
@@ -154,8 +154,8 @@ public class DstatCommand extends AbstractJmxCommand {
         String query = JmxMBeansUtil.createQueryString(queryString, "Topic");
         List topicsList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
-        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
+        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s  %10s";
+        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d  %10d";
 
         // sort list so the names is A..Z
         Collections.sort(topicsList, new ObjectInstanceComparator());

@@ -546,7 +546,7 @@ public class Stomp11Test extends StompTestSupport {
 
         StompFrame received = stompConnection.receive();
         LOG.info("Received Frame: {}", received);
-        assertTrue(received.getAction().equals("MESSAGE"));
+        assertTrue("Expected MESSAGE but got: " + received.getAction(), received.getAction().equals("MESSAGE"));
 
         String ack = "ACK\n" + "message-id:" +
                      received.getHeaders().get("message-id") + "\n\n" + Stomp.NULL;
@@ -554,7 +554,7 @@ public class Stomp11Test extends StompTestSupport {
 
         StompFrame error = stompConnection.receive();
         LOG.info("Received Frame: {}", error);
-        assertTrue(error.getAction().equals("ERROR"));
+        assertTrue("Expected ERROR but got: " + error.getAction(), error.getAction().equals("ERROR"));
 
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
                        "id:12345\n\n" + Stomp.NULL;

@@ -121,6 +121,12 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
         }
     }
 
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration)getConfiguration()).setTrustAllPackages(trustAllPackages);
+        }
+    }
+
     public boolean isExposeAllQueues() {
         return exposeAllQueues;
     }
@@ -199,6 +205,11 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
             createDestinationSource();
             endpointLoader = new CamelEndpointLoader(getCamelContext(), source);
             endpointLoader.afterPropertiesSet();
+        }
+
+        // use OriginalDestinationPropagateStrategy by default if no custom stategy has been set
+        if (getMessageCreatedStrategy() == null) {
+            setMessageCreatedStrategy(new OriginalDestinationPropagateStrategy());
         }
     }
 

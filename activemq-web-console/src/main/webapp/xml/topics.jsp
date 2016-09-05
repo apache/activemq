@@ -17,7 +17,7 @@
 --%>
 <topics>
 <c:forEach items="${requestContext.brokerQuery.topics}" var="row">
-<topic name="${row.name}">
+<topic name="<c:out value="${row.name}"/> ">
 
   <stats size="${row.queueSize}"
          consumerCount="${row.consumerCount}"

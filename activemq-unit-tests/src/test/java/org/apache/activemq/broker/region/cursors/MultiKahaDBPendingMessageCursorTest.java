@@ -34,6 +34,13 @@ import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
 public class MultiKahaDBPendingMessageCursorTest extends
     KahaDBPendingMessageCursorTest {
 
+    /**
+     * @param prioritizedMessages
+     */
+    public MultiKahaDBPendingMessageCursorTest(boolean prioritizedMessages) {
+        super(prioritizedMessages);
+    }
+
     @Override
     protected void initPersistence(BrokerService brokerService)
             throws IOException {

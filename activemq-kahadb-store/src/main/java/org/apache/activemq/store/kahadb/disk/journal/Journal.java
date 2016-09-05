@@ -16,34 +16,53 @@
  */
 package org.apache.activemq.store.kahadb.disk.journal;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
+
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
-import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
-import org.apache.activemq.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
 import org.apache.activemq.store.kahadb.disk.util.SchedulerTimerTask;
 import org.apache.activemq.store.kahadb.disk.util.Sequence;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.DataByteArrayInputStream;
+import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages DataFiles
- *
- *
  */
 public class Journal {
     public static final String CALLER_BUFFER_APPENDER = "org.apache.kahadb.journal.CALLER_BUFFER_APPENDER";
     public static final boolean callerBufferAppender = Boolean.parseBoolean(System.getProperty(CALLER_BUFFER_APPENDER, "false"));
 
     private static final int MAX_BATCH_SIZE = 32*1024*1024;
+
+    private static final int PREALLOC_CHUNK_SIZE = 1024*1024;
 
     // ITEM_HEAD_SPACE = length + type+ reserved space + SOR
     public static final int RECORD_HEAD_SPACE = 4 + 1;
@@ -52,10 +71,10 @@ public class Journal {
     public static final byte BATCH_CONTROL_RECORD_TYPE = 2;
     // Batch Control Item holds a 4 byte size of the batch and a 8 byte checksum of the batch.
     public static final byte[] BATCH_CONTROL_RECORD_MAGIC = bytes("WRITE BATCH");
-    public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE+BATCH_CONTROL_RECORD_MAGIC.length+4+8;
+    public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE + BATCH_CONTROL_RECORD_MAGIC.length + 4 + 8;
     public static final byte[] BATCH_CONTROL_RECORD_HEADER = createBatchControlRecordHeader();
 
-    // tackle corruption when checksum is disabled or corrupt with zeros, minimise data loss
+    // tackle corruption when checksum is disabled or corrupt with zeros, minimize data loss
     public void corruptRecoveryLocation(Location recoveryPosition) throws IOException {
         DataFile dataFile = getDataFile(recoveryPosition);
         // with corruption on recovery we have no faith in the content - slip to the next batch record or eof
@@ -70,7 +89,6 @@ public class Journal {
             recoveryPosition.setSize(-1);
 
             dataFile.corruptedBlocks.add(sequence);
-
         } catch (IOException e) {
         } finally {
             accessorPool.closeDataFileAccessor(reader);
@@ -80,7 +98,8 @@ public class Journal {
     public enum PreallocationStrategy {
         SPARSE_FILE,
         OS_KERNEL_COPY,
-        ZEROS;
+        ZEROS,
+        CHUNKED_ZEROS;
     }
 
     public enum PreallocationScope {
@@ -88,8 +107,7 @@ public class Journal {
     }
 
     private static byte[] createBatchControlRecordHeader() {
-        try {
-            DataByteArrayOutputStream os = new DataByteArrayOutputStream();
+        try (DataByteArrayOutputStream os = new DataByteArrayOutputStream();) {
             os.writeInt(BATCH_CONTROL_RECORD_SIZE);
             os.writeByte(BATCH_CONTROL_RECORD_TYPE);
             os.write(BATCH_CONTROL_RECORD_MAGIC);
@@ -141,6 +159,7 @@ public class Journal {
     protected boolean checkForCorruptionOnStartup;
     protected boolean enableAsyncDiskSync = true;
     private Timer timer;
+    private int nextDataFileId = 1;
 
     protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
     protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
@@ -163,6 +182,7 @@ public class Journal {
         appender = callerBufferAppender ? new CallerBufferingDataFileAppender(this) : new DataFileAppender(this);
 
         File[] files = directory.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String n) {
                 return dir.equals(directory) && n.startsWith(filePrefix) && n.endsWith(fileSuffix);
             }
@@ -201,7 +221,9 @@ public class Journal {
             }
         }
 
-        getCurrentWriteFile();
+        nextDataFileId = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
+
+        getOrCreateCurrentWriteFile();
 
         if (preallocationStrategy != PreallocationStrategy.SPARSE_FILE && maxFileLength != DEFAULT_MAX_FILE_LENGTH) {
             LOG.warn("You are using a preallocation strategy and journal maxFileLength which should be benchmarked accordingly to not introduce unexpected latencies.");
@@ -217,12 +239,13 @@ public class Journal {
             totalLength.addAndGet(lastAppendLocation.get().getOffset() - maxFileLength);
         }
 
-
         cleanupTask = new Runnable() {
+            @Override
             public void run() {
                 cleanup();
             }
         };
+
         this.timer = new Timer("KahaDB Scheduler", true);
         TimerTask task = new SchedulerTimerTask(cleanupTask);
         this.timer.scheduleAtFixedRate(task, DEFAULT_CLEANUP_INTERVAL,DEFAULT_CLEANUP_INTERVAL);
@@ -230,21 +253,20 @@ public class Journal {
         LOG.trace("Startup took: "+(end-start)+" ms");
     }
 
-
     public void preallocateEntireJournalDataFile(RecoverableRandomAccessFile file) {
 
         if (PreallocationScope.ENTIRE_JOURNAL == preallocationScope) {
 
             if (PreallocationStrategy.OS_KERNEL_COPY == preallocationStrategy) {
                 doPreallocationKernelCopy(file);
-
-            }else if (PreallocationStrategy.ZEROS == preallocationStrategy) {
+            } else if (PreallocationStrategy.ZEROS == preallocationStrategy) {
                 doPreallocationZeros(file);
-            }
-            else {
+            } else if (PreallocationStrategy.CHUNKED_ZEROS == preallocationStrategy) {
+                doPreallocationChunkedZeros(file);
+            } else {
                 doPreallocationSparseFile(file);
             }
-        }else {
+        } else {
             LOG.info("Using journal preallocation scope of batch allocation");
         }
     }
@@ -260,10 +282,6 @@ public class Journal {
 
     private void doPreallocationZeros(RecoverableRandomAccessFile file) {
         ByteBuffer buffer = ByteBuffer.allocate(maxFileLength);
-        for (int i = 0; i < maxFileLength; i++) {
-            buffer.put((byte) 0x00);
-        }
-        buffer.flip();
 
         try {
             FileChannel channel = file.getChannel();
@@ -276,7 +294,6 @@ public class Journal {
     }
 
     private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
-
         // create a template file that will be used to pre-allocate the journal files
         File templateFile = createJournalTemplateFile();
 
@@ -297,13 +314,36 @@ public class Journal {
 
     private File createJournalTemplateFile() {
         String fileName = "db-log.template";
-        File rc  = new File(directory, fileName);
+        File rc = new File(directory, fileName);
         if (rc.exists()) {
-            System.out.println("deleting file because it already exists...");
+            LOG.trace("deleting journal template file because it already exists...");
             rc.delete();
-
         }
         return rc;
+    }
+
+    private void doPreallocationChunkedZeros(RecoverableRandomAccessFile file) {
+
+        ByteBuffer buffer = ByteBuffer.allocate(PREALLOC_CHUNK_SIZE);
+
+        try {
+            FileChannel channel = file.getChannel();
+
+            int remLen = maxFileLength;
+            while (remLen > 0) {
+                if (remLen < buffer.remaining()) {
+                    buffer.limit(remLen);
+                }
+                int writeLen = channel.write(buffer);
+                remLen -= writeLen;
+                buffer.rewind();
+            }
+
+            channel.force(false);
+            channel.position(0);
+        } catch (IOException e) {
+            LOG.error("Could not preallocate journal file with zeros! Will continue without preallocation", e);
+        }
     }
 
     private static byte[] bytes(String string) {
@@ -321,16 +361,17 @@ public class Journal {
 
         DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         try {
-            while( true ) {
+            while (true) {
                 int size = checkBatchRecord(reader, location.getOffset());
-                if ( size>=0 && location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size <= dataFile.getLength()) {
-                    location.setOffset(location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size);
+                if (size >= 0 && location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size <= dataFile.getLength()) {
+                    location.setOffset(location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size);
                 } else {
 
-                    // Perhaps it's just some corruption... scan through the file to find the next valid batch record.  We
+                    // Perhaps it's just some corruption... scan through the
+                    // file to find the next valid batch record. We
                     // may have subsequent valid batch records.
-                    int nextOffset = findNextBatchRecord(reader, location.getOffset()+1);
-                    if( nextOffset >=0 ) {
+                    int nextOffset = findNextBatchRecord(reader, location.getOffset() + 1);
+                    if (nextOffset >= 0) {
                         Sequence sequence = new Sequence(location.getOffset(), nextOffset - 1);
                         LOG.warn("Corrupt journal records found in '" + dataFile.getFile() + "' between offsets: " + sequence);
                         dataFile.corruptedBlocks.add(sequence);
@@ -352,9 +393,9 @@ public class Journal {
             totalLength.addAndGet(dataFile.getLength() - existingLen);
         }
 
-        if( !dataFile.corruptedBlocks.isEmpty() ) {
+        if (!dataFile.corruptedBlocks.isEmpty()) {
             // Is the end of the data file corrupted?
-            if( dataFile.corruptedBlocks.getTail().getLast()+1 == location.getOffset() ) {
+            if (dataFile.corruptedBlocks.getTail().getLast() + 1 == location.getOffset()) {
                 dataFile.setLength((int) dataFile.corruptedBlocks.removeLastSequence().getFirst());
             }
         }
@@ -368,65 +409,64 @@ public class Journal {
         ByteSequence bs = new ByteSequence(data, 0, reader.read(offset, data));
 
         int pos = 0;
-        while( true ) {
+        while (true) {
             pos = bs.indexOf(header, pos);
-            if( pos >= 0 ) {
-                return offset+pos;
+            if (pos >= 0) {
+                return offset + pos;
             } else {
                 // need to load the next data chunck in..
-                if( bs.length != data.length ) {
+                if (bs.length != data.length) {
                     // If we had a short read then we were at EOF
                     return -1;
                 }
-                offset += bs.length-BATCH_CONTROL_RECORD_HEADER.length;
+                offset += bs.length - BATCH_CONTROL_RECORD_HEADER.length;
                 bs = new ByteSequence(data, 0, reader.read(offset, data));
-                pos=0;
+                pos = 0;
             }
         }
     }
-
 
     public int checkBatchRecord(DataFileAccessor reader, int offset) throws IOException {
         byte controlRecord[] = new byte[BATCH_CONTROL_RECORD_SIZE];
-        DataByteArrayInputStream controlIs = new DataByteArrayInputStream(controlRecord);
 
-        reader.readFully(offset, controlRecord);
+        try (DataByteArrayInputStream controlIs = new DataByteArrayInputStream(controlRecord);) {
 
-        // Assert that it's  a batch record.
-        for( int i=0; i < BATCH_CONTROL_RECORD_HEADER.length; i++ ) {
-            if( controlIs.readByte() != BATCH_CONTROL_RECORD_HEADER[i] ) {
-                return -1;
-            }
-        }
+            reader.readFully(offset, controlRecord);
 
-        int size = controlIs.readInt();
-        if( size > MAX_BATCH_SIZE ) {
-            return -1;
-        }
-
-        if( isChecksum() ) {
-
-            long expectedChecksum = controlIs.readLong();
-            if( expectedChecksum == 0 ) {
-                // Checksuming was not enabled when the record was stored.
-                // we can't validate the record :(
-                return size;
+            // Assert that it's a batch record.
+            for (int i = 0; i < BATCH_CONTROL_RECORD_HEADER.length; i++) {
+                if (controlIs.readByte() != BATCH_CONTROL_RECORD_HEADER[i]) {
+                    return -1;
+                }
             }
 
-            byte data[] = new byte[size];
-            reader.readFully(offset+BATCH_CONTROL_RECORD_SIZE, data);
-
-            Checksum checksum = new Adler32();
-            checksum.update(data, 0, data.length);
-
-            if( expectedChecksum!=checksum.getValue() ) {
+            int size = controlIs.readInt();
+            if (size > MAX_BATCH_SIZE) {
                 return -1;
             }
 
+            if (isChecksum()) {
+
+                long expectedChecksum = controlIs.readLong();
+                if (expectedChecksum == 0) {
+                    // Checksuming was not enabled when the record was stored.
+                    // we can't validate the record :(
+                    return size;
+                }
+
+                byte data[] = new byte[size];
+                reader.readFully(offset + BATCH_CONTROL_RECORD_SIZE, data);
+
+                Checksum checksum = new Adler32();
+                checksum.update(data, 0, data.length);
+
+                if (expectedChecksum != checksum.getValue()) {
+                    return -1;
+                }
+            }
+            return size;
         }
-        return size;
     }
-
 
     void addToTotalLength(int size) {
         totalLength.addAndGet(size);
@@ -436,21 +476,42 @@ public class Journal {
         return totalLength.get();
     }
 
-    synchronized DataFile getCurrentWriteFile() throws IOException {
+    synchronized DataFile getOrCreateCurrentWriteFile() throws IOException {
         if (dataFiles.isEmpty()) {
             rotateWriteFile();
         }
-        return dataFiles.getTail();
+
+        DataFile current = dataFiles.getTail();
+
+        if (current != null) {
+            return current;
+        } else {
+            return rotateWriteFile();
+        }
     }
 
     synchronized DataFile rotateWriteFile() {
-        int nextNum = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
+        int nextNum = nextDataFileId++;
         File file = getFile(nextNum);
         DataFile nextWriteFile = new DataFile(file, nextNum);
         fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
         fileByFileMap.put(file, nextWriteFile);
         dataFiles.addLast(nextWriteFile);
         return nextWriteFile;
+    }
+
+    public synchronized DataFile reserveDataFile() {
+        int nextNum = nextDataFileId++;
+        File file = getFile(nextNum);
+        DataFile reservedDataFile = new DataFile(file, nextNum);
+        fileMap.put(reservedDataFile.getDataFileId(), reservedDataFile);
+        fileByFileMap.put(file, reservedDataFile);
+        if (dataFiles.isEmpty()) {
+            dataFiles.addLast(reservedDataFile);
+        } else {
+            dataFiles.getTail().linkBefore(reservedDataFile);
+        }
+        return reservedDataFile;
     }
 
     public File getFile(int nextNum) {
@@ -477,10 +538,6 @@ public class Journal {
             throw new IOException("Could not locate data file " + getFile(item.getDataFileId()));
         }
         return dataFile.getFile();
-    }
-
-    private DataFile getNextDataFile(DataFile dataFile) {
-        return dataFile.getNext();
     }
 
     public void close() throws IOException {
@@ -521,6 +578,7 @@ public class Journal {
             DataFile dataFile = i.next();
             result &= dataFile.delete();
         }
+
         totalLength.set(0);
         fileMap.clear();
         fileByFileMap.clear();
@@ -536,11 +594,11 @@ public class Journal {
     public synchronized void removeDataFiles(Set<Integer> files) throws IOException {
         for (Integer key : files) {
             // Can't remove the data file (or subsequent files) that is currently being written to.
-            if( key >= lastAppendLocation.get().getDataFileId() ) {
+            if (key >= lastAppendLocation.get().getDataFileId()) {
                 continue;
             }
             DataFile dataFile = fileMap.get(key);
-            if( dataFile!=null ) {
+            if (dataFile != null) {
                 forceRemoveDataFile(dataFile);
             }
         }
@@ -569,7 +627,7 @@ public class Journal {
             LOG.debug("Successfully moved data file");
         } else {
             LOG.debug("Deleting data file: {}", dataFile);
-            if ( dataFile.delete() ) {
+            if (dataFile.delete()) {
                 LOG.debug("Discarded data file: {}", dataFile);
             } else {
                 LOG.warn("Failed to discard data file : {}", dataFile.getFile());
@@ -606,7 +664,7 @@ public class Journal {
             if (cur == null) {
                 if (location == null) {
                     DataFile head = dataFiles.getHead();
-                    if( head == null ) {
+                    if (head == null) {
                         return null;
                     }
                     cur = new Location();
@@ -629,7 +687,7 @@ public class Journal {
 
             // Did it go into the next file??
             if (dataFile.getLength() <= cur.getOffset()) {
-                dataFile = getNextDataFile(dataFile);
+                dataFile = dataFile.getNext();
                 if (dataFile == null) {
                     return null;
                 } else {
@@ -758,10 +816,35 @@ public class Journal {
         this.archiveDataLogs = archiveDataLogs;
     }
 
-    synchronized public Integer getCurrentDataFileId() {
-        if (dataFiles.isEmpty())
+    public synchronized DataFile getDataFileById(int dataFileId) {
+        if (dataFiles.isEmpty()) {
             return null;
-        return dataFiles.getTail().getDataFileId();
+        }
+
+        return fileMap.get(Integer.valueOf(dataFileId));
+    }
+
+    public synchronized DataFile getCurrentDataFile() {
+        if (dataFiles.isEmpty()) {
+            return null;
+        }
+
+        DataFile current = dataFiles.getTail();
+
+        if (current != null) {
+            return current;
+        } else {
+            return null;
+        }
+    }
+
+    public synchronized Integer getCurrentDataFileId() {
+        DataFile current = getCurrentDataFile();
+        if (current != null) {
+            return current.getDataFileId();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -784,6 +867,7 @@ public class Journal {
     public void setReplicationTarget(ReplicationTarget replicationTarget) {
         this.replicationTarget = replicationTarget;
     }
+
     public ReplicationTarget getReplicationTarget() {
         return replicationTarget;
     }
@@ -869,10 +953,12 @@ public class Journal {
             hash = (int)(file ^ offset);
         }
 
+        @Override
         public int hashCode() {
             return hash;
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj instanceof WriteKey) {
                 WriteKey di = (WriteKey)obj;

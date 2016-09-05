@@ -636,6 +636,57 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         return letter.isEnableIndexPageCaching();
     }
 
+    public int getCompactAcksAfterNoGC() {
+        return letter.getCompactAcksAfterNoGC();
+    }
+
+    /**
+     * Sets the number of GC cycles where no journal logs were removed before an attempt to
+     * move forward all the acks in the last log that contains them and is otherwise unreferenced.
+     * <p>
+     * A value of -1 will disable this feature.
+     *
+     * @param compactAcksAfterNoGC
+     *      Number of empty GC cycles before we rewrite old ACKS.
+     */
+    public void setCompactAcksAfterNoGC(int compactAcksAfterNoGC) {
+        this.letter.setCompactAcksAfterNoGC(compactAcksAfterNoGC);
+    }
+
+    public boolean isCompactAcksIgnoresStoreGrowth() {
+        return this.letter.isCompactAcksIgnoresStoreGrowth();
+    }
+
+    /**
+     * Configure if Ack compaction will occur regardless of continued growth of the
+     * journal logs meaning that the store has not run out of space yet.  Because the
+     * compaction operation can be costly this value is defaulted to off and the Ack
+     * compaction is only done when it seems that the store cannot grow and larger.
+     *
+     * @param compactAcksIgnoresStoreGrowth the compactAcksIgnoresStoreGrowth to set
+     */
+    public void setCompactAcksIgnoresStoreGrowth(boolean compactAcksIgnoresStoreGrowth) {
+        this.letter.setCompactAcksIgnoresStoreGrowth(compactAcksIgnoresStoreGrowth);
+    }
+
+    /**
+     * Returns whether Ack compaction is enabled
+     *
+     * @return enableAckCompaction
+     */
+    public boolean isEnableAckCompaction() {
+        return letter.isEnableAckCompaction();
+    }
+
+    /**
+     * Configure if the Ack compaction task should be enabled to run
+     *
+     * @param enableAckCompaction
+     */
+    public void setEnableAckCompaction(boolean enableAckCompaction) {
+        letter.setEnableAckCompaction(enableAckCompaction);
+    }
+
     public KahaDBStore getStore() {
         return letter;
     }

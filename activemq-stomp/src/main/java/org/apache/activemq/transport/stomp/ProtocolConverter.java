@@ -266,7 +266,7 @@ public class ProtocolConverter {
             } else if (action.startsWith(Stomp.Commands.DISCONNECT)) {
                 onStompDisconnect(command);
             } else {
-                throw new ProtocolException("Unknown STOMP action: " + action);
+                throw new ProtocolException("Unknown STOMP action: " + action, true);
             }
 
         } catch (ProtocolException e) {
@@ -279,9 +279,18 @@ public class ProtocolConverter {
     }
 
     protected void handleException(Throwable exception, StompFrame command) throws IOException {
-        LOG.warn("Exception occurred processing: \n" + command + ": " + exception.toString());
+        if (command == null) {
+            LOG.warn("Exception occurred while processing a command: {}", exception.toString());
+        } else {
+            LOG.warn("Exception occurred processing: {} -> {}", safeGetAction(command), exception.toString());
+        }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("Exception detail", exception);
+        }
+
+        if (command != null && LOG.isTraceEnabled()) {
+            LOG.trace("Command that caused the error: {}", command);
         }
 
         // Let the stomp client know about any protocol errors.
@@ -332,6 +341,7 @@ public class ProtocolConverter {
         }
 
         message.onSend();
+        message.beforeMarshall(null);
         sendToActiveMQ(message, createResponseHandler(command));
     }
 
@@ -703,15 +713,12 @@ public class ProtocolConverter {
         }
 
         if (subscriptionId != null) {
-
             StompSubscription sub = this.subscriptions.remove(subscriptionId);
             if (sub != null) {
                 sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
                 return;
             }
-
         } else {
-
             // Unsubscribing using a destination is a bit weird if multiple subscriptions
             // are created with the same destination.
             for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
@@ -973,7 +980,7 @@ public class ProtocolConverter {
             }
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Stomp Connect heartbeat conf RW[" + hbReadInterval + "," + hbWriteInterval + "]");
+                LOG.debug("Stomp Connect heartbeat conf RW[{},{}]", hbReadInterval, hbWriteInterval);
             }
         }
     }
@@ -988,8 +995,46 @@ public class ProtocolConverter {
             try {
                 sendToStomp(sc);
             } catch (IOException e) {
-                LOG.warn("Could not send a receipt for " + command, e);
+                LOG.warn("Could not send a receipt for {}", command, e);
             }
         }
+    }
+
+    /**
+     * Retrieve the STOMP action value from a frame if the value is valid, otherwise
+     * return an unknown string to allow for safe log output.
+     *
+     * @param command
+     *      The STOMP command to fetch an action from.
+     *
+     * @return the command action or a safe string to use in logging.
+     */
+    protected Object safeGetAction(StompFrame command) {
+        String result = "<Unknown>";
+        if (command != null && command.getAction() != null) {
+            String action = command.getAction().trim();
+
+            if (action != null) {
+                switch (action) {
+                    case Stomp.Commands.SEND:
+                    case Stomp.Commands.ACK:
+                    case Stomp.Commands.NACK:
+                    case Stomp.Commands.BEGIN:
+                    case Stomp.Commands.COMMIT:
+                    case Stomp.Commands.ABORT:
+                    case Stomp.Commands.SUBSCRIBE:
+                    case Stomp.Commands.UNSUBSCRIBE:
+                    case Stomp.Commands.CONNECT:
+                    case Stomp.Commands.STOMP:
+                    case Stomp.Commands.DISCONNECT:
+                        result = action;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return result;
     }
 }

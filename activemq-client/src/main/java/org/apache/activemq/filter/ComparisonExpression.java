@@ -88,30 +88,40 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
             regexp.append("\\A"); // The beginning of the input
             for (int i = 0; i < like.length(); i++) {
                 char c = like.charAt(i);
-                if (escape == (0xFFFF & c)) {
+                if (escape == (0xFFFF & c) && shouldEscapeNext(like, i, c)) {
                     i++;
-                    if (i >= like.length()) {
-                        // nothing left to escape...
-                        break;
-                    }
-
                     char t = like.charAt(i);
                     regexp.append("\\x");
                     regexp.append(Integer.toHexString(0xFFFF & t));
-                } else if (c == '%') {
-                    regexp.append(".*?"); // Do a non-greedy match
-                } else if (c == '_') {
-                    regexp.append("."); // match one
-                } else if (REGEXP_CONTROL_CHARS.contains(new Character(c))) {
-                    regexp.append("\\x");
-                    regexp.append(Integer.toHexString(0xFFFF & c));
                 } else {
-                    regexp.append(c);
+                    append(regexp, c);
                 }
             }
             regexp.append("\\z"); // The end of the input
 
             likePattern = Pattern.compile(regexp.toString(), Pattern.DOTALL);
+        }
+
+        private boolean shouldEscapeNext(String selector, int i, char escape) {
+            int next = i+1;
+            if (next < selector.length()) {
+                final char c = selector.charAt(next);
+                return  (c == '_' || c == '%' || c == escape);
+            }
+            return false;
+        }
+
+        private void append(StringBuffer regexp, char c) {
+            if (c == '%') {
+                regexp.append(".*?"); // Do a non-greedy match
+            } else if (c == '_') {
+                regexp.append("."); // match one
+            } else if (REGEXP_CONTROL_CHARS.contains(new Character(c))) {
+                regexp.append("\\x");
+                regexp.append(Integer.toHexString(0xFFFF & c));
+            } else {
+                regexp.append(c);
+            }
         }
 
         /**

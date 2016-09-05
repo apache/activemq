@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,18 +20,15 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 
-/**
- * 
- */
 public class JmsTopicSendReceiveWithTwoConnectionsAndByteSelectorTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
-    
 
+    @Override
     protected void configureMessage(Message message) throws JMSException {
         message.setByteProperty("dummy", (byte) 33);
     }
 
+    @Override
     protected MessageConsumer createConsumer() throws JMSException {
         return receiveSession.createConsumer(consumerDestination, "dummy = 33", false);
     }
-
 }

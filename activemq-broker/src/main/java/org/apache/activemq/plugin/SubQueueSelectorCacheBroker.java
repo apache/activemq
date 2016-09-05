@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.management.JMException;
 import javax.management.ObjectName;
@@ -103,7 +105,6 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             } catch (Exception e) {
                 LOG.warn("JMX is enabled, but when installing the VirtualDestinationSelectorCache, couldn't install the JMX mbeans. Continuing without installing the mbeans.");
             }
-
         }
     }
 
@@ -113,7 +114,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         if (persistThread != null) {
             persistThread.interrupt();
             persistThread.join();
-        } //if
+        }
         unregisterMBeans();
     }
 
@@ -130,8 +131,8 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        // don't track selectors for advisory topics
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
+        // don't track selectors for advisory topics or temp destinations
+        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
             String destinationName = info.getDestination().getQualifiedName();
             LOG.debug("Caching consumer selector [{}] on  '{}'", info.getSelector(), destinationName);
 
@@ -159,21 +160,18 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 LOG.debug("current selectors in cache: " + selectors);
                 subSelectorCache.put(destinationName, selectors);
             }
-
-
         }
+
         return super.addConsumer(context, info);
     }
 
-    // trivial check for SQL92/selector wildcards
-    private boolean hasWildcards(String selector) {
-        return selector.contains("%") || selector.contains("_");
+    static boolean hasWildcards(String selector) {
+        return WildcardFinder.hasWildcards(selector);
     }
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
-
+        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
             if (singleSelectorPerDestination) {
                 String destinationName = info.getDestination().getQualifiedName();
                 Set<String> selectors = subSelectorCache.get(destinationName);
@@ -187,11 +185,11 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         super.removeConsumer(context, info);
     }
 
+    @SuppressWarnings("unchecked")
     private void readCache() {
         if (persistFile != null && persistFile.exists()) {
             try {
-                FileInputStream fis = new FileInputStream(persistFile);
-                try {
+                try (FileInputStream fis = new FileInputStream(persistFile);) {
                     ObjectInputStream in = new ObjectInputStream(fis);
                     try {
                         subSelectorCache = (ConcurrentHashMap<String, Set<String>>) in.readObject();
@@ -199,14 +197,12 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                         LOG.error("Invalid selector cache data found. Please remove file.", ex);
                     } finally {
                         in.close();
-                    } //try
-                } finally {
-                    fis.close();
-                } //try
+                    }
+                }
             } catch (IOException ex) {
                 LOG.error("Unable to read persisted selector cache...it will be ignored!", ex);
-            } //try
-        } //if
+            }
+        }
     }
 
     /**
@@ -223,15 +219,15 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 } finally {
                     out.flush();
                     out.close();
-                } //try
+                }
             } catch (IOException ex) {
                 LOG.error("Unable to persist selector cache", ex);
             } finally {
                 fos.close();
-            } //try
+            }
         } catch (IOException ex) {
             LOG.error("Unable to access file[{}]", persistFile, ex);
-        } //try
+        }
     }
 
     /**
@@ -252,7 +248,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             try {
                 Thread.sleep(persistInterval);
             } catch (InterruptedException ex) {
-            } //try
+            }
 
             persistCache();
         }
@@ -266,6 +262,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         this.singleSelectorPerDestination = singleSelectorPerDestination;
     }
 
+    @SuppressWarnings("unchecked")
     public Set<String> getSelectorsForDestination(String destinationName) {
         if (subSelectorCache.containsKey(destinationName)) {
             return new HashSet<String>(subSelectorCache.get(destinationName));
@@ -306,5 +303,51 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     public void setIgnoreWildcardSelectors(boolean ignoreWildcardSelectors) {
         this.ignoreWildcardSelectors = ignoreWildcardSelectors;
     }
-}
 
+    // find wildcards inside like operator arguments
+    static class WildcardFinder {
+
+        private static final Pattern LIKE_PATTERN=Pattern.compile(
+                "\\bLIKE\\s+'(?<like>([^']|'')+)'(\\s+ESCAPE\\s+'(?<escape>.)')?",
+                Pattern.CASE_INSENSITIVE);
+
+        private static final String REGEX_SPECIAL = ".+?*(){}[]\\-";
+
+        private static String getLike(final Matcher matcher) {
+            return matcher.group("like");
+        }
+
+        private static boolean hasLikeOperator(final Matcher matcher) {
+            return matcher.find();
+        }
+
+        private static String getEscape(final Matcher matcher) {
+            String escapeChar = matcher.group("escape");
+            if (escapeChar == null) {
+                return null;
+            } else if (REGEX_SPECIAL.contains(escapeChar)) {
+                escapeChar = "\\"+escapeChar;
+            }
+            return escapeChar;
+        }
+
+        private static boolean hasWildcardInCurrentMatch(final Matcher matcher) {
+            String wildcards = "[_%]";
+            if (getEscape(matcher) != null) {
+                wildcards = "(^|[^" + getEscape(matcher) + "])" + wildcards;
+            }
+            return Pattern.compile(wildcards).matcher(getLike(matcher)).find();
+        }
+
+        public static boolean hasWildcards(String selector) {
+            Matcher matcher = LIKE_PATTERN.matcher(selector);
+
+            while(hasLikeOperator(matcher)) {
+                if (hasWildcardInCurrentMatch(matcher)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+}

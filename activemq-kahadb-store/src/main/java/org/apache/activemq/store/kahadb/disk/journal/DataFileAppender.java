@@ -54,33 +54,6 @@ class DataFileAppender implements FileAppender {
     protected boolean running;
     private Thread thread;
 
-    public static class WriteKey {
-        private final int file;
-        private final long offset;
-        private final int hash;
-
-        public WriteKey(Location item) {
-            file = item.getDataFileId();
-            offset = item.getOffset();
-            // TODO: see if we can build a better hash
-            hash = (int)(file ^ offset);
-        }
-
-        @Override
-        public int hashCode() {
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof WriteKey) {
-                WriteKey di = (WriteKey)obj;
-                return di.file == file && di.offset == offset;
-            }
-            return false;
-        }
-    }
-
     public class WriteBatch {
 
         public final DataFile dataFile;
@@ -206,7 +179,7 @@ class DataFileAppender implements FileAppender {
 
             while ( true ) {
                 if (nextWriteBatch == null) {
-                    DataFile file = journal.getCurrentWriteFile();
+                    DataFile file = journal.getOrCreateCurrentWriteFile();
                     if( file.getLength() + write.location.getSize() >= journal.getMaxFileLength() ) {
                         file = journal.rotateWriteFile();
                     }
@@ -287,9 +260,8 @@ class DataFileAppender implements FileAppender {
         DataFile dataFile = null;
         RecoverableRandomAccessFile file = null;
         WriteBatch wb = null;
-        try {
+        try (DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize);) {
 
-            DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize);
             while (true) {
 
                 // Block till we get a command.

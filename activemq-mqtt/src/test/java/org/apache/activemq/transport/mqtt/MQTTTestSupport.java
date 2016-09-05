@@ -21,9 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.security.ProtectionDomain;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,10 +29,6 @@ import java.util.concurrent.TimeUnit;
 import javax.jms.JMSException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -270,7 +263,9 @@ public class MQTTTestSupport {
     }
 
     protected String getTopicName() {
-        return getClass().getName() + "." + name.getMethodName();
+        //wildcard characters are illegal in publish
+        //replace a + with something else, like _ which is allowed
+        return (getClass().getName() + "." + name.getMethodName()).replace("+", "_");
     }
 
     protected BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {
@@ -309,9 +304,18 @@ public class MQTTTestSupport {
         if (!isUseSSL()) {
             provider.connect("tcp://localhost:" + port);
         } else {
-            SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
-            provider.setSslContext(ctx);
+            // Setup SSL context...
+            File trustStore = new File(basedir(), "src/test/resources/server.keystore");
+            File keyStore = new File(basedir(), "src/test/resources/client.keystore");
+
+            final ResourceLoadingSslContext sslContext = new ResourceLoadingSslContext();
+            sslContext.setKeyStore(keyStore.getCanonicalPath());
+            sslContext.setKeyStorePassword("password");
+            sslContext.setTrustStore(trustStore.getCanonicalPath());
+            sslContext.setTrustStorePassword("password");
+            sslContext.afterPropertiesSet();
+
+            provider.setSslContext(sslContext.getSSLContext());
             provider.connect("ssl://localhost:" + port);
         }
     }
@@ -419,9 +423,18 @@ public class MQTTTestSupport {
         }
         mqtt.setCleanSession(clean);
 
-        SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
-        mqtt.setSslContext(ctx);
+        // Setup SSL context...
+        File trustStore = new File(basedir(), "src/test/resources/server.keystore");
+        File keyStore = new File(basedir(), "src/test/resources/client.keystore");
+
+        final ResourceLoadingSslContext sslContext = new ResourceLoadingSslContext();
+        sslContext.setKeyStore(keyStore.getCanonicalPath());
+        sslContext.setKeyStorePassword("password");
+        sslContext.setTrustStore(trustStore.getCanonicalPath());
+        sslContext.setTrustStorePassword("password");
+        sslContext.afterPropertiesSet();
+
+        mqtt.setSslContext(sslContext.getSSLContext());
         return mqtt;
     }
 
@@ -442,21 +455,5 @@ public class MQTTTestSupport {
                 LOG.debug(String.format(message, args));
             }
         };
-    }
-
-    static class DefaultTrustManager implements X509TrustManager {
-
-        @Override
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
     }
 }
