@@ -71,6 +71,11 @@ public class TextWireFormatMarshallers {
         public Object unmarshal(final InputStream stream) throws IOException {
             return wireFormat.unmarshal(new DataInputStream(stream));
         }
+
+        @Override
+        public WireFormat getWireFormat() {
+            return wireFormat;
+        }
     }
 
     private static class MarshalPlainUnmarshalTextMarshaller implements HttpTransportMarshaller  {
@@ -88,6 +93,11 @@ public class TextWireFormatMarshallers {
         @Override
         public Object unmarshal(final InputStream stream) throws IOException {
             return wireFormat.unmarshalText(new InputStreamReader(stream, CHARSET));
+        }
+
+        @Override
+        public WireFormat getWireFormat() {
+            return wireFormat;
         }
     }
 }

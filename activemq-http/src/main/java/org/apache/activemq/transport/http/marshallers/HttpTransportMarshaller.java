@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.activemq.wireformat.WireFormat;
+
 /**
  * A generic interface for marshallers used for HTTP communication.
  */
@@ -43,4 +45,10 @@ public interface HttpTransportMarshaller
      * @throws IOException
      */
     Object unmarshal(final InputStream stream) throws IOException;
+
+    /**
+     *
+     * @return the wire format used by this marshaller
+     */
+    WireFormat getWireFormat();
 }

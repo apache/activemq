@@ -44,4 +44,9 @@ public class HttpWireFormatMarshaller implements HttpTransportMarshaller
     public Object unmarshal(final InputStream stream) throws IOException {
         return wireFormat.unmarshal(new DataInputStream(stream));
     }
+
+    @Override
+    public WireFormat getWireFormat() {
+        return wireFormat;
+    }
 }

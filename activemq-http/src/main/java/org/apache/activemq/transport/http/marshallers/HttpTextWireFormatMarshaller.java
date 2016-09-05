@@ -25,6 +25,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.activemq.transport.util.TextWireFormat;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A {@link HttpTransportMarshaller} implementation using a {@link TextWireFormat} and UTF8 encoding.
@@ -47,5 +48,10 @@ public class HttpTextWireFormatMarshaller implements HttpTransportMarshaller
     @Override
     public Object unmarshal(final InputStream stream) throws IOException {
         return wireFormat.unmarshalText(new InputStreamReader(stream, CHARSET));
+    }
+
+    @Override
+    public WireFormat getWireFormat() {
+        return wireFormat;
     }
 }

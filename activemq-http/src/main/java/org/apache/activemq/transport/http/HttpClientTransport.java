@@ -27,7 +27,6 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.http.marshallers.HttpTransportMarshaller;
-import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
@@ -418,6 +417,6 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     @Override
     public WireFormat getWireFormat() {
-        return getTextWireFormat();
+        return getMarshaller().getWireFormat();
     }
 }

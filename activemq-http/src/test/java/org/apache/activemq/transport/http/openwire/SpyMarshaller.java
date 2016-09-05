@@ -18,6 +18,7 @@
 package org.apache.activemq.transport.http.openwire;
 
 import org.apache.activemq.transport.http.marshallers.HttpTransportMarshaller;
+import org.apache.activemq.wireformat.WireFormat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,5 +55,10 @@ public class SpyMarshaller implements HttpTransportMarshaller {
     public int getUnmarshallCallsCnt()
     {
         return unmarshallCalls.get();
+    }
+
+    @Override
+    public WireFormat getWireFormat() {
+        return marshaller.getWireFormat();
     }
 }
