@@ -45,8 +45,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.InvalidClientIDException;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.AbstractRegion;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -710,6 +712,17 @@ public class AmqpConnection implements AmqpProtocolConverter {
         }
 
         return result;
+    }
+
+
+    Subscription lookupPrefetchSubscription(ConsumerInfo consumerInfo)  {
+        Subscription subscription = null;
+        try {
+            subscription = ((AbstractRegion)((RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class)).getRegion(consumerInfo.getDestination())).getSubscriptions().get(consumerInfo.getConsumerId());
+        } catch (Exception e) {
+            LOG.warn("Error finding subscription for: " + consumerInfo + ": " + e.getMessage(), false, e);
+        }
+        return subscription;
     }
 
     ActiveMQDestination createTemporaryDestination(final Link link, Symbol[] capabilities) {

@@ -22,6 +22,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.LinkedList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -90,6 +94,108 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         receiver2.close();
         connection.close();
     }
+
+    @Test(timeout = 60000)
+    public void testReceiveFlowDispositionSingleCredit() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+        for (int i=0;i<2; i++) {
+            AmqpMessage message = new AmqpMessage();
+            message.setMessageId("msg" + i);
+            sender.send(message);
+        }
+        sender.close();
+        connection.close();
+
+        LOG.info("Starting consumer connection");
+        connection = client.connect();
+        session = connection.createSession();
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        receiver.flow(1);
+        AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+
+        receiver.flow(1);
+        received.accept();
+
+        received = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+        received.accept();
+
+        receiver.close();
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testReceiveFlowDispositionSingleCreditTopic() throws Exception {
+        final AmqpClient client = createAmqpClient();
+        final LinkedList<Throwable> errors = new LinkedList<Throwable>();
+        final CountDownLatch receiverReady = new CountDownLatch(1);
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    LOG.info("Starting consumer connection");
+                    AmqpConnection connection = client.connect();
+                    AmqpSession session = connection.createSession();
+                    AmqpReceiver receiver = session.createReceiver("topic://" + getTestName());
+                    receiver.flow(1);
+                    receiverReady.countDown();
+                    AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
+                    assertNotNull(received);
+
+                    receiver.flow(1);
+                    received.accept();
+
+                    received = receiver.receive(5, TimeUnit.SECONDS);
+                    assertNotNull(received);
+                    received.accept();
+
+                    receiver.close();
+                    connection.close();
+
+                } catch (Exception error) {
+                    errors.add(error);
+                }
+
+            }
+        });
+
+        // producer
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+                    receiverReady.await(20, TimeUnit.SECONDS);
+                    AmqpConnection connection = client.connect();
+                    AmqpSession session = connection.createSession();
+
+                    AmqpSender sender = session.createSender("topic://" + getTestName());
+                    for (int i = 0; i < 2; i++) {
+                        AmqpMessage message = new AmqpMessage();
+                        message.setMessageId("msg" + i);
+                        sender.send(message);
+                    }
+                    sender.close();
+                    connection.close();
+                } catch (Exception ignored) {
+                    ignored.printStackTrace();
+                }
+
+            }
+        });
+
+        executorService.shutdown();
+        executorService.awaitTermination(20, TimeUnit.SECONDS);
+        assertTrue("no errors: " + errors, errors.isEmpty());
+    }
+
 
     @Test(timeout = 60000)
     public void testReceiveWithJMSSelectorFilter() throws Exception {
