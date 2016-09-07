@@ -32,6 +32,8 @@ import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransportFactory;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -97,14 +99,24 @@ public class AutoSslTransportFactory extends SslTransportFactory implements Brok
             @Override
             protected TcpTransport createTransport(Socket socket, WireFormat format)
                     throws IOException {
-                if (format.getClass().toString().contains("MQTT") && !allowLinkStealingSet) {
-                    this.setAllowLinkStealing(true);
-                }
+                setDefaultLinkStealing(format, this);
                 return super.createTransport(socket, format);
+            }
+
+            @Override
+            protected TcpTransport createTransport(Socket socket, WireFormat format,
+                    TcpTransportFactory detectedTransportFactory) throws IOException {
+                setDefaultLinkStealing(format, this);
+                return super.createTransport(socket, format, detectedTransportFactory);
             }
         };
         return server;
     }
 
+    private void setDefaultLinkStealing(WireFormat format, TcpTransportServer server) {
+        if (format.getClass().toString().contains("MQTT") && !allowLinkStealingSet) {
+            server.setAllowLinkStealing(true);
+        }
+    }
 
 }
