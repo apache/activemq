@@ -22,6 +22,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,8 +90,14 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         try {
             wff = (WireFormatFactory)WIREFORMAT_FACTORY_FINDER.newInstance(scheme);
             if (options != null) {
-                IntrospectionSupport.setProperties(wff, options.get(AutoTransportUtils.ALL));
-                IntrospectionSupport.setProperties(wff, options.get(scheme));
+                final Map<String, Object> wfOptions = new HashMap<>();
+                if (options.get(AutoTransportUtils.ALL) != null) {
+                    wfOptions.putAll(options.get(AutoTransportUtils.ALL));
+                }
+                if (options.get(scheme) != null) {
+                    wfOptions.putAll(options.get(scheme));
+                }
+                IntrospectionSupport.setProperties(wff, wfOptions);
             }
             if (wff instanceof OpenWireFormatFactory) {
                 protocolVerifiers.put(AutoTransportUtils.OPENWIRE, new OpenWireProtocolVerifier((OpenWireFormatFactory) wff));
