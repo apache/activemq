@@ -173,6 +173,31 @@ public class AmqpMessage {
     //----- Convenience methods for constructing outbound messages -----------//
 
     /**
+     * Sets the address which is applied to the AMQP message To field in the message properties
+     *
+     * @param address
+     *      The address that should be applied in the Message To field.
+     */
+    public void setAddress(String address) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setAddress(address);
+    }
+
+    /**
+     * Return the set address that was set in the Message To field.
+     *
+     * @return the set address String form or null if not set.
+     */
+    public String getAddress() {
+        if (message.getProperties() == null) {
+            return null;
+        }
+
+        return message.getProperties().getTo();
+    }
+
+    /**
      * Sets the MessageId property on an outbound message using the provided String
      *
      * @param messageId

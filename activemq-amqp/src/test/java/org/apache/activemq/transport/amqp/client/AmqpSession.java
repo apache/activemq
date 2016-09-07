@@ -54,6 +54,17 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     }
 
     /**
+     * Create an anonymous sender.
+     *
+     * @return a newly created sender that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the sender.
+     */
+    public AmqpSender createSender() throws Exception {
+        return createSender(null, false);
+    }
+
+    /**
      * Create a sender instance using the given address
      *
      * @param address
