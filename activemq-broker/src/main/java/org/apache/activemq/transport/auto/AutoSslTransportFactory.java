@@ -29,22 +29,16 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
-import org.apache.activemq.transport.tcp.SslTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class AutoSslTransportFactory extends SslTransportFactory implements BrokerServiceAware  {
-    private static final Logger LOG = LoggerFactory.getLogger(AutoSslTransportFactory.class);
-
 
     protected BrokerService brokerService;
     /* (non-Javadoc)

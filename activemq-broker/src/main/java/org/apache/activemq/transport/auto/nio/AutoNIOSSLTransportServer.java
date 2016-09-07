@@ -104,6 +104,7 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         //The SSLEngine needs to be initialized and handshake done to get the first command and detect the format
+        //The wireformat doesn't need properties set here because we aren't using this format during the SSL handshake
         final AutoInitNioSSLTransport in = new AutoInitNioSSLTransport(wireFormatFactory.createWireFormat(), socket);
         if (context != null) {
             in.setSslContext(context);
@@ -143,7 +144,6 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
 
         return new TransportInfo(format, transport, protocolInfo.detectedTransportFactory);
     }
-
 
 }
 

@@ -16,23 +16,16 @@
  */
 package org.apache.activemq.transport.auto;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerFilter;
-import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +34,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class AutoSslAuthTest {
+public class AutoWireFormatConfigurationTest {
 
     public static final String KEYSTORE_TYPE = "jks";
     public static final String PASSWORD = "password";
@@ -50,14 +43,21 @@ public class AutoSslAuthTest {
 
     private String uri;
     private final String protocol;
-    private AtomicInteger hasCertificateCount = new AtomicInteger();
     private BrokerService brokerService;
+    //Use the scheme for applying wireformat options or apply to all wireformats if false
+    private final boolean onlyScheme;
 
-    @Parameters(name="protocol={0}")
+    @Parameters(name="protocol={0},onlyScheme={1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                {"auto+nio+ssl"},
-                {"auto+ssl"}
+                {"auto", true},
+                {"auto+nio", true},
+                {"auto+nio+ssl", true},
+                {"auto+ssl", true},
+                {"auto", false},
+                {"auto+nio", false},
+                {"auto+nio+ssl", false},
+                {"auto+ssl", false}
             });
     }
 
@@ -75,33 +75,13 @@ public class AutoSslAuthTest {
         BrokerService brokerService = new BrokerService();
         brokerService.setPersistent(false);
 
-        TransportConnector connector = brokerService.addConnector(protocol + "://localhost:0?transport.needClientAuth=true");
+        String wireFormatSetting = onlyScheme ?
+                "wireFormat.default.cacheEnabled=false" : "wireFormat.cacheEnabled=false";
+        TransportConnector connector =
+                brokerService.addConnector(protocol + "://localhost:0?" + wireFormatSetting);
         connector.setName("auto");
+
         uri = connector.getPublishableConnectString();
-
-        ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
-
-        plugins.add(new BrokerPlugin() {
-
-            @Override
-            public Broker installPlugin(Broker broker) throws Exception {
-                return new BrokerFilter(broker) {
-
-                    @Override
-                    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-                        super.addConnection(context, info);
-                        if (info.getTransportContext() instanceof X509Certificate[]) {
-                            hasCertificateCount.getAndIncrement();
-                        }
-                    }
-                };
-            }
-        });
-
-        if (!plugins.isEmpty()) {
-            BrokerPlugin[] array = new BrokerPlugin[plugins.size()];
-            brokerService.setPlugins(plugins.toArray(array));
-        }
 
         this.brokerService = brokerService;
         brokerService.start();
@@ -119,11 +99,12 @@ public class AutoSslAuthTest {
     /**
      * @param isNio
      */
-    public AutoSslAuthTest(String protocol) {
+    public AutoWireFormatConfigurationTest(String protocol, boolean onlyScheme) {
         this.protocol = protocol;
+        this.onlyScheme = onlyScheme;
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 10000)
     public void testConnect() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         factory.setBrokerURL(uri);
@@ -133,10 +114,10 @@ public class AutoSslAuthTest {
             factory.createConnection().start();
         }
 
-        assertTrue(hasCertificateCount.get() == 5);
-
         for (TransportConnection connection : brokerService.getTransportConnectorByName("auto").getConnections()) {
-            assertTrue(connection.getTransport().getPeerCertificates() != null);
+            //Cache should be disabled on the wire format
+            OpenWireFormat wireFormat = (OpenWireFormat) connection.getTransport().getWireFormat();
+            assertEquals(false, wireFormat.isCacheEnabled());
         }
     }
 }
