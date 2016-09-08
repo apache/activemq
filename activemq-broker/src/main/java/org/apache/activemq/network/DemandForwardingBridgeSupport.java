@@ -652,12 +652,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             this.brokerService.getBrokerName(), subInfo.getBrokerName());
 
                     if (configuration.isSyncDurableSubs() && configuration.isConduitSubscriptions()
-                            && !configuration.isDynamicOnly() && subInfo.getSubscriptionInfos() != null) {
+                            && !configuration.isDynamicOnly()) {
                         if (started.get()) {
-                            for (ConsumerInfo info : subInfo.getSubscriptionInfos()) {
-                                if(!info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX) &&
-                                        matchesDynamicallyIncludedDestinations(info.getDestination())) {
-                                    serviceRemoteConsumerAdvisory(info);
+                            if (subInfo.getSubscriptionInfos() != null) {
+                                for (ConsumerInfo info : subInfo.getSubscriptionInfos()) {
+                                    if(!info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX) &&
+                                            matchesDynamicallyIncludedDestinations(info.getDestination())) {
+                                        serviceRemoteConsumerAdvisory(info);
+                                    }
                                 }
                             }
 
