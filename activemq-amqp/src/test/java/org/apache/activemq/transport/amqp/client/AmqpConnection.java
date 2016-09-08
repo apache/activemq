@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -49,6 +49,9 @@ import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.impl.CollectorImpl;
+import org.apache.qpid.proton.engine.impl.ProtocolTracer;
+import org.apache.qpid.proton.engine.impl.TransportImpl;
+import org.apache.qpid.proton.framing.TransportFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +62,7 @@ import io.netty.util.ReferenceCountUtil;
 public class AmqpConnection extends AmqpAbstractResource<Connection> implements NettyTransportListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpConnection.class);
+    private static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpConnection.class.getPackage().getName() + ".FRAMES");
 
     private static final NoOpAsyncResult NOOP_REQUEST = new NoOpAsyncResult();
 
@@ -101,6 +105,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private long connectTimeout = DEFAULT_CONNECT_TIMEOUT;
     private long closeTimeout = DEFAULT_CLOSE_TIMEOUT;
     private long drainTimeout = DEFAULT_DRAIN_TIMEOUT;
+    private boolean trace;
 
     public AmqpConnection(org.apache.activemq.transport.amqp.client.transport.NettyTransport transport, String username, String password) {
         setEndpoint(Connection.Factory.create());
@@ -154,6 +159,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                         sasl.client();
                     }
                     authenticator = new SaslAuthenticator(sasl, username, password, authzid, mechanismRestriction);
+                    updateTracer();
                     open(future);
 
                     pumpToProtonTransport(future);
@@ -434,6 +440,14 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         return mechanismRestriction;
     }
 
+    public boolean isTraceFrames() {
+        return trace;
+    }
+
+    public void setTraceFrames(boolean trace) {
+        this.trace = trace;
+    }
+
     //----- Internal getters used from the child AmqpResource classes --------//
 
     ScheduledExecutorService getScheduler() {
@@ -696,6 +710,22 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         }
 
         return containerId;
+    }
+
+    private void updateTracer() {
+        if (isTraceFrames()) {
+            ((TransportImpl) protonTransport).setProtocolTracer(new ProtocolTracer() {
+                @Override
+                public void receivedFrame(TransportFrame transportFrame) {
+                    TRACE_FRAMES.trace("{} | RECV: {}", getRemoteURI(), transportFrame.getBody());
+                }
+
+                @Override
+                public void sentFrame(TransportFrame transportFrame) {
+                    TRACE_FRAMES.trace("{} | SENT: {}", this, transportFrame.getBody());
+                }
+            });
+        }
     }
 
     @Override
