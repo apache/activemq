@@ -39,6 +39,8 @@ public class AmqpAnonymousSenderTest extends AmqpClientTestSupport {
     public void testSendMessageOnAnonymousRelayLinkUsingMessageTo() throws Exception {
 
         AmqpClient client = createAmqpClient();
+        client.setTraceFrames(false);
+
         AmqpConnection connection = client.connect();
         AmqpSession session = connection.createSession();
 
