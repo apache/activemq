@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -56,14 +57,18 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(DurableSyncNetworkBridgeTest.class);
 
+    protected String staticIncludeTopics = "include.static.test";
+    protected String includedTopics = "include.test.>";
     protected String testTopicName2 = "include.test.bar2";
     private boolean dynamicOnly = false;
+    private boolean forceDurable = false;
     private byte remoteBrokerWireFormatVersion = CommandTypes.PROTOCOL_VERSION;
     public static enum FLOW {FORWARD, REVERSE};
 
     private BrokerService broker1;
     private BrokerService broker2;
     private Session session1;
+    private Session session2;
     private final FLOW flow;
 
     @Rule
@@ -98,7 +103,10 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     @Before
     public void setUp() throws Exception {
+        includedTopics = "include.test.>";
+        staticIncludeTopics = "include.static.test";
         dynamicOnly = false;
+        forceDurable = false;
         remoteBrokerWireFormatVersion = CommandTypes.PROTOCOL_VERSION;
         doSetUp(true, true, tempFolder.newFolder(), tempFolder.newFolder());
     }
@@ -135,6 +143,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertNCDurableSubsCount(broker2, topic, 1);
 
         restartBrokers(true);
+        assertBridgeStarted();
 
         assertSubscriptionsCount(broker1, topic, 1);
         assertNCDurableSubsCount(broker2, topic, 1);
@@ -157,6 +166,43 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         doTearDown();
         restartBroker(broker1, false);
+        restartBroker(broker2, false);
+
+        //Send some messages to the NC sub and make sure it can still be deleted
+        MessageProducer prod = session2.createProducer(topic);
+        for (int i = 0; i < 10; i++) {
+            prod.send(session2.createTextMessage("test"));
+        }
+
+        assertSubscriptionsCount(broker1, topic, 1);
+        removeSubscription(broker1, topic, subName);
+        assertSubscriptionsCount(broker1, topic, 0);
+        doTearDown();
+
+        //Test that on successful reconnection of the bridge that
+        //the NC sub will be removed
+        restartBroker(broker2, true);
+        assertNCDurableSubsCount(broker2, topic, 1);
+        restartBroker(broker1, true);
+        assertBridgeStarted();
+        assertNCDurableSubsCount(broker2, topic, 0);
+
+    }
+
+    @Test
+    public void testRemoveSubscriptionWithBridgeOfflineIncludedChanged() throws Exception {
+        final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
+        MessageConsumer sub1 = session1.createDurableSubscriber(topic, subName);
+        sub1.close();
+
+        assertSubscriptionsCount(broker1, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
+
+        doTearDown();
+
+        //change the included topics to make sure we still cleanup non-matching NC durables
+        includedTopics = "different.topic";
+        restartBroker(broker1, false);
         assertSubscriptionsCount(broker1, topic, 1);
         removeSubscription(broker1, topic, subName);
         assertSubscriptionsCount(broker1, topic, 0);
@@ -166,8 +212,74 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         restartBroker(broker2, true);
         assertNCDurableSubsCount(broker2, topic, 1);
         restartBroker(broker1, true);
+        assertBridgeStarted();
         assertNCDurableSubsCount(broker2, topic, 0);
 
+    }
+
+    @Test
+    public void testSubscriptionRemovedAfterIncludedChanged() throws Exception {
+        final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
+        MessageConsumer sub1 = session1.createDurableSubscriber(topic, subName);
+        sub1.close();
+
+        assertSubscriptionsCount(broker1, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
+
+        doTearDown();
+
+        //change the included topics to make sure we still cleanup non-matching NC durables
+        includedTopics = "different.topic";
+        restartBroker(broker1, false);
+        assertSubscriptionsCount(broker1, topic, 1);
+
+        //Test that on successful reconnection of the bridge that
+        //the NC sub will be removed because even though the local subscription exists,
+        //it no longer matches the included filter
+        restartBroker(broker2, true);
+        assertNCDurableSubsCount(broker2, topic, 1);
+        restartBroker(broker1, true);
+        assertBridgeStarted();
+        assertNCDurableSubsCount(broker2, topic, 0);
+        assertSubscriptionsCount(broker1, topic, 1);
+
+    }
+
+    @Test
+    public void testSubscriptionRemovedAfterStaticChanged() throws Exception {
+        forceDurable = true;
+        this.restartBrokers(true);
+
+        final ActiveMQTopic topic = new ActiveMQTopic(this.staticIncludeTopics);
+        MessageConsumer sub1 = session1.createDurableSubscriber(topic, subName);
+        sub1.close();
+
+        assertSubscriptionsCount(broker1, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
+
+        doTearDown();
+
+        //change the included topics to make sure we still cleanup non-matching NC durables
+        staticIncludeTopics = "different.topic";
+        this.restartBrokers(false);
+        assertSubscriptionsCount(broker1, topic, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
+
+        //Send some messages to the NC sub and make sure it can still be deleted
+        MessageProducer prod = session2.createProducer(topic);
+        for (int i = 0; i < 10; i++) {
+            prod.send(session2.createTextMessage("test"));
+        }
+
+        //Test that on successful reconnection of the bridge that
+        //the NC sub will be removed because even though the local subscription exists,
+        //it no longer matches the included static filter
+        restartBroker(broker2, true);
+        assertNCDurableSubsCount(broker2, topic, 1);
+        restartBroker(broker1, true);
+        assertBridgeStarted();
+        assertNCDurableSubsCount(broker2, topic, 0);
+        assertSubscriptionsCount(broker1, topic, 1);
     }
 
     @Test
@@ -199,9 +311,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         //After sync, remove old NC and create one for topic 2
         restartBroker(broker1, true);
+        assertBridgeStarted();
         assertNCDurableSubsCount(broker2, topic, 0);
         assertNCDurableSubsCount(broker2, topic2, 1);
-
     }
 
     @Test
@@ -225,6 +337,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertSubscriptionsCount(broker1, topic2, 1);
 
         restartBrokers(true);
+        assertBridgeStarted();
         assertNCDurableSubsCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, topic2, 1);
         assertNCDurableSubsCount(broker2, excludeTopic, 0);
@@ -265,6 +378,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
             assertNCDurableSubsCount(broker2, new ActiveMQTopic("include.test." + i), 1);
         }
 
+        assertBridgeStarted();
     }
 
 
@@ -291,6 +405,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //not be added
         restartBrokers(true);
         assertNCDurableSubsCount(broker2, topic, 0);
+        assertBridgeStarted();
 
     }
 
@@ -312,6 +427,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         restartBrokers(true);
         assertNCDurableSubsCount(broker2, topic, 0);
+        assertBridgeStarted();
     }
 
     @Test
@@ -335,6 +451,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //bring online again
         session1.createDurableSubscriber(topic, subName);
         assertNCDurableSubsCount(broker2, topic, 1);
+        assertBridgeStarted();
 
     }
 
@@ -358,6 +475,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         restartBrokers(true);
         assertNCDurableSubsCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, excludeTopic, 0);
+        assertBridgeStarted();
 
     }
 
@@ -389,6 +507,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //between the sync command and the online durables that are added over
         //the consumer advisory
         restartBrokers(true);
+        assertBridgeStarted();
 
         //Re-create
         session1.createDurableSubscriber(topic, subName);
@@ -460,7 +579,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
                 public boolean isSatisified() throws Exception {
                     return localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1;
                 }
-            }, 10000, 500);
+            }, 5000, 500);
         }
         localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -469,6 +588,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
             session1 = localSession;
         } else {
             broker2 = localBroker;
+            session2 = localSession;
         }
     }
 
@@ -486,6 +606,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         if (flow.equals(FLOW.FORWARD)) {
             broker2 = remoteBroker;
+            session2 = remoteSession;
         } else {
             broker1 = remoteBroker;
             session1 = remoteSession;
@@ -524,8 +645,10 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         connector.setDuplex(true);
         connector.setStaticBridge(false);
         connector.setSyncDurableSubs(true);
+        connector.setStaticallyIncludedDestinations(
+                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(staticIncludeTopics + "?forceDurable=" + forceDurable)));
         connector.setDynamicallyIncludedDestinations(
-                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic("include.test.>")));
+                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(includedTopics)));
         connector.setExcludedDestinations(
                 Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(excludeTopicName)));
         return connector;

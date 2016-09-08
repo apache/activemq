@@ -26,6 +26,7 @@ import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.TypeConversionSupport;
@@ -88,6 +89,30 @@ public class DurableConduitBridge extends ConduitBridge {
                         LOG.error("Failed to add static destination {}", dest, e);
                     }
                     LOG.trace("Forwarding messages for durable destination: {}", dest);
+                } else if (configuration.isSyncDurableSubs() && !isPermissableDestination(dest)) {
+                    if (dest.isTopic()) {
+                        RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
+                        TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
+
+                        String candidateSubName = getSubscriberName(dest);
+                        for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
+                            String subName = subscription.getConsumerInfo().getSubscriptionName();
+                            if (subName != null && subName.equals(candidateSubName)) {
+                               try {
+                                    // remove the NC subscription as it is no longer for a permissable dest
+                                    RemoveSubscriptionInfo sending = new RemoveSubscriptionInfo();
+                                    sending.setClientId(localClientId);
+                                    sending.setSubscriptionName(subName);
+                                    sending.setConnectionId(this.localConnectionInfo.getConnectionId());
+                                    localBroker.oneway(sending);
+                                } catch (IOException e) {
+                                    LOG.debug("Exception removing NC durable subscription: {}", subName, e);
+                                    serviceRemoteException(e);
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }

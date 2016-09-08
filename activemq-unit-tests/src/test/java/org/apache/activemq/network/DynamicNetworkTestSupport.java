@@ -88,6 +88,16 @@ public abstract class DynamicNetworkTestSupport {
         }
     }
 
+
+    protected void assertBridgeStarted() throws Exception {
+        assertTrue(Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1;
+            }
+        }, 10000, 500));
+    }
+
     protected RemoveSubscriptionInfo getRemoveSubscriptionInfo(final ConnectionContext context,
             final BrokerService brokerService) throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
@@ -181,6 +191,7 @@ public abstract class DynamicNetworkTestSupport {
             destination = (Topic) d;
         }
 
+
         for (SubscriptionKey key : destination.getDurableTopicSubs().keySet()) {
             if (key.getSubscriptionName().startsWith(DemandForwardingBridge.DURABLE_SUB_PREFIX)) {
                 DurableTopicSubscription sub = destination.getDurableTopicSubs().get(key);
@@ -189,6 +200,7 @@ public abstract class DynamicNetworkTestSupport {
                 }
             }
         }
+
         return subs;
     }
 
