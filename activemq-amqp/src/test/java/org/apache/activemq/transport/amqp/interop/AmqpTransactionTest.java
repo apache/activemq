@@ -178,4 +178,198 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         sender.close();
         connection.close();
     }
+
+    @Test(timeout = 60000)
+    public void testMultipleSessionReceiversInSingleTXNWithCommit() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+
+        // Load up the Queue with some messages
+        {
+            AmqpSession session = connection.createSession();
+            AmqpSender sender = session.createSender("queue://" + getTestName());
+            AmqpMessage message = new AmqpMessage();
+            message.setText("Test-Message");
+            sender.send(message);
+            sender.send(message);
+            sender.send(message);
+            sender.close();
+        }
+
+        // Root TXN session controls all TXN send lifetimes.
+        AmqpSession txnSession = connection.createSession();
+
+        // Create some sender sessions
+        AmqpSession session1 = connection.createSession();
+        AmqpSession session2 = connection.createSession();
+        AmqpSession session3 = connection.createSession();
+
+        // Sender linked to each session
+        AmqpReceiver receiver1 = session1.createReceiver("queue://" + getTestName());
+        AmqpReceiver receiver2 = session2.createReceiver("queue://" + getTestName());
+        AmqpReceiver receiver3 = session3.createReceiver("queue://" + getTestName());
+
+        final QueueViewMBean queue = getProxyToQueue(getTestName());
+        assertEquals(3, queue.getQueueSize());
+
+        // Begin the transaction that all senders will operate in.
+        txnSession.begin();
+
+        assertTrue(txnSession.isInTransaction());
+
+        receiver1.flow(1);
+        receiver2.flow(1);
+        receiver3.flow(1);
+
+        AmqpMessage message1 = receiver1.receive(5, TimeUnit.SECONDS);
+        AmqpMessage message2 = receiver2.receive(5, TimeUnit.SECONDS);
+        AmqpMessage message3 = receiver3.receive(5, TimeUnit.SECONDS);
+
+        message1.accept(txnSession);
+        message2.accept(txnSession);
+        message3.accept(txnSession);
+
+        assertEquals(3, queue.getQueueSize());
+
+        txnSession.commit();
+
+        assertEquals(0, queue.getQueueSize());
+    }
+
+    @Test(timeout = 60000)
+    public void testMultipleSessionReceiversInSingleTXNWithRollback() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+
+        // Load up the Queue with some messages
+        {
+            AmqpSession session = connection.createSession();
+            AmqpSender sender = session.createSender("queue://" + getTestName());
+            AmqpMessage message = new AmqpMessage();
+            message.setText("Test-Message");
+            sender.send(message);
+            sender.send(message);
+            sender.send(message);
+            sender.close();
+        }
+
+        // Root TXN session controls all TXN send lifetimes.
+        AmqpSession txnSession = connection.createSession();
+
+        // Create some sender sessions
+        AmqpSession session1 = connection.createSession();
+        AmqpSession session2 = connection.createSession();
+        AmqpSession session3 = connection.createSession();
+
+        // Sender linked to each session
+        AmqpReceiver receiver1 = session1.createReceiver("queue://" + getTestName());
+        AmqpReceiver receiver2 = session2.createReceiver("queue://" + getTestName());
+        AmqpReceiver receiver3 = session3.createReceiver("queue://" + getTestName());
+
+        final QueueViewMBean queue = getProxyToQueue(getTestName());
+        assertEquals(3, queue.getQueueSize());
+
+        // Begin the transaction that all senders will operate in.
+        txnSession.begin();
+
+        assertTrue(txnSession.isInTransaction());
+
+        receiver1.flow(1);
+        receiver2.flow(1);
+        receiver3.flow(1);
+
+        AmqpMessage message1 = receiver1.receive(5, TimeUnit.SECONDS);
+        AmqpMessage message2 = receiver2.receive(5, TimeUnit.SECONDS);
+        AmqpMessage message3 = receiver3.receive(5, TimeUnit.SECONDS);
+
+        message1.accept(txnSession);
+        message2.accept(txnSession);
+        message3.accept(txnSession);
+
+        assertEquals(3, queue.getQueueSize());
+
+        txnSession.rollback();
+
+        assertEquals(3, queue.getQueueSize());
+    }
+
+    @Test(timeout = 60000)
+    public void testMultipleSessionSendersInSingleTXNWithCommit() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+
+        // Root TXN session controls all TXN send lifetimes.
+        AmqpSession txnSession = connection.createSession();
+
+        // Create some sender sessions
+        AmqpSession session1 = connection.createSession();
+        AmqpSession session2 = connection.createSession();
+        AmqpSession session3 = connection.createSession();
+
+        // Sender linked to each session
+        AmqpSender sender1 = session1.createSender("queue://" + getTestName());
+        AmqpSender sender2 = session2.createSender("queue://" + getTestName());
+        AmqpSender sender3 = session3.createSender("queue://" + getTestName());
+
+        final QueueViewMBean queue = getProxyToQueue(getTestName());
+        assertEquals(0, queue.getQueueSize());
+
+        // Begin the transaction that all senders will operate in.
+        txnSession.begin();
+
+        AmqpMessage message = new AmqpMessage();
+        message.setText("Test-Message");
+
+        assertTrue(txnSession.isInTransaction());
+
+        sender1.send(message, txnSession.getTransactionId());
+        sender2.send(message, txnSession.getTransactionId());
+        sender3.send(message, txnSession.getTransactionId());
+
+        assertEquals(0, queue.getQueueSize());
+
+        txnSession.commit();
+
+        assertEquals(3, queue.getQueueSize());
+    }
+
+    @Test(timeout = 60000)
+    public void testMultipleSessionSendersInSingleTXNWithRollback() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+
+        // Root TXN session controls all TXN send lifetimes.
+        AmqpSession txnSession = connection.createSession();
+
+        // Create some sender sessions
+        AmqpSession session1 = connection.createSession();
+        AmqpSession session2 = connection.createSession();
+        AmqpSession session3 = connection.createSession();
+
+        // Sender linked to each session
+        AmqpSender sender1 = session1.createSender("queue://" + getTestName());
+        AmqpSender sender2 = session2.createSender("queue://" + getTestName());
+        AmqpSender sender3 = session3.createSender("queue://" + getTestName());
+
+        final QueueViewMBean queue = getProxyToQueue(getTestName());
+        assertEquals(0, queue.getQueueSize());
+
+        // Begin the transaction that all senders will operate in.
+        txnSession.begin();
+
+        AmqpMessage message = new AmqpMessage();
+        message.setText("Test-Message");
+
+        assertTrue(txnSession.isInTransaction());
+
+        sender1.send(message, txnSession.getTransactionId());
+        sender2.send(message, txnSession.getTransactionId());
+        sender3.send(message, txnSession.getTransactionId());
+
+        assertEquals(0, queue.getQueueSize());
+
+        txnSession.rollback();
+
+        assertEquals(0, queue.getQueueSize());
+    }
 }

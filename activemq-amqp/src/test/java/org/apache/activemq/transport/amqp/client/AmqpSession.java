@@ -464,8 +464,12 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         connection.pumpToProtonTransport(request);
     }
 
-    AmqpTransactionId getTransactionId() {
-        return txContext.getTransactionId();
+    public AmqpTransactionId getTransactionId() {
+        if (txContext != null && txContext.isInTransaction()) {
+            return txContext.getTransactionId();
+        }
+
+        return null;
     }
 
     AmqpTransactionContext getTransactionContext() {
