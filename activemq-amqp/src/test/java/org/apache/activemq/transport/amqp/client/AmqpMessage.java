@@ -140,6 +140,22 @@ public class AmqpMessage {
     }
 
     /**
+     * Accepts the message marking it as consumed on the remote peer.
+     *
+     * @param session
+     *      The session that is used to manage acceptance of the message.
+     *
+     * @throws Exception if an error occurs during the accept.
+     */
+    public void accept(AmqpSession txnSession) throws Exception {
+        if (receiver == null) {
+            throw new IllegalStateException("Can't accept non-received message.");
+        }
+
+        receiver.accept(delivery, txnSession);
+    }
+
+    /**
      * Marks the message as Modified, indicating whether it failed to deliver and is not deliverable here.
      *
      * @param deliveryFailed
@@ -374,7 +390,7 @@ public class AmqpMessage {
      * @param key
      *        the name used to lookup the property in the application properties.
      *
-     * @return the propety value or null if not set.
+     * @return the property value or null if not set.
      */
     public Object getApplicationProperty(String key) {
         if (applicationPropertiesMap == null) {
@@ -560,6 +576,7 @@ public class AmqpMessage {
             message.setHeader(new Header());
         }
     }
+
     private void lazyCreateProperties() {
         if (message.getProperties() == null) {
             message.setProperties(new Properties());

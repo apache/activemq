@@ -127,6 +127,21 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
      */
     public void send(final AmqpMessage message) throws IOException {
         checkClosed();
+        send(message, null);
+    }
+
+    /**
+     * Sends the given message to this senders assigned address using the supplied transaction ID.
+     *
+     * @param message
+     *        the message to send.
+     * @param txId
+     *        the transaction ID to assign the outgoing send.
+     *
+     * @throws IOException if an error occurs during the send.
+     */
+    public void send(final AmqpMessage message, final AmqpTransactionId txId) throws IOException {
+        checkClosed();
         final ClientFuture sendRequest = new ClientFuture();
 
         session.getScheduler().execute(new Runnable() {
@@ -134,7 +149,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             @Override
             public void run() {
                 try {
-                    doSend(message, sendRequest);
+                    doSend(message, sendRequest, txId);
                     session.pumpToProtonTransport(sendRequest);
                 } catch (Exception e) {
                     sendRequest.onFailure(e);
@@ -319,7 +334,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
         }
     }
 
-    private void doSend(AmqpMessage message, AsyncResult request) throws Exception {
+    private void doSend(AmqpMessage message, AsyncResult request, AmqpTransactionId txId) throws Exception {
         LOG.trace("Producer sending message: {}", message);
 
         Delivery delivery = null;
@@ -332,8 +347,14 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
 
         delivery.setContext(request);
 
-        if (session.isInTransaction()) {
-            Binary amqpTxId = session.getTransactionId().getRemoteTxId();
+        Binary amqpTxId = null;
+        if (txId != null) {
+            amqpTxId = txId.getRemoteTxId();
+        } else if (session.isInTransaction()) {
+            amqpTxId = session.getTransactionId().getRemoteTxId();
+        }
+
+        if (amqpTxId != null) {
             TransactionalState state = new TransactionalState();
             state.setTxnId(amqpTxId);
             delivery.disposition(state);
