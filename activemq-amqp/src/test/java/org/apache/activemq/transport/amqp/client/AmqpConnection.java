@@ -226,7 +226,13 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                     }
                 }
 
-                serializer.shutdown();
+                serializer.shutdownNow();
+                try {
+                    if (!serializer.awaitTermination(10, TimeUnit.SECONDS)) {
+                        LOG.warn("Serializer didn't shutdown cleanly");
+                    }
+                } catch (InterruptedException e) {
+                }
             }
         }
     }
