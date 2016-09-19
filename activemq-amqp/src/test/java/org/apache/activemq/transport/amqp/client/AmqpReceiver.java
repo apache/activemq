@@ -414,19 +414,33 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     /**
-     * Accepts a message that was dispatched under the given Delivery instance.
+     * Accepts a message that was dispatched under the given Delivery instance and settles the delivery.
      *
      * @param delivery
      *        the Delivery instance to accept.
      *
      * @throws IOException if an error occurs while sending the accept.
      */
-    public void accept(final Delivery delivery) throws IOException {
-        accept(delivery, this.session);
+    public void accept(Delivery delivery) throws IOException {
+        accept(delivery, this.session, true);
     }
 
     /**
      * Accepts a message that was dispatched under the given Delivery instance.
+     *
+     * @param delivery
+     *        the Delivery instance to accept.
+     * @param settle
+     *        true if the receiver should settle the delivery or just send the disposition.
+     *
+     * @throws IOException if an error occurs while sending the accept.
+     */
+    public void accept(Delivery delivery, boolean settle) throws IOException {
+        accept(delivery, this.session, settle);
+    }
+
+    /**
+     * Accepts a message that was dispatched under the given Delivery instance and settles the delivery.
      *
      * This method allows for the session that is used in the accept to be specified by the
      * caller.  This allows for an accepted message to be involved in a transaction that is
@@ -440,6 +454,26 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * @throws IOException if an error occurs while sending the accept.
      */
     public void accept(final Delivery delivery, final AmqpSession session) throws IOException {
+        accept(delivery, session, true);
+    }
+
+    /**
+     * Accepts a message that was dispatched under the given Delivery instance.
+     *
+     * This method allows for the session that is used in the accept to be specified by the
+     * caller.  This allows for an accepted message to be involved in a transaction that is
+     * being managed by some other session other than the one that created this receiver.
+     *
+     * @param delivery
+     *        the Delivery instance to accept.
+     * @param session
+     *        the session under which the message is being accepted.
+     * @param settle
+     *        true if the receiver should settle the delivery or just send the disposition.
+     *
+     * @throws IOException if an error occurs while sending the accept.
+     */
+    public void accept(final Delivery delivery, final AmqpSession session, final boolean settle) throws IOException {
         checkClosed();
 
         if (delivery == null) {
@@ -469,11 +503,13 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                                 txState.setOutcome(Accepted.getInstance());
                                 txState.setTxnId(txnId);
                                 delivery.disposition(txState);
-                                delivery.settle();
                                 session.getTransactionContext().registerTxConsumer(AmqpReceiver.this);
                             }
                         } else {
                             delivery.disposition(Accepted.getInstance());
+                        }
+
+                        if (settle) {
                             delivery.settle();
                         }
                     }
