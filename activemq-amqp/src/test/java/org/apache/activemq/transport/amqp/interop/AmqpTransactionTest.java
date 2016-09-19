@@ -32,6 +32,7 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -570,6 +571,158 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         }
 
         // Should be nothing left.
+        assertNull(receiver.receive(1, TimeUnit.SECONDS));
+
+        connection.close();
+    }
+
+    // TODO - Direct ports of the AmqpNetLite client tests that don't currently with this broker.
+
+    @Ignore("Fails due to no support for TX enrollment without settlement.")
+    @Test(timeout = 60000)
+    public void testReceiversCommitAndRollbackWithMultipleSessionsInSingleTXNoSettlement() throws Exception {
+        final int NUM_MESSAGES = 10;
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+
+        // Root TXN session controls all TXN send lifetimes.
+        AmqpSession txnSession = connection.createSession();
+
+        // Normal Session which won't create an TXN itself
+        AmqpSession session = connection.createSession();
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+
+        for (int i = 0; i < NUM_MESSAGES + 1; ++i) {
+            AmqpMessage message = new AmqpMessage();
+            message.setText("Test-Message");
+            message.setApplicationProperty("msgId", i);
+            sender.send(message, txnSession.getTransactionId());
+        }
+
+        // Read all messages from the Queue, do not accept them yet.
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        ArrayList<AmqpMessage> messages = new ArrayList<>(NUM_MESSAGES);
+        receiver.flow((NUM_MESSAGES + 2) * 2);
+        for (int i = 0; i < NUM_MESSAGES; ++i) {
+            AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+            assertNotNull(message);
+            messages.add(message);
+        }
+
+        // Commit half the consumed messages
+        txnSession.begin();
+        for (int i = 0; i < NUM_MESSAGES / 2; ++i) {
+            messages.get(i).accept(txnSession, false);
+        }
+        txnSession.commit();
+
+        // Rollback the other half the consumed messages
+        txnSession.begin();
+        for (int i = NUM_MESSAGES / 2; i < NUM_MESSAGES; ++i) {
+            messages.get(i).accept(txnSession, false);
+        }
+        txnSession.rollback();
+
+        // After rollback message should still be acquired so we read last sent message.
+        {
+            AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+            assertNotNull(message);
+            assertEquals(NUM_MESSAGES, message.getApplicationProperty("msgId"));
+            message.release();
+        }
+
+        // Commit the other half the consumed messages
+        txnSession.begin();
+        for (int i = NUM_MESSAGES / 2; i < NUM_MESSAGES; ++i) {
+            messages.get(i).accept(txnSession);
+        }
+        txnSession.commit();
+
+        // The final message should still be pending.
+        {
+            AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+            receiver.flow(1);
+            assertNotNull(message);
+            assertEquals(NUM_MESSAGES, message.getApplicationProperty("msgId"));
+            message.accept();
+        }
+
+        // We should have now drained the Queue
+        AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+        receiver.flow(1);
+        assertNull(message);
+
+        connection.close();
+    }
+
+    @Ignore("Fails due to no support for TX enrollment without settlement.")
+    @Test(timeout = 60000)
+    public void testCommitAndRollbackWithMultipleSessionsInSingleTXNoSettlement() throws Exception {
+        final int NUM_MESSAGES = 10;
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+
+        // Root TXN session controls all TXN send lifetimes.
+        AmqpSession txnSession = connection.createSession();
+
+        // Normal Session which won't create an TXN itself
+        AmqpSession session = connection.createSession();
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+
+        for (int i = 0; i < NUM_MESSAGES; ++i) {
+            AmqpMessage message = new AmqpMessage();
+            message.setText("Test-Message");
+            message.setApplicationProperty("msgId", i);
+            sender.send(message, txnSession.getTransactionId());
+        }
+
+        // Read all messages from the Queue, do not accept them yet.
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        receiver.flow(2);
+        AmqpMessage message1 = receiver.receive(5, TimeUnit.SECONDS);
+        AmqpMessage message2 = receiver.receive(5, TimeUnit.SECONDS);
+
+        // Accept the first one in a TXN and send a new message in that TXN as well
+        txnSession.begin();
+        {
+            message1.accept(txnSession, false);
+
+            AmqpMessage message = new AmqpMessage();
+            message.setText("Test-Message");
+            message.setApplicationProperty("msgId", NUM_MESSAGES);
+
+            sender.send(message, txnSession.getTransactionId());
+        }
+        txnSession.commit();
+
+        // Accept the second one in a TXN and send a new message in that TXN as well but rollback
+        txnSession.begin();
+        {
+            message2.accept(txnSession, false);
+
+            AmqpMessage message = new AmqpMessage();
+            message.setText("Test-Message");
+            message.setApplicationProperty("msgId", NUM_MESSAGES + 1);
+            sender.send(message, txnSession.getTransactionId());
+        }
+        txnSession.rollback();
+
+        message2.release();
+
+        // Should be two message available for dispatch given that we sent and committed one, and
+        // releases another we had previously received.
+        receiver.flow(2);
+        for (int i = 1; i <= NUM_MESSAGES; ++i) {
+            AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+            assertNotNull(message);
+            assertEquals(i, message.getApplicationProperty("msgId"));
+            message.accept();
+        }
+
+        // Should be nothing left.
+        receiver.flow(1);
         assertNull(receiver.receive(1, TimeUnit.SECONDS));
 
         connection.close();
