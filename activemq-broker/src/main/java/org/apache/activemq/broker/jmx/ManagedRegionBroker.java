@@ -828,4 +828,13 @@ public class ManagedRegionBroker extends RegionBroker {
     public Map<ObjectName, DestinationView> getQueueViews() {
         return queues;
     }
+
+    public Map<ObjectName, DestinationView> getTopicViews() {
+        return topics;
+    }
+
+    public DestinationView getQueueView(String queueName) throws MalformedObjectNameException {
+        ObjectName objName = BrokerMBeanSupport.createDestinationName(brokerObjectName.toString(), "Queue", queueName);
+        return queues.get(objName);
+    }
 }

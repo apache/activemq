@@ -255,13 +255,26 @@ public final class IntrospectionSupport {
         }
     }
 
-    private static Method findSetterMethod(Class clazz, String name) {
+    public static Method findSetterMethod(Class clazz, String name) {
         // Build the method name.
         name = "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         Method[] methods = clazz.getMethods();
         for (Method method : methods) {
             Class<?> params[] = method.getParameterTypes();
             if (method.getName().equals(name) && params.length == 1 ) {
+                return method;
+            }
+        }
+        return null;
+    }
+
+    public static Method findGetterMethod(Class clazz, String name) {
+        // Build the method name.
+        name = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        Method[] methods = clazz.getMethods();
+        for (Method method : methods) {
+            Class<?> params[] = method.getParameterTypes();
+            if (method.getName().equals(name) && params.length == 0 ) {
                 return method;
             }
         }

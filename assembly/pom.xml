@@ -340,6 +340,11 @@
       <artifactId>derbynet</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava-version}</version>
+    </dependency>
 
     <!-- copied dependencies from activemq-web-console -->
     <!-- enable commons-logging when inside jetty6:run -->

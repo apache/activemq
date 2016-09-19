@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.IOException;
 import java.util.Map;
 
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.OpenDataException;
 
 import org.apache.activemq.Service;
 
@@ -177,6 +181,20 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("Standard Queues containing AIE messages.")
     ObjectName[] getQueues();
+
+    /**
+     * Queue Query API, take a look at {@link DestinationsViewFilter} for more information
+     */
+    @MBeanInfo("Query queues")
+    String queryQueues(String filter, int page, int pageSize) throws IOException;
+
+    /**
+     * Topic Query API, take a look at {@link DestinationsViewFilter} for more information
+     */
+    @MBeanInfo("Query topics")
+    String queryTopics(String filter, int page, int pageSize) throws IOException;
+
+    public CompositeData[] browseQueue(String queueName) throws OpenDataException, MalformedObjectNameException;
 
     @MBeanInfo("Temporary Topics; generally unused.")
     ObjectName[] getTemporaryTopics();
