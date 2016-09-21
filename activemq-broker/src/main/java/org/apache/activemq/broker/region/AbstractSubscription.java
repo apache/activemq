@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -49,6 +50,7 @@ public abstract class AbstractSubscription implements Subscription {
     protected ConsumerInfo info;
     protected final DestinationFilter destinationFilter;
     protected final CopyOnWriteArrayList<Destination> destinations = new CopyOnWriteArrayList<Destination>();
+    protected final AtomicInteger prefetchExtension = new AtomicInteger(0);
 
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
@@ -308,5 +310,15 @@ public abstract class AbstractSubscription implements Subscription {
     @Override
     public SubscriptionStatistics getSubscriptionStatistics() {
         return subscriptionStatistics;
+    }
+
+    public void wakeupDestinationsForDispatch() {
+        for (Destination dest : destinations) {
+            dest.wakeup();
+        }
+    }
+
+    public AtomicInteger getPrefetchExtension() {
+        return this.prefetchExtension;
     }
 }
