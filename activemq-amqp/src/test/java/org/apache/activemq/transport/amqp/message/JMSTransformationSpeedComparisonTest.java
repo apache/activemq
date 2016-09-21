@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.message;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
@@ -52,7 +53,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Some simple performance tests for the Message Transformers.
  */
-@Ignore("Turn on to profile.")
+@Ignore("Enable for profiling")
 @RunWith(Parameterized.class)
 public class JMSTransformationSpeedComparisonTest {
 
@@ -63,7 +64,7 @@ public class JMSTransformationSpeedComparisonTest {
 
     private final String transformer;
 
-    private final int WARM_CYCLES = 50;
+    private final int WARM_CYCLES = 1000;
     private final int PROFILE_CYCLES = 1000000;
 
     public JMSTransformationSpeedComparisonTest(String transformer) {
@@ -82,11 +83,11 @@ public class JMSTransformationSpeedComparisonTest {
     private InboundTransformer getInboundTransformer() {
         switch (transformer) {
             case "raw":
-                return new AMQPRawInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                return new AMQPRawInboundTransformer();
             case "native":
-                return new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                return new AMQPNativeInboundTransformer();
             default:
-                return new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                return new JMSMappingInboundTransformer();
         }
     }
 
@@ -94,9 +95,9 @@ public class JMSTransformationSpeedComparisonTest {
         switch (transformer) {
             case "raw":
             case "native":
-                return new AMQPNativeOutboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                return new AMQPNativeOutboundTransformer();
             default:
-                return new JMSMappingOutboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                return new JMSMappingOutboundTransformer();
         }
     }
 
@@ -113,7 +114,7 @@ public class JMSTransformationSpeedComparisonTest {
 
         // Warm up
         for (int i = 0; i < WARM_CYCLES; ++i) {
-            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
         }
@@ -122,7 +123,7 @@ public class JMSTransformationSpeedComparisonTest {
 
         long startTime = System.nanoTime();
         for (int i = 0; i < PROFILE_CYCLES; ++i) {
-            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
         }
@@ -149,7 +150,7 @@ public class JMSTransformationSpeedComparisonTest {
 
         // Warm up
         for (int i = 0; i < WARM_CYCLES; ++i) {
-            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
         }
@@ -158,7 +159,7 @@ public class JMSTransformationSpeedComparisonTest {
 
         long startTime = System.nanoTime();
         for (int i = 0; i < PROFILE_CYCLES; ++i) {
-            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
         }
@@ -177,7 +178,7 @@ public class JMSTransformationSpeedComparisonTest {
 
         // Warm up
         for (int i = 0; i < WARM_CYCLES; ++i) {
-            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
         }
@@ -186,7 +187,7 @@ public class JMSTransformationSpeedComparisonTest {
 
         long startTime = System.nanoTime();
         for (int i = 0; i < PROFILE_CYCLES; ++i) {
-            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
         }
@@ -205,7 +206,7 @@ public class JMSTransformationSpeedComparisonTest {
 
         // Warm up
         for (int i = 0; i < WARM_CYCLES; ++i) {
-            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
         }
@@ -214,7 +215,7 @@ public class JMSTransformationSpeedComparisonTest {
 
         long startTime = System.nanoTime();
         for (int i = 0; i < PROFILE_CYCLES; ++i) {
-            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
             intermediate.onSend();
             outboundTransformer.transform(intermediate);
         }
@@ -255,7 +256,7 @@ public class JMSTransformationSpeedComparisonTest {
         InboundTransformer inboundTransformer = getInboundTransformer();
         OutboundTransformer outboundTransformer = getOutboundTransformer();
 
-        ActiveMQMessage outbound = (ActiveMQMessage) inboundTransformer.transform(encoded);
+        ActiveMQMessage outbound = inboundTransformer.transform(encoded);
         outbound.onSend();
 
         // Warm up
@@ -276,7 +277,6 @@ public class JMSTransformationSpeedComparisonTest {
             transformer, PROFILE_CYCLES, TimeUnit.NANOSECONDS.toMillis(totalDuration), test.getMethodName());
     }
 
-    @Ignore
     @Test
     public void testEncodeDecodeIsWorking() throws Exception {
         Message incomingMessage = createTypicalQpidJMSMessage();
@@ -284,7 +284,7 @@ public class JMSTransformationSpeedComparisonTest {
         InboundTransformer inboundTransformer = getInboundTransformer();
         OutboundTransformer outboundTransformer = getOutboundTransformer();
 
-        ActiveMQMessage outbound = (ActiveMQMessage) inboundTransformer.transform(encoded);
+        ActiveMQMessage outbound = inboundTransformer.transform(encoded);
         outbound.onSend();
         Message outboudMessage = outboundTransformer.transform(outbound).decode();
 
@@ -317,6 +317,25 @@ public class JMSTransformationSpeedComparisonTest {
         assertTrue(outgoingBody.getValue() instanceof String);
 
         assertEquals(incomingBody.getValue(), outgoingBody.getValue());
+    }
+
+    @Test
+    public void testBodyOnlyEncodeDecode() throws Exception {
+
+        Message incomingMessage = Proton.message();
+
+        incomingMessage.setBody(new AmqpValue("String payload for AMQP message conversion performance testing."));
+
+        EncodedMessage encoded = encode(incomingMessage);
+        InboundTransformer inboundTransformer = getInboundTransformer();
+        OutboundTransformer outboundTransformer = getOutboundTransformer();
+
+        ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
+        intermediate.onSend();
+        Message outboudMessage = outboundTransformer.transform(intermediate).decode();
+
+        assertNull(outboudMessage.getHeader());
+        assertNull(outboudMessage.getProperties());
     }
 
     private Message createTypicalQpidJMSMessage() {

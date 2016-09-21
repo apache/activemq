@@ -16,13 +16,9 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import javax.jms.Message;
+import org.apache.activemq.command.ActiveMQMessage;
 
 public class AMQPNativeInboundTransformer extends AMQPRawInboundTransformer {
-
-    public AMQPNativeInboundTransformer(ActiveMQJMSVendor vendor) {
-        super(vendor);
-    }
 
     @Override
     public String getTransformerName() {
@@ -31,14 +27,14 @@ public class AMQPNativeInboundTransformer extends AMQPRawInboundTransformer {
 
     @Override
     public InboundTransformer getFallbackTransformer() {
-        return new AMQPRawInboundTransformer(getVendor());
+        return new AMQPRawInboundTransformer();
     }
 
     @Override
-    protected Message doTransform(EncodedMessage amqpMessage) throws Exception {
+    protected ActiveMQMessage doTransform(EncodedMessage amqpMessage) throws Exception {
         org.apache.qpid.proton.message.Message amqp = amqpMessage.decode();
 
-        Message result = super.doTransform(amqpMessage);
+        ActiveMQMessage result = super.doTransform(amqpMessage);
 
         populateMessage(result, amqp);
 

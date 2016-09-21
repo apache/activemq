@@ -16,93 +16,73 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import java.nio.ByteBuffer;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_MESSAGE_FORMAT;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.getBinaryFromMessageBody;
 
-import javax.jms.BytesMessage;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageFormatException;
 
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.UnsignedInteger;
 import org.apache.qpid.proton.amqp.messaging.Header;
-import org.apache.qpid.proton.codec.CompositeWritableBuffer;
-import org.apache.qpid.proton.codec.DroppingWritableBuffer;
-import org.apache.qpid.proton.codec.WritableBuffer;
 import org.apache.qpid.proton.message.ProtonJMessage;
 
-public class AMQPNativeOutboundTransformer extends OutboundTransformer {
-
-    public AMQPNativeOutboundTransformer(ActiveMQJMSVendor vendor) {
-        super(vendor);
-    }
+public class AMQPNativeOutboundTransformer implements OutboundTransformer {
 
     @Override
-    public EncodedMessage transform(Message msg) throws Exception {
-        if (msg == null || !(msg instanceof BytesMessage)) {
+    public EncodedMessage transform(ActiveMQMessage message) throws Exception {
+        if (message == null || !(message instanceof ActiveMQBytesMessage)) {
             return null;
         }
 
-        try {
-            if (!msg.getBooleanProperty(prefixVendor + "NATIVE")) {
-                return null;
-            }
-        } catch (MessageFormatException e) {
-            return null;
-        }
-
-        return transform(this, (BytesMessage) msg);
+        return transform(this, (ActiveMQBytesMessage) message);
     }
 
-    static EncodedMessage transform(OutboundTransformer options, BytesMessage msg) throws JMSException {
+    static EncodedMessage transform(OutboundTransformer options, ActiveMQBytesMessage message) throws JMSException {
         long messageFormat;
         try {
-            messageFormat = msg.getLongProperty(options.prefixVendor + "MESSAGE_FORMAT");
+            messageFormat = message.getLongProperty(JMS_AMQP_MESSAGE_FORMAT);
         } catch (MessageFormatException e) {
             return null;
         }
-        byte data[] = new byte[(int) msg.getBodyLength()];
-        int dataSize = data.length;
-        msg.readBytes(data);
-        msg.reset();
 
-        try {
-            int count = msg.getIntProperty("JMSXDeliveryCount");
-            if (count > 1) {
+        Binary encodedMessage = getBinaryFromMessageBody(message);
+        byte encodedData[] = encodedMessage.getArray();
+        int encodedSize = encodedMessage.getLength();
 
-                // decode...
-                ProtonJMessage amqp = (ProtonJMessage) org.apache.qpid.proton.message.Message.Factory.create();
-                int offset = 0;
-                int len = data.length;
-                while (len > 0) {
-                    final int decoded = amqp.decode(data, offset, len);
-                    assert decoded > 0 : "Make progress decoding the message";
-                    offset += decoded;
-                    len -= decoded;
-                }
+        int count = message.getRedeliveryCounter();
+        if (count >= 1) {
 
-                // Update the DeliveryCount header...
-                // The AMQP delivery-count field only includes prior failed delivery attempts,
-                // whereas JMSXDeliveryCount includes the first/current delivery attempt. Subtract 1.
-                if (amqp.getHeader() == null) {
-                    amqp.setHeader(new Header());
-                }
-
-                amqp.getHeader().setDeliveryCount(new UnsignedInteger(count - 1));
-
-                // Re-encode...
-                ByteBuffer buffer = ByteBuffer.wrap(new byte[1024 * 4]);
-                final DroppingWritableBuffer overflow = new DroppingWritableBuffer();
-                int c = amqp.encode(new CompositeWritableBuffer(new WritableBuffer.ByteBufferWrapper(buffer), overflow));
-                if (overflow.position() > 0) {
-                    buffer = ByteBuffer.wrap(new byte[1024 * 4 + overflow.position()]);
-                    c = amqp.encode(new WritableBuffer.ByteBufferWrapper(buffer));
-                }
-                data = buffer.array();
-                dataSize = c;
+            // decode...
+            ProtonJMessage amqp = (ProtonJMessage) org.apache.qpid.proton.message.Message.Factory.create();
+            int offset = 0;
+            int len = encodedSize;
+            while (len > 0) {
+                final int decoded = amqp.decode(encodedData, offset, len);
+                assert decoded > 0 : "Make progress decoding the message";
+                offset += decoded;
+                len -= decoded;
             }
-        } catch (JMSException e) {
+
+            // Update the DeliveryCount header...
+            // The AMQP delivery-count field only includes prior failed delivery attempts,
+            // whereas JMSXDeliveryCount includes the first/current delivery attempt. Subtract 1.
+            if (amqp.getHeader() == null) {
+                amqp.setHeader(new Header());
+            }
+
+            amqp.getHeader().setDeliveryCount(new UnsignedInteger(count));
+
+            // Re-encode...
+            final AmqpWritableBuffer buffer = new AmqpWritableBuffer();
+            int written = amqp.encode(buffer);
+
+            encodedData = buffer.getArray();
+            encodedSize = written;
         }
 
-        return new EncodedMessage(messageFormat, data, 0, dataSize);
+        return new EncodedMessage(messageFormat, encodedData, 0, encodedSize);
     }
 }
