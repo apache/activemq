@@ -22,6 +22,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -73,6 +74,24 @@ public class TopicSubscriptionZeroPrefetchTest {
         Message consumedMessage = consumer.receiveNoWait();
 
         Assert.assertNotNull("should have received a message the published message", consumedMessage);
+    }
+
+    @Test(timeout=60000)
+    public void testTopicConsumerPrefetchZeroClientAckLoop() throws Exception {
+        ActiveMQTopic consumerDestination = new ActiveMQTopic(TOPIC_NAME + "?consumer.retroactive=true&consumer.prefetchSize=0");
+        Session consumerClientAckSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        consumer = consumerClientAckSession.createConsumer(consumerDestination);
+
+        final int count = 10;
+        for (int i=0;i<count;i++) {
+            Message txtMessage = session.createTextMessage("M:"+ i);
+            producer.send(txtMessage);
+        }
+
+        for (int i=0;i<count;i++) {
+            Message consumedMessage = consumer.receive(2000);
+            Assert.assertNotNull("should have received message[" + i +"]", consumedMessage);
+        }
     }
 
     /*

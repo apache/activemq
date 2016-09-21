@@ -193,8 +193,6 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
         assertEquals(MSG_COUNT, getProxyToQueue(getDestinationName()).getQueueSize());
         SubscriptionViewMBean subscription = getProxyToQueueSubscriber(getDestinationName());
         assertNotNull(subscription);
-        LOG.info("Subscription[{}]: prefetch size after rollback = {}", subscription.getSubscriptionId(), subscription.getPrefetchSize());
-        assertTrue(subscription.getPrefetchSize() > 0);
 
         for (int i = 1; i <= MSG_COUNT; i++) {
             LOG.info("Trying to receive message: {}", i);
@@ -259,8 +257,6 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
         assertEquals(MSG_COUNT, getProxyToQueue(getDestinationName()).getQueueSize());
         SubscriptionViewMBean subscription = getProxyToQueueSubscriber(getDestinationName());
         assertNotNull(subscription);
-        LOG.info("Subscription[{}]: prefetch size after rollback = {}", subscription.getSubscriptionId(), subscription.getPrefetchSize());
-        assertTrue(subscription.getPrefetchSize() > 0);
 
         assertTrue("Should read all " + MSG_COUNT + " messages.", Wait.waitFor(new Wait.Condition() {
 
@@ -273,7 +269,6 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
         LOG.info("COMMIT of first received batch here:");
         session.commit();
 
-        assertTrue(subscription.getPrefetchSize() > 0);
         for (int i = 1; i <= MSG_COUNT; i++) {
             LOG.info("Sending message: {} to commit", msgIndex++);
             TextMessage message = session.createTextMessage("Commit Message: " + msgIndex);
@@ -286,7 +281,6 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
 
         LOG.info("WAITING -> for next three messages to arrive:");
 
-        assertTrue(subscription.getPrefetchSize() > 0);
         assertTrue("Should read all " + MSG_COUNT + " messages.", Wait.waitFor(new Wait.Condition() {
 
             @Override

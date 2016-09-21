@@ -20,8 +20,9 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.toLong;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.AbstractSubscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerControl;
@@ -81,7 +82,10 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     private final String MESSAGE_FORMAT_KEY = outboundTransformer.getPrefixVendor() + "MESSAGE_FORMAT";
 
     private final ConsumerInfo consumerInfo;
-    private Subscription subscription;
+    private AbstractSubscription subscription;
+    private AtomicInteger prefetchExtension;
+    private int currentCreditRequest;
+    private int logicalDeliveryCount; // echoes prefetch extension but from protons perspective
     private final boolean presettle;
 
     private boolean draining;
@@ -111,7 +115,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     public void open() {
         if (!isClosed()) {
             session.registerSender(getConsumerId(), this);
-            subscription = session.getConnection().lookupPrefetchSubscription(consumerInfo);
+            subscription = (AbstractSubscription)session.getConnection().lookupPrefetchSubscription(consumerInfo);
+            prefetchExtension = subscription.getPrefetchExtension();
         }
 
         super.open();
@@ -168,24 +173,15 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     public void flow() throws Exception {
         Link endpoint = getEndpoint();
         if (LOG.isTraceEnabled()) {
-            LOG.trace("Flow: draining={}, drain={} credit={}, remoteCredit={}, queued={}, unsettled={}",
+            LOG.trace("Flow: draining={}, drain={} credit={}, currentCredit={}, senderDeliveryCount={} - Sub={}",
                     draining, endpoint.getDrain(),
-                    endpoint.getCredit(), endpoint.getRemoteCredit(), endpoint.getQueued(), endpoint.getUnsettled());
+                    endpoint.getCredit(), currentCreditRequest, logicalDeliveryCount, subscription);
         }
 
+        final int endpointCredit = endpoint.getCredit();
         if (endpoint.getDrain() && !draining) {
 
-            // Revert to a pull consumer.
-            ConsumerControl control = new ConsumerControl();
-            control.setConsumerId(getConsumerId());
-            control.setDestination(getDestination());
-            control.setPrefetch(0);
-
-            LOG.trace("Flow: Pull case -> consumer control with prefetch (0) to control output");
-
-            sendToActiveMQ(control);
-
-            if (endpoint.getCredit() > 0) {
+            if (endpointCredit > 0) {
                 draining = true;
 
                 // Now request dispatch of the drain amount, we request immediate
@@ -196,9 +192,9 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 pullRequest.setDestination(getDestination());
                 pullRequest.setTimeout(-1);
                 pullRequest.setAlwaysSignalDone(true);
-                pullRequest.setQuantity(endpoint.getCredit());
+                pullRequest.setQuantity(endpointCredit);
 
-                LOG.trace("Pull case -> consumer pull request quantity = {}", endpoint.getCredit());
+                LOG.trace("Pull case -> consumer pull request quantity = {}", endpointCredit);
 
                 sendToActiveMQ(pullRequest);
             } else {
@@ -207,25 +203,36 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 pumpOutbound();
                 getEndpoint().drained();
                 session.pumpProtonToSocket();
+                currentCreditRequest = 0;
+                logicalDeliveryCount = 0;
             }
-        } else {
-            ConsumerControl control = new ConsumerControl();
-            control.setConsumerId(getConsumerId());
-            control.setDestination(getDestination());
+        } else if (endpointCredit >= 0) {
 
-            int remoteCredit = endpoint.getRemoteCredit();
-            if (remoteCredit > 0 && subscription != null) {
-                // ensure prefetch exceeds credit + inflight
-                if (remoteCredit + endpoint.getUnsettled() + endpoint.getQueued() > subscription.getPrefetchSize()) {
-                    LOG.trace("Adding dispatched size to credit for sub: " + subscription);
-                    remoteCredit += subscription.getDispatchedQueueSize();
+            if (endpointCredit == 0 && currentCreditRequest != 0) {
+
+                prefetchExtension.set(0);
+                currentCreditRequest = 0;
+                logicalDeliveryCount = 0;
+                LOG.trace("Flow: credit 0 for sub:" + subscription);
+
+            } else {
+
+                int deltaToAdd = endpointCredit;
+                int logicalCredit = currentCreditRequest - logicalDeliveryCount;
+                if (logicalCredit > 0) {
+                    deltaToAdd -= logicalCredit;
+                } else {
+                    // reset delivery counter - dispatch from broker concurrent with credit=0 flow can go negative
+                    logicalDeliveryCount = 0;
+                }
+                if (deltaToAdd > 0) {
+                    currentCreditRequest = prefetchExtension.addAndGet(deltaToAdd);
+                    subscription.wakeupDestinationsForDispatch();
+                    // force dispatch of matched/pending for topics (pending messages accumulate in the sub and are dispatched on update of prefetch)
+                    subscription.setPrefetchSize(0);
+                    LOG.trace("Flow: credit addition of {} for sub {}", deltaToAdd, subscription);
                 }
             }
-            control.setPrefetch(remoteCredit);
-
-            LOG.trace("Flow: update -> consumer control with prefetch {}", control.getPrefetch());
-
-            sendToActiveMQ(control);
         }
     }
 
@@ -285,6 +292,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         }
 
         pumpOutbound();
+        logicalDeliveryCount++;
     }
 
     @Override
@@ -440,6 +448,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     // It's the end of browse signal in response to a MessagePull
                     getEndpoint().drained();
                     draining = false;
+                    currentCreditRequest = 0;
+                    logicalDeliveryCount = 0;
                 } else {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Sender:[{}] msgId={} draining={}, drain={}, credit={}, remoteCredit={}, queued={}",
@@ -451,6 +461,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         LOG.trace("Sender:[{}] browse complete.", getEndpoint().getName());
                         getEndpoint().drained();
                         draining = false;
+                        currentCreditRequest = 0;
+                        logicalDeliveryCount = 0;
                     }
 
                     jms.setRedeliveryCounter(md.getRedeliveryCounter());
@@ -480,17 +492,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         if (tag != null && tag.length > 0 && delivery.remotelySettled()) {
             tagCache.returnTag(tag);
         }
-
-        int newCredit = Math.max(0, getEndpoint().getCredit() - 1);
-        LOG.trace("Sender:[{}] updating conumser prefetch:{} after delivery settled.",
-                  getEndpoint().getName(), newCredit);
-
-        ConsumerControl control = new ConsumerControl();
-        control.setConsumerId(getConsumerId());
-        control.setDestination(getDestination());
-        control.setPrefetch(newCredit);
-
-        sendToActiveMQ(control);
 
         if (ackType == -1) {
             // we are going to settle, but redeliver.. we we won't yet ack to ActiveMQ
