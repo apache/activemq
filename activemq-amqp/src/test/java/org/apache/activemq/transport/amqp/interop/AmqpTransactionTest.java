@@ -151,6 +151,51 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testReceiveAfterConnectionClose() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender(getTestName());
+        final QueueViewMBean queue = getProxyToQueue(getTestName());
+
+        AmqpMessage message = new AmqpMessage();
+        message.setText("Test-Message");
+        sender.send(message);
+
+        assertEquals(1, queue.getQueueSize());
+
+        AmqpReceiver receiver = session.createReceiver(getTestName());
+
+        session.begin();
+
+        receiver.flow(1);
+        AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+        received.accept();
+
+        // this will force a rollback on the TX (It should at least)
+        connection.close();
+
+        connection = client.connect();
+        session = connection.createSession();
+        receiver = session.createReceiver(getTestName());
+        session.begin();
+        receiver.flow(1);
+
+        received = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+        received.accept();
+
+        session.commit();
+
+        assertEquals(0, queue.getQueueSize());
+
+        connection.close();
+    }
+
+
+    @Test(timeout = 60000)
     public void testReceiveMessageWithRollback() throws Exception {
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = client.connect();
