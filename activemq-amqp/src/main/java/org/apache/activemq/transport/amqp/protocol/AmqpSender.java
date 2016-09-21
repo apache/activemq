@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.protocol;
 
 import static org.apache.activemq.transport.amqp.AmqpSupport.toLong;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_MESSAGE_FORMAT;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -39,7 +40,6 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.ResponseHandler;
-import org.apache.activemq.transport.amqp.message.ActiveMQJMSVendor;
 import org.apache.activemq.transport.amqp.message.AutoOutboundTransformer;
 import org.apache.activemq.transport.amqp.message.EncodedMessage;
 import org.apache.activemq.transport.amqp.message.OutboundTransformer;
@@ -75,11 +75,10 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
 
-    private final OutboundTransformer outboundTransformer = new AutoOutboundTransformer(ActiveMQJMSVendor.INSTANCE);
+    private final OutboundTransformer outboundTransformer = new AutoOutboundTransformer();
     private final AmqpTransferTagGenerator tagCache = new AmqpTransferTagGenerator();
     private final LinkedList<MessageDispatch> outbound = new LinkedList<MessageDispatch>();
     private final LinkedList<MessageDispatch> dispatchedInTx = new LinkedList<MessageDispatch>();
-    private final String MESSAGE_FORMAT_KEY = outboundTransformer.getPrefixVendor() + "MESSAGE_FORMAT";
 
     private final ConsumerInfo consumerInfo;
     private AbstractSubscription subscription;
@@ -437,8 +436,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         temp = (ActiveMQMessage) md.getMessage();
                     }
 
-                    if (!temp.getProperties().containsKey(MESSAGE_FORMAT_KEY)) {
-                        temp.setProperty(MESSAGE_FORMAT_KEY, 0);
+                    if (!temp.getProperties().containsKey(JMS_AMQP_MESSAGE_FORMAT)) {
+                        temp.setProperty(JMS_AMQP_MESSAGE_FORMAT, 0);
                     }
                 }
 
@@ -477,6 +476,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                             currentDelivery = getEndpoint().delivery(tag, 0, tag.length);
                         }
                         currentDelivery.setContext(md);
+                        currentDelivery.setMessageFormat((int) amqp.getMessageFormat());
                     } else {
                         // TODO: message could not be generated what now?
                     }

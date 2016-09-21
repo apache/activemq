@@ -18,13 +18,14 @@ package org.apache.activemq.transport.amqp.message;
 
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_DATA;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_NULL;
-import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_ORIGINAL_ENCODING_KEY;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_SEQUENCE;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_BINARY;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_LIST;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_MAP;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_NULL;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_STRING;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_MESSAGE_FORMAT;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_ORIGINAL_ENCODING;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.OCTET_STREAM_CONTENT_TYPE;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.SERIALIZED_JAVA_OBJECT_CONTENT_TYPE;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.getCharsetForTextualContent;
@@ -37,10 +38,19 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import javax.jms.StreamMessage;
+import javax.jms.JMSException;
+import javax.jms.MessageNotWriteableException;
 
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQMapMessage;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQStreamMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -50,10 +60,6 @@ import org.apache.qpid.proton.message.Message;
 
 public class JMSMappingInboundTransformer extends InboundTransformer {
 
-    public JMSMappingInboundTransformer(ActiveMQJMSVendor vendor) {
-        super(vendor);
-    }
-
     @Override
     public String getTransformerName() {
         return TRANSFORMER_JMS;
@@ -61,55 +67,52 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
 
     @Override
     public InboundTransformer getFallbackTransformer() {
-        return new AMQPNativeInboundTransformer(getVendor());
+        return new AMQPNativeInboundTransformer();
     }
 
     @Override
-    protected javax.jms.Message doTransform(EncodedMessage amqpMessage) throws Exception {
+    protected ActiveMQMessage doTransform(EncodedMessage amqpMessage) throws Exception {
         Message amqp = amqpMessage.decode();
 
-        javax.jms.Message result = createMessage(amqp, amqpMessage);
-
-        result.setJMSDeliveryMode(defaultDeliveryMode);
-        result.setJMSPriority(defaultPriority);
-        result.setJMSExpiration(defaultTtl);
+        ActiveMQMessage result = createMessage(amqp, amqpMessage);
 
         populateMessage(result, amqp);
 
-        result.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
-        result.setBooleanProperty(prefixVendor + "NATIVE", false);
+        if (amqpMessage.getMessageFormat() != 0) {
+            result.setLongProperty(JMS_AMQP_MESSAGE_FORMAT, amqpMessage.getMessageFormat());
+        }
 
         return result;
     }
 
     @SuppressWarnings({ "unchecked" })
-    private javax.jms.Message createMessage(Message message, EncodedMessage original) throws Exception {
+    private ActiveMQMessage createMessage(Message message, EncodedMessage original) throws Exception {
 
         Section body = message.getBody();
-        javax.jms.Message result;
+        ActiveMQMessage result;
 
         if (body == null) {
             if (isContentType(SERIALIZED_JAVA_OBJECT_CONTENT_TYPE, message)) {
-                result = vendor.createObjectMessage();
+                result = new ActiveMQObjectMessage();
             } else if (isContentType(OCTET_STREAM_CONTENT_TYPE, message) || isContentType(null, message)) {
-                result = vendor.createBytesMessage();
+                result = new ActiveMQBytesMessage();
             } else {
                 Charset charset = getCharsetForTextualContent(message.getContentType());
                 if (charset != null) {
-                    result = vendor.createTextMessage();
+                    result = new ActiveMQTextMessage();
                 } else {
-                    result = vendor.createMessage();
+                    result = new ActiveMQMessage();
                 }
             }
 
-            result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_NULL);
+            result.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_NULL);
         } else if (body instanceof Data) {
             Binary payload = ((Data) body).getValue();
 
             if (isContentType(SERIALIZED_JAVA_OBJECT_CONTENT_TYPE, message)) {
-                result = vendor.createObjectMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                result = createObjectMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
             } else if (isContentType(OCTET_STREAM_CONTENT_TYPE, message)) {
-                result = vendor.createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                result = createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
             } else {
                 Charset charset = getCharsetForTextualContent(message.getContentType());
                 if (StandardCharsets.UTF_8.equals(charset)) {
@@ -117,51 +120,51 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
 
                     try {
                         CharBuffer chars = charset.newDecoder().decode(buf);
-                        result = vendor.createTextMessage(String.valueOf(chars));
+                        result = createTextMessage(String.valueOf(chars));
                     } catch (CharacterCodingException e) {
-                        result = vendor.createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                        result = createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
                     }
                 } else {
-                    result = vendor.createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                    result = createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
                 }
             }
 
-            result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_DATA);
+            result.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_DATA);
         } else if (body instanceof AmqpSequence) {
             AmqpSequence sequence = (AmqpSequence) body;
-            StreamMessage m = vendor.createStreamMessage();
+            ActiveMQStreamMessage m = new ActiveMQStreamMessage();
             for (Object item : sequence.getValue()) {
                 m.writeObject(item);
             }
 
             result = m;
-            result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_SEQUENCE);
+            result.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_SEQUENCE);
         } else if (body instanceof AmqpValue) {
             Object value = ((AmqpValue) body).getValue();
             if (value == null || value instanceof String) {
-                result = vendor.createTextMessage((String) value);
+                result = createTextMessage((String) value);
 
-                result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, value == null ? AMQP_VALUE_NULL : AMQP_VALUE_STRING);
+                result.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, value == null ? AMQP_VALUE_NULL : AMQP_VALUE_STRING);
             } else if (value instanceof Binary) {
                 Binary payload = (Binary) value;
 
                 if (isContentType(SERIALIZED_JAVA_OBJECT_CONTENT_TYPE, message)) {
-                    result = vendor.createObjectMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                    result = createObjectMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
                 } else {
-                    result = vendor.createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
+                    result = createBytesMessage(payload.getArray(), payload.getArrayOffset(), payload.getLength());
                 }
 
-                result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_BINARY);
+                result.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
             } else if (value instanceof List) {
-                StreamMessage m = vendor.createStreamMessage();
+                ActiveMQStreamMessage m = new ActiveMQStreamMessage();
                 for (Object item : (List<Object>) value) {
                     m.writeObject(item);
                 }
                 result = m;
-                result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_LIST);
+                result.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_LIST);
             } else if (value instanceof Map) {
-                result = vendor.createMapMessage((Map<String, Object>) value);
-                result.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_MAP);
+                result = createMapMessage((Map<String, Object>) value);
+                result.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_MAP);
             } else {
                 // Trigger fall-back to native encoder which generates BytesMessage with the
                 // original message stored in the message body.
@@ -172,5 +175,35 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
         }
 
         return result;
+    }
+
+    private static ActiveMQBytesMessage createBytesMessage(byte[] content, int offset, int length) {
+        ActiveMQBytesMessage message = new ActiveMQBytesMessage();
+        message.setContent(new ByteSequence(content, offset, length));
+        return message;
+    }
+
+    public static ActiveMQTextMessage createTextMessage(String text) {
+        ActiveMQTextMessage message = new ActiveMQTextMessage();
+        try {
+            message.setText(text);
+        } catch (MessageNotWriteableException ex) {}
+
+        return message;
+    }
+
+    public static ActiveMQObjectMessage createObjectMessage(byte[] content, int offset, int length) {
+        ActiveMQObjectMessage message = new ActiveMQObjectMessage();
+        message.setContent(new ByteSequence(content, offset, length));
+        return message;
+    }
+
+    public static ActiveMQMapMessage createMapMessage(Map<String, Object> content) throws JMSException {
+        ActiveMQMapMessage message = new ActiveMQMapMessage();
+        final Set<Map.Entry<String, Object>> set = content.entrySet();
+        for (Map.Entry<String, Object> entry : set) {
+            message.setObject(entry.getKey(), entry.getValue());
+        }
+        return message;
     }
 }

@@ -18,10 +18,10 @@ package org.apache.activemq.transport.amqp.message;
 
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_DATA;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_NULL;
-import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_ORIGINAL_ENCODING_KEY;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_SEQUENCE;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_UNKNOWN;
 import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.AMQP_VALUE_BINARY;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_ORIGINAL_ENCODING;
 import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.JMS_DEST_TYPE_MSG_ANNOTATION;
 import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.JMS_REPLY_TO_TYPE_MSG_ANNOTATION;
 import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.QUEUE_TYPE;
@@ -43,20 +43,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQStreamMessage;
+import org.apache.activemq.command.ActiveMQTempQueue;
+import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -70,6 +70,9 @@ import org.mockito.Mockito;
 
 public class JMSMappingOutboundTransformerTest {
 
+    private final UUID TEST_OBJECT_VALUE = UUID.fromString("fee14b62-09e0-4ac6-a4c3-4206c630d844");
+    private final String TEST_ADDRESS = "queue://testAddress";
+
     //----- no-body Message type tests ---------------------------------------//
 
     @Test
@@ -78,10 +81,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNull(amqp.getBody());
     }
@@ -89,14 +94,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertTextMessageToAmqpMessageWithNoBodyOriginalEncodingWasNull() throws Exception {
         ActiveMQTextMessage outbound = createTextMessage();
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_NULL);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_NULL);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNull(amqp.getBody());
     }
@@ -109,10 +116,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -128,10 +137,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.storeContent();
         outbound.onSend();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -152,10 +163,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.storeContent();
         outbound.onSend();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -171,14 +184,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertEmptyBytesMessageToAmqpMessageWithAmqpValueBody() throws Exception {
         ActiveMQBytesMessage outbound = createBytesMessage();
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_BINARY);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -190,15 +205,17 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertUncompressedBytesMessageToAmqpMessageWithAmqpValueBody() throws Exception {
         byte[] expectedPayload = new byte[] { 8, 16, 24, 32 };
         ActiveMQBytesMessage outbound = createBytesMessage();
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_BINARY);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.writeBytes(expectedPayload);
         outbound.storeContent();
         outbound.onSend();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -215,15 +232,17 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertCompressedBytesMessageToAmqpMessageWithAmqpValueBody() throws Exception {
         byte[] expectedPayload = new byte[] { 8, 16, 24, 32 };
         ActiveMQBytesMessage outbound = createBytesMessage(true);
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_BINARY);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.writeBytes(expectedPayload);
         outbound.storeContent();
         outbound.onSend();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -244,10 +263,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -263,10 +284,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -288,10 +311,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -312,10 +337,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -325,14 +352,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertStreamMessageToAmqpMessageWithAmqpSequencey() throws Exception {
         ActiveMQStreamMessage outbound = createStreamMessage();
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_SEQUENCE);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_SEQUENCE);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpSequence);
@@ -347,10 +376,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -365,16 +396,18 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertCompressedStreamMessageToAmqpMessageWithAmqpSequencey() throws Exception {
         ActiveMQStreamMessage outbound = createStreamMessage(true);
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_SEQUENCE);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_SEQUENCE);
         outbound.writeBoolean(false);
         outbound.writeString("test");
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpSequence);
@@ -394,10 +427,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -407,14 +442,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertEmptyObjectMessageToAmqpMessageUnknownEncodingGetsDataSection() throws Exception {
         ActiveMQObjectMessage outbound = createObjectMessage();
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_UNKNOWN);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_UNKNOWN);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -424,14 +461,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertEmptyObjectMessageToAmqpMessageWithAmqpValueBody() throws Exception {
         ActiveMQObjectMessage outbound = createObjectMessage();
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_BINARY);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -445,10 +484,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -462,14 +503,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertObjectMessageToAmqpMessageUnknownEncodingGetsDataSection() throws Exception {
         ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID());
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_UNKNOWN);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_UNKNOWN);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -483,14 +526,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertObjectMessageToAmqpMessageWithAmqpValueBody() throws Exception {
         ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID());
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_BINARY);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -504,14 +549,16 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertCompressedObjectMessageToAmqpMessageWithDataBody() throws Exception {
-        ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID(), true);
+        ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE, true);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -525,14 +572,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertCompressedObjectMessageToAmqpMessageUnknownEncodingGetsDataSection() throws Exception {
         ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID(), true);
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_UNKNOWN);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_UNKNOWN);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -546,14 +595,16 @@ public class JMSMappingOutboundTransformerTest {
     @Test
     public void testConvertCompressedObjectMessageToAmqpMessageWithAmqpValueBody() throws Exception {
         ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID(), true);
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_VALUE_BINARY);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -573,10 +624,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -587,14 +640,16 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertTextMessageCreatesBodyUsingOriginalEncodingWithDataSection() throws Exception {
         String contentString = "myTextMessageContent";
         ActiveMQTextMessage outbound = createTextMessage(contentString);
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_DATA);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_DATA);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -609,13 +664,15 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertTextMessageContentNotStoredCreatesBodyUsingOriginalEncodingWithDataSection() throws Exception {
         String contentString = "myTextMessageContent";
         ActiveMQTextMessage outbound = createTextMessage(contentString);
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_DATA);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_DATA);
         outbound.onSend();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -633,10 +690,12 @@ public class JMSMappingOutboundTransformerTest {
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -649,10 +708,12 @@ public class JMSMappingOutboundTransformerTest {
         ActiveMQTextMessage outbound = createTextMessage(contentString);
         outbound.onSend();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -663,14 +724,16 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertCompressedTextMessageCreatesDataSectionBody() throws Exception {
         String contentString = "myTextMessageContent";
         ActiveMQTextMessage outbound = createTextMessage(contentString, true);
-        outbound.setShortProperty(AMQP_ORIGINAL_ENCODING_KEY, AMQP_DATA);
+        outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_DATA);
         outbound.onSend();
         outbound.storeContent();
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(vendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(outbound);
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof Data);
@@ -690,45 +753,35 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertMessageWithJMSDestinationQueue() throws Exception {
-        Queue mockDest = Mockito.mock(Queue.class);
-
-        doTestConvertMessageWithJMSDestination(mockDest, QUEUE_TYPE);
+        doTestConvertMessageWithJMSDestination(createMockDestination(QUEUE_TYPE), QUEUE_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSDestinationTemporaryQueue() throws Exception {
-        TemporaryQueue mockDest = Mockito.mock(TemporaryQueue.class);
-
-        doTestConvertMessageWithJMSDestination(mockDest, TEMP_QUEUE_TYPE);
+        doTestConvertMessageWithJMSDestination(createMockDestination(TEMP_QUEUE_TYPE), TEMP_QUEUE_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSDestinationTopic() throws Exception {
-        Topic mockDest = Mockito.mock(Topic.class);
-
-        doTestConvertMessageWithJMSDestination(mockDest, TOPIC_TYPE);
+        doTestConvertMessageWithJMSDestination(createMockDestination(TOPIC_TYPE), TOPIC_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSDestinationTemporaryTopic() throws Exception {
-        TemporaryTopic mockDest = Mockito.mock(TemporaryTopic.class);
-
-        doTestConvertMessageWithJMSDestination(mockDest, TEMP_TOPIC_TYPE);
+        doTestConvertMessageWithJMSDestination(createMockDestination(TEMP_TOPIC_TYPE), TEMP_TOPIC_TYPE);
     }
 
-    private void doTestConvertMessageWithJMSDestination(Destination jmsDestination, Object expectedAnnotationValue) throws Exception {
+    private void doTestConvertMessageWithJMSDestination(ActiveMQDestination jmsDestination, Object expectedAnnotationValue) throws Exception {
         ActiveMQTextMessage mockTextMessage = createMockTextMessage();
         Mockito.when(mockTextMessage.getText()).thenReturn("myTextMessageContent");
-        Mockito.when(mockTextMessage.getJMSDestination()).thenReturn(jmsDestination);
-        ActiveMQJMSVendor mockVendor = createMockVendor();
-        String toAddress = "someToAddress";
-        if (jmsDestination != null) {
-            Mockito.when(mockVendor.toAddress(Mockito.any(Destination.class))).thenReturn(toAddress);
-        }
+        Mockito.when(mockTextMessage.getDestination()).thenReturn(jmsDestination);
 
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(mockVendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(mockTextMessage);
+        EncodedMessage encoded = transformer.transform(mockTextMessage);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         MessageAnnotations ma = amqp.getMessageAnnotations();
         Map<Symbol, Object> maMap = ma == null ? null : ma.getValue();
@@ -740,7 +793,7 @@ public class JMSMappingOutboundTransformerTest {
         }
 
         if (jmsDestination != null) {
-            assertEquals("Unexpected 'to' address", toAddress, amqp.getAddress());
+            assertEquals("Unexpected 'to' address", jmsDestination.getQualifiedName(), amqp.getAddress());
         }
     }
 
@@ -753,45 +806,35 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertMessageWithJMSReplyToQueue() throws Exception {
-        Queue mockDest = Mockito.mock(Queue.class);
-
-        doTestConvertMessageWithJMSReplyTo(mockDest, QUEUE_TYPE);
+        doTestConvertMessageWithJMSReplyTo(createMockDestination(QUEUE_TYPE), QUEUE_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSReplyToTemporaryQueue() throws Exception {
-        TemporaryQueue mockDest = Mockito.mock(TemporaryQueue.class);
-
-        doTestConvertMessageWithJMSReplyTo(mockDest, TEMP_QUEUE_TYPE);
+        doTestConvertMessageWithJMSReplyTo(createMockDestination(TEMP_QUEUE_TYPE), TEMP_QUEUE_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSReplyToTopic() throws Exception {
-        Topic mockDest = Mockito.mock(Topic.class);
-
-        doTestConvertMessageWithJMSReplyTo(mockDest, TOPIC_TYPE);
+        doTestConvertMessageWithJMSReplyTo(createMockDestination(TOPIC_TYPE), TOPIC_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSReplyToTemporaryTopic() throws Exception {
-        TemporaryTopic mockDest = Mockito.mock(TemporaryTopic.class);
-
-        doTestConvertMessageWithJMSReplyTo(mockDest, TEMP_TOPIC_TYPE);
+        doTestConvertMessageWithJMSReplyTo(createMockDestination(TEMP_TOPIC_TYPE), TEMP_TOPIC_TYPE);
     }
 
-    private void doTestConvertMessageWithJMSReplyTo(Destination jmsReplyTo, Object expectedAnnotationValue) throws Exception {
+    private void doTestConvertMessageWithJMSReplyTo(ActiveMQDestination jmsReplyTo, Object expectedAnnotationValue) throws Exception {
         ActiveMQTextMessage mockTextMessage = createMockTextMessage();
         Mockito.when(mockTextMessage.getText()).thenReturn("myTextMessageContent");
-        Mockito.when(mockTextMessage.getJMSReplyTo()).thenReturn(jmsReplyTo);
-        ActiveMQJMSVendor mockVendor = createMockVendor();
-        String replyToAddress = "someReplyToAddress";
-        if (jmsReplyTo != null) {
-            Mockito.when(mockVendor.toAddress(Mockito.any(Destination.class))).thenReturn(replyToAddress);
-        }
+        Mockito.when(mockTextMessage.getReplyTo()).thenReturn(jmsReplyTo);
 
-        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer(mockVendor);
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
 
-        Message amqp = transformer.convert(mockTextMessage);
+        EncodedMessage encoded = transformer.transform(mockTextMessage);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
 
         MessageAnnotations ma = amqp.getMessageAnnotations();
         Map<Symbol, Object> maMap = ma == null ? null : ma.getValue();
@@ -803,7 +846,7 @@ public class JMSMappingOutboundTransformerTest {
         }
 
         if (jmsReplyTo != null) {
-            assertEquals("Unexpected 'reply-to' address", replyToAddress, amqp.getReplyTo());
+            assertEquals("Unexpected 'reply-to' address", jmsReplyTo.getQualifiedName(), amqp.getReplyTo());
         }
     }
 
@@ -812,16 +855,35 @@ public class JMSMappingOutboundTransformerTest {
     private ActiveMQTextMessage createMockTextMessage() throws Exception {
         ActiveMQTextMessage mockTextMessage = Mockito.mock(ActiveMQTextMessage.class);
         Mockito.when(mockTextMessage.getPropertyNames()).thenReturn(Collections.enumeration(Collections.emptySet()));
+        Mockito.when(mockTextMessage.getPriority()).thenReturn((byte) Message.DEFAULT_PRIORITY);
 
         return mockTextMessage;
     }
 
-    private ActiveMQJMSVendor createVendor() {
-        return ActiveMQJMSVendor.INSTANCE;
-    }
+    private ActiveMQDestination createMockDestination(byte destType) {
+        ActiveMQDestination mockDestination = null;
+        switch (destType) {
+            case QUEUE_TYPE:
+                mockDestination = Mockito.mock(ActiveMQQueue.class);
+                Mockito.when(mockDestination.getQualifiedName()).thenReturn("queue://" + TEST_ADDRESS);
+                break;
+            case TOPIC_TYPE:
+                mockDestination = Mockito.mock(ActiveMQTopic.class);
+                Mockito.when(mockDestination.getQualifiedName()).thenReturn("topic://" + TEST_ADDRESS);
+                break;
+            case TEMP_QUEUE_TYPE:
+                mockDestination = Mockito.mock(ActiveMQTempQueue.class);
+                Mockito.when(mockDestination.getQualifiedName()).thenReturn("tempQueue://" + TEST_ADDRESS);
+                break;
+            case TEMP_TOPIC_TYPE:
+                mockDestination = Mockito.mock(ActiveMQTempTopic.class);
+                Mockito.when(mockDestination.getQualifiedName()).thenReturn("tempTopic://" + TEST_ADDRESS);
+                break;
+            default:
+                throw new IllegalArgumentException("Invliad Destination Type given/");
+        }
 
-    private ActiveMQJMSVendor createMockVendor() {
-        return Mockito.mock(ActiveMQJMSVendor.class);
+        return mockDestination;
     }
 
     private ActiveMQMessage createMessage() {

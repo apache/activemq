@@ -37,7 +37,6 @@ import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.ResponseHandler;
 import org.apache.activemq.transport.amqp.message.AMQPNativeInboundTransformer;
 import org.apache.activemq.transport.amqp.message.AMQPRawInboundTransformer;
-import org.apache.activemq.transport.amqp.message.ActiveMQJMSVendor;
 import org.apache.activemq.transport.amqp.message.EncodedMessage;
 import org.apache.activemq.transport.amqp.message.InboundTransformer;
 import org.apache.activemq.transport.amqp.message.JMSMappingInboundTransformer;
@@ -138,14 +137,14 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
         if (inboundTransformer == null) {
             String transformer = session.getConnection().getConfiguredTransformer();
             if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_JMS)) {
-                inboundTransformer = new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                inboundTransformer = new JMSMappingInboundTransformer();
             } else if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_NATIVE)) {
-                inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                inboundTransformer = new AMQPNativeInboundTransformer();
             } else if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_RAW)) {
-                inboundTransformer = new AMQPRawInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                inboundTransformer = new AMQPRawInboundTransformer();
             } else {
                 LOG.warn("Unknown transformer type {} using native one instead", transformer);
-                inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                inboundTransformer = new AMQPNativeInboundTransformer();
             }
         }
         return inboundTransformer;
@@ -157,7 +156,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
             EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), deliveryBytes.data, deliveryBytes.offset, deliveryBytes.length);
 
             InboundTransformer transformer = getTransformer();
-            ActiveMQMessage message = (ActiveMQMessage) transformer.transform(em);
+            ActiveMQMessage message = transformer.transform(em);
 
             current = null;
 

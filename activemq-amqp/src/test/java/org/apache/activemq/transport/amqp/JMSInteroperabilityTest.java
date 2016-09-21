@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
@@ -467,5 +468,47 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
 
         amqp.close();
         openwire.close();
+    }
+
+    //----- Test Qpid JMS to Qpid JMS interop with transformers --------------//
+
+    @Test
+    public void testQpidJMSToQpidJMSMessageSendReceive() throws Exception {
+        final int SIZE = 1024;
+        final int NUM_MESSAGES = 100;
+
+        Connection amqpSend = createConnection("client-1");
+        Connection amqpReceive = createConnection("client-2");
+
+        amqpReceive.start();
+
+        Session senderSession = amqpSend.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session receiverSession = amqpReceive.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Destination queue = senderSession.createQueue(getDestinationName());
+
+        MessageProducer amqpProducer = senderSession.createProducer(queue);
+        MessageConsumer amqpConsumer = receiverSession.createConsumer(queue);
+
+        byte[] payload = new byte[SIZE];
+
+        for (int i = 0; i < NUM_MESSAGES; ++i) {
+            BytesMessage outgoing = senderSession.createBytesMessage();
+            outgoing.setLongProperty("SendTime", System.currentTimeMillis());
+            outgoing.writeBytes(payload);
+            amqpProducer.send(outgoing);
+        }
+
+        // Now consumer the message
+        for (int i = 0; i < NUM_MESSAGES; ++i) {
+            Message received = amqpConsumer.receive(2000);
+            assertNotNull(received);
+            assertTrue("Expected BytesMessage but got " + received, received instanceof BytesMessage);
+            BytesMessage incoming = (BytesMessage) received;
+            assertEquals(SIZE, incoming.getBodyLength());
+        }
+
+        amqpReceive.close();
+        amqpSend.close();
     }
 }

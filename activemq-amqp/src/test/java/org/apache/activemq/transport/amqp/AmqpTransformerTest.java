@@ -87,8 +87,6 @@ public class AmqpTransformerTest {
 
         assertTrue(message instanceof BytesMessage);
         Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
-        Long messageFormat = message.getLongProperty("JMS_AMQP_MESSAGE_FORMAT");
-        assertEquals(0L, messageFormat.longValue());
         assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
         assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
         assertEquals(7, message.getJMSPriority());
@@ -136,8 +134,6 @@ public class AmqpTransformerTest {
         LOG.info("Recieved message: {}", message);
         assertTrue(message instanceof BytesMessage);
         Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
-        Long messageFormat = message.getLongProperty("JMS_AMQP_MESSAGE_FORMAT");
-        assertEquals(0L, messageFormat.longValue());
         assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
         assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
 
@@ -184,8 +180,6 @@ public class AmqpTransformerTest {
 
         assertTrue(message instanceof TextMessage);
         Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
-        Long messageFormat = message.getLongProperty("JMS_AMQP_MESSAGE_FORMAT");
-        assertEquals(0L, messageFormat.longValue());
         assertFalse("Didn't use the correct transformation, expected NOT to be NATIVE", nativeTransformationUsed);
         assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
 
