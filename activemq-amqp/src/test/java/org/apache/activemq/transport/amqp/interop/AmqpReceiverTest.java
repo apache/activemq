@@ -225,6 +225,47 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     @Repeat(repetitions = 1)
+    public void testPresettledReceiverReadsAllMessagesInNonFlowBatch() throws Exception {
+        final int MSG_COUNT = 100;
+        sendMessages(getTestName(), MSG_COUNT, false);
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), null, false, true);
+
+        QueueViewMBean queueView = getProxyToQueue(getTestName());
+        assertEquals(MSG_COUNT, queueView.getQueueSize());
+        assertEquals(0, queueView.getDispatchCount());
+
+        receiver.flow(20);
+        // consume less that flow
+        for (int j=0;j<10;j++) {
+            assertNotNull(receiver.receive(5, TimeUnit.SECONDS));
+        }
+
+        // flow more and consume all
+        receiver.flow(10);
+        for (int j=0;j<20;j++) {
+            assertNotNull(receiver.receive(5, TimeUnit.SECONDS));
+        }
+
+        // remainder
+        receiver.flow(70);
+        for (int j=0;j<70;j++) {
+            assertNotNull(receiver.receive(5, TimeUnit.SECONDS));
+        }
+
+        receiver.close();
+
+        assertEquals(0, queueView.getQueueSize());
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    @Repeat(repetitions = 1)
     public void testTwoQueueReceiversOnSameConnectionReadMessagesNoDispositions() throws Exception {
         int MSG_COUNT = 4;
         sendMessages(getTestName(), MSG_COUNT, false);

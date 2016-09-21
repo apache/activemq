@@ -292,7 +292,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         }
 
         pumpOutbound();
-        logicalDeliveryCount++;
     }
 
     @Override
@@ -410,6 +409,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         }
                         currentBuffer = null;
                         currentDelivery = null;
+                        logicalDeliveryCount++;
                     }
                 } else {
                     return;
