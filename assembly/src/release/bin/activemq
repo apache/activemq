@@ -456,24 +456,27 @@ invokeJar(){
    return $RET
 }
 
-# Check if ActiveMQ is running
+# Check if a java process (ActiveMQ) with pid found in file is running
 #
-# @RET  : 0 => the activemq process is running
-#         1 => process id in $ACTIVEMQ_PIDFILE does not exist anymore
-#         2 => something is wrong with the pid file
+# @ARG1 : the name of the PID-file
+# @RET  : 0 => the java process is running
+#         1 => process id in PID-file does not exist anymore
+#         2 => something is wrong with the PID-file
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE : the name of the pid file
 
 
 checkRunning(){
-    if [ -f "$ACTIVEMQ_PIDFILE" ]; then
-       if  [ -z "`cat $ACTIVEMQ_PIDFILE`" ];then
-        echo "ERROR: Pidfile '$ACTIVEMQ_PIDFILE' exists but contains no pid"
+    local pidfile="${1}"
+
+    if [ -f $pidfile ]; then
+       if  [ -z "`cat "$pidfile"`" ];then
+        echo "ERROR: Pidfile '$pidfile' exists but contains no pid"
         return 2
        fi
-       ACTIVEMQ_PID="`cat ${ACTIVEMQ_PIDFILE}`"
-       RET="`ps -p "${ACTIVEMQ_PID}"|grep java`"
+       local activemq_pid="`cat "$pidfile"`"
+       local RET="`ps -o "pid,args" | grep "^$activemq_pid\s.*java"`"
        if [ -n "$RET" ];then
          return 0;
        else
@@ -484,24 +487,6 @@ checkRunning(){
     fi
 }
 
-checkStopRunning(){
-    PID_STOP="${ACTIVEMQ_PIDFILE}.stop"
-    if [ -f "$PID_STOP" ]; then
-       if  [ -z "`cat $PID_STOP`" ];then
-        echo "ERROR: Pidfile os stop process '$PID_STOP' exists but contains no pid"
-        return 2
-       fi
-       THEPID=`cat ${PID_STOP}`
-       RET=`ps -p $THEPID|grep java`
-       if [ -n "$RET" ];then
-         return 0;
-       else
-         return 1;
-       fi
-    else
-         return 1;
-    fi
-}
 
 # Check if ActiveMQ is running
 #
@@ -513,7 +498,7 @@ checkStopRunning(){
 
 
 invoke_status(){
-    if ( checkRunning );then
+    if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
          PID="`cat $ACTIVEMQ_PIDFILE`"
          echo "ActiveMQ is running (pid '$PID')"
          exit 0
@@ -534,7 +519,7 @@ invoke_status(){
 # - $ACTIVEMQ_SSL_OPTS     : options for SSL encryption
 
 invoke_start(){
-    if ( checkRunning );then
+  if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
       PID="`cat $ACTIVEMQ_PIDFILE`"
       echo "INFO: Process with pid '$PID' is already running"
       exit 0
@@ -560,7 +545,7 @@ invoke_start(){
 # - $ACTIVEMQ_SSL_OPTS     : options for SSL encryption
 
 invoke_console(){
-    if ( checkRunning );then
+    if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
       echo "ERROR: ActiveMQ is already running"
       exit 1
     fi
@@ -588,7 +573,7 @@ invoke_console(){
 
 
 invoke_kill(){
-    if ( checkRunning ); then
+    if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
        ACTIVEMQ_PID="`cat ${ACTIVEMQ_PIDFILE}`"
        echo "INFO: sending SIGKILL to pid '$ACTIVEMQ_PID'"
        kill -KILL $ACTIVEMQ_PID
@@ -612,7 +597,7 @@ invoke_kill(){
 
 invoke_stop(){
     RET="1"
-    if ( checkRunning );then
+    if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
        ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
 
@@ -625,15 +610,15 @@ invoke_stop(){
        i=0
        echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$ACTIVEMQ_PID' : "
        while [ "$i" -le "$ACTIVEMQ_KILL_MAXSECONDS" ]; do
-         if [ ! checkStopRunning ];then
-            if [ ! checkRunning ]; then
+         if ( ! checkRunning "${ACTIVEMQ_PIDFILE}.stop" ); then
+            if ( ! checkRunning "$ACTIVEMQ_PIDFILE" ); then
                echo " FINISHED"
                FOUND="1"
             fi
             break
          fi
 
-         if (checkRunning);then
+         if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
             sleep 1
             printf  "."
          else
@@ -681,12 +666,12 @@ invoke_task(){
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
 
     if [ "$CHECKRUNNING" = "checkforrunning" ];then
-       if ( ! checkRunning );then
+       if ( ! checkRunning "$ACTIVEMQ_PIDFILE" );then
          echo "Activemq is not running."
          exit 1
        fi
     elif [ "$CHECKRUNNING" = "checkfornotrunning" ];then
-      if ( checkRunning );then
+      if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
          echo "Activemq is running."
          exit 1
        fi
@@ -740,7 +725,7 @@ case "$1" in
     invoke_status
     ;;
   restart)
-    if ( checkRunning );then
+    if ( checkRunning "$ACTIVEMQ_PIDFILE" );then
       $0 stop
       echo
     fi
