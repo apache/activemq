@@ -63,6 +63,7 @@ import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.MessageStoreStatistics;
 import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionIdTransformer;
@@ -86,7 +87,7 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
+public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, NoLocalSubscriptionAware {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBStore.class);
     private static final int MAX_ASYNC_JOBS = BaseDestination.MAX_AUDIT_DEPTH;
 
@@ -1566,5 +1567,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         return new JobSchedulerStoreImpl();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.NoLocalSubscriptionAware#isPersistNoLocal()
+     */
+    @Override
+    public boolean isPersistNoLocal() {
+        // Prior to v11 the broker did not store the noLocal value for durable subs.
+        return brokerService.getStoreOpenWireVersion() >= 11;
     }
 }

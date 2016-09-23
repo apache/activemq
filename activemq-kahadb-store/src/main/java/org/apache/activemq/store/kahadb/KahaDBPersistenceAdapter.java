@@ -42,6 +42,7 @@ import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.JournaledStore;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.SharedFileLocker;
 import org.apache.activemq.store.TopicMessageStore;
@@ -61,7 +62,9 @@ import org.apache.activemq.util.ServiceStopper;
  * @org.apache.xbean.XBean element="kahaDB"
  *
  */
-public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, JournaledStore, TransactionIdTransformerAware {
+public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter,
+    JournaledStore, TransactionIdTransformerAware, NoLocalSubscriptionAware {
+
     private final KahaDBStore letter = new KahaDBStore();
 
     /**
@@ -787,5 +790,13 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         return this.letter.createJobSchedulerStore();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.NoLocalSubscriptionAware#isPersistNoLocal()
+     */
+    @Override
+    public boolean isPersistNoLocal() {
+        return this.letter.isPersistNoLocal();
     }
 }

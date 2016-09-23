@@ -48,6 +48,7 @@ import org.apache.activemq.filter.AnyDestination;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.SharedFileLocker;
 import org.apache.activemq.store.TopicMessageStore;
@@ -69,7 +70,9 @@ import org.slf4j.LoggerFactory;
  *
  * @org.apache.xbean.XBean element="mKahaDB"
  */
-public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, BrokerServiceAware {
+public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter,
+    BrokerServiceAware, NoLocalSubscriptionAware {
+
     static final Logger LOG = LoggerFactory.getLogger(MultiKahaDBPersistenceAdapter.class);
 
     final static ActiveMQDestination matchAll = new AnyDestination(new ActiveMQDestination[]{new ActiveMQQueue(">"), new ActiveMQTopic(">")});
@@ -531,5 +534,14 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         return new JobSchedulerStoreImpl();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.NoLocalSubscriptionAware#isPersistNoLocal()
+     */
+    @Override
+    public boolean isPersistNoLocal() {
+        // Prior to v11 the broker did not store the noLocal value for durable subs.
+        return brokerService.getStoreOpenWireVersion() >= 11;
     }
 }
