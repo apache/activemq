@@ -16,14 +16,18 @@
  */
 package org.apache.activemq.store.kahadb.plist;
 
-import org.apache.activemq.store.PListStore;
-import org.apache.activemq.store.PListTestSupport;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import org.apache.activemq.store.PListStore;
+import org.apache.activemq.store.PListTestSupport;
+import org.apache.activemq.util.IOHelper;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -36,6 +40,7 @@ public class PListImplTest extends PListTestSupport {
         return new PListStoreImpl();
     }
 
+    @Override
     protected PListStore createConcurrentAddIteratePListStore() {
         PListStoreImpl store = createPListStore();
         store.setIndexPageSize(2 * 1024);
@@ -84,10 +89,49 @@ public class PListImplTest extends PListTestSupport {
         final File directory = pListStore.getDirectory();
         pListStore.stop();
         pListStore = createPListStore();
+        pListStore.setDirectory(directory);
         pListStore.setLazyInit(false);
         pListStore.setIndexDirectory(new File(directory, "indexDir"));
         pListStore.start();
         assertNotEquals(pListStore.getDirectory(), pListStore.getIndexDirectory());
         pListStore.stop();
+    }
+
+    //Test that when lazy init is true that the directory gets cleaned up on start up
+    @Test
+    public void testLazyInitCleanup() throws Exception {
+        PListStoreImpl pListStore = (PListStoreImpl)store;
+        File directory = pListStore.getDirectory();
+        File indexDir = tempFolder.newFolder();
+        pListStore.stop();
+
+        //Restart one time with index directory so everything gets created
+        pListStore = createPListStore();
+        pListStore.setLazyInit(false);
+        pListStore.setDirectory(directory);
+        pListStore.setIndexDirectory(indexDir);
+        pListStore.start();
+        pListStore.stop();
+
+        assertTrue(directory.exists());
+        assertTrue(indexDir.exists());
+
+        //restart again with lazy init true and make sure that the directories are cleared
+        pListStore = createPListStore();
+        pListStore.setLazyInit(true);
+        pListStore.setDirectory(directory);
+        pListStore.setIndexDirectory(indexDir);
+
+        //assert that start cleaned up old data
+        pListStore.start();
+        assertFalse(directory.exists());
+        assertFalse(indexDir.exists());
+
+        //assert that initialize re-created the data dirs
+        pListStore.intialize();
+        assertTrue(directory.exists());
+        assertTrue(indexDir.exists());
+        pListStore.stop();
+
     }
 }

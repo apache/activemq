@@ -39,7 +39,9 @@ import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,9 @@ public abstract class PListTestSupport {
     final String idSeed = new String("Seed" + new byte[1024]);
     final Vector<Throwable> exceptions = new Vector<Throwable>();
     ExecutorService executor;
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
     public void testAddLast() throws Exception {
@@ -645,11 +650,8 @@ public abstract class PListTestSupport {
 
     @Before
     public void setUp() throws Exception {
-        File directory = new File("target/test/PlistDB");
-        IOHelper.mkdirs(directory);
-        IOHelper.deleteChildren(directory);
+        File directory = tempFolder.newFolder();
         startStore(directory);
-
     }
 
     protected void startStore(File directory) throws Exception {

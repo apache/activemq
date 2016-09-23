@@ -162,12 +162,14 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         MetaDataMarshaller(PListStoreImpl store) {
             this.store = store;
         }
+        @Override
         public MetaData readPayload(DataInput dataIn) throws IOException {
             MetaData rc = new MetaData(this.store);
             rc.read(dataIn);
             return rc;
         }
 
+        @Override
         public void writePayload(MetaData object, DataOutput dataOut) throws IOException {
             object.write(dataOut);
         }
@@ -178,12 +180,14 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         PListMarshaller(PListStoreImpl store) {
             this.store = store;
         }
+        @Override
         public PListImpl readPayload(DataInput dataIn) throws IOException {
             PListImpl result = new PListImpl(this.store);
             result.read(dataIn);
             return result;
         }
 
+        @Override
         public void writePayload(PListImpl list, DataOutput dataOut) throws IOException {
             list.write(dataOut);
         }
@@ -211,6 +215,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         this.indexDirectory = indexDirectory;
     }
 
+    @Override
     public long size() {
         synchronized (this) {
             if (!initialized) {
@@ -237,6 +242,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                     final PListImpl pl = new PListImpl(this);
                     pl.setName(name);
                     getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                        @Override
                         public void execute(Transaction tx) throws IOException {
                             pl.setHeadPageId(tx.allocate().getPageId());
                             pl.load(tx);
@@ -248,6 +254,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                 }
                 final PListImpl toLoad = result;
                 getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                    @Override
                     public void execute(Transaction tx) throws IOException {
                         toLoad.load(tx);
                     }
@@ -267,6 +274,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                 result = pl != null;
                 if (result) {
                     getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                        @Override
                         public void execute(Transaction tx) throws IOException {
                             metaData.lists.remove(tx, name);
                             pl.destroy();
@@ -282,7 +290,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         if (isStarted()) {
             if (this.initialized == false) {
                 if (this.directory == null) {
-                    this.directory = new File(IOHelper.getDefaultDataDirectory() + File.pathSeparator + "delayedDB");
+                    this.directory = getDefaultDirectory();
                 }
                 IOHelper.mkdirs(this.directory);
                 IOHelper.deleteChildren(this.directory);
@@ -304,6 +312,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                 this.pageFile.load();
 
                 this.pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                    @Override
                     public void execute(Transaction tx) throws IOException {
                         if (pageFile.getPageCount() == 0) {
                             Page<MetaData> page = tx.allocate();
@@ -337,10 +346,27 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         }
     }
 
+    protected File getDefaultDirectory() {
+        return new File(IOHelper.getDefaultDataDirectory() + File.pathSeparator + "delayedDB");
+    }
+
+    protected void cleanupDirectory(final File dir) {
+        if (dir != null && dir.exists()) {
+            IOHelper.delete(dir);
+        }
+    }
+
     @Override
     protected synchronized void doStart() throws Exception {
         if (!lazyInit) {
             intialize();
+        } else {
+            if (this.directory == null) {
+                this.directory = getDefaultDirectory();
+            }
+            //Go ahead and clean up previous data on start up
+            cleanupDirectory(this.directory);
+            cleanupDirectory(this.indexDirectory);
         }
         LOG.info(this + " started");
     }
@@ -371,6 +397,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
 
     }
 
+    @Override
     public void run() {
         try {
             if (isStopping()) {
@@ -455,6 +482,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
         this.failIfDatabaseIsLocked = failIfDatabaseIsLocked;
     }
 
+    @Override
     public int getJournalMaxFileLength() {
         return journalMaxFileLength;
     }
