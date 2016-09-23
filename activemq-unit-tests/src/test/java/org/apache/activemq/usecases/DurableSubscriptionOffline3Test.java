@@ -388,7 +388,7 @@ public class DurableSubscriptionOffline3Test extends DurableSubscriptionOfflineT
         // test offline subs
         con = createConnection("offCli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+        consumer = session.createDurableSubscriber(topic, "SubsId", null, false);
         consumer.setMessageListener(listener);
 
         Thread.sleep(3 * 1000);

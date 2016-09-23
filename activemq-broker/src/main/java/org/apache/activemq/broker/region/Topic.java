@@ -51,6 +51,8 @@ import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.store.MessageRecoveryListener;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
@@ -211,7 +213,7 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
-    private boolean hasDurableSubChanged(SubscriptionInfo info1, ConsumerInfo info2) {
+    private boolean hasDurableSubChanged(SubscriptionInfo info1, ConsumerInfo info2) throws IOException {
         if (hasSelectorChanged(info1, info2)) {
             return true;
         }
@@ -219,9 +221,10 @@ public class Topic extends BaseDestination implements Task {
         return hasNoLocalChanged(info1, info2);
     }
 
-    private boolean hasNoLocalChanged(SubscriptionInfo info1, ConsumerInfo info2) {
-        // Prior to V11 the broker did not store the noLocal value for durable subs.
-        if (brokerService.getStoreOpenWireVersion() >= 11) {
+    private boolean hasNoLocalChanged(SubscriptionInfo info1, ConsumerInfo info2) throws IOException {
+        //Not all persistence adapters store the noLocal value for a subscription
+        PersistenceAdapter adapter = broker.getBrokerService().getPersistenceAdapter();
+        if (adapter instanceof NoLocalSubscriptionAware) {
             if (info1.isNoLocal() ^ info2.isNoLocal()) {
                 return true;
             }

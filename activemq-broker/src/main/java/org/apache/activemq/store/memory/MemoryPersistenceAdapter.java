@@ -31,6 +31,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.ProxyMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
@@ -42,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @org.apache.xbean.XBean
  */
-public class MemoryPersistenceAdapter implements PersistenceAdapter {
+public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubscriptionAware {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryPersistenceAdapter.class);
 
     MemoryTransactionStore transactionStore;
@@ -240,5 +241,13 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         // We could eventuall implement an in memory scheduler.
         throw new UnsupportedOperationException();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.NoLocalSubscriptionAware#isPersistNoLocal()
+     */
+    @Override
+    public boolean isPersistNoLocal() {
+        return true;
     }
 }
