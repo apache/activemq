@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -196,6 +197,34 @@ public class JMSTransformationSpeedComparisonTest {
     }
 
     @Test
+    public void testComplexQpidJMSMessage() throws Exception {
+
+        EncodedMessage encoded = encode(createComplexQpidJMSMessage());
+        InboundTransformer inboundTransformer = getInboundTransformer();
+        OutboundTransformer outboundTransformer = getOutboundTransformer();
+
+        // Warm up
+        for (int i = 0; i < WARM_CYCLES; ++i) {
+            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            intermediate.onSend();
+            outboundTransformer.transform(intermediate);
+        }
+
+        long totalDuration = 0;
+
+        long startTime = System.nanoTime();
+        for (int i = 0; i < PROFILE_CYCLES; ++i) {
+            ActiveMQMessage intermediate = (ActiveMQMessage) inboundTransformer.transform(encoded);
+            intermediate.onSend();
+            outboundTransformer.transform(intermediate);
+        }
+        totalDuration += System.nanoTime() - startTime;
+
+        LOG.info("[{}] Total time for {} cycles of transforms = {} ms  -> [{}]",
+            transformer, PROFILE_CYCLES, TimeUnit.NANOSECONDS.toMillis(totalDuration), test.getMethodName());
+    }
+
+    @Test
     public void testTypicalQpidJMSMessageInBoundOnly() throws Exception {
 
         EncodedMessage encoded = encode(createTypicalQpidJMSMessage());
@@ -309,6 +338,50 @@ public class JMSTransformationSpeedComparisonTest {
         message.setMessageAnnotations(new MessageAnnotations(messageAnnotations));
         message.setCreationTime(System.currentTimeMillis());
         message.setContentType("text/plain");
+        message.setBody(new AmqpValue("String payload for AMQP message conversion performance testing."));
+
+        return message;
+    }
+
+    private Message createComplexQpidJMSMessage() {
+        Map<String, Object> applicationProperties = new HashMap<String, Object>();
+        Map<Symbol, Object> messageAnnotations = new HashMap<Symbol, Object>();
+
+        applicationProperties.put("property-1", "string-1");
+        applicationProperties.put("property-2", 512);
+        applicationProperties.put("property-3", true);
+        applicationProperties.put("property-4", "string-2");
+        applicationProperties.put("property-5", 512);
+        applicationProperties.put("property-6", true);
+        applicationProperties.put("property-7", "string-3");
+        applicationProperties.put("property-8", 512);
+        applicationProperties.put("property-9", true);
+
+        messageAnnotations.put(Symbol.valueOf("x-opt-jms-msg-type"), 0);
+        messageAnnotations.put(Symbol.valueOf("x-opt-jms-dest"), 0);
+
+        Message message = Proton.message();
+
+        // Header Values
+        message.setPriority((short) 9);
+        message.setDurable(true);
+        message.setDeliveryCount(2);
+        message.setTtl(5000);
+
+        // Properties
+        message.setMessageId("ID:SomeQualifier:0:0:1");
+        message.setGroupId("Group-ID-1");
+        message.setGroupSequence(15);
+        message.setAddress("queue://test-queue");
+        message.setReplyTo("queue://reply-queue");
+        message.setCreationTime(System.currentTimeMillis());
+        message.setContentType("text/plain");
+        message.setCorrelationId("ID:SomeQualifier:0:7:9");
+        message.setUserId("username".getBytes(StandardCharsets.UTF_8));
+
+        // Application Properties / Message Annotations / Body
+        message.setApplicationProperties(new ApplicationProperties(applicationProperties));
+        message.setMessageAnnotations(new MessageAnnotations(messageAnnotations));
         message.setBody(new AmqpValue("String payload for AMQP message conversion performance testing."));
 
         return message;
