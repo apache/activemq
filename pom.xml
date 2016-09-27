@@ -1497,6 +1497,8 @@
           <maxmemory>2048m</maxmemory>
           <source>${source-version}</source>
           <additionalJOption>-J-Xmx2048m</additionalJOption>
+          <!-- necessary for now under the javadocs can be fixed because jdk8 is much stricter -->
+          <additionalparam>-Xdoclint:none</additionalparam>
         </configuration>
         <executions>
             <execution>
