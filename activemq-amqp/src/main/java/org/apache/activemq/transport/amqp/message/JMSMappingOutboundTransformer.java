@@ -220,7 +220,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             if (header == null) {
                 header = new Header();
             }
-            header.setDeliveryCount(new UnsignedInteger(deliveryCount));
+            header.setDeliveryCount(UnsignedInteger.valueOf(deliveryCount));
         }
         String userId = message.getUserID();
         if (userId != null) {
@@ -238,11 +238,10 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
         }
         int groupSequence = message.getGroupSequence();
         if (groupSequence > 0) {
-            UnsignedInteger value = new UnsignedInteger(groupSequence);
             if (properties == null) {
                 properties = new Properties();
             }
-            properties.setGroupSequence(value);
+            properties.setGroupSequence(UnsignedInteger.valueOf(groupSequence));
         }
 
         final Map<String, Object> entries;
