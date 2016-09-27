@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -275,67 +271,6 @@ public class JMSTransformationSpeedComparisonTest {
 
         LOG.info("[{}] Total time for {} cycles of transforms = {} ms  -> [{}]",
             transformer, PROFILE_CYCLES, TimeUnit.NANOSECONDS.toMillis(totalDuration), test.getMethodName());
-    }
-
-    @Test
-    public void testEncodeDecodeIsWorking() throws Exception {
-        Message incomingMessage = createTypicalQpidJMSMessage();
-        EncodedMessage encoded = encode(incomingMessage);
-        InboundTransformer inboundTransformer = getInboundTransformer();
-        OutboundTransformer outboundTransformer = getOutboundTransformer();
-
-        ActiveMQMessage outbound = inboundTransformer.transform(encoded);
-        outbound.onSend();
-        Message outboudMessage = outboundTransformer.transform(outbound).decode();
-
-        // Test that message details are equal
-        assertEquals(incomingMessage.getAddress(), outboudMessage.getAddress());
-        assertEquals(incomingMessage.getDeliveryCount(), outboudMessage.getDeliveryCount());
-        assertEquals(incomingMessage.getCreationTime(), outboudMessage.getCreationTime());
-        assertEquals(incomingMessage.getContentType(), outboudMessage.getContentType());
-
-        // Test Message annotations
-        ApplicationProperties incomingApplicationProperties = incomingMessage.getApplicationProperties();
-        ApplicationProperties outgoingApplicationProperties = outboudMessage.getApplicationProperties();
-
-        assertEquals(incomingApplicationProperties.getValue(), outgoingApplicationProperties.getValue());
-
-        // Test Message properties
-        MessageAnnotations incomingMessageAnnotations = incomingMessage.getMessageAnnotations();
-        MessageAnnotations outgoingMessageAnnotations = outboudMessage.getMessageAnnotations();
-
-        assertEquals(incomingMessageAnnotations.getValue(), outgoingMessageAnnotations.getValue());
-
-        // Test that bodies are equal
-        assertTrue(incomingMessage.getBody() instanceof AmqpValue);
-        assertTrue(outboudMessage.getBody() instanceof AmqpValue);
-
-        AmqpValue incomingBody = (AmqpValue) incomingMessage.getBody();
-        AmqpValue outgoingBody = (AmqpValue) outboudMessage.getBody();
-
-        assertTrue(incomingBody.getValue() instanceof String);
-        assertTrue(outgoingBody.getValue() instanceof String);
-
-        assertEquals(incomingBody.getValue(), outgoingBody.getValue());
-    }
-
-    @Test
-    public void testBodyOnlyEncodeDecode() throws Exception {
-
-        Message incomingMessage = Proton.message();
-
-        incomingMessage.setBody(new AmqpValue("String payload for AMQP message conversion performance testing."));
-
-        EncodedMessage encoded = encode(incomingMessage);
-        InboundTransformer inboundTransformer = getInboundTransformer();
-        OutboundTransformer outboundTransformer = getOutboundTransformer();
-
-        ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
-        intermediate.onSend();
-        Message outboudMessage = outboundTransformer.transform(intermediate).decode();
-
-        assertNull(outboudMessage.getHeader());
-        assertNull(outboudMessage.getProperties());
     }
 
     private Message createTypicalQpidJMSMessage() {
