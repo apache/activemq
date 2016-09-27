@@ -127,29 +127,28 @@ public class DestinationsViewFilter implements Serializable {
      */
     String filter(int page, int pageSize) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        Map<ObjectName, DestinationView> filtered = getFilteredDestinations(page, pageSize);
+        destinations = Maps.filterValues(destinations, getPredicate());
+        Map<ObjectName, DestinationView> pagedDestinations = getPagedDestinations(page, pageSize);
         Map<String, Object> result = new HashMap<String, Object>();
-        result.put("data", filtered);
+        result.put("data", pagedDestinations);
         result.put("count", destinations.size());
         StringWriter writer = new StringWriter();
         mapper.writeValue(writer, result);
         return writer.toString();
     }
 
-    Map<ObjectName, DestinationView> getFilteredDestinations(int page, int pageSize) {
-        Map<ObjectName, DestinationView> filtered = Maps.filterValues(destinations, getPredicate());
+    Map<ObjectName, DestinationView> getPagedDestinations(int page, int pageSize) {
         ImmutableMap.Builder<ObjectName, DestinationView> builder = ImmutableMap.builder();
         int start = (page - 1) * pageSize;
-        int end = Math.min(page * pageSize, filtered.size());
+        int end = Math.min(page * pageSize, destinations.size());
         int i = 0;
         for (Map.Entry<ObjectName, DestinationView> entry :
-                getOrdering().sortedCopy(filtered.entrySet())) {
+                getOrdering().sortedCopy(destinations.entrySet())) {
             if (i >= start && i < end) {
                 builder.put(entry.getKey(), entry.getValue());
             }
             i++;
         }
-
         return builder.build();
     }
 
