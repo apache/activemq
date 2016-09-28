@@ -23,6 +23,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -56,14 +57,22 @@ public final class SelectorManager {
                     t.setDaemon(true);
                     return t;
                 }
-            }, new ThreadPoolExecutor.CallerRunsPolicy());
+            }, newRejectionHandler());
 
         return rc;
+    }
+
+    private RejectedExecutionHandler newRejectionHandler() {
+        return canRejectWork() ? new ThreadPoolExecutor.AbortPolicy() : new ThreadPoolExecutor.CallerRunsPolicy();
     }
 
     private BlockingQueue<Runnable> newWorkQueue() {
         final int workQueueCapicity = getDefaultWorkQueueCapacity();
         return workQueueCapicity > 0 ? new LinkedBlockingQueue<Runnable>(workQueueCapicity) : new SynchronousQueue<Runnable>();
+    }
+
+    private static boolean canRejectWork() {
+        return Boolean.getBoolean("org.apache.activemq.transport.nio.SelectorManager.rejectWork");
     }
 
     private static int getDefaultWorkQueueCapacity() {

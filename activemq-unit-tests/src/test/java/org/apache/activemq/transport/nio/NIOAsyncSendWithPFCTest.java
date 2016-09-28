@@ -146,12 +146,8 @@ public class NIOAsyncSendWithPFCTest extends TestCase {
 
             }
 
-
             //wait till producer follow control kicks in
             waitForProducerFlowControl(broker, queueView);
-
-
-            TestSupport.dumpAllThreads("Blocked");
 
             try {
                 Session producerSession = exisitngConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
