@@ -35,6 +35,7 @@ import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
@@ -123,11 +124,14 @@ public class AmqpSession implements AmqpResource {
     /**
      * Commits all pending work for all resources managed under this session.
      *
+     * @param txId
+     *      The specific TransactionId that is being committed.
+     *
      * @throws Exception if an error occurs while attempting to commit work.
      */
-    public void commit() throws Exception {
+    public void commit(LocalTransactionId txId) throws Exception {
         for (AmqpSender consumer : consumers.values()) {
-            consumer.commit();
+            consumer.commit(txId);
         }
 
         enlisted = false;
@@ -136,11 +140,14 @@ public class AmqpSession implements AmqpResource {
     /**
      * Rolls back any pending work being down under this session.
      *
+     * @param txId
+     *      The specific TransactionId that is being rolled back.
+     *
      * @throws Exception if an error occurs while attempting to roll back work.
      */
-    public void rollback() throws Exception {
+    public void rollback(LocalTransactionId txId) throws Exception {
         for (AmqpSender consumer : consumers.values()) {
-            consumer.rollback();
+            consumer.rollback(txId);
         }
 
         enlisted = false;

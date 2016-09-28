@@ -480,7 +480,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertObjectMessageToAmqpMessageWithDataBody() throws Exception {
-        ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID());
+        ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE);
         outbound.onSend();
         outbound.storeContent();
 
@@ -502,7 +502,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertObjectMessageToAmqpMessageUnknownEncodingGetsDataSection() throws Exception {
-        ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID());
+        ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE);
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_UNKNOWN);
         outbound.onSend();
         outbound.storeContent();
@@ -525,7 +525,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertObjectMessageToAmqpMessageWithAmqpValueBody() throws Exception {
-        ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID());
+        ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE);
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.onSend();
         outbound.storeContent();
@@ -571,7 +571,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertCompressedObjectMessageToAmqpMessageUnknownEncodingGetsDataSection() throws Exception {
-        ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID(), true);
+        ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE, true);
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_UNKNOWN);
         outbound.onSend();
         outbound.storeContent();
@@ -594,7 +594,7 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertCompressedObjectMessageToAmqpMessageWithAmqpValueBody() throws Exception {
-        ActiveMQObjectMessage outbound = createObjectMessage(UUID.randomUUID(), true);
+        ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE, true);
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_VALUE_BINARY);
         outbound.onSend();
         outbound.storeContent();

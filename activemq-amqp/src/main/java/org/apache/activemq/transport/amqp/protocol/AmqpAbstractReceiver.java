@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp.protocol;
 
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
@@ -78,11 +79,11 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
     }
 
     @Override
-    public void commit() throws Exception {
+    public void commit(LocalTransactionId txnId) throws Exception {
     }
 
     @Override
-    public void rollback() throws Exception {
+    public void rollback(LocalTransactionId txnId) throws Exception {
     }
 
     @Override
