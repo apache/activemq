@@ -32,7 +32,11 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
-import org.junit.Ignore;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Outcome;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Released;
 import org.junit.Test;
 
 /**
@@ -89,7 +93,6 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
         assertEquals(1, queue.getQueueSize());
 
-        sender.close();
         connection.close();
     }
 
@@ -114,7 +117,6 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
         assertEquals(0, queue.getQueueSize());
 
-        sender.close();
         connection.close();
     }
 
@@ -146,7 +148,6 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
         assertEquals(0, queue.getQueueSize());
 
-        sender.close();
         connection.close();
     }
 
@@ -194,7 +195,6 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         connection.close();
     }
 
-
     @Test(timeout = 60000)
     public void testReceiveMessageWithRollback() throws Exception {
         AmqpClient client = createAmqpClient();
@@ -223,7 +223,6 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
         assertEquals(1, queue.getQueueSize());
 
-        sender.close();
         connection.close();
     }
 
@@ -419,6 +418,163 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         txnSession.rollback();
 
         assertEquals(0, queue.getQueueSize());
+    }
+
+    @Test(timeout = 60000)
+    public void testAcceptedButNotSettledInTXRemainsAquiredCanBeAccepted() throws Exception {
+        doTestAcceptedButNotSettledInTXRemainsAquired(Accepted.getInstance());
+    }
+
+    @Test(timeout = 60000)
+    public void testAcceptedButNotSettledInTXRemainsAquiredCanBeReleased() throws Exception {
+        doTestAcceptedButNotSettledInTXRemainsAquired(Released.getInstance());
+    }
+
+    @Test(timeout = 60000)
+    public void testAcceptedButNotSettledInTXRemainsAquiredCanBeRejected() throws Exception {
+        doTestAcceptedButNotSettledInTXRemainsAquired(new Rejected());
+    }
+
+    @Test(timeout = 60000)
+    public void testAcceptedButNotSettledInTXRemainsAquiredCanBeModifiedAsFailed() throws Exception {
+        Modified outcome = new Modified();
+        outcome.setDeliveryFailed(true);
+        doTestAcceptedButNotSettledInTXRemainsAquired(outcome);
+    }
+
+    @Test(timeout = 60000)
+    public void testAcceptedButNotSettledInTXRemainsAquiredCanBeModifiedAsUndeliverable() throws Exception {
+        Modified outcome = new Modified();
+        outcome.setDeliveryFailed(true);
+        outcome.setUndeliverableHere(true);
+        doTestAcceptedButNotSettledInTXRemainsAquired(outcome);
+    }
+
+    private void doTestAcceptedButNotSettledInTXRemainsAquired(Outcome outcome) throws Exception {
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+
+        final QueueViewMBean queue = getProxyToQueue(getTestName());
+
+        AmqpMessage message = new AmqpMessage();
+        message.setText("Test-Message");
+        sender.send(message);
+
+        session.begin();
+
+        receiver.flow(10);
+        AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+        received.accept(false);
+
+        session.rollback();
+
+        // Message should remain acquired an not be redelivered.
+        assertEquals(1, queue.getQueueSize());
+        assertNull(receiver.receive(2, TimeUnit.SECONDS));
+
+        if (outcome instanceof Released || outcome instanceof Rejected) {
+            // Receiver should be able to release the still acquired message and the
+            // broker should redispatch it to the client again.
+            received.release();
+            received = receiver.receive(3, TimeUnit.SECONDS);
+            assertNotNull(received);
+            received.accept();
+            received = receiver.receive(2, TimeUnit.SECONDS);
+            assertNull(received);
+            assertEquals(0, queue.getQueueSize());
+        } else if (outcome instanceof Accepted) {
+            // Receiver should be able to accept the still acquired message and the
+            // broker should then mark it as consumed.
+            received.accept();
+            received = receiver.receive(2, TimeUnit.SECONDS);
+            assertNull(received);
+            assertEquals(0, queue.getQueueSize());
+        } else if (outcome instanceof Modified) {
+            // Depending on the undeliverable here state the message will either be
+            // redelivered or DLQ'd
+            Modified modified = (Modified) outcome;
+            received.modified(Boolean.TRUE.equals(modified.getDeliveryFailed()), Boolean.TRUE.equals(modified.getUndeliverableHere()));
+            if (Boolean.TRUE.equals(modified.getUndeliverableHere())) {
+                received = receiver.receive(2, TimeUnit.SECONDS);
+                assertNull(received);
+                assertEquals(0, queue.getQueueSize());
+            } else {
+                received = receiver.receive(3, TimeUnit.SECONDS);
+                assertNotNull(received);
+                received.accept();
+                received = receiver.receive(2, TimeUnit.SECONDS);
+                assertNull(received);
+                assertEquals(0, queue.getQueueSize());
+            }
+        }
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testTransactionallyAcquiredMessageCanBeTransactionallyConsumed() throws Exception {
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+
+        final QueueViewMBean queue = getProxyToQueue(getTestName());
+
+        AmqpMessage message = new AmqpMessage();
+        message.setText("Test-Message");
+        sender.send(message);
+
+        session.begin();
+
+        receiver.flow(10);
+        AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+        received.accept(false);
+
+        session.rollback();
+
+        // Message should remain acquired an not be redelivered.
+        assertEquals(1, queue.getQueueSize());
+        assertNull(receiver.receive(1, TimeUnit.SECONDS));
+
+        // Consume under TX but settle this time
+        session.begin();
+        received.accept(false);
+        session.rollback();
+
+        // Should still be acquired
+        assertEquals(1, queue.getQueueSize());
+        assertNull(receiver.receive(1, TimeUnit.SECONDS));
+
+        // Consume under TX and settle but rollback, message should be redelivered.
+        session.begin();
+        received.accept();
+        session.rollback();
+
+        assertEquals(1, queue.getQueueSize());
+        received = receiver.receive(1, TimeUnit.SECONDS);
+        assertNotNull(received);
+
+        // Consume under TX and commit it this time.
+        session.begin();
+        received.accept(false);
+        session.commit();
+
+        // Check that it is now consumed and no more message available
+        assertTrue(received.getWrappedDelivery().remotelySettled());
+        assertEquals(0, queue.getQueueSize());
+        assertNull(receiver.receive(1, TimeUnit.SECONDS));
+
+        connection.close();
     }
 
     //----- Tests Ported from AmqpNetLite client -----------------------------//
@@ -621,9 +777,6 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         connection.close();
     }
 
-    // TODO - Direct ports of the AmqpNetLite client tests that don't currently with this broker.
-
-    @Ignore("Fails due to no support for TX enrollment without settlement.")
     @Test(timeout = 60000)
     public void testReceiversCommitAndRollbackWithMultipleSessionsInSingleTXNoSettlement() throws Exception {
         final int NUM_MESSAGES = 10;
@@ -701,7 +854,6 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         connection.close();
     }
 
-    @Ignore("Fails due to no support for TX enrollment without settlement.")
     @Test(timeout = 60000)
     public void testCommitAndRollbackWithMultipleSessionsInSingleTXNoSettlement() throws Exception {
         final int NUM_MESSAGES = 10;
@@ -756,12 +908,12 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
 
         message2.release();
 
-        // Should be two message available for dispatch given that we sent and committed one, and
+        // Should be ten message available for dispatch given that we sent and committed one, and
         // releases another we had previously received.
-        receiver.flow(2);
+        receiver.flow(10);
         for (int i = 1; i <= NUM_MESSAGES; ++i) {
             AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
-            assertNotNull(message);
+            assertNotNull("Expected a message for: " + i, message);
             assertEquals(i, message.getApplicationProperty("msgId"));
             message.accept();
         }

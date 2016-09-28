@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.protocol;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Delivery;
 
@@ -60,17 +61,23 @@ public interface AmqpLink extends AmqpResource {
      * Handle work necessary on commit of transacted resources associated with
      * this Link instance.
      *
+     * @param txnId
+     *      The Transaction ID being committed.
+     *
      * @throws Exception if an error occurs while performing the commit.
      */
-    void commit() throws Exception;
+    void commit(LocalTransactionId txnId) throws Exception;
 
     /**
      * Handle work necessary on rollback of transacted resources associated with
      * this Link instance.
      *
+     * @param txnId
+     *      The Transaction ID being rolled back.
+     *
      * @throws Exception if an error occurs while performing the rollback.
      */
-    void rollback() throws Exception;
+    void rollback(LocalTransactionId txnId) throws Exception;
 
     /**
      * @return the ActiveMQDestination that this link is servicing.

@@ -78,7 +78,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     private final OutboundTransformer outboundTransformer = new AutoOutboundTransformer();
     private final AmqpTransferTagGenerator tagCache = new AmqpTransferTagGenerator();
     private final LinkedList<MessageDispatch> outbound = new LinkedList<MessageDispatch>();
-    private final LinkedList<MessageDispatch> dispatchedInTx = new LinkedList<MessageDispatch>();
+    private final LinkedList<Delivery> dispatchedInTx = new LinkedList<Delivery>();
 
     private final ConsumerInfo consumerInfo;
     private AbstractSubscription subscription;
@@ -208,26 +208,26 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
         } else if (endpointCredit >= 0) {
 
             if (endpointCredit == 0 && currentCreditRequest != 0) {
-
                 prefetchExtension.set(0);
                 currentCreditRequest = 0;
                 logicalDeliveryCount = 0;
                 LOG.trace("Flow: credit 0 for sub:" + subscription);
-
             } else {
-
                 int deltaToAdd = endpointCredit;
                 int logicalCredit = currentCreditRequest - logicalDeliveryCount;
                 if (logicalCredit > 0) {
                     deltaToAdd -= logicalCredit;
                 } else {
-                    // reset delivery counter - dispatch from broker concurrent with credit=0 flow can go negative
+                    // reset delivery counter - dispatch from broker concurrent with credit=0
+                    // flow can go negative
                     logicalDeliveryCount = 0;
                 }
+
                 if (deltaToAdd > 0) {
                     currentCreditRequest = prefetchExtension.addAndGet(deltaToAdd);
                     subscription.wakeupDestinationsForDispatch();
-                    // force dispatch of matched/pending for topics (pending messages accumulate in the sub and are dispatched on update of prefetch)
+                    // force dispatch of matched/pending for topics (pending messages accumulate
+                    // in the sub and are dispatched on update of prefetch)
                     subscription.setPrefetchSize(0);
                     LOG.trace("Flow: credit addition of {} for sub {}", deltaToAdd, subscription);
                 }
@@ -246,14 +246,20 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             if (txState.getOutcome() != null) {
                 Outcome outcome = txState.getOutcome();
                 if (outcome instanceof Accepted) {
+                    TransactionId txId = new LocalTransactionId(session.getConnection().getConnectionId(), toLong(txState.getTxnId()));
+
+                    // Store the message sent in this TX we might need to re-send on rollback
+                    // and we need to ACK it on commit.
+                    session.enlist(txId);
+                    dispatchedInTx.addFirst(delivery);
+
                     if (!delivery.remotelySettled()) {
                         TransactionalState txAccepted = new TransactionalState();
                         txAccepted.setOutcome(Accepted.getInstance());
-                        txAccepted.setTxnId(((TransactionalState) state).getTxnId());
+                        txAccepted.setTxnId(txState.getTxnId());
 
                         delivery.disposition(txAccepted);
                     }
-                    settle(delivery, MessageAck.DELIVERED_ACK_TYPE);
                 }
             }
         } else {
@@ -294,12 +300,14 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     }
 
     @Override
-    public void commit() throws Exception {
+    public void commit(LocalTransactionId txnId) throws Exception {
         if (!dispatchedInTx.isEmpty()) {
-            for (MessageDispatch md : dispatchedInTx) {
-                MessageAck pendingTxAck = new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
-                pendingTxAck.setFirstMessageId(md.getMessage().getMessageId());
-                pendingTxAck.setTransactionId(md.getMessage().getTransactionId());
+            for (final Delivery delivery : dispatchedInTx) {
+                MessageDispatch dispatch = (MessageDispatch) delivery.getContext();
+
+                MessageAck pendingTxAck = new MessageAck(dispatch, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
+                pendingTxAck.setFirstMessageId(dispatch.getMessage().getMessageId());
+                pendingTxAck.setTransactionId(txnId);
 
                 LOG.trace("Sending commit Ack to ActiveMQ: {}", pendingTxAck);
 
@@ -310,6 +318,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                             Throwable exception = ((ExceptionResponse) response).getException();
                             exception.printStackTrace();
                             getEndpoint().close();
+                        } else {
+                            delivery.settle();
                         }
                         session.pumpProtonToSocket();
                     }
@@ -321,15 +331,22 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     }
 
     @Override
-    public void rollback() throws Exception {
+    public void rollback(LocalTransactionId txnId) throws Exception {
         synchronized (outbound) {
 
             LOG.trace("Rolling back {} messages for redelivery. ", dispatchedInTx.size());
 
-            for (MessageDispatch dispatch : dispatchedInTx) {
-                dispatch.setRedeliveryCounter(dispatch.getRedeliveryCounter() + 1);
+            for (Delivery delivery : dispatchedInTx) {
+                // Only settled deliveries should be re-dispatched, unsettled deliveries
+                // remain acquired on the remote end and can be accepted again in a new
+                // TX or released or rejected etc.
+                MessageDispatch dispatch = (MessageDispatch) delivery.getContext();
                 dispatch.getMessage().setTransactionId(null);
-                outbound.addFirst(dispatch);
+
+                if (delivery.remotelySettled()) {
+                    dispatch.setRedeliveryCounter(dispatch.getRedeliveryCounter() + 1);
+                    outbound.addFirst(dispatch);
+                }
             }
 
             dispatchedInTx.clear();
@@ -507,19 +524,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             ack.setMessageCount(1);
             ack.setAckType((byte) ackType);
             ack.setDestination(md.getDestination());
-
-            DeliveryState remoteState = delivery.getRemoteState();
-            if (remoteState != null && remoteState instanceof TransactionalState) {
-                TransactionalState txState = (TransactionalState) remoteState;
-                TransactionId txId = new LocalTransactionId(session.getConnection().getConnectionId(), toLong(txState.getTxnId()));
-                ack.setTransactionId(txId);
-
-                // Store the message sent in this TX we might need to re-send on rollback
-                session.enlist(txId);
-                md.getMessage().setTransactionId(txId);
-                dispatchedInTx.addFirst(md);
-            }
-
             LOG.trace("Sending Ack to ActiveMQ: {}", ack);
 
             sendToActiveMQ(ack, new ResponseHandler() {
