@@ -374,10 +374,8 @@ public class Journal {
     }
 
     private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
-        try {
-            RandomAccessFile templateRaf = new RandomAccessFile(osKernelCopyTemplateFile, "rw");
+        try (RandomAccessFile templateRaf = new RandomAccessFile(osKernelCopyTemplateFile, "rw");){
             templateRaf.getChannel().transferTo(0, getMaxFileLength(), file.getChannel());
-            templateRaf.close();
         } catch (ClosedByInterruptException ignored) {
             LOG.trace("Could not preallocate journal file with kernel copy", ignored);
         } catch (FileNotFoundException e) {
