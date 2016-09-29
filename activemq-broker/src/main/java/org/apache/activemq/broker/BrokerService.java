@@ -2055,6 +2055,10 @@ public class BrokerService implements Service {
             long storeLimit = storeUsage.getLimit();
             long storeCurrent = storeUsage.getUsage();
             long totalSpace = dir.getTotalSpace();
+            if (totalSpace < 0) {
+                totalSpace = Long.MAX_VALUE;
+                LOG.info("Total space was negative.  Setting to " + totalSpace);
+            }
             long totalUsableSpace = dir.getUsableSpace() + storeCurrent;
             //compute byte value of the percent limit
             long bytePercentLimit = totalSpace * percentLimit / 100;
