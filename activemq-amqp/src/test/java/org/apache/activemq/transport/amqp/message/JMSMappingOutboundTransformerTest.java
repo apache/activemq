@@ -276,6 +276,34 @@ public class JMSMappingOutboundTransformerTest {
     }
 
     @Test
+    public void testConvertMapMessageToAmqpMessageWithByteArrayValueInBody() throws Exception {
+        final byte[] byteArray = new byte[] { 1, 2, 3, 4, 5 };
+
+        ActiveMQMapMessage outbound = createMapMessage();
+        outbound.setBytes("bytes", byteArray);
+        outbound.onSend();
+        outbound.storeContent();
+
+        JMSMappingOutboundTransformer transformer = new JMSMappingOutboundTransformer();
+
+        EncodedMessage encoded = transformer.transform(outbound);
+        assertNotNull(encoded);
+
+        Message amqp = encoded.decode();
+
+        assertNotNull(amqp.getBody());
+        assertTrue(amqp.getBody() instanceof AmqpValue);
+        assertTrue(((AmqpValue) amqp.getBody()).getValue() instanceof Map);
+
+        @SuppressWarnings("unchecked")
+        Map<Object, Object> amqpMap = (Map<Object, Object>) ((AmqpValue) amqp.getBody()).getValue();
+
+        assertEquals(1, amqpMap.size());
+        Binary readByteArray = (Binary) amqpMap.get("bytes");
+        assertNotNull(readByteArray);
+    }
+
+    @Test
     public void testConvertMapMessageToAmqpMessage() throws Exception {
         ActiveMQMapMessage outbound = createMapMessage();
         outbound.setString("property-1", "string");

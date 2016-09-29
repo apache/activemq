@@ -36,6 +36,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -202,7 +203,12 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
         ActiveMQMapMessage message = new ActiveMQMapMessage();
         final Set<Map.Entry<String, Object>> set = content.entrySet();
         for (Map.Entry<String, Object> entry : set) {
-            message.setObject(entry.getKey(), entry.getValue());
+            Object value = entry.getValue();
+            if (value instanceof Binary) {
+                Binary binary = (Binary) value;
+                value = Arrays.copyOfRange(binary.getArray(), binary.getArrayOffset(), binary.getLength());
+            }
+            message.setObject(entry.getKey(), value);
         }
         return message;
     }
