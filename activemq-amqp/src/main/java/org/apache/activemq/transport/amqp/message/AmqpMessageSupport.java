@@ -23,7 +23,9 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.zip.InflaterInputStream;
 
 import javax.jms.JMSException;
@@ -313,13 +315,19 @@ public final class AmqpMessageSupport {
      * @throws JMSException if an error occurs in constructing or fetching the Map.
      */
     public static Map<String, Object> getMapFromMessageBody(ActiveMQMapMessage message) throws JMSException {
-        final HashMap<String, Object> map = new HashMap<String, Object>();
+        final HashMap<String, Object> map = new LinkedHashMap<String, Object>();
 
         final Map<String, Object> contentMap = message.getContentMap();
         if (contentMap != null) {
-            map.putAll(contentMap);
+            for (Entry<String, Object> entry : contentMap.entrySet()) {
+                Object value = entry.getValue();
+                if (value instanceof byte[]) {
+                    value = new Binary((byte[]) value);
+                }
+                map.put(entry.getKey(), value);
+            }
         }
 
-        return contentMap;
+        return map;
     }
 }

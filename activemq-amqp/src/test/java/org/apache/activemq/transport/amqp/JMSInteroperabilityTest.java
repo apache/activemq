@@ -34,6 +34,7 @@ import java.util.UUID;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
+import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -42,6 +43,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.qpid.proton.amqp.Binary;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -253,7 +255,73 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testMapMessageSendReceive() throws Exception {
+    public void testMapMessageUsingPrimitiveSettersSendReceive() throws Exception {
+        Connection openwire = createJMSConnection();
+        Connection amqp = createConnection();
+
+        openwire.start();
+        amqp.start();
+
+        Session openwireSession = openwire.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session amqpSession = amqp.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Destination queue = openwireSession.createQueue(getDestinationName());
+
+        MessageProducer openwireProducer = openwireSession.createProducer(queue);
+        MessageConsumer amqpConsumer = amqpSession.createConsumer(queue);
+
+        byte[] bytesValue = new byte[] { 1, 2, 3, 4, 5 };
+
+        // Create the Message
+        MapMessage outgoing = openwireSession.createMapMessage();
+
+        outgoing.setBoolean("boolean", true);
+        outgoing.setByte("byte", (byte) 10);
+        outgoing.setBytes("bytes", bytesValue);
+        outgoing.setChar("char", 'B');
+        outgoing.setDouble("double", 24.42);
+        outgoing.setFloat("float", 3.14159f);
+        outgoing.setInt("integer", 1024);
+        outgoing.setLong("long", 8096l);
+        outgoing.setShort("short", (short) 255);
+
+        openwireProducer.send(outgoing);
+
+        // Now consume the MapMessage
+        Message received = amqpConsumer.receive(2000);
+        assertNotNull(received);
+        assertTrue("Expected MapMessage but got " + received, received instanceof ObjectMessage);
+        ObjectMessage incoming = (ObjectMessage) received;
+
+        Map<String, Object> incomingMap = (Map<String, Object>) incoming.getObject();
+
+        assertEquals(true, incomingMap.get("boolean"));
+        assertEquals(10, (byte) incomingMap.get("byte"));
+        assertEquals('B', incomingMap.get("char"));
+        assertEquals(24.42, (double) incomingMap.get("double"), 0.5);
+        assertEquals(3.14159f, (float) incomingMap.get("float"), 0.5f);
+        assertEquals(1024, incomingMap.get("integer"));
+        assertEquals(8096l, incomingMap.get("long"));
+        assertEquals(255, (short) incomingMap.get("short"));
+
+        // Test for the byte array which will be in an AMQP Binary as this message
+        // is received as an ObjectMessage by Qpid JMS
+        Object incomingValue = incomingMap.get("bytes");
+        assertNotNull(incomingValue);
+        assertTrue(incomingValue instanceof Binary);
+        Binary incomingBinary = (Binary) incomingValue;
+        byte[] incomingBytes = Arrays.copyOfRange(incomingBinary.getArray(), incomingBinary.getArrayOffset(), incomingBinary.getLength());
+        assertTrue(Arrays.equals(bytesValue, incomingBytes));
+
+        amqp.close();
+        openwire.close();
+    }
+
+    //----- Tests for OpenWire <-> Qpid JMS using ObjectMessage --------------//
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testMapInObjectMessageSendReceive() throws Exception {
         Connection openwire = createJMSConnection();
         Connection amqp = createConnection();
 
@@ -284,7 +352,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
 
         openwireProducer.send(outgoing);
 
-        // Now consumer the ObjectMessage
+        // Now consume the ObjectMessage
         Message received = amqpConsumer.receive(2000);
         assertNotNull(received);
         assertTrue("Expected ObjectMessage but got " + received, received instanceof ObjectMessage);
@@ -299,8 +367,6 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         amqp.close();
         openwire.close();
     }
-
-    //----- Tests for OpenWire <-> Qpid JMS using ObjectMessage --------------//
 
     @Test
     public void testQpidToOpenWireObjectMessage() throws Exception {
@@ -327,7 +393,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         outgoing.setObject(UUID.randomUUID());
         amqpProducer.send(outgoing);
 
-        // Now consumer the ObjectMessage
+        // Now consume the ObjectMessage
         Message received = openwireConsumer.receive(2000);
         assertNotNull(received);
         LOG.info("Read new message: {}", received);
@@ -366,7 +432,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         outgoing.setObject(UUID.randomUUID());
         openwireProducer.send(outgoing);
 
-        // Now consumer the ObjectMessage
+        // Now consume the ObjectMessage
         Message received = amqpConsumer.receive(2000);
         assertNotNull(received);
         LOG.info("Read new message: {}", received);
@@ -407,7 +473,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         outgoing.setObject(UUID.randomUUID());
         openwireProducer.send(outgoing);
 
-        // Now consumer the ObjectMessage
+        // Now consume the ObjectMessage
         Message received = amqpConsumer.receive(2000);
         assertNotNull(received);
         LOG.info("Read new message: {}", received);
@@ -454,7 +520,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
 
         openwireProducer.send(outgoing);
 
-        // Now consumer the ObjectMessage
+        // Now consume the ObjectMessage
         Message received = amqpConsumer.receive(2000);
         assertNotNull(received);
         assertTrue(received instanceof ObjectMessage);
@@ -499,7 +565,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
             amqpProducer.send(outgoing);
         }
 
-        // Now consumer the message
+        // Now consume the message
         for (int i = 0; i < NUM_MESSAGES; ++i) {
             Message received = amqpConsumer.receive(2000);
             assertNotNull(received);

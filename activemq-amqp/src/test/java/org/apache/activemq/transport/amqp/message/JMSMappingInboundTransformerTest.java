@@ -24,12 +24,14 @@ import static org.junit.Assert.assertTrue;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.jms.Destination;
+import javax.jms.MapMessage;
 import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
@@ -434,6 +436,39 @@ public class JMSMappingInboundTransformerTest {
 
         assertNotNull("Message should not be null", jmsMessage);
         assertEquals("Unexpected message class type", ActiveMQMapMessage.class, jmsMessage.getClass());
+    }
+
+    /**
+     * Test that an amqp-value body containing a map that has an AMQP Binary as one of the
+     * entries encoded into the Map results in an MapMessage where a byte array can be read
+     * from the entry.
+     *
+     * @throws Exception if an error occurs during the test.
+     */
+    @Test
+    public void testCreateAmqpMapMessageFromAmqpValueWithMapContainingBinaryEntry() throws Exception {
+        final String ENTRY_NAME = "bytesEntry";
+
+        Message message = Proton.message();
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        byte[] inputBytes = new byte[] { 1, 2, 3, 4, 5 };
+        map.put(ENTRY_NAME, new Binary(inputBytes));
+
+        message.setBody(new AmqpValue(map));
+
+        EncodedMessage em = encodeMessage(message);
+
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
+        javax.jms.Message jmsMessage = transformer.transform(em);
+
+        assertNotNull("Message should not be null", jmsMessage);
+        assertEquals("Unexpected message class type", ActiveMQMapMessage.class, jmsMessage.getClass());
+
+        MapMessage mapMessage = (MapMessage) jmsMessage;
+        byte[] outputBytes = mapMessage.getBytes(ENTRY_NAME);
+        assertNotNull(outputBytes);
+        assertTrue(Arrays.equals(inputBytes, outputBytes));
     }
 
     /**
