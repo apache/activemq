@@ -27,6 +27,8 @@ import org.apache.activemq.util.LogWriterFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.activemq.TransportLoggerSupport.defaultJmxPort;
+
 /**
  * Singleton class to create TransportLogger objects.
  * When the method getInstance() is called for the first time,
@@ -61,10 +63,6 @@ public class TransportLoggerFactory {
      * This setting only has a meaning if
      */
     private static boolean defaultInitialBehavior = true;
-    /**
-     * Default port to control the transport loggers through JMX
-     */
-    private static int defaultJmxPort = 1099;
 
     private boolean transportLoggerControlCreated = false;
     private ManagementContext managementContext;
@@ -137,7 +135,11 @@ public class TransportLoggerFactory {
      */
     public TransportLogger createTransportLogger(Transport next, String logWriterName,
             boolean useJmx, boolean startLogging, int jmxport) throws IOException {
-        int id = getNextId();
+        int id = -1; // new default to single logger
+        // allow old behaviour with incantation
+        if (!useJmx && jmxport != defaultJmxPort) {
+            id = getNextId();
+        }
         return createTransportLogger(next, id, createLog(id), logWriterName, useJmx, startLogging, jmxport);
     }
 
@@ -162,6 +164,9 @@ public class TransportLoggerFactory {
             String logWriterName, boolean dynamicManagement, boolean startLogging, int jmxport) throws IOException {
         try {
             LogWriter logWriter = logWriterFinder.newInstance(logWriterName);
+            if (id == -1) {
+                logWriter.setPrefix(String.format("%08X: ", getNextId()));
+            }
             TransportLogger tl =  new TransportLogger (next, log, startLogging, logWriter);
             if (dynamicManagement) {
                 synchronized (this) {
@@ -183,7 +188,7 @@ public class TransportLoggerFactory {
     }
 
     private static Logger createLog(int id) {
-        return LoggerFactory.getLogger(TransportLogger.class.getName()+".Connection:" + id);
+        return LoggerFactory.getLogger(TransportLogger.class.getName()+".Connection" + (id > 0 ? ":"+id : "" ));
     }
 
     /**

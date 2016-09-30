@@ -226,7 +226,7 @@ public class KahaDBTest extends TestCase {
         assertEquals("Expected to received all messages.", count, 100);
         broker.stop();
 
-        Logger.getRootLogger().addAppender(appender);
+        Logger.getRootLogger().removeAppender(appender);
         assertFalse("Did not replay any records from the journal", didSomeRecovery.get());
     }
 
