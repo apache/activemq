@@ -35,6 +35,7 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
+import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.codec.CompositeWritableBuffer;
 import org.apache.qpid.proton.codec.DroppingWritableBuffer;
 import org.apache.qpid.proton.codec.WritableBuffer;
@@ -87,13 +88,7 @@ public class MessageTransformationTest {
     }
 
     private OutboundTransformer getOutboundTransformer() {
-        switch (transformer) {
-            case "raw":
-            case "native":
-                return new AMQPNativeOutboundTransformer();
-            default:
-                return new JMSMappingOutboundTransformer();
-        }
+        return new AutoOutboundTransformer();
     }
 
     @Test
@@ -214,6 +209,30 @@ public class MessageTransformationTest {
 
         assertNotNull(outboudMessage.getHeader());
         assertNull(outboudMessage.getProperties());
+    }
+
+    @Test
+    public void testMessageWithAmqpValueThatFailsJMSConversion() throws Exception {
+
+        Message incomingMessage = Proton.message();
+
+        incomingMessage.setBody(new AmqpValue(new Boolean(true)));
+
+        EncodedMessage encoded = encode(incomingMessage);
+        InboundTransformer inboundTransformer = getInboundTransformer();
+        OutboundTransformer outboundTransformer = getOutboundTransformer();
+
+        ActiveMQMessage intermediate = inboundTransformer.transform(encoded);
+        intermediate.onSend();
+        Message outboudMessage = outboundTransformer.transform(intermediate).decode();
+
+        Section section = outboudMessage.getBody();
+        assertNotNull(section);
+        assertTrue(section instanceof AmqpValue);
+        AmqpValue amqpValue = (AmqpValue) section;
+        assertNotNull(amqpValue.getValue());
+        assertTrue(amqpValue.getValue() instanceof Boolean);
+        assertEquals(true, amqpValue.getValue());
     }
 
     @Test
