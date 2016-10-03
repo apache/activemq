@@ -48,7 +48,7 @@ configuration example:
 ## Built in High Availability Support
 
 You can also use a High Availability (HA) version of the LevelDB store which 
-works with Hadoop based file systems to achive HA of your stored messages.
+works with Hadoop based file systems to achieve HA of your stored messages.
 
 **Q:** What are the requirements?
 **A:** An existing Hadoop 1.0.0 cluster
