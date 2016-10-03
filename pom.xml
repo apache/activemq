@@ -1477,7 +1477,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin-version}</version>
         <configuration>
           <links>
             <link>${javase-javadoc-url}</link>
@@ -1497,7 +1496,7 @@
           <source>${source-version}</source>
           <additionalJOption>-J-Xmx2048m</additionalJOption>
           <!-- necessary for now under the javadocs can be fixed because jdk8 is much stricter -->
-          <additionalparam>-Xdoclint:none</additionalparam>
+          <additionalparam>${javadoc.options}</additionalparam>
         </configuration>
         <executions>
             <execution>
@@ -1662,5 +1661,16 @@
             <jetty-version>${jetty9-version}</jetty-version>
         </properties>
     </profile>
+    
+    <!-- Need to disable doclint for JDK 8 builds so Javadocs work -->
+    <profile>
+      <id>jdk8-disable-doclint</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <properties>
+        <javadoc.options>-Xdoclint:none</javadoc.options>
+     </properties>
+   </profile>
   </profiles>
 </project>
