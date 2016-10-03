@@ -325,7 +325,7 @@
         <version>${maven-javadoc-plugin-version}</version>
         <configuration>
           <!-- necessary for now under the javadocs can be fixed because jdk8 is much stricter -->
-          <additionalparam>-Xdoclint:none</additionalparam>
+          <additionalparam>${javadoc.options}</additionalparam>
           <links>
             <link>${javase-javadoc-url}</link>
             <link>${javaee-javadoc-url}</link>
