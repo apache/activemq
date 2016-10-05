@@ -1772,6 +1772,9 @@ public class BrokerService implements Service {
      */
     public void setTempDataStore(PListStore tempDataStore) {
         this.tempDataStore = tempDataStore;
+        if(tempDataStore!=null){
+        setTmpDataDirectory(tempDataStore.getDirectory());
+        }
         configureService(tempDataStore);
     }
 
