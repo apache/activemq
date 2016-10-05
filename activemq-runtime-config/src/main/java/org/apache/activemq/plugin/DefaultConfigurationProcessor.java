@@ -96,7 +96,7 @@ public class DefaultConfigurationProcessor implements ConfigurationProcessor {
             Object existing = current.get(currentIndex);
             Object candidate = modification.get(modIndex);
             if (!existing.equals(candidate)) {
-                plugin.info("modification to:" + existing + " , with: " + candidate);
+                plugin.debug("modification to:" + existing + " , with: " + candidate);
                 ConfigurationProcessor processor = findProcessor(existing);
                 if (processor != null) {
                     processor.modify(existing, candidate);

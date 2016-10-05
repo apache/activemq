@@ -64,4 +64,25 @@ public abstract class AbstractAuthorizationTest extends RuntimeConfigTestSupport
         }
     }
 
+    protected void assertAllowedWrite(String userPass, String dest) throws JMSException {
+        ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection(userPass, userPass);
+        connection.start();
+        try {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createProducer(session.createQueue(dest)).send(session.createTextMessage());
+        } finally {
+            connection.close();
+        }
+    }
+
+    protected void assertDeniedWrite(String userPass, String destination) {
+        try {
+            assertAllowedWrite(userPass, destination);
+            fail("Expected not allowed exception");
+        } catch (JMSException expected) {
+            LOG.debug("got:" + expected, expected);
+        }
+    }
+
+
 }

@@ -34,6 +34,7 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
 
         assertAllowed("user", "USERS.A");
         assertDenied("user", "GUESTS.A");
+        assertDenied("guest", "GUESTS.A");
 
         assertDeniedTemp("guest");
 
@@ -63,6 +64,22 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
         assertAllowed("user", "USERS.A");
         assertDenied("user", "GUESTS.A");
         assertDeniedTemp("guest");
+    }
+
+    @Test
+    public void testModAddWrite() throws Exception {
+        final String brokerConfig = configurationSeed + "-auth-rm-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-users");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        assertAllowedWrite("user", "USERS.A");
+        assertDeniedWrite("guest", "USERS.A");
+
+        applyNewConfig(brokerConfig, configurationSeed + "-users-add-write-guest", SLEEP);
+
+        assertAllowedWrite("user", "USERS.A");
+        assertAllowedWrite("guest", "USERS.A");
     }
 
     @Test
