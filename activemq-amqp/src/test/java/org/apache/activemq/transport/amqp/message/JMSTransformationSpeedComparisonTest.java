@@ -60,7 +60,7 @@ public class JMSTransformationSpeedComparisonTest {
 
     private final String transformer;
 
-    private final int WARM_CYCLES = 1000;
+    private final int WARM_CYCLES = 10000;
     private final int PROFILE_CYCLES = 1000000;
 
     public JMSTransformationSpeedComparisonTest(String transformer) {
