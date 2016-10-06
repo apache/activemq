@@ -54,15 +54,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageEOFException;
-import javax.jms.Queue;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
-import javax.jms.Topic;
 
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -71,6 +66,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -140,7 +136,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             if (header == null) {
                 header = new Header();
             }
-            header.setPriority(new UnsignedByte(priority));
+            header.setPriority(UnsignedByte.valueOf(priority));
         }
         String type = message.getType();
         if (type != null) {
@@ -376,7 +372,9 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             // Ignore and stick with UNKNOWN
         }
 
-        if (message instanceof ActiveMQBytesMessage) {
+        int messageType = message.getDataStructureType();
+
+        if (messageType == CommandTypes.ACTIVEMQ_BYTES_MESSAGE) {
             Binary payload = getBinaryFromMessageBody((ActiveMQBytesMessage) message);
 
             if (payload == null) {
@@ -395,7 +393,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     body = new Data(payload);
                     break;
             }
-        } else if (message instanceof ActiveMQTextMessage) {
+        } else if (messageType == CommandTypes.ACTIVEMQ_TEXT_MESSAGE) {
             switch (orignalEncoding) {
                 case AMQP_NULL:
                     break;
@@ -408,9 +406,9 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     body = new AmqpValue(((TextMessage) message).getText());
                     break;
             }
-        } else if (message instanceof ActiveMQMapMessage) {
+        } else if (messageType == CommandTypes.ACTIVEMQ_MAP_MESSAGE) {
             body = new AmqpValue(getMapFromMessageBody((ActiveMQMapMessage) message));
-        } else if (message instanceof ActiveMQStreamMessage) {
+        } else if (messageType == CommandTypes.ACTIVEMQ_STREAM_MESSAGE) {
             ArrayList<Object> list = new ArrayList<Object>();
             final ActiveMQStreamMessage m = (ActiveMQStreamMessage) message;
             try {
@@ -430,7 +428,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     body = new AmqpValue(list);
                     break;
             }
-        } else if (message instanceof ActiveMQObjectMessage) {
+        } else if (messageType == CommandTypes.ACTIVEMQ_OBJECT_MESSAGE) {
             Binary payload = getBinaryFromMessageBody((ActiveMQObjectMessage) message);
 
             if (payload == null) {
@@ -461,15 +459,15 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
         return body;
     }
 
-    private static byte destinationType(Destination destination) {
-        if (destination instanceof Queue) {
-            if (destination instanceof TemporaryQueue) {
+    private static byte destinationType(ActiveMQDestination destination) {
+        if (destination.isQueue()) {
+            if (destination.isTemporary()) {
                 return TEMP_QUEUE_TYPE;
             } else {
                 return QUEUE_TYPE;
             }
-        } else if (destination instanceof Topic) {
-            if (destination instanceof TemporaryTopic) {
+        } else if (destination.isTopic()) {
+            if (destination.isTemporary()) {
                 return TEMP_TOPIC_TYPE;
             } else {
                 return TOPIC_TYPE;
