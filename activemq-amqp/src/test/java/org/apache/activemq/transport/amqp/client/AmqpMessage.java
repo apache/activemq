@@ -239,6 +239,31 @@ public class AmqpMessage {
     }
 
     /**
+     * Sets the address which is applied to the AMQP message ReplyTo field in the message properties
+     *
+     * @param replyTo
+     *      The address that should be applied in the Message ReplyTo field.
+     */
+    public void setReplyTo(String replyTo) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setReplyTo(replyTo);
+    }
+
+    /**
+     * Return the set address that was set in the Message ReplyTo field.
+     *
+     * @return the set address String form or null if not set.
+     */
+    public String getReplyTo() {
+        if (message.getProperties() == null) {
+            return null;
+        }
+
+        return message.getProperties().getReplyTo();
+    }
+
+    /**
      * Sets the MessageId property on an outbound message using the provided String
      *
      * @param messageId
