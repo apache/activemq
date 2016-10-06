@@ -894,18 +894,24 @@ public class JMSMappingOutboundTransformerTest {
             case QUEUE_TYPE:
                 mockDestination = Mockito.mock(ActiveMQQueue.class);
                 Mockito.when(mockDestination.getQualifiedName()).thenReturn("queue://" + TEST_ADDRESS);
+                Mockito.when(mockDestination.isQueue()).thenReturn(true);
                 break;
             case TOPIC_TYPE:
                 mockDestination = Mockito.mock(ActiveMQTopic.class);
                 Mockito.when(mockDestination.getQualifiedName()).thenReturn("topic://" + TEST_ADDRESS);
+                Mockito.when(mockDestination.isTopic()).thenReturn(true);
                 break;
             case TEMP_QUEUE_TYPE:
                 mockDestination = Mockito.mock(ActiveMQTempQueue.class);
                 Mockito.when(mockDestination.getQualifiedName()).thenReturn("tempQueue://" + TEST_ADDRESS);
+                Mockito.when(mockDestination.isQueue()).thenReturn(true);
+                Mockito.when(mockDestination.isTemporary()).thenReturn(true);
                 break;
             case TEMP_TOPIC_TYPE:
                 mockDestination = Mockito.mock(ActiveMQTempTopic.class);
                 Mockito.when(mockDestination.getQualifiedName()).thenReturn("tempTopic://" + TEST_ADDRESS);
+                Mockito.when(mockDestination.isTopic()).thenReturn(true);
+                Mockito.when(mockDestination.isTemporary()).thenReturn(true);
                 break;
             default:
                 throw new IllegalArgumentException("Invliad Destination Type given/");
