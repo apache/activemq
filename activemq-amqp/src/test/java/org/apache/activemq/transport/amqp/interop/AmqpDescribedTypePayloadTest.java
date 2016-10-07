@@ -77,7 +77,7 @@ public class AmqpDescribedTypePayloadTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageWithDescribedTypeInBody() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -103,7 +103,7 @@ public class AmqpDescribedTypePayloadTest extends AmqpClientTestSupport {
     public void testSendMessageWithDescribedTypeInBodyReceiveOverOpenWire() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -133,7 +133,7 @@ public class AmqpDescribedTypePayloadTest extends AmqpClientTestSupport {
     public void testDescribedTypeMessageRoundTrips() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         // Send with AMQP client.

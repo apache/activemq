@@ -77,7 +77,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
         connection.getStateInspector().assertValid();
@@ -98,7 +98,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setIdleTimeout(TEST_IDLE_TIMEOUT * 4);
         assertNotNull(connection);
 
@@ -115,7 +115,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         assertNotNull(connection);
 
         connection.setIdleProcessingDisabled(true);
@@ -151,7 +151,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         assertNotNull(connection);
 
         connection.setListener(new AmqpConnectionListener() {

@@ -41,7 +41,7 @@ public class AmqpAnonymousSenderTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         client.setTraceFrames(false);
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender();

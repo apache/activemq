@@ -58,7 +58,7 @@ public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
     public void testSlowConsumerIsAborted() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
         final AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
         receiver.flow(100);
@@ -87,7 +87,7 @@ public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
         strategy.setMaxSlowDuration(60*1000); // so jmx does the abort
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
         final AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
         receiver.flow(100);

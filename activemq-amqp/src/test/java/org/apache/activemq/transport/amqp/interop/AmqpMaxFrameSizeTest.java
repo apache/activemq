@@ -80,7 +80,7 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
         final CountDownLatch failed = new CountDownLatch(1);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setListener(new AmqpConnectionListener() {
 
             @Override

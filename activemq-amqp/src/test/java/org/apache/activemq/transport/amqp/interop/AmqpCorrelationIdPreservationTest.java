@@ -132,7 +132,7 @@ public class AmqpCorrelationIdPreservationTest extends AmqpClientTestSupport {
 
     public void doTestCorrelationIdPreservation(Object messageId) throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -161,7 +161,7 @@ public class AmqpCorrelationIdPreservationTest extends AmqpClientTestSupport {
 
     public void doTestCorrelationIdPreservationOnBrokerRestart(Object messageId) throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());

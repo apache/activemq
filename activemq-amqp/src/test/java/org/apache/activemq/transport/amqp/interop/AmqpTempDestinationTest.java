@@ -61,7 +61,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
     protected void doTestCannotCreateSenderWithNamedTempDestination(boolean topic) throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         String address = null;
@@ -92,7 +92,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
     protected void doTestCannotCreateReceiverWithNamedTempDestination(boolean topic) throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         String address = null;
@@ -126,7 +126,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender(target);
@@ -157,7 +157,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender(target);
@@ -196,7 +196,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver(source);
@@ -227,7 +227,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver(source);
@@ -266,7 +266,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender(target);
@@ -319,7 +319,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver(source);
