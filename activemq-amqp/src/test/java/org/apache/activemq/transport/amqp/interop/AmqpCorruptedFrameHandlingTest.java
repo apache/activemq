@@ -44,7 +44,7 @@ public class AmqpCorruptedFrameHandlingTest extends AmqpClientTestSupport {
         random.setSeed(System.nanoTime());
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
 
         connection.setContainerId("ClientID:" + getTestName());
         connection.connect();
@@ -83,7 +83,7 @@ public class AmqpCorruptedFrameHandlingTest extends AmqpClientTestSupport {
         random.setSeed(System.nanoTime());
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
 
         connection.setContainerId("ClientID:" + getTestName());
         connection.connect();
@@ -122,7 +122,7 @@ public class AmqpCorruptedFrameHandlingTest extends AmqpClientTestSupport {
         random.setSeed(System.nanoTime());
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
 
         connection.setContainerId("ClientID:" + getTestName());
         connection.connect();

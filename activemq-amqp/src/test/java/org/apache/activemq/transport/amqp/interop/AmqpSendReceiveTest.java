@@ -63,7 +63,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     public void testSimpleSendOneReceiveOne() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -95,7 +95,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 20;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -137,7 +137,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testReceiveWithJMSSelectorFilter() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpMessage message1 = new AmqpMessage();
@@ -173,7 +173,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 20;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -235,7 +235,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 20;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -319,7 +319,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         AmqpClient client = createAmqpClient();
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         final String address;
@@ -382,7 +382,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
             public void run() {
                 try {
                     LOG.info("Starting consumer connection");
-                    AmqpConnection connection = client.connect();
+                    AmqpConnection connection = trackConnection(client.connect());
                     AmqpSession session = connection.createSession();
                     AmqpReceiver receiver = session.createReceiver(address);
                     receiver.flow(1);
@@ -412,7 +412,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
             public void run() {
                 try {
                     receiverReady.await(20, TimeUnit.SECONDS);
-                    AmqpConnection connection = client.connect();
+                    AmqpConnection connection = trackConnection(client.connect());
                     AmqpSession session = connection.createSession();
 
                     AmqpSender sender = session.createSender(address);
@@ -437,7 +437,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testMessageDurabliltyFollowsSpec() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -480,7 +480,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageToQueueNoPrefixReceiveWithPrefix() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender(getTestName());
@@ -513,7 +513,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageToQueueWithPrefixReceiveWithNoPrefix() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -558,7 +558,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         AmqpClient client = createAmqpClient();
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         final String address;
@@ -621,7 +621,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 100;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         final String address = "queue://" + getTestName();

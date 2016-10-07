@@ -60,7 +60,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendWithDeliveryTimeIsScheduled() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -88,7 +88,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendRecvWithDeliveryTime() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -130,7 +130,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendScheduledReceiveOverOpenWire() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -165,7 +165,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
     @Test
     public void testScheduleWithDelay() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -206,7 +206,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         final int NUMBER = 10;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -276,5 +276,4 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
 
         return scheduler;
     }
-
 }

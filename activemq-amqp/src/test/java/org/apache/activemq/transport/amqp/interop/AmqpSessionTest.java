@@ -32,7 +32,7 @@ public class AmqpSessionTest extends AmqpClientTestSupport {
     @Test
     public void testCreateSession() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
         assertNotNull(session);
         connection.close();

@@ -56,7 +56,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
     public void testCreateDurableReceiver() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 
@@ -74,7 +74,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
     public void testDetachedDurableReceiverRemainsActive() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 
@@ -98,7 +98,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
     public void testCloseDurableReceiverRemovesSubscription() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 
@@ -123,7 +123,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 
@@ -157,7 +157,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 
@@ -200,7 +200,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 
@@ -249,7 +249,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 
@@ -298,7 +298,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 
@@ -354,7 +354,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         final BrokerViewMBean brokerView = getProxyToBroker();
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setContainerId(getTestName());
         connection.connect();
 

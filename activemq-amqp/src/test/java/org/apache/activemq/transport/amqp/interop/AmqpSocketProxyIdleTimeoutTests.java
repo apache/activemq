@@ -81,7 +81,7 @@ public class AmqpSocketProxyIdleTimeoutTests extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setIdleTimeout(TEST_IDLE_TIMEOUT);
         assertNotNull(connection);
 
@@ -125,7 +125,7 @@ public class AmqpSocketProxyIdleTimeoutTests extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setCloseTimeout(1000);  // Socket will have silently gone away, don't wait to long.
         assertNotNull(connection);
 

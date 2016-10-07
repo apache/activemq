@@ -42,7 +42,7 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
@@ -68,7 +68,7 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
     public void testPullWithNoMessageGetDrained() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
@@ -94,7 +94,7 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
@@ -122,7 +122,7 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testMultipleZeroResultPulls() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());

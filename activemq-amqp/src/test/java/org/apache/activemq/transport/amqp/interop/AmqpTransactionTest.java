@@ -47,7 +47,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 30000)
     public void testBeginAndCommitTransaction() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
         assertNotNull(session);
 
@@ -61,7 +61,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 30000)
     public void testBeginAndRollbackTransaction() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
         assertNotNull(session);
 
@@ -75,7 +75,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageToQueueWithCommit() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -99,7 +99,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageToQueueWithRollback() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -123,7 +123,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testReceiveMessageWithCommit() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -154,7 +154,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testReceiveAfterConnectionClose() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender(getTestName());
@@ -198,7 +198,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testReceiveMessageWithRollback() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -229,7 +229,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testMultipleSessionReceiversInSingleTXNWithCommit() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Load up the Queue with some messages
         {
@@ -286,7 +286,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testMultipleSessionReceiversInSingleTXNWithRollback() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Load up the Queue with some messages
         {
@@ -343,7 +343,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testMultipleSessionSendersInSingleTXNWithCommit() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();
@@ -383,7 +383,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testMultipleSessionSendersInSingleTXNWithRollback() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();
@@ -453,7 +453,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     private void doTestAcceptedButNotSettledInTXRemainsAquired(Outcome outcome) throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -521,7 +521,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
     public void testTransactionallyAcquiredMessageCanBeTransactionallyConsumed() throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -584,7 +584,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         final int NUM_MESSAGES = 5;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();
@@ -637,7 +637,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         final int NUM_MESSAGES = 10;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();
@@ -713,7 +713,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         final int NUM_MESSAGES = 10;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();
@@ -782,7 +782,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         final int NUM_MESSAGES = 10;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();
@@ -859,7 +859,7 @@ public class AmqpTransactionTest extends AmqpClientTestSupport {
         final int NUM_MESSAGES = 10;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Root TXN session controls all TXN send lifetimes.
         AmqpSession txnSession = connection.createSession();

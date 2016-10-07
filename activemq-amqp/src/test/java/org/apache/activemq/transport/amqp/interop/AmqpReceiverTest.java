@@ -64,7 +64,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateQueueReceiver() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -104,7 +104,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -141,7 +141,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -157,7 +157,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateTopicReceiver() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getTopics().length);
@@ -178,7 +178,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), 1, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
@@ -203,7 +203,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), null, false, true);
@@ -230,7 +230,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), null, false, true);
@@ -271,7 +271,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
@@ -308,7 +308,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
@@ -367,7 +367,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
@@ -447,7 +447,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         source.setDurable(TerminusDurability.NONE);
         source.setExpiryPolicy(TerminusExpiryPolicy.LINK_DETACH);
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -485,7 +485,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), msgCount, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());

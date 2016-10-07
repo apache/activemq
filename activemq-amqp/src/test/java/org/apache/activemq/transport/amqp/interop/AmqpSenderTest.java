@@ -39,7 +39,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateQueueSender() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -58,7 +58,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateTopicSender() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getTopics().length);
@@ -77,7 +77,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendMessageToQueue() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -100,7 +100,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 100;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
@@ -124,7 +124,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 1000;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("topic://" + getTestName(), false);
@@ -157,7 +157,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         final int MSG_COUNT = 1000;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("topic://" + getTestName(), true);

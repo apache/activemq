@@ -73,7 +73,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
@@ -127,7 +127,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
@@ -156,7 +156,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
@@ -172,8 +172,8 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection1 = client.createConnection();
-        AmqpConnection connection2 = client.createConnection();
+        AmqpConnection connection1 = trackConnection(client.createConnection());
+        AmqpConnection connection2 = trackConnection(client.createConnection());
 
         connection1.setContainerId(getTestName() + "-Client:1");
         connection2.setContainerId(getTestName() + "-Client:2");
@@ -196,8 +196,8 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection1 = client.createConnection();
-        AmqpConnection connection2 = client.createConnection();
+        AmqpConnection connection1 = trackConnection(client.createConnection());
+        AmqpConnection connection2 = trackConnection(client.createConnection());
 
         connection1.setContainerId(getTestName());
         connection2.setContainerId(getTestName());

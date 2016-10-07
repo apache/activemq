@@ -69,7 +69,7 @@ public class AmqpDeliveryAnnotationsTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testDeliveryAnnotationsStrippedFromIncoming() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
