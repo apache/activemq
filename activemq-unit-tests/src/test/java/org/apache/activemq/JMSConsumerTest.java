@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
+import javax.jms.JMSException;
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -858,6 +859,33 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(redispatchConsumer.receive(500));
         redispatchSession.close();
     }
+
+    public void testExceptionOnClientAckAfterConsumerClose() throws Exception {
+
+        connection.start();
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
+
+        sendMessages(connection, destination, 1);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+        Message message = consumer.receive(1000);
+        assertNotNull(message);
+        consumer.close();
+
+        try {
+            message.acknowledge();
+            fail("Expect exception on ack after close - consumer gone so message available again");
+        } catch (JMSException expected) {}
+
+        Session redispatchSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer redispatchConsumer = redispatchSession.createConsumer(destination);
+        Message msg = redispatchConsumer.receive(1000);
+        assertNotNull(msg);
+
+        redispatchSession.close();
+    }
+
 
     public void initCombosForTestAckOfExpired() {
         addCombinationValues("destinationType",

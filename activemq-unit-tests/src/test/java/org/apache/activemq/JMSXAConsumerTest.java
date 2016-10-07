@@ -47,4 +47,8 @@ public class JMSXAConsumerTest extends JMSConsumerTest {
 
     public void testMessageListenerOnMessageCloseUnackedWithPrefetch1StayInQueue() throws Exception {
     }
+
+    // needs client ack, xa is auto ack if no transaction
+    public void testExceptionOnClientAckAfterConsumerClose() throws Exception {
+    }
 }
