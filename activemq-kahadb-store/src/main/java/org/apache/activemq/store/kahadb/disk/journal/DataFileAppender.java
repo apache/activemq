@@ -356,7 +356,7 @@ class DataFileAppender implements FileAppender {
                 signalDone(wb);
             }
         } catch (IOException e) {
-            logger.info("Journal failed while writing at: " + wb.offset);
+            logger.warn("Journal failed while writing at: " + wb.dataFile.getDataFileId() + ":" + wb.offset, e);
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
                 if (wb != null) {
