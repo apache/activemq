@@ -51,6 +51,19 @@ public class TempUsage extends PercentLimitUsage<TempUsage> {
     }
 
     @Override
+    public int getPercentUsage() {
+        if (store != null) {
+            usageLock.writeLock().lock();
+            try {
+                percentUsage = caclPercentUsage();
+            } finally {
+                usageLock.writeLock().unlock();
+            }
+        }
+        return super.getPercentUsage();
+    }
+
+    @Override
     protected long retrieveUsage() {
         if (store == null) {
             return 0;
