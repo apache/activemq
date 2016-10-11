@@ -605,6 +605,43 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     /**
+     * Reject a message that was dispatched under the given Delivery instance.
+     *
+     * @param delivery
+     *        the Delivery instance to reject.
+     *
+     * @throws IOException if an error occurs while sending the release.
+     */
+    public void reject(final Delivery delivery) throws IOException {
+        checkClosed();
+
+        if (delivery == null) {
+            throw new IllegalArgumentException("Delivery to release cannot be null");
+        }
+
+        final ClientFuture request = new ClientFuture();
+        session.getScheduler().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+                try {
+                    if (!delivery.isSettled()) {
+                        delivery.disposition(new Rejected());
+                        delivery.settle();
+                        session.pumpToProtonTransport(request);
+                    }
+                    request.onSuccess();
+                } catch (Exception e) {
+                    request.onFailure(e);
+                }
+            }
+        });
+
+        request.sync();
+    }
+
+    /**
      * @return an unmodifiable view of the underlying Receiver instance.
      */
     public Receiver getReceiver() {
