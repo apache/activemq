@@ -201,7 +201,7 @@ public class AmqpMessage {
     /**
      * Release the message, remote can redeliver it elsewhere.
      *
-     * @throws Exception if an error occurs during the reject.
+     * @throws Exception if an error occurs during the release.
      */
     public void release() throws Exception {
         if (receiver == null) {
@@ -209,6 +209,19 @@ public class AmqpMessage {
         }
 
         receiver.release(delivery);
+    }
+
+    /**
+     * Reject the message, remote can redeliver it elsewhere.
+     *
+     * @throws Exception if an error occurs during the reject.
+     */
+    public void reject() throws Exception {
+        if (receiver == null) {
+            throw new IllegalStateException("Can't release non-received message.");
+        }
+
+        receiver.reject(delivery);
     }
 
     //----- Convenience methods for constructing outbound messages -----------//

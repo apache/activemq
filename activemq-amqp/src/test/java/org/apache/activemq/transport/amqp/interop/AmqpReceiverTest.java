@@ -461,6 +461,74 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 30000)
+    public void testReleasedDisposition() throws Exception {
+        sendMessages(getTestName(), 1, false);
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver(getTestName());
+        receiver.flow(2);
+
+        AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull("did not receive message first time", message);
+
+        Message protonMessage = message.getWrappedMessage();
+        assertNotNull(protonMessage);
+        assertEquals("Unexpected initial value for AMQP delivery-count", 0, protonMessage.getDeliveryCount());
+
+        message.release();
+
+        // Read the message again and validate its state
+
+        message = receiver.receive(10, TimeUnit.SECONDS);
+        assertNotNull("did not receive message again", message);
+
+        message.accept();
+
+        protonMessage = message.getWrappedMessage();
+        assertNotNull(protonMessage);
+        assertEquals("Unexpected updated value for AMQP delivery-count", 0, protonMessage.getDeliveryCount());
+
+        connection.close();
+    }
+
+    @Test(timeout = 30000)
+    public void testRejectedDisposition() throws Exception {
+        sendMessages(getTestName(), 1, false);
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver(getTestName());
+        receiver.flow(2);
+
+        AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull("did not receive message first time", message);
+
+        Message protonMessage = message.getWrappedMessage();
+        assertNotNull(protonMessage);
+        assertEquals("Unexpected initial value for AMQP delivery-count", 0, protonMessage.getDeliveryCount());
+
+        message.reject();
+
+        // Read the message again and validate its state
+
+        message = receiver.receive(10, TimeUnit.SECONDS);
+        assertNotNull("did not receive message again", message);
+
+        message.accept();
+
+        protonMessage = message.getWrappedMessage();
+        assertNotNull(protonMessage);
+        assertEquals("Unexpected updated value for AMQP delivery-count", 1, protonMessage.getDeliveryCount());
+
+        connection.close();
+    }
+
+    @Test(timeout = 30000)
     public void testModifiedDispositionWithDeliveryFailedWithoutUndeliverableHereFieldsSet() throws Exception {
         doModifiedDispositionTestImpl(Boolean.TRUE, null);
     }
