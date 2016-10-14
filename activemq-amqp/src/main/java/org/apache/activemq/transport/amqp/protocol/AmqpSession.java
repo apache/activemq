@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp.protocol;
 import static org.apache.activemq.transport.amqp.AmqpSupport.COPY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_FILTER_IDS;
 import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_NAME;
+import static org.apache.activemq.transport.amqp.AmqpSupport.LIFETIME_POLICY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_FILTER_IDS;
 import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_NAME;
 import static org.apache.activemq.transport.amqp.AmqpSupport.createDestination;
@@ -46,10 +47,12 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
+import org.apache.activemq.transport.amqp.AmqpSupport;
 import org.apache.activemq.transport.amqp.ResponseHandler;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.DeleteOnClose;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
@@ -186,9 +189,17 @@ public class AmqpSession implements AmqpResource {
 
             if (target.getDynamic()) {
                 destination = connection.createTemporaryDestination(protonReceiver, target.getCapabilities());
+
+                Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
+                dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
+
+                // Currently we only support temporary destinations with delete on close lifetime policy.
                 Target actualTarget = new Target();
                 actualTarget.setAddress(destination.getQualifiedName());
+                actualTarget.setCapabilities(AmqpSupport.getDestinationTypeSymbol(destination));
                 actualTarget.setDynamic(true);
+                actualTarget.setDynamicNodeProperties(dynamicNodeProperties);
+
                 protonReceiver.setTarget(actualTarget);
                 receiver.addCloseAction(new Runnable() {
 
@@ -298,11 +309,18 @@ public class AmqpSession implements AmqpResource {
                     return;
                 }
             } else if (source.getDynamic()) {
-                // lets create a temp dest.
                 destination = connection.createTemporaryDestination(protonSender, source.getCapabilities());
+
+                Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
+                dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
+
+                // Currently we only support temporary destinations with delete on close lifetime policy.
                 source = new org.apache.qpid.proton.amqp.messaging.Source();
                 source.setAddress(destination.getQualifiedName());
+                source.setCapabilities(AmqpSupport.getDestinationTypeSymbol(destination));
                 source.setDynamic(true);
+                source.setDynamicNodeProperties(dynamicNodeProperties);
+
                 sender.addCloseAction(new Runnable() {
 
                     @Override
