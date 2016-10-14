@@ -1158,6 +1158,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             messageEvalContext.setMessageReference(md.getMessage());
             messageEvalContext.setDestination(md.getDestination());
             suppress = !sub.getNetworkBridgeFilter().matches(messageEvalContext);
+            //AMQ-6465 - Need to decrement the reference count after checking matches() as
+            //the call above will increment the reference count by 1
+            messageEvalContext.getMessageReference().decrementReferenceCount();
         }
         return suppress;
     }
