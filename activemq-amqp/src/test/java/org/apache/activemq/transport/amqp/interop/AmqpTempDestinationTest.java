@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -21,6 +21,7 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_QUEUE_CAPABILI
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_TOPIC_CAPABILITY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.transport.amqp.AmqpSupport;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
@@ -120,6 +122,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         doTestCreateDynamicSender(false);
     }
 
+    @SuppressWarnings("unchecked")
     protected void doTestCreateDynamicSender(boolean topic) throws Exception {
         Target target = createDynamicTarget(topic);
 
@@ -132,10 +135,20 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         AmqpSender sender = session.createSender(target);
         assertNotNull(sender);
 
+        Target remoteTarget = (Target) sender.getEndpoint().getRemoteTarget();
+        Map<Symbol, Object> dynamicNodeProperties = remoteTarget.getDynamicNodeProperties();
+        Symbol[] capabilites = remoteTarget.getCapabilities();
+
+        assertTrue(Boolean.TRUE.equals(remoteTarget.getDynamic()));
+        assertTrue(dynamicNodeProperties.containsKey(LIFETIME_POLICY));
+        assertEquals(DeleteOnClose.getInstance(), dynamicNodeProperties.get(LIFETIME_POLICY));
+
         if (topic) {
             assertEquals(1, brokerView.getTemporaryTopics().length);
+            assertTrue(AmqpSupport.contains(capabilites, TEMP_TOPIC_CAPABILITY));
         } else {
             assertEquals(1, brokerView.getTemporaryQueues().length);
+            assertTrue(AmqpSupport.contains(capabilites, TEMP_QUEUE_CAPABILITY));
         }
 
         connection.close();
@@ -190,6 +203,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         doTestCreateDynamicSender(false);
     }
 
+    @SuppressWarnings("unchecked")
     protected void doTestCreateDynamicReceiver(boolean topic) throws Exception {
         Source source = createDynamicSource(topic);
 
@@ -202,10 +216,20 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         AmqpReceiver receiver = session.createReceiver(source);
         assertNotNull(receiver);
 
+        Source remoteSource = (Source) receiver.getEndpoint().getRemoteSource();
+        Map<Symbol, Object> dynamicNodeProperties = remoteSource.getDynamicNodeProperties();
+        Symbol[] capabilites = remoteSource.getCapabilities();
+
+        assertTrue(Boolean.TRUE.equals(remoteSource.getDynamic()));
+        assertTrue(dynamicNodeProperties.containsKey(LIFETIME_POLICY));
+        assertEquals(DeleteOnClose.getInstance(), dynamicNodeProperties.get(LIFETIME_POLICY));
+
         if (topic) {
             assertEquals(1, brokerView.getTemporaryTopics().length);
+            assertTrue(AmqpSupport.contains(capabilites, TEMP_TOPIC_CAPABILITY));
         } else {
             assertEquals(1, brokerView.getTemporaryQueues().length);
+            assertTrue(AmqpSupport.contains(capabilites, TEMP_QUEUE_CAPABILITY));
         }
 
         connection.close();

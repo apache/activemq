@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -44,6 +44,8 @@ public class AmqpSupport {
     // Capabilities used to identify destination type in some requests.
     public static final Symbol TEMP_QUEUE_CAPABILITY = Symbol.valueOf("temporary-queue");
     public static final Symbol TEMP_TOPIC_CAPABILITY = Symbol.valueOf("temporary-topic");
+    public static final Symbol QUEUE_CAPABILITY = Symbol.valueOf("queue");
+    public static final Symbol TOPIC_CAPABILITY = Symbol.valueOf("topic");
 
     // Symbols used to announce connection information to remote peer.
     public static final Symbol INVALID_FIELD = Symbol.valueOf("invalid-field");
@@ -212,6 +214,30 @@ public class AmqpSupport {
             return ActiveMQDestination.createDestination(terminus.getAddress(), ActiveMQDestination.QUEUE_TYPE);
         } else {
             throw new RuntimeException("Unexpected terminus type: " + endpoint);
+        }
+    }
+
+    /**
+     * Given an ActiveMQDestination return the proper Capability value for the concrete destination type.
+     *
+     * @param destination
+     *      The ActiveMQDestination whose capability is being requested.
+     *
+     * @return a Symbol that matches the defined Capability value for the ActiveMQDestiantion.
+     */
+    public static Symbol getDestinationTypeSymbol(ActiveMQDestination destination) {
+        if (destination.isQueue()) {
+            if (destination.isTemporary()) {
+                return TEMP_QUEUE_CAPABILITY;
+            } else {
+                return QUEUE_CAPABILITY;
+            }
+        } else {
+            if (destination.isTemporary()) {
+                return TEMP_TOPIC_CAPABILITY;
+            } else {
+                return TOPIC_CAPABILITY;
+            }
         }
     }
 }
