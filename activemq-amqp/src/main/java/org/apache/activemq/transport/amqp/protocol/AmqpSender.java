@@ -270,10 +270,11 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 }
                 settle(delivery, MessageAck.INDIVIDUAL_ACK_TYPE);
             } else if (state instanceof Rejected) {
-                // re-deliver /w incremented delivery counter.
-                md.setRedeliveryCounter(md.getRedeliveryCounter() + 1);
-                LOG.trace("onDelivery: Rejected state = {}, delivery count now {}", state, md.getRedeliveryCounter());
-                settle(delivery, -1);
+                // Rejection is a terminal outcome, we poison the message for dispatch to
+                // the DLQ.  If a custom redelivery policy is used on the broker the message
+                // can still be redelivered based on the configation of that policy.
+                LOG.trace("onDelivery: Rejected state = {}, message poisoned.", state, md.getRedeliveryCounter());
+                settle(delivery, MessageAck.POSION_ACK_TYPE);
             } else if (state instanceof Released) {
                 LOG.trace("onDelivery: Released state = {}", state);
                 // re-deliver && don't increment the counter.
