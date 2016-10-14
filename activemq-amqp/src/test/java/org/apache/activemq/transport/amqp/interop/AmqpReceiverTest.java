@@ -514,16 +514,9 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
         message.reject();
 
-        // Read the message again and validate its state
-
-        message = receiver.receive(10, TimeUnit.SECONDS);
-        assertNotNull("did not receive message again", message);
-
-        message.accept();
-
-        protonMessage = message.getWrappedMessage();
-        assertNotNull(protonMessage);
-        assertEquals("Unexpected updated value for AMQP delivery-count", 1, protonMessage.getDeliveryCount());
+        // Attempt to read the message again but should not get it.
+        message = receiver.receive(2, TimeUnit.SECONDS);
+        assertNull("shoudl not receive message again", message);
 
         connection.close();
     }
