@@ -63,7 +63,7 @@
                 <a href="network.jsp">${row.clientId}</a><br/>
             </c:when>
             <c:otherwise>
-                <a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>"><c:out value="${row.clientId}" /></a><br/>
+                <a href="<c:out value="connection.jsp?connectionID=${row.clientId}"/>"><c:out value="${row.clientId}" /></a><br/>
             </c:otherwise>
         </c:choose>
             <c:out value="${row.connectionId}" />
