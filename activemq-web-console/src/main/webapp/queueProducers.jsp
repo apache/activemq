@@ -49,7 +49,7 @@
 <c:forEach items="${requestContext.queueProducerQuery.producers}" var="row">
 <tr>
 	<td>
-        <a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>"><c:out value="${row.clientId}" /></a><br/>
+        <a href="<c:out value="connection.jsp?connectionID=${row.clientId}"/>"><c:out value="${row.clientId}" /></a><br/>
         <br>
         <c:out value="${row.connectionId}" />
     </td>
