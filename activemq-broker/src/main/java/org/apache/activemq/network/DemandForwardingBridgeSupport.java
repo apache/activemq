@@ -99,6 +99,7 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.MarshallingSupport;
+import org.apache.activemq.util.NetworkBridgeUtils;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.StringToListOfActiveMQDestinationConverter;
@@ -575,7 +576,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     remoteBroker.oneway(brokerInfo);
                     if (configuration.isSyncDurableSubs() &&
                             remoteBroker.getWireFormat().getVersion() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
-                        remoteBroker.oneway(TransportConnection.getBrokerSubscriptionInfo(brokerService));
+                        remoteBroker.oneway(NetworkBridgeUtils.getBrokerSubscriptionInfo(brokerService,
+                                configuration));
                     }
                 }
                 if (remoteConnectionInfo != null) {
@@ -656,8 +658,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         if (started.get()) {
                             if (subInfo.getSubscriptionInfos() != null) {
                                 for (ConsumerInfo info : subInfo.getSubscriptionInfos()) {
-                                    if(!info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX) &&
-                                            matchesDynamicallyIncludedDestinations(info.getDestination())) {
+                                    //re-add any process any non-NC consumers that match the
+                                    //dynamicallyIncludedDestinations list
+                                    if((info.getSubscriptionName() == null || !info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)) &&
+                                            NetworkBridgeUtils.matchesDestinations(dynamicallyIncludedDestinations, info.getDestination())) {
                                         serviceRemoteConsumerAdvisory(info);
                                     }
                                 }
@@ -666,7 +670,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             //After re-added, clean up any empty durables
                             for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
                                 DemandSubscription ds = i.next();
-                                if (matchesDynamicallyIncludedDestinations(ds.getLocalInfo().getDestination())) {
+                                if (NetworkBridgeUtils.matchesDestinations(dynamicallyIncludedDestinations, ds.getLocalInfo().getDestination())) {
                                     cleanupDurableSub(ds, i);
                                 }
                             }
@@ -907,7 +911,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             Iterator<DemandSubscription> i) throws IOException {
         if (ds != null && ds.getLocalDurableSubscriber() != null && ds.getDurableRemoteSubs().isEmpty()
                 && ds.getForcedDurableConsumersSize() == 0) {
-
             // deactivate subscriber
             RemoveInfo removeInfo = new RemoveInfo(ds.getLocalInfo().getConsumerId());
             localBroker.oneway(removeInfo);
@@ -1243,33 +1246,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         return true;
-    }
-
-    private boolean matchesDynamicallyIncludedDestinations(ActiveMQDestination destination) {
-        ActiveMQDestination[] dests = dynamicallyIncludedDestinations;
-        if (dests != null && dests.length > 0) {
-            for (ActiveMQDestination dest : dests) {
-                DestinationFilter inclusionFilter = DestinationFilter.parseFilter(dest);
-                if (dest != null && inclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    protected ActiveMQDestination findMatchingDestination(ActiveMQDestination[] dests, ActiveMQDestination destination) {
-        if (dests != null && dests.length > 0) {
-            for (ActiveMQDestination dest : dests) {
-                DestinationFilter inclusionFilter = DestinationFilter.parseFilter(dest);
-                if (dest != null && inclusionFilter.matches(destination) && dest.getDestinationType() == destination.getDestinationType()) {
-                    return dest;
-                }
-            }
-        }
-
-        return null;
     }
 
     /**
