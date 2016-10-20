@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.transport.amqp.client;
 
+import java.io.IOException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
@@ -38,6 +40,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     private final AmqpConnection connection;
     private final String sessionId;
     private final AmqpTransactionContext txContext;
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     /**
      * Create a new session instance.
@@ -51,6 +54,29 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         this.connection = connection;
         this.sessionId = sessionId;
         this.txContext = new AmqpTransactionContext(this);
+    }
+
+    /**
+     * Close the receiver, a closed receiver will throw exceptions if any further send
+     * calls are made.
+     *
+     * @throws IOException if an error occurs while closing the receiver.
+     */
+    public void close() throws IOException {
+        if (closed.compareAndSet(false, true)) {
+            final ClientFuture request = new ClientFuture();
+            getScheduler().execute(new Runnable() {
+
+                @Override
+                public void run() {
+                    checkClosed();
+                    close(request);
+                    pumpToProtonTransport(request);
+                }
+            });
+
+            request.sync();
+        }
     }
 
     /**
