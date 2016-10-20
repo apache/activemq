@@ -83,6 +83,21 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
     }
 
     @Test
+    public void testModWithGroupClass() throws Exception {
+        final String brokerConfig = configurationSeed + "-auth-add-guest-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-users");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        assertAllowed("user", "USERS.A");
+        applyNewConfig(brokerConfig, configurationSeed + "-users-dud-groupClass", SLEEP);
+        assertDenied("user", "USERS.A");
+
+        applyNewConfig(brokerConfig, configurationSeed + "-users", SLEEP);
+        assertAllowed("user", "USERS.A");
+    }
+
+    @Test
     public void testWildcard() throws Exception {
         final String brokerConfig = configurationSeed + "-auth-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-wildcard-users-guests");
