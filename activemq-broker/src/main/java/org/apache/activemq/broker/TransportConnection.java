@@ -20,14 +20,15 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -39,10 +40,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.transaction.xa.XAResource;
 
+import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerInfo;
@@ -103,7 +106,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
-import org.apache.activemq.util.StringToListOfActiveMQDestinationConverter;
+import org.apache.activemq.util.NetworkBridgeUtils;
 import org.apache.activemq.util.SubscriptionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1378,23 +1381,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.pendingStop = pendingStop;
     }
 
-    public static BrokerSubscriptionInfo getBrokerSubscriptionInfo(final BrokerService brokerService) {
-        RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
-        TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
-        List<ConsumerInfo> subscriptionInfos = new ArrayList<>();
-        for (SubscriptionKey key : topicRegion.getDurableSubscriptions().keySet()) {
-            DurableTopicSubscription sub = topicRegion.getDurableSubscriptions().get(key);
-            if (sub != null) {
-                ConsumerInfo ci = sub.getConsumerInfo().copy();
-                ci.setClientId(key.getClientId());
-                subscriptionInfos.add(ci);
-            }
-        }
-        BrokerSubscriptionInfo bsi = new BrokerSubscriptionInfo(brokerService.getBrokerName());
-        bsi.setSubscriptionInfos(subscriptionInfos.toArray(new ConsumerInfo[0]));
-        return bsi;
-    }
-
     private NetworkBridgeConfiguration getNetworkConfiguration(final BrokerInfo info) throws IOException {
         Properties properties = MarshallingSupport.stringToProperties(info.getNetworkProperties());
         Map<String, String> props = createMap(properties);
@@ -1412,7 +1398,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 NetworkBridgeConfiguration config = getNetworkConfiguration(info);
                 if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
                     LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
-                    dispatchSync(getBrokerSubscriptionInfo(this.broker.getBrokerService()));
+                    dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(this.broker.getBrokerService(), config));
                 }
             } catch (Exception e) {
                 LOG.error("Failed to respond to network bridge creation from broker {}", info.getBrokerId(), e);
@@ -1425,9 +1411,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 NetworkBridgeConfiguration config = getNetworkConfiguration(info);
                 config.setBrokerName(broker.getBrokerName());
 
-                if (config.isSyncDurableSubs() && protocolVersion.get() >= 12) {
+                if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
                     LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
-                    dispatchSync(getBrokerSubscriptionInfo(this.broker.getBrokerService()));
+                    dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(this.broker.getBrokerService(), config));
                 }
 
                 // check for existing duplex connection hanging about

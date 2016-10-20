@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.net.URI;
 import java.util.Arrays;
@@ -23,17 +26,25 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisoryBroker;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.virtual.CompositeTopic;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.plugin.java.JavaRuntimeConfigurationBroker;
+import org.apache.activemq.plugin.java.JavaRuntimeConfigurationPlugin;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.util.Wait;
@@ -57,11 +68,13 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(DurableSyncNetworkBridgeTest.class);
 
+    protected JavaRuntimeConfigurationBroker remoteRuntimeBroker;
     protected String staticIncludeTopics = "include.static.test";
     protected String includedTopics = "include.test.>";
     protected String testTopicName2 = "include.test.bar2";
     private boolean dynamicOnly = false;
     private boolean forceDurable = false;
+    private boolean useVirtualDestSubs = false;
     private byte remoteBrokerWireFormatVersion = CommandTypes.PROTOCOL_VERSION;
     public static enum FLOW {FORWARD, REVERSE};
 
@@ -107,6 +120,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         staticIncludeTopics = "include.static.test";
         dynamicOnly = false;
         forceDurable = false;
+        useVirtualDestSubs = false;
         remoteBrokerWireFormatVersion = CommandTypes.PROTOCOL_VERSION;
         doSetUp(true, true, tempFolder.newFolder(), tempFolder.newFolder());
     }
@@ -521,6 +535,116 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     }
 
+    @Test(timeout = 60 * 1000)
+    public void testVirtualDestSubForceDurableSync() throws Exception {
+        Assume.assumeTrue(flow == FLOW.FORWARD);
+        forceDurable = true;
+        useVirtualDestSubs = true;
+        this.restartBrokers(true);
+
+        //configure a virtual destination that forwards messages from topic testQueueName
+        CompositeTopic compositeTopic = createCompositeTopic(testTopicName,
+                new ActiveMQQueue("include.test.bar.bridge"));
+        remoteRuntimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
+
+        MessageProducer includedProducer = localSession.createProducer(included);
+        Message test = localSession.createTextMessage("test");
+
+        final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
+        final DestinationStatistics remoteDestStatistics = remoteBroker.getDestination(
+                new ActiveMQQueue("include.test.bar.bridge")).getDestinationStatistics();
+
+        //Make sure that the NC durable is created because of the compositeTopic
+        waitForConsumerCount(destinationStatistics, 1);
+        assertNCDurableSubsCount(localBroker, included, 1);
+
+        //Send message and make sure it is dispatched across the bridge
+        includedProducer.send(test);
+        waitForDispatchFromLocalBroker(destinationStatistics, 1);
+        assertLocalBrokerStatistics(destinationStatistics, 1);
+        assertEquals("remote dest messages", 1, remoteDestStatistics.getMessages().getCount());
+
+        //Stop the remote broker so the bridge stops and then send 500 messages so
+        //the messages build up on the NC durable
+        this.stopRemoteBroker();
+        for (int i = 0; i < 500; i++) {
+            includedProducer.send(test);
+        }
+        this.stopLocalBroker();
+
+        //Restart the brokers
+        this.restartRemoteBroker();
+        remoteRuntimeBroker.setVirtualDestinations(new VirtualDestination[] {compositeTopic}, true);
+        this.restartLocalBroker(true);
+
+        //We now need to verify that 501 messages made it to the queue on the remote side
+        //which means that the NC durable was not deleted and recreated during the sync
+        final DestinationStatistics remoteDestStatistics2 = remoteBroker.getDestination(
+                new ActiveMQQueue("include.test.bar.bridge")).getDestinationStatistics();
+
+        assertTrue(Wait.waitFor(new Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return remoteDestStatistics2.getMessages().getCount() == 501;
+            }
+        }));
+
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testForceDurableTopicSubSync() throws Exception {
+        Assume.assumeTrue(flow == FLOW.FORWARD);
+        forceDurable = true;
+        this.restartBrokers(true);
+
+        //configure a virtual destination that forwards messages from topic testQueueName
+        remoteSession.createConsumer(included);
+
+        MessageProducer includedProducer = localSession.createProducer(included);
+        Message test = localSession.createTextMessage("test");
+
+        final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
+
+        //Make sure that the NC durable is created because of the compositeTopic
+        waitForConsumerCount(destinationStatistics, 1);
+        assertNCDurableSubsCount(localBroker, included, 1);
+
+        //Send message and make sure it is dispatched across the bridge
+        includedProducer.send(test);
+        waitForDispatchFromLocalBroker(destinationStatistics, 1);
+        assertLocalBrokerStatistics(destinationStatistics, 1);
+
+        //Stop the network connector and send messages to the local broker so they build
+        //up on the durable
+        this.localBroker.getNetworkConnectorByName("networkConnector").stop();
+
+        for (int i = 0; i < 500; i++) {
+            includedProducer.send(test);
+        }
+
+        //restart the local broker and bridge
+        this.stopLocalBroker();
+        this.restartLocalBroker(true);
+
+        //We now need to verify that the 500 messages on the NC durable are dispatched
+        //on bridge sync which shows that the durable wasn't destroyed/recreated
+        final DestinationStatistics destinationStatistics2 =
+                localBroker.getDestination(included).getDestinationStatistics();
+        waitForDispatchFromLocalBroker(destinationStatistics2, 500);
+        assertLocalBrokerStatistics(destinationStatistics2, 500);
+
+    }
+
+    protected CompositeTopic createCompositeTopic(String name, ActiveMQDestination...forwardTo) {
+        CompositeTopic compositeTopic = new CompositeTopic();
+        compositeTopic.setName(name);
+        compositeTopic.setForwardOnly(true);
+        compositeTopic.setForwardTo( Lists.newArrayList(forwardTo));
+
+        return compositeTopic;
+    }
+
     protected void restartBroker(BrokerService broker, boolean startNetworkConnector) throws Exception {
         if (broker.getBrokerName().equals("localBroker")) {
             restartLocalBroker(startNetworkConnector);
@@ -607,11 +731,14 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         if (flow.equals(FLOW.FORWARD)) {
             broker2 = remoteBroker;
             session2 = remoteSession;
+            remoteRuntimeBroker = (JavaRuntimeConfigurationBroker)
+                    remoteBroker.getBroker().getAdaptor(JavaRuntimeConfigurationBroker.class);
         } else {
             broker1 = remoteBroker;
             session1 = remoteSession;
         }
     }
+
 
     protected BrokerService createLocalBroker(File dataDir, boolean startNetworkConnector) throws Exception {
         BrokerService brokerService = new BrokerService();
@@ -622,6 +749,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         adapter.setDirectory(dataDir);
         adapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.PERIODIC.name());
         brokerService.setPersistenceAdapter(adapter);
+        brokerService.setUseVirtualDestSubs(useVirtualDestSubs);
+        brokerService.setUseVirtualDestSubsOnCreation(useVirtualDestSubs);
 
         if (startNetworkConnector) {
             brokerService.addNetworkConnector(configureLocalNetworkConnector());
@@ -645,10 +774,11 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         connector.setDuplex(true);
         connector.setStaticBridge(false);
         connector.setSyncDurableSubs(true);
+        connector.setUseVirtualDestSubs(useVirtualDestSubs);
         connector.setStaticallyIncludedDestinations(
                 Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(staticIncludeTopics + "?forceDurable=" + forceDurable)));
         connector.setDynamicallyIncludedDestinations(
-                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(includedTopics)));
+                Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(includedTopics + "?forceDurable=" + forceDurable)));
         connector.setExcludedDestinations(
                 Lists.<ActiveMQDestination>newArrayList(new ActiveMQTopic(excludeTopicName)));
         return connector;
@@ -665,6 +795,12 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         adapter.setDirectory(dataDir);
         adapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.PERIODIC.name());
         brokerService.setPersistenceAdapter(adapter);
+        brokerService.setUseVirtualDestSubs(useVirtualDestSubs);
+        brokerService.setUseVirtualDestSubsOnCreation(useVirtualDestSubs);
+
+        if (useVirtualDestSubs) {
+            brokerService.setPlugins(new BrokerPlugin[] {new JavaRuntimeConfigurationPlugin()});
+        }
 
         remoteAdvisoryBroker = (AdvisoryBroker) brokerService.getBroker().getAdaptor(AdvisoryBroker.class);
 

@@ -17,9 +17,7 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
-import java.util.Map;
 
-import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
@@ -29,7 +27,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.util.TypeConversionSupport;
+import org.apache.activemq.util.NetworkBridgeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +118,8 @@ public class DurableConduitBridge extends ConduitBridge {
 
     @Override
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
-        boolean isForcedDurable = isForcedDurable(info);
+        boolean isForcedDurable = NetworkBridgeUtils.isForcedDurable(info,
+                dynamicallyIncludedDestinations, staticallyIncludedDestinations);
 
         if (addToAlreadyInterestedConsumers(info, isForcedDurable)) {
             return null; // don't want this subscription added
@@ -144,40 +143,6 @@ public class DurableConduitBridge extends ConduitBridge {
             forcedDurableRemoteId.add(forcedDurableId);
         }
         return demandSubscription;
-    }
-
-
-    private boolean isForcedDurable(ConsumerInfo info) {
-        if (info.isDurable()) {
-            return false;
-        }
-
-        ActiveMQDestination destination = info.getDestination();
-        if (AdvisorySupport.isAdvisoryTopic(destination) || destination.isTemporary() ||
-                destination.isQueue()) {
-            return false;
-        }
-
-        ActiveMQDestination matching = findMatchingDestination(dynamicallyIncludedDestinations, destination);
-        if (matching != null) {
-            return isDestForcedDurable(matching);
-        }
-        matching = findMatchingDestination(staticallyIncludedDestinations, destination);
-        if (matching != null) {
-            return isDestForcedDurable(matching);
-        }
-        return false;
-    }
-
-    private boolean isDestForcedDurable(ActiveMQDestination destination) {
-        final Map<String, String> options = destination.getOptions();
-
-        boolean isForceDurable = false;
-        if (options != null) {
-            isForceDurable = (boolean) TypeConversionSupport.convert(options.get("forceDurable"), boolean.class);
-        }
-
-        return isForceDurable;
     }
 
     protected String getSubscriberName(ActiveMQDestination dest) {

@@ -893,6 +893,10 @@ public class AdvisoryBroker extends BrokerFilter {
         return destinations;
     }
 
+    public ConcurrentMap<ConsumerInfo, VirtualDestination> getVirtualDestinationConsumers() {
+        return virtualDestinationConsumers;
+    }
+
     private class VirtualConsumerPair {
         private final VirtualDestination virtualDestination;
 
