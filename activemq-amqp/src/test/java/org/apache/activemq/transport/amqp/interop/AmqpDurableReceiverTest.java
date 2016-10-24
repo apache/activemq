@@ -29,12 +29,15 @@ import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
+import org.apache.activemq.transport.amqp.client.AmqpFrameValidator;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
+import org.apache.qpid.proton.amqp.transport.Detach;
 import org.apache.qpid.proton.engine.Receiver;
 import org.junit.Test;
 
@@ -81,6 +84,26 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         connection.setContainerId(getTestName());
         connection.connect();
 
+        connection.setReceivedFrameInspector(new AmqpFrameValidator() {
+
+            @Override
+            public void inspectDetach(Detach detach, Binary encoded) {
+                if (detach.getClosed()) {
+                    markAsInvalid("Remote should have detached but closed instead.");
+                }
+            }
+        });
+
+        connection.setSentFrameInspector(new AmqpFrameValidator() {
+
+            @Override
+            public void inspectDetach(Detach detach, Binary encoded) {
+                if (detach.getClosed()) {
+                    markAsInvalid("Client should have detached but closed instead.");
+                }
+            }
+        });
+
         AmqpSession session = connection.createSession();
         AmqpReceiver receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName());
 
@@ -93,6 +116,9 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
 
         assertEquals(0, brokerView.getDurableTopicSubscribers().length);
         assertEquals(1, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        connection.getSentFrameInspector().assertValid();
+        connection.getReceivedFrameInspector().assertValid();
 
         connection.close();
     }

@@ -49,9 +49,7 @@ import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.impl.CollectorImpl;
-import org.apache.qpid.proton.engine.impl.ProtocolTracer;
 import org.apache.qpid.proton.engine.impl.TransportImpl;
-import org.apache.qpid.proton.framing.TransportFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +60,6 @@ import io.netty.util.ReferenceCountUtil;
 public class AmqpConnection extends AmqpAbstractResource<Connection> implements NettyTransportListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpConnection.class);
-    private static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpConnection.class.getPackage().getName() + ".FRAMES");
 
     private static final NoOpAsyncResult NOOP_REQUEST = new NoOpAsyncResult();
 
@@ -92,6 +89,8 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private List<Symbol> offeredCapabilities = Collections.emptyList();
     private Map<Symbol, Object> offeredProperties = Collections.emptyMap();
 
+    private volatile AmqpFrameValidator sentFrameInspector;
+    private volatile AmqpFrameValidator receivedFrameInspector;
     private AmqpConnectionListener listener;
     private SaslAuthenticator authenticator;
     private String mechanismRestriction;
@@ -159,7 +158,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                         sasl.client();
                     }
                     authenticator = new SaslAuthenticator(sasl, username, password, authzid, mechanismRestriction);
-                    updateTracer();
+                    ((TransportImpl) protonTransport).setProtocolTracer(new AmqpProtocolTracer(AmqpConnection.this));
                     open(future);
 
                     pumpToProtonTransport(future);
@@ -454,6 +453,22 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         this.trace = trace;
     }
 
+    public AmqpFrameValidator getSentFrameInspector() {
+        return sentFrameInspector;
+    }
+
+    public void setSentFrameInspector(AmqpFrameValidator amqpFrameInspector) {
+        this.sentFrameInspector = amqpFrameInspector;
+    }
+
+    public AmqpFrameValidator getReceivedFrameInspector() {
+        return receivedFrameInspector;
+    }
+
+    public void setReceivedFrameInspector(AmqpFrameValidator amqpFrameInspector) {
+        this.receivedFrameInspector = amqpFrameInspector;
+    }
+
     //----- Internal getters used from the child AmqpResource classes --------//
 
     ScheduledExecutorService getScheduler() {
@@ -716,22 +731,6 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         }
 
         return containerId;
-    }
-
-    private void updateTracer() {
-        if (isTraceFrames()) {
-            ((TransportImpl) protonTransport).setProtocolTracer(new ProtocolTracer() {
-                @Override
-                public void receivedFrame(TransportFrame transportFrame) {
-                    TRACE_FRAMES.trace("{} | RECV: {}", getRemoteURI(), transportFrame.getBody());
-                }
-
-                @Override
-                public void sentFrame(TransportFrame transportFrame) {
-                    TRACE_FRAMES.trace("{} | SENT: {}", this, transportFrame.getBody());
-                }
-            });
-        }
     }
 
     @Override
