@@ -839,15 +839,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     } else {
                         store.addMessage(context, message);
                     }
-                    if (isReduceMemoryFootprint()) {
-                        message.clearMarshalledState();
-                    }
                 } catch (Exception e) {
                     // we may have a store in inconsistent state, so reset the cursor
                     // before restarting normal broker operations
                     resetNeeded = true;
                     throw e;
                 }
+            }
+
+            //Clear the unmarshalled state if the message is marshalled
+            //Persistent messages will always be marshalled but non-persistent may not be
+            //Specially non-persistent messages over the VM transport won't be
+            if (isReduceMemoryFootprint() && message.isMarshalled()) {
+                message.clearUnMarshalledState();
             }
             if(tryOrderedCursorAdd(message, context)) {
                 break;

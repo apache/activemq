@@ -110,9 +110,22 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public abstract void storeContent();
     public abstract void storeContentAndClear();
 
-    // useful to reduce the memory footprint of a persisted message
+    /**
+     * @deprecated - This method name is misnamed
+     * @throws JMSException
+     */
     public void clearMarshalledState() throws JMSException {
+        clearUnMarshalledState();
+    }
+
+    // useful to reduce the memory footprint of a persisted message
+    public void clearUnMarshalledState() throws JMSException {
         properties = null;
+    }
+
+    public boolean isMarshalled() {
+        return content != null && (marshalledProperties != null ||
+                (marshalledProperties == null && properties == null));
     }
 
     protected void copy(Message copy) {

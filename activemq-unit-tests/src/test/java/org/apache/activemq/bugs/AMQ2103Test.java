@@ -21,7 +21,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerTestSupport;
@@ -32,7 +32,16 @@ import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.usecases.MyObject;
+import org.junit.Ignore;
 
+import junit.framework.Test;
+
+
+/**
+ * AMQ-6477 changes the behavior to only clear memory if the marshalled state exists
+ * so this test no longer works
+ */
+@Ignore
 public class AMQ2103Test extends BrokerTestSupport {
     static PolicyEntry reduceMemoryFootprint = new PolicyEntry();
     static {
@@ -47,7 +56,7 @@ public class AMQ2103Test extends BrokerTestSupport {
     }
 
     public void initCombosForTestVerifyMarshalledStateIsCleared() throws Exception {
-        addCombinationValues("defaultPolicy", new Object[]{defaultPolicy, null});    
+        addCombinationValues("defaultPolicy", new Object[]{defaultPolicy, null});
     }
 
     public static Test suite() {
@@ -60,6 +69,8 @@ public class AMQ2103Test extends BrokerTestSupport {
      * With vm transport and deferred serialisation and no persistence (mem persistence),
      * we see the message as sent by the client so we can validate the contents against
      * the policy
+     *
+     *
      * @throws Exception
      */
     public void testVerifyMarshalledStateIsCleared() throws Exception {
