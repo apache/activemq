@@ -42,6 +42,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.util.Wait;
 import org.hamcrest.Description;
+import org.hamcrest.Matchers;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.api.Action;
@@ -151,7 +152,7 @@ public class ServerSessionImplTest {
                 allowing(messageEndpointFactory).createEndpoint(with(any(XAResource.class)));
                 will(returnValue(messageEndpoint));
 
-                allowing(workManager).scheduleWork((Work) with(anything()), with(any(long.class)), with(any(ExecutionContext.class)),
+                allowing(workManager).scheduleWork((Work) with(Matchers.instanceOf(Work.class)), with(any(long.class)), with(any(ExecutionContext.class)),
                     with(any(WorkListener.class)));
                 will(new Action() {
                     @Override
@@ -164,7 +165,7 @@ public class ServerSessionImplTest {
                     }
                 });
 
-                allowing(messageEndpoint).beforeDelivery((Method) with(anything()));
+                allowing(messageEndpoint).beforeDelivery((Method) with(Matchers.instanceOf(Method.class)));
                 allowing(messageEndpoint).onMessage(with(any(javax.jms.Message.class)));
                 will(new Action() {
                     @Override
