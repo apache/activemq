@@ -130,8 +130,8 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     }
 
     @Override
-    public void clearMarshalledState() throws JMSException {
-        super.clearMarshalledState();
+    public void clearUnMarshalledState() throws JMSException {
+        super.clearUnMarshalledState();
         map.clear();
     }
 

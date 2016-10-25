@@ -516,9 +516,7 @@ public class Topic extends BaseDestination implements Task {
             }
             result = topicStore.asyncAddTopicMessage(context, message,isOptimizeStorage());
 
-            if (isReduceMemoryFootprint()) {
-                message.clearMarshalledState();
-            }
+            //Moved the reduceMemoryfootprint clearing to the dispatch method
         }
 
         message.incrementReferenceCount();
@@ -758,6 +756,13 @@ public class Topic extends BaseDestination implements Task {
                     return;
                 }
             }
+
+            // Clear memory before dispatch - need to clear here because the call to
+            //subscriptionRecoveryPolicy.add() will unmarshall the state
+            if (isReduceMemoryFootprint() && message.isMarshalled()) {
+                message.clearUnMarshalledState();
+            }
+
             msgContext = context.getMessageEvaluationContext();
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
