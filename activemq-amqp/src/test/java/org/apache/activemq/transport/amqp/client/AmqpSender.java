@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -322,6 +322,14 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
         }
     }
 
+    protected void doDeliveryUpdateInspection(Delivery delivery) {
+        try {
+            getStateInspector().inspectDeliveryUpdate(getSender(), delivery);
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
+        }
+    }
+
     @Override
     protected Exception getOpenAbortException() {
         // Verify the attach response contained a non-null target
@@ -407,6 +415,8 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             if (state == null) {
                 continue;
             }
+
+            doDeliveryUpdateInspection(delivery);
 
             Outcome outcome = null;
             if (state instanceof TransactionalState) {

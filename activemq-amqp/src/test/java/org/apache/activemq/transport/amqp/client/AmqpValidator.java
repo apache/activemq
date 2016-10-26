@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp.client;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
@@ -68,6 +69,14 @@ public class AmqpValidator {
     }
 
     public void inspectDetachedResource(Receiver receiver) {
+
+    }
+
+    public void inspectDelivery(Receiver receiver, Delivery delivery) {
+
+    }
+
+    public void inspectDeliveryUpdate(Sender sender, Delivery delivery) {
 
     }
 

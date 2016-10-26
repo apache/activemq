@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -856,6 +856,8 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     private void processDelivery(Delivery incoming) throws Exception {
+        doDeliveryInspection(incoming);
+
         Message message = null;
         try {
             message = decodeIncomingMessage(incoming);
@@ -875,6 +877,14 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         if (pullRequest != null) {
             pullRequest.onSuccess();
             pullRequest = null;
+        }
+    }
+
+    private void doDeliveryInspection(Delivery delivery) {
+        try {
+            getStateInspector().inspectDelivery(getReceiver(), delivery);
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
         }
     }
 

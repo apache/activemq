@@ -297,7 +297,6 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
         return new IOException("Open failed unexpectedly.");
     }
 
-    // TODO - Fina a more generic way to do this.
     protected abstract void doOpenInspection();
     protected abstract void doClosedInspection();
 

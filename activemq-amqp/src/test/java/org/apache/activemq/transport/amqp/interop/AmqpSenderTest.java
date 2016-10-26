@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
@@ -28,7 +31,10 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.client.AmqpValidator;
 import org.apache.activemq.util.Wait;
+import org.apache.qpid.proton.engine.Delivery;
+import org.apache.qpid.proton.engine.Sender;
 import org.junit.Test;
 
 /**
@@ -123,10 +129,23 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     public void testUnsettledSender() throws Exception {
         final int MSG_COUNT = 1000;
 
+        final CountDownLatch settled = new CountDownLatch(MSG_COUNT);
+
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
-        AmqpSession session = connection.createSession();
 
+        connection.setStateInspector(new AmqpValidator() {
+
+            @Override
+            public void inspectDeliveryUpdate(Sender sender, Delivery delivery) {
+                if (delivery.remotelySettled()) {
+                    LOG.trace("Remote settled message for sender: {}", sender.getName());
+                    settled.countDown();
+                }
+            }
+        });
+
+        AmqpSession session = connection.createSession();
         AmqpSender sender = session.createSender("topic://" + getTestName(), false);
 
         for (int i = 1; i <= MSG_COUNT; ++i) {
@@ -149,6 +168,9 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         }));
 
         sender.close();
+
+        assertTrue("Remote should have settled all deliveries", settled.await(5, TimeUnit.MINUTES));
+
         connection.close();
     }
 
