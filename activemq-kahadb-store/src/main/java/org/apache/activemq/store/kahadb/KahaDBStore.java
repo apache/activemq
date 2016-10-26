@@ -936,17 +936,17 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             } else {
                 indexLock.writeLock().lock();
                 try {
-                    return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
+                    return pageFile.tx().execute(new Transaction.CallableClosure<Long, IOException>() {
                         @Override
-                        public Integer execute(Transaction tx) throws IOException {
+                        public Long execute(Transaction tx) throws IOException {
                             StoredDestination sd = getStoredDestination(dest, tx);
                             LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
                             if (cursorPos == null) {
                                 // The subscription might not exist.
-                                return 0;
+                                return 0l;
                             }
 
-                            return (int) getStoredMessageSize(tx, sd, subscriptionKey);
+                            return getStoredMessageSize(tx, sd, subscriptionKey);
                         }
                     });
                 } finally {
@@ -954,7 +954,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 }
             }
         }
-
 
         protected void recoverMessageStoreSubMetrics() throws IOException {
             if (isEnableSubscriptionStatistics()) {
