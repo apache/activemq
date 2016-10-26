@@ -478,6 +478,31 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testMessageWithNoHeaderNotMarkedDurable() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+        AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
+
+        // Create default message that should be sent as non-durable
+        AmqpMessage message1 = new AmqpMessage();
+        message1.setText("Test-Message -> non-durable");
+        message1.setMessageId("ID:Message:1");
+        sender.send(message1);
+
+        receiver1.flow(1);
+        AmqpMessage message2 = receiver1.receive(50, TimeUnit.SECONDS);
+        assertNotNull("Should have read a message", message2);
+        assertFalse("Second message sent should not be durable", message2.isDurable());
+        message2.accept();
+
+        sender.close();
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
     public void testSendMessageToQueueNoPrefixReceiveWithPrefix() throws Exception {
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
