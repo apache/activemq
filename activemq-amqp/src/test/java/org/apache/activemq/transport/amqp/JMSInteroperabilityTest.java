@@ -198,7 +198,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         MessageProducer amqpProducer = amqpSession.createProducer(queue);
         MessageConsumer openwireConsumer = openwireSession.createConsumer(queue);
 
-        TextMessage outbound = openwireSession.createTextMessage();
+        TextMessage outbound = amqpSession.createTextMessage();
         outbound.setText(testMessageBody);
         outbound.setBooleanProperty("Boolean", bool);
         outbound.setByteProperty("Byte", bValue);

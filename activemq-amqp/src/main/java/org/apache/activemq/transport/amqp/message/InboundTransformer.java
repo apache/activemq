@@ -108,6 +108,7 @@ public abstract class InboundTransformer {
             }
         } else {
             jms.setPriority((byte) Message.DEFAULT_PRIORITY);
+            jms.setPersistent(false);
         }
 
         final MessageAnnotations ma = amqp.getMessageAnnotations();
