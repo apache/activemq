@@ -124,8 +124,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public boolean isMarshalled() {
-        return content != null && (marshalledProperties != null ||
-                (marshalledProperties == null && properties == null));
+        return content != null && (marshalledProperties != null || properties == null);
     }
 
     protected void copy(Message copy) {
