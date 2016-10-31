@@ -468,7 +468,7 @@
                 </pluginExecution>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                    <groupId>net.alichim31</groupId>
+                    <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
                     <versionRange>[0.0.0,)</versionRange>
                     <goals>
