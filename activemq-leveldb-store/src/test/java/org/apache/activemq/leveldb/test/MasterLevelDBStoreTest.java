@@ -21,6 +21,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Test;
 
+import java.io.File;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -41,6 +42,7 @@ public class MasterLevelDBStoreTest {
     @Test(timeout = 1000*60*10)
     public void testStoppingStoreStopsTransport() throws Exception {
         store = new MasterLevelDBStore();
+        store.setDirectory(new File("target/activemq-data/master-leveldb-store-test"));
         store.setReplicas(0);
 
         ExecutorService threads = Executors.newFixedThreadPool(1);
