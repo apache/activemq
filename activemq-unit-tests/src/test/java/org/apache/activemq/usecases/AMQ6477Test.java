@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -174,15 +175,22 @@ public class AMQ6477Test {
 
     @SuppressWarnings("unchecked")
     protected List<MessageReference> getSubscriptionMessages(Subscription sub) throws Exception {
-        Field f = null;
+        Field dispatchedField = null;
+        Field dispatchLockField = null;
 
         if (sub instanceof TopicSubscription) {
-            f = TopicSubscription.class.getDeclaredField("dispatched");
+            dispatchedField = TopicSubscription.class.getDeclaredField("dispatched");
+            dispatchLockField = TopicSubscription.class.getDeclaredField("dispatchLock");
         } else {
-            f = PrefetchSubscription.class.getDeclaredField("dispatched");
+            dispatchedField = PrefetchSubscription.class.getDeclaredField("dispatched");
+            dispatchLockField = PrefetchSubscription.class.getDeclaredField("dispatchLock");
         }
-        f.setAccessible(true);
-        return (List<MessageReference>) f.get(sub);
+        dispatchedField.setAccessible(true);
+        dispatchLockField.setAccessible(true);
+
+        synchronized (dispatchLockField.get(sub)) {
+            return new ArrayList<MessageReference>((List<MessageReference>)dispatchedField.get(sub));
+        }
     }
 
 }
