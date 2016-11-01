@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -23,12 +23,10 @@ import java.util.concurrent.Callable;
 import javax.jms.Connection;
 
 import org.apache.qpid.jms.JmsConnectionFactory;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 
@@ -38,43 +36,22 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
 
     @Configuration
     public static Option[] configure() {
-        Option[] configure = configure("activemq");
+        Option[] configure = configure("activemq", "activemq-amqp-client");
 
         Option[] configuredOptions = configureBrokerStart(configure);
 
         return configuredOptions;
     }
 
-
-
-    @Before
-    public void setUpBundle() {
-
-        installWrappedBundle(CoreOptions.wrappedBundle(CoreOptions.mavenBundle(
-                "io.netty", "netty-all").version(
-                        getArtifactVersion("io.netty", "netty-all")).getURL().toString()
-                + "$Bundle-SymbolicName=qpid-jms-client"));
-        installWrappedBundle(CoreOptions.wrappedBundle(CoreOptions.mavenBundle(
-                "org.apache.qpid", "proton-j").version(
-                        getArtifactVersion("org.apache.qpid", "proton-j")).getURL()));
-        installWrappedBundle(CoreOptions.wrappedBundle(CoreOptions.mavenBundle(
-                "org.apache.qpid", "qpid-jms-client").version(
-                        getArtifactVersion("org.apache.qpid", "qpid-jms-client")).getURL()));
-    }
-
-
     @Override
     protected Connection getConnection() throws Throwable {
-        setUpBundle();
-
         withinReason(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                assertTrue("qpid jms client bundle installed", verifyBundleInstalled("qpid-jms-client"));
+                assertTrue("qpid jms client bundle installed", verifyBundleInstalled("org.apache.qpid.jms.client"));
                 return true;
             }
         });
-
 
         String amqpURI = "amqp://localhost:" + AMQP_PORT;
         JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
