@@ -76,7 +76,7 @@ public class FailoverTransport implements CompositeTransport {
     private static final int DEFAULT_INITIAL_RECONNECT_DELAY = 10;
     private static final int INFINITE = -1;
     private TransportListener transportListener;
-    private boolean disposed;
+    private volatile boolean disposed;
     private final CopyOnWriteArrayList<URI> uris = new CopyOnWriteArrayList<URI>();
     private final CopyOnWriteArrayList<URI> updated = new CopyOnWriteArrayList<URI>();
 
@@ -92,7 +92,7 @@ public class FailoverTransport implements CompositeTransport {
     private final AtomicReference<Transport> connectedTransport = new AtomicReference<Transport>();
     private final TaskRunnerFactory reconnectTaskFactory;
     private final TaskRunner reconnectTask;
-    private boolean started;
+    private volatile boolean started;
     private long initialReconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private long maxReconnectDelay = 1000 * 30;
     private double backOffMultiplier = 2d;
@@ -127,7 +127,7 @@ public class FailoverTransport implements CompositeTransport {
     private final ArrayList<URI> priorityList = new ArrayList<URI>();
     private boolean priorityBackupAvailable = false;
     private String nestedExtraQueryOptions;
-    private boolean shuttingDown = false;
+    private volatile boolean shuttingDown = false;
 
     public FailoverTransport() {
         brokerSslContext = SslContext.getCurrentSslContext();
