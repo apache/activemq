@@ -93,7 +93,7 @@ public class Journal {
         try {
             int nextOffset = findNextBatchRecord(reader, recoveryPosition.getOffset() + 1);
             Sequence sequence = new Sequence(recoveryPosition.getOffset(), nextOffset >= 0 ? nextOffset - 1 : dataFile.getLength() - 1);
-            LOG.warn("Corrupt journal records found in '" + dataFile.getFile() + "' between offsets: " + sequence);
+            LOG.warn("Corrupt journal records found in '{}' between offsets: {}", dataFile.getFile(), sequence);
 
             // skip corruption on getNextLocation
             recoveryPosition.setOffset((int) sequence.getLast() + 1);
@@ -477,7 +477,7 @@ public class Journal {
                     int nextOffset = findNextBatchRecord(reader, location.getOffset() + 1);
                     if (nextOffset >= 0) {
                         Sequence sequence = new Sequence(location.getOffset(), nextOffset - 1);
-                        LOG.warn("Corrupt journal records found in '" + dataFile.getFile() + "' between offsets: " + sequence);
+                        LOG.warn("Corrupt journal records found in '{}' between offsets: {}", dataFile.getFile(), sequence);
                         dataFile.corruptedBlocks.add(sequence);
                         location.setOffset(nextOffset);
                     } else {
