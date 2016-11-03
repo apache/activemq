@@ -16,11 +16,6 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.LinkedList;
-
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -37,6 +32,11 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 /**
  *
@@ -86,7 +86,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
     private void recordDestinationCreation(ActiveMQDestination destination) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            c = persistenceAdapter.getTransactionContext();
             if (adapter.doGetLastAckedDurableSubscriberMessageId(c, destination, destination.getQualifiedName(), destination.getQualifiedName()) < 0) {
                 adapter.doRecordDestination(c, destination);
             }
@@ -273,7 +272,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
         // Get all the Message ids out of the database.
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            c = persistenceAdapter.getTransactionContext();
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
                 @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
