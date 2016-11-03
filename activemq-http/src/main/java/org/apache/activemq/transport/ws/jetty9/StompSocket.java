@@ -44,7 +44,8 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
 
     @Override
     public void sendToStomp(StompFrame command) throws IOException {
-        session.getRemote().sendString(command.format());
+        //Send async - do we need to wait for the future to complete?
+        session.getRemote().sendStringByFuture(command.format());
     }
 
     @Override
