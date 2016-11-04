@@ -69,11 +69,14 @@ public abstract class JNDITestSupport extends TestCase {
 
         configureEnvironment();
 
-        InitialContextFactory factory = new ActiveMQInitialContextFactory();
+        InitialContextFactory factory = getInitialContextFactory();
         context = factory.getInitialContext(environment);
         assertTrue("No context created", context != null);
     }
 
+    protected InitialContextFactory getInitialContextFactory() {
+        return new ActiveMQInitialContextFactory();
+    }
     /**
      * Stops all existing ActiveMQConnectionFactory in Context.
      *

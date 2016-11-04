@@ -63,7 +63,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
 
         // This should create the connection.
-        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
+        ActiveMQSslConnectionFactory cf = getFactory("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
         connection.start();
@@ -76,7 +76,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
 
         // This should create the connection.
-        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("failover:(tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true)");
+        ActiveMQSslConnectionFactory cf = getFactory("failover:(tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true)");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
         connection.start();
@@ -91,7 +91,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(broker);
 
         // This should create the connection.
-        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory(sslUri);
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("password");
         connection = (ActiveMQConnection)cf.createConnection();
@@ -109,7 +109,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(broker);
 
         // This should create the connection.
-        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
+        ActiveMQSslConnectionFactory cf = getFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("password");
         connection = (ActiveMQConnection)cf.createConnection();
@@ -126,7 +126,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
-        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
+        ActiveMQSslConnectionFactory cf = getFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
         cf.setKeyAndTrustManagers(getKeyManager(), getTrustManager(), new SecureRandom());
         connection = (ActiveMQConnection)cf.createConnection();
         LOG.info("Created client connection");
@@ -144,7 +144,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(broker);
 
         // This should FAIL to connect, due to wrong password.
-        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory(sslUri);
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("wrongPassword");
         try {
@@ -166,7 +166,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(broker);
 
         // This should FAIL to connect, due to wrong password.
-        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory(sslUri);
+        ActiveMQSslConnectionFactory cf = getFactory(sslUri);
         cf.setTrustStore("dummy.keystore");
         cf.setTrustStorePassword("password");
         try {
@@ -211,6 +211,10 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     protected void brokerStop() throws Exception {
         broker.stop();
+    }
+
+    protected ActiveMQSslConnectionFactory getFactory(String uri) {
+        return new ActiveMQSslConnectionFactory(uri);
     }
 
     public static TrustManager[] getTrustManager() throws Exception {

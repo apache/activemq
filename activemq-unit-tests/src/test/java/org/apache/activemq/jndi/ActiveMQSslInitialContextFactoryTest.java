@@ -16,22 +16,49 @@
  */
 package org.apache.activemq.jndi;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Hashtable;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSslConnectionFactory;
+import org.apache.activemq.ActiveMQXASslConnectionFactory;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class ActiveMQSslInitialContextFactoryTest {
 
     protected Context context;
+    protected boolean isXa;
+
+    @Parameters(name = "isXa={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {true},
+                {false}
+        });
+    }
+
+    /**
+     * @param isXa
+     */
+    public ActiveMQSslInitialContextFactoryTest(boolean isXa) {
+        super();
+        this.isXa = isXa;
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -46,14 +73,21 @@ public class ActiveMQSslInitialContextFactoryTest {
         environment.put("connection.ConnectionFactory.trustStore", "truststore.jks");
         environment.put("connection.ConnectionFactory.trustStorePassword", "test");
         environment.put("connection.ConnectionFactory.trustStoreType", "JKS");
-        
+        environment.put("xa", Boolean.toString(isXa));
+
         context = factory.getInitialContext(environment);
         assertTrue("No context created", context != null);
     }
 
     @Test
-    public void testCreateConnectionFactory() throws NamingException {
-        assertTrue(context.lookup("ConnectionFactory") instanceof ActiveMQSslConnectionFactory);
+    public void testCreateXaConnectionFactory() throws NamingException {
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) context.lookup("ConnectionFactory");
+        assertTrue(factory instanceof ActiveMQSslConnectionFactory);
+        if (isXa) {
+            assertTrue(factory instanceof ActiveMQXASslConnectionFactory);
+        } else {
+            assertFalse(factory instanceof ActiveMQXASslConnectionFactory);
+        }
     }
 
     @Test
