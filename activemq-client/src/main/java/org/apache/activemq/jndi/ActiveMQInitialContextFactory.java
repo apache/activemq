@@ -211,7 +211,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         return answer;
     }
 
-    private boolean needsXA(Hashtable environment) {
+    protected boolean needsXA(Hashtable environment) {
         boolean isXA = Boolean.parseBoolean((String) environment.get("xa"));
         // property not applicable to connectionfactory so remove
         environment.remove("xa");

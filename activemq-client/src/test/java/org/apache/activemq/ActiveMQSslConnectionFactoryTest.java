@@ -114,12 +114,16 @@ public class ActiveMQSslConnectionFactoryTest {
     }
 
     protected void executeTest(String transport, String name) throws Throwable {
-    	executeTest(transport, name, null);    	
+    	executeTest(transport, name, null);
+    }
+
+    protected ActiveMQSslConnectionFactory getFactory(String transport) {
+        return new ActiveMQSslConnectionFactory(transport);
     }
 
     protected void executeTest(String transport, String name, String type) throws Throwable {
         try {
-            ActiveMQSslConnectionFactory activeMQSslConnectionFactory = new ActiveMQSslConnectionFactory(transport);
+            ActiveMQSslConnectionFactory activeMQSslConnectionFactory = getFactory(transport);
             activeMQSslConnectionFactory.setTrustStoreType(type != null ? type : activeMQSslConnectionFactory.getTrustStoreType());
             activeMQSslConnectionFactory.setTrustStore(name);
             activeMQSslConnectionFactory.setTrustStorePassword(TRUST_STORE_PASSWORD);

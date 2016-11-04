@@ -22,6 +22,7 @@ import java.util.Properties;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSslConnectionFactory;
+import org.apache.activemq.ActiveMQXASslConnectionFactory;
 
 public class ActiveMQSslInitialContextFactory extends ActiveMQInitialContextFactory {
 
@@ -31,7 +32,7 @@ public class ActiveMQSslInitialContextFactory extends ActiveMQInitialContextFact
      */
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory(Hashtable environment) throws URISyntaxException {
-        ActiveMQConnectionFactory answer = new ActiveMQSslConnectionFactory();
+        ActiveMQConnectionFactory answer = needsXA(environment) ? new ActiveMQXASslConnectionFactory() : new ActiveMQSslConnectionFactory();
         Properties properties = new Properties();
         properties.putAll(environment);
         answer.setProperties(properties);

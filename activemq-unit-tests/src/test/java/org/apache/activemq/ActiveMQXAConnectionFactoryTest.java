@@ -30,6 +30,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 import javax.jms.XAConnection;
+import javax.jms.XAConnectionFactory;
 import javax.jms.XAQueueConnection;
 import javax.jms.XASession;
 import javax.jms.XATopicConnection;
@@ -73,30 +74,37 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         }
     }
 
+    protected ActiveMQConnectionFactory getXAConnectionFactory(String brokerUrl) {
+        return new ActiveMQXAConnectionFactory(brokerUrl);
+    }
+
+    protected ActiveMQConnectionFactory getXAConnectionFactory(URI uri) {
+        return new ActiveMQXAConnectionFactory(uri);
+    }
+
     public void testCopy() throws URISyntaxException, JMSException {
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://localhost?");
+        ActiveMQConnectionFactory cf = getXAConnectionFactory("vm://localhost?");
         ActiveMQConnectionFactory copy = cf.copy();
-        assertTrue("Should be an ActiveMQXAConnectionFactory", copy instanceof ActiveMQXAConnectionFactory);
+        assertTrue("Should be an ActiveMQXAConnectionFactory", copy.getClass().equals(cf.getClass()));
     }
 
     public void testUseURIToSetOptionsOnConnectionFactory() throws URISyntaxException, JMSException {
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory(
-                                                                         "vm://localhost?jms.useAsyncSend=true");
+        ActiveMQConnectionFactory cf = getXAConnectionFactory("vm://localhost?jms.useAsyncSend=true");
         assertTrue(cf.isUseAsyncSend());
         // the broker url have been adjusted.
         assertEquals("vm://localhost", cf.getBrokerURL());
 
-        cf = new ActiveMQXAConnectionFactory("vm://localhost?jms.useAsyncSend=false");
+        cf = getXAConnectionFactory("vm://localhost?jms.useAsyncSend=false");
         assertFalse(cf.isUseAsyncSend());
         // the broker url have been adjusted.
         assertEquals("vm://localhost", cf.getBrokerURL());
 
-        cf = new ActiveMQXAConnectionFactory("vm:(broker:()/localhost)?jms.useAsyncSend=true");
+        cf = getXAConnectionFactory("vm:(broker:()/localhost)?jms.useAsyncSend=true");
         assertTrue(cf.isUseAsyncSend());
         // the broker url have been adjusted.
         assertEquals("vm:(broker:()/localhost)", cf.getBrokerURL());
 
-        cf = new ActiveMQXAConnectionFactory(
+        cf = getXAConnectionFactory(
                 "vm://localhost?jms.redeliveryPolicy.maximumRedeliveries=10&" +
                                "jms.redeliveryPolicy.initialRedeliveryDelay=10000&" +
                                "jms.redeliveryPolicy.redeliveryDelay=10000&" +
@@ -113,7 +121,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testCreateVMConnectionWithEmbdeddBroker() throws URISyntaxException, JMSException {
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://myBroker?broker.persistent=false");
+        ActiveMQConnectionFactory cf = getXAConnectionFactory("vm://myBroker?broker.persistent=false");
         // Make sure the broker is not created until the connection is
         // instantiated.
         assertNull(BrokerRegistry.getInstance().lookup("myBroker"));
@@ -130,7 +138,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testGetBrokerName() throws URISyntaxException, JMSException {
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory cf = getXAConnectionFactory("vm://localhost?broker.persistent=false");
         connection = (ActiveMQConnection)cf.createConnection();
         connection.start();
 
@@ -154,12 +162,12 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         XAConnection connection1 = null;
         XAConnection connection2 = null;
         try {
-            ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+            ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
             connection1 = (XAConnection)cf1.createConnection();
             XASession session1 = connection1.createXASession();
             XAResource resource1 = session1.getXAResource();
 
-            ActiveMQXAConnectionFactory cf2 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+            ActiveMQConnectionFactory cf2 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
             connection2 = (XAConnection)cf2.createConnection();
             XASession session2 = connection2.createXASession();
             XAResource resource2 = session2.getXAResource();
@@ -190,12 +198,12 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         XAConnection connection1 = null;
         XAConnection connection2 = null;
         try {
-            ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false&jms.rmIdFromConnectionId=true");
+            ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false&jms.rmIdFromConnectionId=true");
             connection1 = (XAConnection)cf1.createConnection();
             XASession session1 = connection1.createXASession();
             XAResource resource1 = session1.getXAResource();
 
-            ActiveMQXAConnectionFactory cf2 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+            ActiveMQConnectionFactory cf2 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
             connection2 = (XAConnection)cf2.createConnection();
             XASession session2 = connection2.createXASession();
             XAResource resource2 = session2.getXAResource();
@@ -229,7 +237,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
         XAConnection connection1 = null;
         try {
-            ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+            ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
             connection1 = (XAConnection)cf1.createConnection();
             connection1.start();
             XASession session = connection1.createXASession();
@@ -272,7 +280,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     public void testConsumerCloseTransactionalSendReceive() throws Exception {
 
-        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
         XAConnection connection1 = (XAConnection)cf1.createConnection();
         connection1.start();
         XASession session = connection1.createXASession();
@@ -316,7 +324,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     public void testSessionCloseTransactionalSendReceive() throws Exception {
 
-        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
         XAConnection connection1 = (XAConnection)cf1.createConnection();
         connection1.start();
         XASession session = connection1.createXASession();
@@ -363,7 +371,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
         broker.setPersistent(false);
         broker.start();
-        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getConnectUri() + ")");
+        ActiveMQConnectionFactory cf1 = getXAConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getConnectUri() + ")");
         cf1.setStatsEnabled(true);
         ActiveMQXAConnection xaConnection = (ActiveMQXAConnection)cf1.createConnection();
         xaConnection.start();
@@ -405,7 +413,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
         broker.start();
         broker.waitUntilStarted();
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
+        ActiveMQConnectionFactory cf = getXAConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
         XAConnection connection = (XAConnection)cf.createConnection();
         connection.start();
         XASession session = connection.createXASession();
@@ -429,7 +437,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     public void testExceptionAfterClose() throws Exception {
 
-        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
         XAConnection connection1 = (XAConnection)cf1.createConnection();
         connection1.start();
 
@@ -456,7 +464,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
         broker.start();
         broker.waitUntilStarted();
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
+        ActiveMQConnectionFactory cf = getXAConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
         XAConnection connection = (XAConnection)cf.createConnection();
         connection.start();
         XASession session = connection.createXASession();
@@ -536,7 +544,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         LOG.info("connection URI is: " + connectURI);
 
         // This should create the connection.
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory(connectURI);
+        ActiveMQConnectionFactory cf = getXAConnectionFactory(connectURI);
         Connection connection = cf.createConnection();
 
         assertXAConnection(connection);
@@ -544,7 +552,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(connection);
         connection.close();
 
-        connection = cf.createXAConnection();
+        connection = ((XAConnectionFactory)cf).createXAConnection();
 
         assertXAConnection(connection);
 
@@ -566,14 +574,17 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         final byte[] bs = baos.toByteArray();
 
         return new Xid() {
+            @Override
             public int getFormatId() {
                 return 86;
             }
 
+            @Override
             public byte[] getGlobalTransactionId() {
                 return bs;
             }
 
+            @Override
             public byte[] getBranchQualifier() {
                 return bs;
             }
