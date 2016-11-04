@@ -237,7 +237,11 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
         }
 
         LOG.trace("WS Proxy sending string of size {} out", data.length());
-        session.getRemote().sendString(data);
+        try {
+            session.getRemote().sendStringByFuture(data).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw IOExceptionSupport.create(e);
+        }
     }
 
     @Override
@@ -253,7 +257,11 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
 
         LOG.trace("WS Proxy sending {} bytes out", data.remaining());
         int limit = data.limit();
-        session.getRemote().sendBytes(data);
+        try {
+            session.getRemote().sendBytesByFuture(data).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw IOExceptionSupport.create(e);
+        }
 
         // Reset back to original limit and move position to match limit indicating
         // that we read everything, the websocket sender clears the passed buffer
@@ -266,5 +274,9 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
 
     private boolean transportStartedAtLeastOnce() {
         return socketTransportStarted.getCount() == 0;
+    }
+
+    private static int getDefaultSendTimeOut() {
+        return Integer.getInteger("org.apache.activemq.transport.ws.WSTransportProxy.sendTimeout", 30);
     }
 }
