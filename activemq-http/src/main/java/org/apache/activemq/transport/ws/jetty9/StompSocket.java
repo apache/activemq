@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.ws.AbstractStompSocket;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.slf4j.Logger;
@@ -44,8 +45,12 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
 
     @Override
     public void sendToStomp(StompFrame command) throws IOException {
-        //Send async - do we need to wait for the future to complete?
-        session.getRemote().sendStringByFuture(command.format());
+        try {
+            //timeout after a period of time so we don't wait forever and hold the protocol lock
+            session.getRemote().sendStringByFuture(command.format()).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw IOExceptionSupport.create(e);
+        }
     }
 
     @Override
@@ -89,5 +94,9 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     @Override
     public void onWebSocketText(String data) {
         processStompFrame(data);
+    }
+
+    private static int getDefaultSendTimeOut() {
+        return Integer.getInteger("org.apache.activemq.transport.ws.StompSocket.sendTimeout", 30);
     }
 }

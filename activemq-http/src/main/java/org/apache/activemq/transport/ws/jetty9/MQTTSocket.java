@@ -46,7 +46,13 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
     @Override
     public void sendToMQTT(MQTTFrame command) throws IOException {
         ByteSequence bytes = wireFormat.marshal(command);
-        session.getRemote().sendBytes(ByteBuffer.wrap(bytes.getData(), 0, bytes.getLength()));
+        try {
+            //timeout after a period of time so we don't wait forever and hold the protocol lock
+            session.getRemote().sendBytesByFuture(
+                    ByteBuffer.wrap(bytes.getData(), 0, bytes.getLength())).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw IOExceptionSupport.create(e);
+        }
     }
 
     @Override
@@ -116,5 +122,9 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
 
     @Override
     public void onWebSocketText(String arg0) {
+    }
+
+    private static int getDefaultSendTimeOut() {
+        return Integer.getInteger("org.apache.activemq.transport.ws.MQTTSocket.sendTimeout", 30);
     }
 }
