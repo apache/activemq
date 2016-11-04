@@ -683,7 +683,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void isFull(ConnectionContext context, Destination destination, Usage usage) {
+    public void isFull(ConnectionContext context, Destination destination, Usage<?> usage) {
         super.isFull(context, destination, usage);
         if (AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination()) == false) {
             try {
