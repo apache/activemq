@@ -146,7 +146,7 @@ public interface Region extends Service {
      * 
      * @return a set of matching destination objects.
      */
-    Set <Destination>getDestinations(ActiveMQDestination destination);
+    Set<Destination> getDestinations(ActiveMQDestination destination);
     
     void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control);
 

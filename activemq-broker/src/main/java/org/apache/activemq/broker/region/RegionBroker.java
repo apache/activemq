@@ -161,15 +161,6 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
-    @Override
-    @SuppressWarnings("rawtypes")
-    public Broker getAdaptor(Class type) {
-        if (type.isInstance(this)) {
-            return this;
-        }
-        return null;
-    }
-
     public Region getQueueRegion() {
         return queueRegion;
     }
