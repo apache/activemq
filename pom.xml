@@ -95,6 +95,7 @@
     <leveldbjni-version>1.8</leveldbjni-version>
     <log4j-version>1.2.17</log4j-version>
     <mockito-version>1.10.19</mockito-version>
+    <powermock-version>1.6.5</powermock-version>
     <mqtt-client-version>1.13</mqtt-client-version>
     <openjpa-version>1.2.0</openjpa-version>
     <org-apache-derby-version>10.11.1.1</org-apache-derby-version>
@@ -1012,6 +1013,30 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito-version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-core</artifactId>
+        <version>${powermock-version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-module-junit4</artifactId>
+        <version>${powermock-version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-mockito</artifactId>
+        <version>${powermock-version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-mockito-common</artifactId>
+        <version>${powermock-version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
