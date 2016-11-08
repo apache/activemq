@@ -17,6 +17,7 @@
 package org.apache.activemq.store.kahadb.disk.journal;
 
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -53,6 +54,40 @@ public class PreallocationJournalTest  {
     @Test
     public void testZerosPreallocation() throws Exception {
         executeTest("zeros");
+    }
+
+    @Test
+    public void testZerosLoop() throws Exception {
+        Random rand = new Random();
+        int randInt = rand.nextInt(100);
+        File dataDirectory = new File("./target/activemq-data/kahadb" + randInt);
+
+        KahaDBStore store = new KahaDBStore();
+        store.setJournalMaxFileLength(5*1024*1024);
+        store.deleteAllMessages();
+        store.setDirectory(dataDirectory);
+        store.setPreallocationStrategy("zeros");
+        store.start();
+
+        final File journalLog = new File(dataDirectory, "db-1.log");
+        assertTrue("file exists", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return journalLog.exists();
+            }
+        }));
+
+
+        KahaTraceCommand traceCommand = new KahaTraceCommand();
+        traceCommand.setMessage(new String(new byte[2*1024*1024]));
+        Location location = null;
+        for (int i=0; i<20; i++) {
+            location = store.store(traceCommand);
+        }
+        LOG.info("Last location:" + location);
+
+        LOG.info("Store journal files:" + store.getJournal().getFiles().size());
+
     }
 
     private void executeTest(String preallocationStrategy)throws Exception {
