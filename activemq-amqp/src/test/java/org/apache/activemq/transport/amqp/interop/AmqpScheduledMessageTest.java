@@ -18,6 +18,7 @@ package org.apache.activemq.transport.amqp.interop;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -171,6 +172,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         assertEquals(0, brokerService.getAdminView().getQueues().length);
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
 
         // Get the Queue View early to avoid racing the delivery.
         assertEquals(1, brokerService.getAdminView().getQueues().length);
@@ -184,19 +186,27 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         sender.send(message);
         sender.close();
 
+        receiver.flow(1);
+
         // Read the message with short timeout, shouldn't get it.
         try {
-            readMessages(getTestName(), 1, false, 1000);
+            assertNull(receiver.receive(1, TimeUnit.SECONDS));
             fail("Should not read the message");
         } catch (Throwable ex) {
         }
 
         // Read the message with long timeout, should get it.
+        AmqpMessage delivered = null;
         try {
-            readMessages(getTestName(), 1, false, 10000);
+            delivered = receiver.receive(10, TimeUnit.SECONDS);
         } catch (Throwable ex) {
             fail("Should read the message");
         }
+
+        assertNotNull(delivered);
+        Long msgDeliveryTime = (Long) delivered.getMessageAnnotation("x-opt-delivery-delay");
+        assertNotNull(msgDeliveryTime);
+        assertEquals(delay, msgDeliveryTime.longValue());
 
         connection.close();
     }
