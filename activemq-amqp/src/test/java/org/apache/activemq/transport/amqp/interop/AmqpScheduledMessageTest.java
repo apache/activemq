@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
@@ -165,6 +166,8 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
 
     @Test
     public void testScheduleWithDelay() throws Exception {
+        final long DELAY = 5000;
+
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
@@ -179,9 +182,10 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         final QueueViewMBean queueView = getProxyToQueue(getTestName());
         assertNotNull(queueView);
 
+        long sendTime = System.currentTimeMillis();
+
         AmqpMessage message = new AmqpMessage();
-        long delay = 5000;
-        message.setMessageAnnotation("x-opt-delivery-delay", delay);
+        message.setMessageAnnotation("x-opt-delivery-delay", DELAY);
         message.setText("Test-Message");
         sender.send(message);
         sender.close();
@@ -203,10 +207,17 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
             fail("Should read the message");
         }
 
+        long receivedTime = System.currentTimeMillis();
+
         assertNotNull(delivered);
         Long msgDeliveryTime = (Long) delivered.getMessageAnnotation("x-opt-delivery-delay");
         assertNotNull(msgDeliveryTime);
-        assertEquals(delay, msgDeliveryTime.longValue());
+        assertEquals(DELAY, msgDeliveryTime.longValue());
+
+        long totalDelay = receivedTime - sendTime;
+        LOG.debug("Sent at: {}, received at: {} ", new Date(sendTime), new Date(receivedTime), totalDelay);
+
+        assertTrue("Delay not as expected: " + totalDelay, receivedTime - sendTime >= DELAY);
 
         connection.close();
     }
