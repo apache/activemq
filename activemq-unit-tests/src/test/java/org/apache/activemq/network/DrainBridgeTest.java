@@ -18,6 +18,8 @@ package org.apache.activemq.network;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 
@@ -45,6 +47,17 @@ public class DrainBridgeTest {
         NetworkConnector drainingNetworkConnector = drainingBroker.addNetworkConnector("static:(" + target.getTransportConnectorByScheme("tcp").getPublishableConnectString() + ")");
         drainingNetworkConnector.setStaticBridge(true);
         drainingNetworkConnector.setStaticallyIncludedDestinations(Arrays.asList(new ActiveMQDestination[]{new ActiveMQQueue("*")}));
+
+        // ensure replay back to the origin is allowed
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setExpireMessagesPeriod(0);
+        ConditionalNetworkBridgeFilterFactory filterFactory = new ConditionalNetworkBridgeFilterFactory();
+        filterFactory.setReplayWhenNoConsumers(true);
+        defaultEntry.setNetworkBridgeFilterFactory(filterFactory);
+        policyMap.setDefaultEntry(defaultEntry); // applies to all destinations
+        drainingBroker.setDestinationPolicy(policyMap);
+        
         drainingBroker.start();
 
         System.out.println("Local count: " + drainingBroker.getAdminView().getTotalMessageCount() + ", target count:" + target.getAdminView().getTotalMessageCount());
