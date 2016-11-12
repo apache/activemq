@@ -130,7 +130,7 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         waitForProtocolDetectionFinish(future, in.getReadSize());
         in.stop();
 
-        initBuffer = new InitBuffer(in.getReadSize().get(), ByteBuffer.allocate(in.getReadData().length));
+        InitBuffer initBuffer = new InitBuffer(in.getReadSize().get(), ByteBuffer.allocate(in.getReadData().length));
         initBuffer.buffer.put(in.getReadData());
 
         ProtocolInfo protocolInfo = detectProtocol(in.getReadData());
