@@ -34,6 +34,7 @@ import org.apache.activemq.transport.auto.AutoTcpTransportServer;
 import org.apache.activemq.transport.auto.AutoTransportUtils;
 import org.apache.activemq.transport.nio.NIOTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -58,13 +59,13 @@ public class AutoNioTransportFactory extends NIOTransportFactory implements Brok
     protected AutoTcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new AutoTcpTransportServer(this, location, serverSocketFactory, brokerService, enabledProtocols) {
             @Override
-            protected TcpTransport createTransport(Socket socket, WireFormat format, TcpTransportFactory detectedTransportFactory) throws IOException {
+            protected TcpTransport createTransport(Socket socket, WireFormat format, TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
                 TcpTransport nioTransport = null;
                 if (detectedTransportFactory.getClass().equals(NIOTransportFactory.class)) {
-                    nioTransport = new AutoNIOTransport(format, socket,this.initBuffer);
+                    nioTransport = new AutoNIOTransport(format, socket, initBuffer);
                 } else {
                     nioTransport = detectedTransportFactory.createTransport(
-                            format, socket, this.initBuffer);
+                            format, socket, initBuffer);
                 }
 
                 if (format.getClass().toString().contains("MQTT")) {

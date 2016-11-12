@@ -222,12 +222,6 @@ public class AutoTcpTransportServer extends TcpTransportServer {
 
     protected final ThreadPoolExecutor service;
 
-
-    /**
-     * This holds the initial buffer that has been read to detect the protocol.
-     */
-    public InitBuffer initBuffer;
-
     @Override
     protected void handleSocket(final Socket socket) {
         final AutoTcpTransportServer server = this;
@@ -272,7 +266,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         data.flip();
         ProtocolInfo protocolInfo = detectProtocol(data.array());
 
-        initBuffer = new InitBuffer(readBytes.get(), ByteBuffer.allocate(readBytes.get()));
+        InitBuffer initBuffer = new InitBuffer(readBytes.get(), ByteBuffer.allocate(readBytes.get()));
         initBuffer.buffer.put(data.array());
 
         if (protocolInfo.detectedTransportFactory instanceof BrokerServiceAware) {
@@ -280,7 +274,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         }
 
         WireFormat format = protocolInfo.detectedWireFormatFactory.createWireFormat();
-        Transport transport = createTransport(socket, format, protocolInfo.detectedTransportFactory);
+        Transport transport = createTransport(socket, format, protocolInfo.detectedTransportFactory, initBuffer);
 
         return new TransportInfo(format, transport, protocolInfo.detectedTransportFactory);
     }
@@ -299,11 +293,6 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         }
     }
 
-    @Override
-    protected TcpTransport createTransport(Socket socket, WireFormat format) throws IOException {
-        return new TcpTransport(format, socket, this.initBuffer);
-    }
-
     /**
      * @param socket
      * @param format
@@ -311,8 +300,8 @@ public class AutoTcpTransportServer extends TcpTransportServer {
      * @return
      */
     protected TcpTransport createTransport(Socket socket, WireFormat format,
-            TcpTransportFactory detectedTransportFactory) throws IOException {
-        return createTransport(socket, format);
+            TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
+        return new TcpTransport(format, socket, initBuffer);
     }
 
     public void setWireFormatOptions(Map<String, Map<String, Object>> wireFormatOptions) {

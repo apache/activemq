@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -33,15 +35,21 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class AutoTransportMaxConnectionsTest {
+public class AutoTransportConnectionsTest {
+
+    @Rule
+    public Timeout globalTimeout = new Timeout(60, TimeUnit.SECONDS);
 
     public static final String KEYSTORE_TYPE = "jks";
     public static final String PASSWORD = "password";
@@ -55,7 +63,7 @@ public class AutoTransportMaxConnectionsTest {
     private TransportConnector connector;
     private final String transportType;
 
-    @Parameters
+    @Parameters(name="transport={0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
                 {"auto"},
@@ -66,7 +74,7 @@ public class AutoTransportMaxConnectionsTest {
     }
 
 
-    public AutoTransportMaxConnectionsTest(String transportType) {
+    public AutoTransportConnectionsTest(String transportType) {
         super();
         this.transportType = transportType;
     }
@@ -84,7 +92,18 @@ public class AutoTransportMaxConnectionsTest {
         service = new BrokerService();
         service.setPersistent(false);
         service.setUseJmx(false);
-        connector = service.addConnector(transportType + "://0.0.0.0:0?maxConnectionThreadPoolSize=10&maximumConnections="+maxConnections);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        executor.shutdown();
+
+        service.stop();
+        service.waitUntilStopped();
+    }
+
+    public void configureConnectorAndStart(String bindAddress) throws Exception {
+        connector = service.addConnector(bindAddress);
         connectionUri = connector.getPublishableConnectString();
         service.start();
         service.waitUntilStarted();
@@ -94,8 +113,10 @@ public class AutoTransportMaxConnectionsTest {
         return new ActiveMQConnectionFactory(connectionUri);
     }
 
-    @Test(timeout=60000)
+    @Test
     public void testMaxConnectionControl() throws Exception {
+        configureConnectorAndStart(transportType + "://0.0.0.0:0?maxConnectionThreadPoolSize=10&maximumConnections="+maxConnections);
+
         final ConnectionFactory cf = createConnectionFactory();
         final CountDownLatch startupLatch = new CountDownLatch(1);
 
@@ -113,7 +134,6 @@ public class AutoTransportMaxConnectionsTest {
                         conn = cf.createConnection();
                         conn.start();
                     } catch (Exception e) {
-                        //JmsUtils.closeConnection(conn);
                     }
                 }
             });
@@ -141,11 +161,48 @@ public class AutoTransportMaxConnectionsTest {
 
     }
 
-    @After
-    public void tearDown() throws Exception {
-        executor.shutdown();
+    @Test
+    public void testConcurrentConnections() throws Exception {
+        configureConnectorAndStart(transportType + "://0.0.0.0:0");
 
-        service.stop();
-        service.waitUntilStopped();
+        int connectionAttempts = 50;
+        ConnectionFactory factory = createConnectionFactory();
+        final AtomicInteger connectedCount = new AtomicInteger(0);
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        try {
+            for (int i = 0; i < connectionAttempts; i++) {
+                executor.execute(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            latch.await();
+                            Connection con = factory.createConnection();
+                            con.start();
+                            connectedCount.incrementAndGet();
+                        } catch (Exception e) {
+                            //print for debugging but don't fail it might just be the transport stopping
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+            }
+            latch.countDown();
+
+            //Make sure all attempts connected without error
+            assertTrue(Wait.waitFor(new Condition() {
+
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return connectedCount.get() == connectionAttempts;
+                }
+            }));
+
+        } catch (Exception e) {
+            //print for debugging but don't fail it might just be the transport stopping
+            e.printStackTrace();
+        }
     }
 }

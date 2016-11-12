@@ -31,6 +31,7 @@ import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -88,17 +89,10 @@ public class AutoTcpTransportFactory extends TcpTransportFactory implements Brok
         AutoTcpTransportServer server = new AutoTcpTransportServer(this, location, serverSocketFactory, brokerService, enabledProtocols) {
 
             @Override
-            protected TcpTransport createTransport(Socket socket, WireFormat format)
-                    throws IOException {
-                setDefaultLinkStealing(format, this);
-                return super.createTransport(socket, format);
-            }
-
-            @Override
             protected TcpTransport createTransport(Socket socket, WireFormat format,
-                    TcpTransportFactory detectedTransportFactory) throws IOException {
+                    TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
                 setDefaultLinkStealing(format, this);
-                return super.createTransport(socket, format, detectedTransportFactory);
+                return super.createTransport(socket, format, detectedTransportFactory, initBuffer);
             }
 
         };

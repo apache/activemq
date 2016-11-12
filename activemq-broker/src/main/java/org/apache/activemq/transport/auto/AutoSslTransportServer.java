@@ -29,6 +29,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -120,9 +121,9 @@ public class AutoSslTransportServer extends AutoTcpTransportServer {
      */
     @Override
     protected TcpTransport createTransport(Socket socket, WireFormat format,
-            TcpTransportFactory detectedTransportFactory) throws IOException {
+            TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
 
-        return detectedTransportFactory.createTransport(format, socket, this.initBuffer);
+        return detectedTransportFactory.createTransport(format, socket, initBuffer);
     }
 
     @Override
