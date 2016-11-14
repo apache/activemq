@@ -22,6 +22,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 
 import javax.jms.Connection;
 import javax.jms.MessageProducer;
@@ -46,7 +47,7 @@ public class DrainBridgeTest {
         // add the draining bridge that subscribes to all queues and forwards on start - irrespective of demand
         NetworkConnector drainingNetworkConnector = drainingBroker.addNetworkConnector("static:(" + target.getTransportConnectorByScheme("tcp").getPublishableConnectString() + ")");
         drainingNetworkConnector.setStaticBridge(true);
-        drainingNetworkConnector.setStaticallyIncludedDestinations(Arrays.asList(new ActiveMQDestination[]{new ActiveMQQueue("*")}));
+        drainingNetworkConnector.setStaticallyIncludedDestinations(Arrays.asList(new ActiveMQDestination[]{new ActiveMQQueue(">")}));
 
         // ensure replay back to the origin is allowed
         PolicyMap policyMap = new PolicyMap();
@@ -65,9 +66,12 @@ public class DrainBridgeTest {
         assertEquals("local messages", 20, drainingBroker.getAdminView().getTotalMessageCount());
         assertEquals("no remote messages", 0, target.getAdminView().getTotalMessageCount());
 
-        while (drainingBroker.getAdminView().getTotalMessageCount() > 0) {
-            TimeUnit.SECONDS.sleep(5);
-        }
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return drainingBroker.getAdminView().getTotalMessageCount() == 0l;
+            }
+        });
 
         assertEquals("no local messages", 0, drainingBroker.getAdminView().getTotalMessageCount());
         assertEquals("remote messages", 20, target.getAdminView().getTotalMessageCount());
@@ -95,7 +99,7 @@ public class DrainBridgeTest {
         conn.start();
         Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TextMessage msg = session.createTextMessage("This is a message.");
-        MessageProducer producer = session.createProducer(new ActiveMQQueue("Foo,Bar"));
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("Q.Foo,Bar"));
         for (int i = 0; i < 10; i++) {
             producer.send(msg);
         }
