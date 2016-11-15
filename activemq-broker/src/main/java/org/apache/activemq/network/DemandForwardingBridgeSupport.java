@@ -221,6 +221,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 @Override
                 public void onException(IOException error) {
                     if (!futureLocalBrokerInfo.isDone()) {
+                        LOG.info("error with pending local brokerInfo on: " + localBroker, error);
                         futureLocalBrokerInfo.cancel(true);
                         return;
                     }
@@ -239,6 +240,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 @Override
                 public void onException(IOException error) {
                     if (!futureRemoteBrokerInfo.isDone()) {
+                        LOG.info("error with pending remote brokerInfo on: " + remoteBroker, error);
                         futureRemoteBrokerInfo.cancel(true);
                         return;
                     }
