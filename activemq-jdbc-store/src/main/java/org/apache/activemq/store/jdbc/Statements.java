@@ -95,7 +95,7 @@ public class Statements {
         if (createSchemaStatements == null) {
             createSchemaStatements = new String[] {
                 "CREATE TABLE " + getFullMessageTableName() + "(" + "ID " + sequenceDataType + " NOT NULL"
-                    + ", CONTAINER " + containerNameDataType + ", MSGID_PROD " + msgIdDataType + ", MSGID_SEQ "
+                    + ", CONTAINER " + containerNameDataType + " NOT NULL, MSGID_PROD " + msgIdDataType + ", MSGID_SEQ "
                     + sequenceDataType + ", EXPIRATION " + longDataType + ", MSG "
                     + (useExternalMessageReferences ? stringIdDataType : binaryDataType)
                     + ", PRIMARY KEY ( ID ) )",
@@ -390,7 +390,7 @@ public class Statements {
     public String getFindAllDestinationsStatement() {
         if (findAllDestinationsStatement == null) {
             findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullMessageTableName()
-                    + " UNION SELECT DISTINCT CONTAINER FROM "  + getFullAckTableName();
+                    + " WHERE CONTAINER IS NOT NULL UNION SELECT DISTINCT CONTAINER FROM " + getFullAckTableName();
         }
         return findAllDestinationsStatement;
     }
