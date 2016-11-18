@@ -230,7 +230,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         assertEquals(totalCount, proxy.getQueueSize());
 
         // Consume again..check we receive all the messages.
-        Set<Integer> messageNumbers = new HashSet<Integer>();
+        Set<Integer> messageNumbers = new HashSet<>();
         for (int i = 1; i <= totalCount; i++) {
             messageNumbers.add(i);
         }
@@ -644,7 +644,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     public void testDurableConsumerAsync() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
         final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<Message> received = new AtomicReference<Message>();
+        final AtomicReference<Message> received = new AtomicReference<>();
         String durableClientId = getDestinationName() + "-ClientId";
 
         connection = createConnection(durableClientId);
@@ -693,7 +693,7 @@ public class JMSClientTest extends JMSClientTestSupport {
             message.setText("hello");
             producer.send(message);
 
-            final AtomicReference<Message> msg = new AtomicReference<Message>();
+            final AtomicReference<Message> msg = new AtomicReference<>();
             assertTrue(Wait.waitFor(new Wait.Condition() {
 
                 @Override
@@ -712,7 +712,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     public void testTopicConsumerAsync() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
         final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<Message> received = new AtomicReference<Message>();
+        final AtomicReference<Message> received = new AtomicReference<>();
 
         connection = createConnection();
         {
@@ -760,7 +760,7 @@ public class JMSClientTest extends JMSClientTestSupport {
             message.setText("hello");
             producer.send(message);
 
-            final AtomicReference<Message> msg = new AtomicReference<Message>();
+            final AtomicReference<Message> msg = new AtomicReference<>();
             assertTrue(Wait.waitFor(new Wait.Condition() {
 
                 @Override
@@ -782,7 +782,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         final ConnectorViewMBean connector = getProxyToConnectionView(getTargetConnectorName());
         LOG.info("Current number of Connections is: {}", connector.connectionCount());
 
-        ArrayList<Connection> connections = new ArrayList<Connection>();
+        ArrayList<Connection> connections = new ArrayList<>();
 
         for (int i = 0; i < 10; i++) {
             connections.add(createConnection(null));
@@ -1264,5 +1264,70 @@ public class JMSClientTest extends JMSClientTestSupport {
             assertNotNull(message);
             assertFalse(message.getJMSRedelivered());
         }
+    }
+
+    @Test(timeout = 30000)
+    public void testProduceAndConsumeLargeNumbersOfTopicMessagesClientAck() throws Exception {
+        doTestProduceAndConsumeLargeNumbersOfMessages(true, Session.CLIENT_ACKNOWLEDGE);
+    }
+
+    @Test(timeout = 30000)
+    public void testProduceAndConsumeLargeNumbersOfQueueMessagesClientAck() throws Exception {
+        doTestProduceAndConsumeLargeNumbersOfMessages(false, Session.CLIENT_ACKNOWLEDGE);
+    }
+
+    @Test(timeout = 30000)
+    public void testProduceAndConsumeLargeNumbersOfTopicMessagesAutoAck() throws Exception {
+        doTestProduceAndConsumeLargeNumbersOfMessages(true, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    @Test(timeout = 30000)
+    public void testProduceAndConsumeLargeNumbersOfQueueMessagesAutoAck() throws Exception {
+        doTestProduceAndConsumeLargeNumbersOfMessages(false, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    public void doTestProduceAndConsumeLargeNumbersOfMessages(boolean topic, int ackMode) throws Exception {
+
+        final int MSG_COUNT = 1000;
+        final CountDownLatch done = new CountDownLatch(MSG_COUNT);
+
+        JmsConnectionFactory factory = new JmsConnectionFactory(getAmqpURI());
+        factory.setForceSyncSend(true);
+
+        connection = factory.createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, ackMode);
+        final Destination destination;
+        if (topic) {
+            destination = session.createTopic(getDestinationName());
+        } else {
+            destination = session.createQueue(getDestinationName());
+        }
+
+        MessageConsumer consumer = session.createConsumer(destination);
+        consumer.setMessageListener(new MessageListener() {
+
+            @Override
+            public void onMessage(Message message) {
+                try {
+                    message.acknowledge();
+                    done.countDown();
+                } catch (JMSException ex) {
+                    LOG.info("Caught exception.", ex);
+                }
+            }
+        });
+
+        MessageProducer producer = session.createProducer(destination);
+
+        TextMessage textMessage = session.createTextMessage();
+        textMessage.setText("messageText");
+
+        for (int i = 0; i < MSG_COUNT; i++) {
+            producer.send(textMessage);
+        }
+
+        assertTrue("Did not receive all messages: " + MSG_COUNT, done.await(15, TimeUnit.SECONDS));
     }
 }
