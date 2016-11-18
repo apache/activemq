@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.junit.ActiveMQTestRunner;
 import org.apache.activemq.junit.Repeat;
@@ -268,19 +269,43 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     @Repeat(repetitions = 1)
-    public void testPresettledReceiverReadsAllMessagesInNonFlowBatch() throws Exception {
+    public void testPresettledReceiverReadsAllMessagesInNonFlowBatchQueue() throws Exception {
+        doTestPresettledReceiverReadsAllMessagesInNonFlowBatch(false);
+    }
+
+    @Test(timeout = 60000)
+    @Repeat(repetitions = 1)
+    public void testPresettledReceiverReadsAllMessagesInNonFlowBatchTopic() throws Exception {
+        doTestPresettledReceiverReadsAllMessagesInNonFlowBatch(true);
+    }
+
+    private void doTestPresettledReceiverReadsAllMessagesInNonFlowBatch(boolean topic) throws Exception {
+
+        final String destinationName;
+        if (topic) {
+            destinationName = "topic://" + getTestName();
+        } else {
+            destinationName = "queue://" + getTestName();
+        }
+
         final int MSG_COUNT = 100;
-        sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
-        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), null, false, true);
+        AmqpReceiver receiver = session.createReceiver(destinationName, null, false, true);
 
-        QueueViewMBean queueView = getProxyToQueue(getTestName());
-        assertEquals(MSG_COUNT, queueView.getQueueSize());
-        assertEquals(0, queueView.getDispatchCount());
+        sendMessages(getTestName(), MSG_COUNT, topic);
+
+        final DestinationViewMBean destinationView;
+        if (topic) {
+            destinationView = getProxyToTopic(getTestName());
+        } else {
+            destinationView = getProxyToQueue(getTestName());
+        }
+        assertEquals(MSG_COUNT, destinationView.getEnqueueCount());
+        assertEquals(0, destinationView.getDispatchCount());
 
         receiver.flow(20);
         // consume less that flow
@@ -302,7 +327,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
         receiver.close();
 
-        assertEquals(0, queueView.getQueueSize());
+        assertEquals(0, destinationView.getEnqueueCount() - destinationView.getDequeueCount());
 
         connection.close();
     }
@@ -481,7 +506,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
             }
         });
 
-        Map<Symbol, DescribedType> filters = new HashMap<Symbol, DescribedType>();
+        Map<Symbol, DescribedType> filters = new HashMap<>();
         filters.put(AmqpUnknownFilterType.UNKNOWN_FILTER_NAME, AmqpUnknownFilterType.UNKOWN_FILTER);
 
         Source source = new Source();
