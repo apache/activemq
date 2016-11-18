@@ -165,8 +165,8 @@ public class AutoTransportConnectionsTest {
     public void testConcurrentConnections() throws Exception {
         configureConnectorAndStart(transportType + "://0.0.0.0:0");
 
-        int connectionAttempts = 50;
-        ConnectionFactory factory = createConnectionFactory();
+        final int connectionAttempts = 50;
+        final ConnectionFactory factory = createConnectionFactory();
         final AtomicInteger connectedCount = new AtomicInteger(0);
         final CountDownLatch latch = new CountDownLatch(1);
 
