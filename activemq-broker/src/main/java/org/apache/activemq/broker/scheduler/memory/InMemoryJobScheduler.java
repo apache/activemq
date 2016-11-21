@@ -223,7 +223,8 @@ public class InMemoryJobScheduler implements JobScheduler {
         long startTime = System.currentTimeMillis();
         long executionTime = 0;
         // round startTime - so we can schedule more jobs at the same time
-        startTime = ((startTime + 500) / 1000) * 1000;
+        startTime = ((startTime + 500) / 500) * 500;
+
         if (cronEntry != null && cronEntry.length() > 0) {
             try {
                 executionTime = CronParser.getNextScheduledTime(cronEntry, startTime);
