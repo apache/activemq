@@ -44,7 +44,7 @@ public abstract class Transaction {
     public static final byte PREPARED_STATE = 2; // can go to: 3
     public static final byte FINISHED_STATE = 3;
     boolean committed = false;
-    boolean rollbackOnly = false;
+    Throwable rollackOnlyCause = null;
 
     private final ArrayList<Synchronization> synchronizations = new ArrayList<Synchronization>();
     private byte state = START_STATE;
@@ -111,9 +111,10 @@ public abstract class Transaction {
             throw xae;
         }
 
-        if (rollbackOnly) {
+        if (isRollbackOnly()) {
             XAException xae = newXAException("COMMIT FAILED: Transaction marked rollback only", XAException.XA_RBROLLBACK);
             TransactionRolledBackException transactionRolledBackException = new TransactionRolledBackException(xae.getLocalizedMessage());
+            transactionRolledBackException.initCause(rollackOnlyCause);
             xae.initCause(transactionRolledBackException);
             throw xae;
         }
@@ -215,14 +216,14 @@ public abstract class Transaction {
     }
 
     public void setRollbackOnly(Throwable cause) {
-        if (!rollbackOnly) {
+        if (!isRollbackOnly()) {
             getLog().trace("setting rollback only, cause:", cause);
-            rollbackOnly = true;
+            rollackOnlyCause = cause;
         }
     }
 
     public boolean isRollbackOnly() {
-        return rollbackOnly;
+        return rollackOnlyCause != null;
     }
 
 }
