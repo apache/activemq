@@ -17,6 +17,7 @@
 
 package org.apache.activemq.transport.ws;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -25,13 +26,22 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.Wait;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.client.util.BufferingResponseListener;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.Before;
@@ -57,8 +67,9 @@ public class WSTransportTest extends WSTransportTestSupport {
     private File profileDir;
 
     private String stompUri;
-
     private StompConnection stompConnection = new StompConnection();
+
+    protected final int port = 61623;
 
     @Override
     protected void addAdditionalConnectors(BrokerService service) throws Exception {
@@ -67,7 +78,7 @@ public class WSTransportTest extends WSTransportTestSupport {
 
     @Override
     protected String getWSConnectorURI() {
-        return "ws://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
+        return "ws://127.0.0.1:" + port + "?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
     }
 
     protected Server createWebServer() throws Exception {
@@ -141,6 +152,32 @@ public class WSTransportTest extends WSTransportTestSupport {
     @Test
     public void testBrokerStart() throws Exception {
         assertTrue(broker.isStarted());
+    }
+
+    @Test(timeout=10000)
+    public void testGet() throws Exception {
+        testGet("http://127.0.0.1:" + port, null);
+    }
+
+
+    protected void testGet(final String uri, SslContextFactory
+            sslContextFactory) throws Exception {
+        HttpClient httpClient = sslContextFactory != null ? new HttpClient(sslContextFactory) :
+            new HttpClient(new SslContextFactory());
+        httpClient.start();
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        Request request = httpClient.newRequest(uri).method(HttpMethod.GET);
+        final AtomicInteger status = new AtomicInteger();
+        request.send(new BufferingResponseListener() {
+            @Override
+            public void onComplete(Result result) {
+                status.set(result.getResponse().getStatus());
+                latch.countDown();
+            }
+        });
+        latch.await();
+        assertEquals(HttpStatus.OK_200, status.get());
     }
 
     @Ignore

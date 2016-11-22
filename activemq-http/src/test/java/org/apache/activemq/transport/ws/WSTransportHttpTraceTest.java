@@ -20,14 +20,13 @@ package org.apache.activemq.transport.ws;
 import java.util.Collection;
 
 import org.apache.activemq.transport.http.HttpTraceTestSupport;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class WSTransportHttpTraceTest extends WSTransportTest {
+public class WSTransportHttpTraceTest extends WSTransportTestSupport {
 
     protected String enableTraceParam;
     protected int expectedStatus;
@@ -58,9 +57,4 @@ public class WSTransportHttpTraceTest extends WSTransportTest {
         HttpTraceTestSupport.testHttpTraceEnabled("http://127.0.0.1:61623", expectedStatus, null);
     }
 
-    @Override
-    @Ignore
-    @Test
-    public void testBrokerStart() throws Exception {
-    }
 }
