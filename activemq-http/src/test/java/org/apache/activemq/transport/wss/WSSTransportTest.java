@@ -21,6 +21,8 @@ import org.apache.activemq.transport.ws.WSTransportTest;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.junit.Test;
 
 public class WSSTransportTest extends WSTransportTest {
     @Override
@@ -38,12 +40,21 @@ public class WSSTransportTest extends WSTransportTest {
 
     @Override
     protected String getWSConnectorURI() {
-        return "wss://localhost:61623";
+        return "wss://localhost:" + port;
+    }
+
+    @Override
+    @Test(timeout=10000)
+    public void testGet() throws Exception {
+        SslContextFactory factory = new SslContextFactory();
+        factory.setSslContext(broker.getSslContext().getSSLContext());
+
+        testGet("https://127.0.0.1:" + port, factory);
     }
 
     @Override
     protected String getTestURI() {
-        int port = getProxyPort();
-        return "https://localhost:" + port + "/websocket.html#wss://localhost:61623";
+        int proxyPort = getProxyPort();
+        return "https://localhost:" + proxyPort + "/websocket.html#wss://localhost:" + port;
     }
 }

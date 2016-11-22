@@ -85,7 +85,7 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        getServletContext().getNamedDispatcher("default").forward(request, response);
+        //return empty response - AMQ-6491
     }
 
     @Override
