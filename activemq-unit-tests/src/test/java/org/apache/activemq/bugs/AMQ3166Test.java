@@ -51,7 +51,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class   {
+public class AMQ3166Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ3166Test.class);
 
