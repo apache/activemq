@@ -70,7 +70,7 @@ public class RedeliveryPluginHeaderTest extends TestCase {
         //pushed message to broker
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
-                transportURL + "?trace=true&jms.redeliveryPolicy.maximumRedeliveries=0");
+                transportURL + "?trace=true&jms.redeliveryPolicy.maximumRedeliveries=0&jms.redeliveryPolicy.preDispatchCheck=true");
 
         Connection connection = factory.createConnection();
         connection.start();
