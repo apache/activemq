@@ -120,7 +120,7 @@ public class StatisticsBroker extends BrokerFilter {
                         statsMessage.setLong("inflightCount", stats.getInflight().getCount());
                         statsMessage.setLong("messagesCached", stats.getMessagesCached().getCount());
                         // we are okay with the size without decimals so cast to long
-                        statsMessage.setLong("averageMessageSize", (long) stats.getMessageSize().getAveragePerSecond());
+                        statsMessage.setLong("averageMessageSize", (long) stats.getMessageSize().getAverageSize());
                         statsMessage.setInt("memoryPercentUsage", dest.getMemoryUsage().getPercentUsage());
                         statsMessage.setLong("memoryUsage", dest.getMemoryUsage().getUsage());
                         statsMessage.setLong("memoryLimit", dest.getMemoryUsage().getLimit());
