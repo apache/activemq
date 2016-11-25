@@ -779,7 +779,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
-        return "KahaDBPersistenceAdapter[" + path + "]";
+        return "KahaDBPersistenceAdapter[" + path + (getIndexDirectory() != null ? ",Index:" + getIndexDirectory().getAbsolutePath() : "") +  "]";
     }
 
     @Override

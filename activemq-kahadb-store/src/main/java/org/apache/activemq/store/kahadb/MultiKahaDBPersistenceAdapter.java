@@ -64,6 +64,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.activemq.store.kahadb.MessageDatabase.DEFAULT_DIRECTORY;
+
 /**
  * An implementation of {@link org.apache.activemq.store.PersistenceAdapter}  that supports
  * distribution of destinations across multiple kahaDB persistence adapters
@@ -150,7 +152,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         destinationMap.setEntries(entries);
     }
 
-    private String nameFromDestinationFilter(ActiveMQDestination destination) {
+    public static String nameFromDestinationFilter(ActiveMQDestination destination) {
         if (destination.getQualifiedName().length() > IOHelper.getMaxFileNameLength()) {
             LOG.warn("Destination name is longer than 'MaximumFileNameLength' system property, " +
                      "potential problem with recovery can result from name truncation.");
@@ -242,6 +244,20 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         }
         transactionStore.deleteAllMessages();
         IOHelper.deleteChildren(getDirectory());
+        for (Object o : destinationMap.get(new AnyDestination(new ActiveMQDestination[]{new ActiveMQQueue(">"), new ActiveMQTopic(">")}))) {
+            if (o instanceof FilteredKahaDBPersistenceAdapter) {
+                FilteredKahaDBPersistenceAdapter filteredKahaDBPersistenceAdapter = (FilteredKahaDBPersistenceAdapter) o;
+                if (filteredKahaDBPersistenceAdapter.getPersistenceAdapter().getDirectory() != DEFAULT_DIRECTORY) {
+                    IOHelper.deleteChildren(filteredKahaDBPersistenceAdapter.getPersistenceAdapter().getDirectory());
+                }
+                if (filteredKahaDBPersistenceAdapter.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
+                    KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) filteredKahaDBPersistenceAdapter.getPersistenceAdapter();
+                    if (kahaDBPersistenceAdapter.getIndexDirectory() != null) {
+                        IOHelper.deleteChildren(kahaDBPersistenceAdapter.getIndexDirectory());
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -394,12 +410,28 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         PersistenceAdapter adapter = kahaDBFromTemplate(template);
         configureAdapter(adapter);
         configureDirectory(adapter, destinationName);
+        configureIndexDirectory(adapter, template, destinationName);
         return adapter;
+    }
+
+    private void configureIndexDirectory(PersistenceAdapter adapter, PersistenceAdapter template, String destinationName) {
+        if (template instanceof KahaDBPersistenceAdapter) {
+            KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) template;
+            if (kahaDBPersistenceAdapter.getIndexDirectory() != null) {
+                if (adapter instanceof KahaDBPersistenceAdapter) {
+                    File directory = kahaDBPersistenceAdapter.getIndexDirectory();
+                    if (destinationName != null) {
+                        directory = new File(directory, destinationName);
+                    }
+                    ((KahaDBPersistenceAdapter)adapter).setIndexDirectory(directory);
+                }
+            }
+        }
     }
 
     private void configureDirectory(PersistenceAdapter adapter, String fileName) {
         File directory = null;
-        File defaultDir = MessageDatabase.DEFAULT_DIRECTORY;
+        File defaultDir = DEFAULT_DIRECTORY;
         try {
             defaultDir = adapter.getClass().newInstance().getDirectory();
         } catch (Exception e) {
