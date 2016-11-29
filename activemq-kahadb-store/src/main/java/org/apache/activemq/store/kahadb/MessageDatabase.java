@@ -935,11 +935,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (!missingPredicates.isEmpty()) {
             for (Entry<String, StoredDestination> sdEntry : storedDestinations.entrySet()) {
                 final StoredDestination sd = sdEntry.getValue();
-                final ArrayList<Long> matches = new ArrayList<Long>();
+                final LinkedHashMap<Long, Location> matches = new LinkedHashMap<Long, Location>();
                 sd.locationIndex.visit(tx, new BTreeVisitor.OrVisitor<Location, Long>(missingPredicates) {
                     @Override
                     protected void matched(Location key, Long value) {
-                        matches.add(value);
+                        matches.put(value, key);
                     }
                 });
 
@@ -950,7 +950,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     // we error out.
                     if( ignoreMissingJournalfiles ) {
                         // Update the index to remove the references to the missing data
-                        for (Long sequenceId : matches) {
+                        for (Long sequenceId : matches.keySet()) {
                             MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
                             sd.locationIndex.remove(tx, keys.location);
                             sd.messageIdIndex.remove(tx, keys.messageId);
@@ -960,7 +960,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             // TODO: do we need to modify the ack positions for the pub sub case?
                         }
                     } else {
-                        LOG.error("[" + sdEntry.getKey() + "] references corrupt locations. " + matches.size() + " messages affected.");
+                        LOG.error("[" + sdEntry.getKey() + "] references corrupt locations: " + matches);
                         throw new IOException("Detected missing/corrupt journal files referenced by:[" + sdEntry.getKey() + "] " +matches.size()+" messages affected.");
                     }
                 }

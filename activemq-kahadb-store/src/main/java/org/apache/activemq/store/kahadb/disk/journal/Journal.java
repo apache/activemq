@@ -65,8 +65,6 @@ public class Journal {
     public static final String CALLER_BUFFER_APPENDER = "org.apache.kahadb.journal.CALLER_BUFFER_APPENDER";
     public static final boolean callerBufferAppender = Boolean.parseBoolean(System.getProperty(CALLER_BUFFER_APPENDER, "false"));
 
-    private static final int MAX_BATCH_SIZE = 32*1024*1024;
-
     private static final int PREALLOC_CHUNK_SIZE = 1024*1024;
 
     // ITEM_HEAD_SPACE = length + type+ reserved space + SOR
@@ -570,7 +568,7 @@ public class Journal {
             }
 
             int size = controlIs.readInt();
-            if (size > MAX_BATCH_SIZE) {
+            if (size < 0 || size > Integer.MAX_VALUE - (BATCH_CONTROL_RECORD_SIZE + EOF_RECORD.length)) {
                 return -1;
             }
 
