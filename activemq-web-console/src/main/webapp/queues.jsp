@@ -24,6 +24,9 @@
 
 <%@include file="decorators/header.jsp" %>
 
+<table>
+<tr>
+<td>
 <div>
 <form action="createDestination.action" method="post">
     <input type="hidden" name="JMSDestinationType" value="queue"/>
@@ -35,9 +38,21 @@
     <input type="submit" value="Create"/>
 </form>
 </div>
+</td>
 
+<td>
+<div>
+<form action="queues.jsp" method="get">
+    <label name="destination">Queue Name Filter</label>
+    <input type="text" name="QueueFilter" value="${param.QueueFilter}"/>
 
-<h2>Queues</h2>
+    <input type="submit" value="Filter"/>
+</form>
+</div>
+</tr>
+</table>
+
+<h2>Queues:<c:if test="${null != param.QueueFilter && param.QueueFilter != ''}"> (filter='${param.QueueFilter}')</c:if></h2>
 
 <table id="queues" class="sortable autostripe">
 <thead>
@@ -53,6 +68,7 @@
 </thead>
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
+<c:if test="${param.QueueFilter == '' || fn:containsIgnoreCase(row.name, param.QueueFilter)}">
 
 <tr>
 <td><a href="<c:url value="browse.jsp">
@@ -85,6 +101,8 @@
                     <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Delete</a>
 </td>
 </tr>
+
+</c:if>
 </c:forEach>
 </tbody>
 </table>
