@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
-
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
@@ -118,15 +117,10 @@ public class PurgeCommand extends AbstractJmxCommand {
                     // We then need to construct the SQL-92 query out of
                     // this list.
 
-                    String sqlQuery = null;
-                    if (queryAddObjects.size() > 1) {
-                        sqlQuery = convertToSQL92(queryAddObjects);
-                    } else {
-                        sqlQuery = queryAddObjects.get(0);
-                    }
+                    String sqlQuery = convertToSQL92(queryAddObjects);
                     removed = proxy.removeMatchingMessages(sqlQuery);
                     context.printInfo("Removed: " + removed
-                            + " messages for message selector " + sqlQuery.toString());
+                            + " messages for message selector " + sqlQuery);
 
                     if (resetStatistics) {
                         proxy.resetStatistics();
@@ -208,21 +202,27 @@ public class PurgeCommand extends AbstractJmxCommand {
      * @return SQL-92 string of that query.
      */
     public String convertToSQL92(List<String> tokens) {
-        String selector = "";
+        StringBuilder selector = new StringBuilder();
 
-        // Convert to message selector
+        boolean isFirstToken = true;
         for (Iterator i = tokens.iterator(); i.hasNext(); ) {
-            selector = selector + "(" + i.next().toString() + ") AND ";
+            String token = i.next().toString();
+            if (token.matches("^[^=]*='.*[\\*\\?].*'$")) {
+                token = token.replace('?', '_')
+                        .replace('*', '%')
+                        .replaceFirst("=", " LIKE ");
+            }
+            if (isFirstToken) {
+                isFirstToken = false;
+            } else {
+                selector.append(" AND ");
+            }
+            selector.append('(')
+                    .append(token)
+                    .append(')');
         }
-
-        // Remove last AND and replace '*' with '%'
-        if (!selector.equals("")) {
-            selector = selector.substring(0, selector.length() - 5);
-            selector = selector.replace('*', '%');
-        }
-        return selector;
+        return selector.toString();
     }
-
 
     /**
      * Print the help messages for the browse command
