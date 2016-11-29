@@ -69,7 +69,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
         "    Main browse --amqurl tcp://localhost:61616 -Vheader --view custom:MyField queue:FOO.BAR",
         "        - Print the message header and the custom field 'MyField' of all messages in the queue FOO.BAR",
         "",
-        "    Main browse --amqurl tcp://localhost:61616 --msgsel JMSMessageID='*:10',JMSPriority>5 FOO.BAR",
+        "    Main browse --amqurl tcp://localhost:61616 --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.BAR",
         "        - Print all the message fields that has a JMSMessageID in the header field that matches the",
         "          wildcard *:10, and has a JMSPriority field > 5 in the queue FOO.BAR",
         "        * To use wildcard queries, the field must be a string and the query enclosed in ''",
