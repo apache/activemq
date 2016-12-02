@@ -1701,9 +1701,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     @Override
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
-        if (topic == null) {
-            throw new InvalidDestinationException("topic is null");
-        }
         checkClosed();
 
         if (topic instanceof CustomDestination) {

@@ -17,17 +17,14 @@
 package org.apache.activemq;
 
 import javax.jms.Connection;
-import javax.jms.TopicConnection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.TopicSession;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
-import javax.jms.TopicRequestor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,20 +149,6 @@ public class JmsTopicRedeliverTest extends TestSupport {
         consumeSession.recover();
         assertNull(consumer.receiveNoWait());
     }
-
-    public void testExOnNullDestToTopicRequestor() throws Exception {
-
-        TopicConnection topicConnection = connectionFactory.createTopicConnection();
-        TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-        try {
-            TopicRequestor topicRequestor = new TopicRequestor(topicSession, null);
-            fail("Expect ex on invalid dest");
-        } catch (javax.jms.InvalidDestinationException expected) {
-        } finally {
-            topicConnection.close();
-        }
-    }
-
 
     protected MessageConsumer createConsumer() throws JMSException {
         if (durable) {
