@@ -34,6 +34,7 @@
     <activemq.osgi.import.pkg>
       !org.apache.commons.daemon,
       !org.apache.maven*,
+      !com.google.thirdparty.publicsuffix,
       sun.misc*;resolution:=optional,
       sun.nio*;resolution:=optional,
       javax.jmdns*;resolution:=optional,
