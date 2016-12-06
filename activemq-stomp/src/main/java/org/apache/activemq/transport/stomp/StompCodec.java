@@ -101,11 +101,15 @@ public class StompCodec {
                    } else {
                        currentCommand.write(b);
                        if (currentCommand.size() > wireFormat.getMaxDataLength()) {
-                           transport.doConsume(new StompFrameError(new ProtocolException("The maximum data length was exceeded", true)));
+                           StompFrameError errorFrame = new StompFrameError(new ProtocolException("The maximum data length was exceeded", true));
+                           errorFrame.setAction(this.action);
+                           transport.doConsume(errorFrame);
                            return;
                        }
                        if (frameSize.incrementAndGet() > wireFormat.getMaxFrameSize()) {
-                           transport.doConsume(new StompFrameError(new ProtocolException("The maximum frame size was exceeded", true)));
+                           StompFrameError errorFrame = new StompFrameError(new ProtocolException("The maximum frame size was exceeded", true));
+                           errorFrame.setAction(this.action);
+                           transport.doConsume(errorFrame);
                            return;
                        }
                    }
