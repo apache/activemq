@@ -1,3 +1,19 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.transport.stomp;
 
 import static org.junit.Assert.*;
@@ -39,6 +55,7 @@ public class StompNIOSSLLargeMessageTest extends StompTestSupport {
     // custom Log4J appender so we can filter the logging output in this test.
     protected Appender appender = new DefaultTestAppender() {
         //@Override
+        @Override
         public void doAppend(org.apache.log4j.spi.LoggingEvent event) {
             if (event.getMessage().toString().contains("<Unknown>") &&
                 event.getMessage().toString().contains("The maximum data length was exceeded")) {
@@ -93,13 +110,13 @@ public class StompNIOSSLLargeMessageTest extends StompTestSupport {
      * Sends a Stomp message larger than maxDataLength bytes.
      * Expects to receive an exception from the broker.
      * The broker will throw an Stomp ProtocolException of type
-     * "Exception occurred processing: SEND -> 
-     * org.apache.activemq.transport.stomp.ProtocolException: 
+     * "Exception occurred processing: SEND ->
+     * org.apache.activemq.transport.stomp.ProtocolException:
      * The maximum data length was exceeded"
-     * 
-     * Before bug AMQ-6526 this exception would contain \<Unkown\> for the 
+     *
+     * Before bug AMQ-6526 this exception would contain \<Unkown\> for the
      * operation name. With the fix it should print the Stomp operation.
-     * 
+     *
      * @throws Exception
      */
     @Test(timeout = 6000000)
@@ -130,9 +147,9 @@ public class StompNIOSSLLargeMessageTest extends StompTestSupport {
 
 
     /**
-     * Creates a large byte buffer and fills it with char 'X' except for the 
+     * Creates a large byte buffer and fills it with char 'X' except for the
      * last byte, it gets value 0x0 assigned.
-     * 
+     *
      * @param size - the size of the array to be created.
      * @return
     */
@@ -141,9 +158,9 @@ public class StompNIOSSLLargeMessageTest extends StompTestSupport {
         for (int i=0; i<size; i++) {
             buffer[i] = (char) 'X';
         }
-        //insert trailing 0x0 
+        //insert trailing 0x0
         buffer[size-1] = 0;
-        LOG.info("Created byte buffer of size {} starting with content {}", 
+        LOG.info("Created byte buffer of size {} starting with content {}",
             size,
             new String(buffer,0,20));
         return buffer;
