@@ -1264,7 +1264,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
         }
         gc();
-        this.destinationStatistics.getMessages().setCount(0);
+        this.destinationStatistics.getMessages().setCount(this.destinationStatistics.getInflight().getCount());
         getMessages().clear();
     }
 
