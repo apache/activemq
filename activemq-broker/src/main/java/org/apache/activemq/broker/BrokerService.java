@@ -111,9 +111,9 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
+import org.apache.activemq.usage.PercentLimitUsage;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.apache.activemq.util.IOExceptionHandler;
@@ -2048,18 +2048,19 @@ public class BrokerService implements Service {
         }
     }
 
-    protected void checkUsageLimit(File dir, Usage<?> storeUsage, int percentLimit) throws ConfigurationException {
+    protected void checkUsageLimit(File dir, PercentLimitUsage<?> storeUsage, int percentLimit) throws ConfigurationException {
         if (dir != null) {
             dir = StoreUtil.findParentDirectory(dir);
             String storeName = storeUsage instanceof StoreUsage ? "Store" : "Temporary Store";
             long storeLimit = storeUsage.getLimit();
             long storeCurrent = storeUsage.getUsage();
-            long totalSpace = dir.getTotalSpace();
-            if (totalSpace < 0) {
-                totalSpace = Long.MAX_VALUE;
-                LOG.info("Total space was negative.  Setting to " + totalSpace);
+            long totalSpace = storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getTotalSpace();
+            long totalUsableSpace = (storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getUsableSpace()) + storeCurrent;
+            if (totalUsableSpace < 0 || totalSpace < 0) {
+                final String message = "File system space reported by: " + dir + " was negative, possibly a huge file system, set a sane usage.total to provide some guidance";
+                LOG.error(message);
+                throw new ConfigurationException(message);
             }
-            long totalUsableSpace = dir.getUsableSpace() + storeCurrent;
             //compute byte value of the percent limit
             long bytePercentLimit = totalSpace * percentLimit / 100;
             int oneMeg = 1024 * 1024;
@@ -2069,6 +2070,7 @@ public class BrokerService implements Service {
             //Changes in partition size (total space) as well as changes in usable space should
             //be detected here
             if (diskUsageCheckRegrowThreshold > -1 && percentLimit > 0
+                    && storeUsage.getTotal() == 0
                     && storeLimit < bytePercentLimit && storeLimit < totalUsableSpace){
 
                 // set the limit to be bytePercentLimit or usableSpace if

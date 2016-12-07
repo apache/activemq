@@ -103,20 +103,29 @@ public class BrokerServiceTest extends TestCase {
         PersistenceAdapter persistenceAdapter = service.createPersistenceAdapter();
         persistenceAdapter.setDirectory(dataDirectory);
         service.setPersistenceAdapter(persistenceAdapter);
+        service.setUseJmx(false);
 
         mockStatic(StoreUtil.class);
 
         // Return a simulated handle to a very large file system that will return a negative totalSpace.
         when(StoreUtil.findParentDirectory(dataDirectory)).thenReturn(new LargeFile(dataDirectory.getParentFile(), "KahaDB"));
-        when(StoreUtil.findParentDirectory(tmpDataDirectory)).thenReturn(tmpDataDirectory);
+        when(StoreUtil.findParentDirectory(tmpDataDirectory)).thenReturn(tmpDataDirectory.getParentFile());
 
-        service.setPersistent(false);
-        service.setUseJmx(false);
-        TransportConnector connector = service.addConnector("tcp://localhost:0");
-        service.start();
+        try {
+            service.start();
+            fail("Expect error on negative totalspace");
+        } catch (Exception expected) {
+            // verify message
+            assertTrue(expected.getLocalizedMessage().contains("negative"));
+        }
+        finally {
+            service.stop();
+        }
 
-        service.removeConnector(connector);
-        connector.stop();
+        // configure a 2x value for the fs limit so it can start
+        service.getSystemUsage().getStoreUsage().setTotal( service.getSystemUsage().getStoreUsage().getLimit() * 2);
+
+        service.start(true);
         service.stop();
 
         verifyStatic();

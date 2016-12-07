@@ -22,4 +22,9 @@ public class LargeFile extends File {
 	public long getTotalSpace() {
 		return Long.MAX_VALUE + 4193L;
 	}
+
+	@Override
+	public long getUsableSpace() {
+		return getTotalSpace() - 1024L;
+	}
 }

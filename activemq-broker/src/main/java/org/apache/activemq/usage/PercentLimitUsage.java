@@ -17,9 +17,14 @@
 package org.apache.activemq.usage;
 
 
+import org.apache.activemq.util.StoreUtil;
+
+import java.io.File;
+
 public abstract class PercentLimitUsage <T extends Usage> extends Usage<T> {
 
     protected int percentLimit = 0;
+    protected long total = 0;
 
     /**
      * @param parent
@@ -46,6 +51,28 @@ public abstract class PercentLimitUsage <T extends Usage> extends Usage<T> {
             return percentLimit;
         } finally {
             usageLock.readLock().unlock();
+        }
+    }
+
+    public void setTotal(long max) {
+        this.total = max;
+    }
+
+    public long getTotal() {
+        return total;
+    }
+
+
+    protected void percentLimitFromFile(File directory) {
+        if (percentLimit > 0) {
+            if (total > 0) {
+                this.setLimit(total * percentLimit / 100);
+            } else if (directory != null) {
+                File dir = StoreUtil.findParentDirectory(directory);
+                if (dir != null) {
+                    this.setLimit(dir.getTotalSpace() * percentLimit / 100);
+                }
+            }
         }
     }
 
