@@ -27,6 +27,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.naming.Binding;
 import javax.naming.Context;
@@ -93,7 +94,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     protected String groupClass = DefaultAuthorizationMap.DEFAULT_GROUP_CLASS;
 
     // Internal State
-    private long lastUpdated;
+    private long lastUpdated = -1;
 
     private static String ANY_DESCENDANT = "\\$";
 
@@ -222,8 +223,9 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
      *             if there is an unrecoverable error processing the directory contents
      */
     @SuppressWarnings("rawtypes")
-    protected void query() throws Exception {
+    protected synchronized void query() throws Exception {
         DirContext currentContext = open();
+        entries.clear();
 
         final SearchControls constraints = new SearchControls();
         constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -668,11 +670,20 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
      * refresh interval has elapsed.
      */
     protected void checkForUpdates() {
+        if (lastUpdated == -1) {
+            //ACL's have never been queried, but we need them NOW as we're being asked for them. 
+            try {
+                query();
+                return;
+            } catch (Exception e) {
+                LOG.error("Error updating authorization map.  Partial policy may be applied until the next successful update.", e);
+            }
+        }
 
         if (context != null && refreshDisabled) {
             return;
         }
-
+        
         if (context == null || (!refreshDisabled && (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval))) {
             this.updaterService.execute(new Runnable() {
                 @Override
@@ -690,8 +701,6 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
                                 return;
                             }
                         }
-
-                        entries.clear();
 
                         LOG.debug("Updating authorization map!");
                         try {
