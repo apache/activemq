@@ -30,6 +30,7 @@ import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -124,13 +125,13 @@ public class HttpTransportServer extends WebTransportServerSupport {
     }
 
     private void addGzipHandler(ServletContextHandler contextHandler) throws Exception {
-        Handler handler = null;
+        HandlerWrapper handler = null;
         try {
-            handler = (Handler) forName("org.eclipse.jetty.server.handler.GzipHandler").newInstance();
+            handler = (HandlerWrapper) forName("org.eclipse.jetty.servlets.gzip.GzipHandler").newInstance();
         } catch (Throwable t) {
-            handler = (Handler) forName("org.eclipse.jetty.servlets.gzip.GzipHandler").newInstance();
+            handler = (HandlerWrapper) forName("org.eclipse.jetty.server.handler.gzip.GzipHandler").newInstance();
         }
-        contextHandler.setHandler(handler);
+        contextHandler.insertHandler(handler);
     }
 
     private Class<?> forName(String name) throws ClassNotFoundException {
