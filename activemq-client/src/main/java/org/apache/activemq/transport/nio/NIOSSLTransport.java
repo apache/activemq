@@ -156,7 +156,6 @@ public class NIOSSLTransport extends NIOTransport {
                 doHandshake();
             }
 
-           // if (hasSslEngine) {
             selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
                 @Override
                 public void onSelect(SelectorSelection selection) {
@@ -233,23 +232,6 @@ public class NIOSSLTransport extends NIOTransport {
             // otherwise the session would return 'SSL_NULL_WITH_NULL_NULL' for the
             // cipher suite.
             sslSession = sslEngine.getSession();
-
-            // listen for events telling us when the socket is readable.
-            selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
-                @Override
-                public void onSelect(SelectorSelection selection) {
-                    serviceRead();
-                }
-
-                @Override
-                public void onError(SelectorSelection selection, Throwable error) {
-                    if (error instanceof IOException) {
-                        onException((IOException) error);
-                    } else {
-                        onException(IOExceptionSupport.create(error));
-                    }
-                }
-            });
         }
     }
 
