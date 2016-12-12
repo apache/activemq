@@ -7,8 +7,6 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import javax.net.ServerSocketFactory;
@@ -101,8 +99,6 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
 
     @Override
     protected TransportInfo configureTransport(final TcpTransportServer server, final Socket socket) throws Exception {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
         //The SSLEngine needs to be initialized and handshake done to get the first command and detect the format
         //The wireformat doesn't need properties set here because we aren't using this format during the SSL handshake
         final AutoInitNioSSLTransport in = new AutoInitNioSSLTransport(wireFormatFactory.createWireFormat(), socket);
@@ -117,17 +113,38 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         in.start();
         SSLEngine engine = in.getSslSession();
 
-        Future<?> future = executor.submit(new Runnable() {
+        //Attempt to read enough bytes to detect the protocol until the timeout period
+        //is reached
+        Future<?> future = protocolDetectionExecutor.submit(new Runnable() {
             @Override
             public void run() {
-                //Wait for handshake to finish initializing
+                int attempts = 0;
                 do {
+                    if(attempts > 0) {
+                        try {
+                            //increase sleep period each attempt to prevent high cpu usage
+                            //if the client is hung and not sending bytes
+                            int sleep = attempts >= 1024 ? 1024 : 4 * attempts;
+                            Thread.sleep(sleep);
+                        } catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                    //In the future it might be better to register a nonblocking selector
+                    //to be told when bytes are ready
                     in.serviceRead();
-                } while(in.getReadSize().get() < 8);
+                    attempts++;
+                } while(in.getReadSize().get() < 8 && !Thread.interrupted());
             }
         });
 
-        waitForProtocolDetectionFinish(future, in.getReadSize());
+        try {
+            //If this fails and throws an exception and the socket will be closed
+            waitForProtocolDetectionFinish(future, in.getReadSize());
+        } finally {
+            //call cancel in case task didn't complete which will interrupt the task
+            future.cancel(true);
+        }
         in.stop();
 
         InitBuffer initBuffer = new InitBuffer(in.getReadSize().get(), ByteBuffer.allocate(in.getReadData().length));

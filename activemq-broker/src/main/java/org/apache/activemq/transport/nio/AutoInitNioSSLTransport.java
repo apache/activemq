@@ -135,21 +135,6 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
 
     }
 
-
-    @Override
-    protected void finishHandshake() throws Exception {
-        if (handshakeInProgress) {
-            handshakeInProgress = false;
-            nextFrameSize = -1;
-
-            // Once handshake completes we need to ask for the now real sslSession
-            // otherwise the session would return 'SSL_NULL_WITH_NULL_NULL' for the
-            // cipher suite.
-            sslSession = sslEngine.getSession();
-
-        }
-    }
-
     public SSLEngine getSslSession() {
         return this.sslEngine;
     }
@@ -179,6 +164,10 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
             while (true) {
                 if (!plain.hasRemaining()) {
                     int readCount = secureRead(plain);
+
+                    if (readCount == 0) {
+                        break;
+                    }
 
                     // channel is closed, cleanup
                     if (readCount == -1) {
