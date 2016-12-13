@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -70,8 +71,13 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
     private boolean presettle;
     private long sendTimeout = DEFAULT_SEND_TIMEOUT;
 
-    private final Set<Delivery> pending = new LinkedHashSet<Delivery>();
+    private final Set<Delivery> pending = new LinkedHashSet<>();
     private byte[] encodeBuffer = new byte[1024 * 8];
+
+    private Symbol[] desiredCapabilities;
+    private Symbol[] offeredCapabilities;
+    private Map<Symbol, Object> properties;
+
 
     /**
      * Create a new sender instance.
@@ -245,6 +251,30 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
         this.sendTimeout = sendTimeout;
     }
 
+    public void setDesiredCapabilities(Symbol[] desiredCapabilities) {
+        if (getEndpoint() != null) {
+            throw new IllegalStateException("Endpoint already established");
+        }
+
+        this.desiredCapabilities = desiredCapabilities;
+    }
+
+    public void setOfferedCapabilities(Symbol[] offeredCapabilities) {
+        if (getEndpoint() != null) {
+            throw new IllegalStateException("Endpoint already established");
+        }
+
+        this.offeredCapabilities = offeredCapabilities;
+    }
+
+    public void setProperties(Map<Symbol, Object> properties) {
+        if (getEndpoint() != null) {
+            throw new IllegalStateException("Endpoint already established");
+        }
+
+        this.properties = properties;
+    }
+
     //----- Private Sender implementation ------------------------------------//
 
     private void checkClosed() {
@@ -278,6 +308,10 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             sender.setSenderSettleMode(SenderSettleMode.UNSETTLED);
         }
         sender.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+
+        sender.setDesiredCapabilities(desiredCapabilities);
+        sender.setOfferedCapabilities(offeredCapabilities);
+        sender.setProperties(properties);
 
         setEndpoint(sender);
 
@@ -408,7 +442,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
 
     @Override
     public void processDeliveryUpdates(AmqpConnection connection) throws IOException {
-        List<Delivery> toRemove = new ArrayList<Delivery>();
+        List<Delivery> toRemove = new ArrayList<>();
 
         for (Delivery delivery : pending) {
             DeliveryState state = delivery.getRemoteState();

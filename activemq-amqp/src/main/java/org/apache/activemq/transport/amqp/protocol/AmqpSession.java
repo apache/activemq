@@ -26,7 +26,9 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.createDestination;
 import static org.apache.activemq.transport.amqp.AmqpSupport.findFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.InvalidSelectorException;
@@ -72,7 +74,7 @@ public class AmqpSession implements AmqpResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpSession.class);
 
-    private final Map<ConsumerId, AmqpSender> consumers = new HashMap<ConsumerId, AmqpSender>();
+    private final Map<ConsumerId, AmqpSender> consumers = new HashMap<>();
 
     private final AmqpConnection connection;
     private final Session protonSession;
@@ -190,7 +192,7 @@ public class AmqpSession implements AmqpResource {
             if (target.getDynamic()) {
                 destination = connection.createTemporaryDestination(protonReceiver, target.getCapabilities());
 
-                Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
+                Map<Symbol, Object> dynamicNodeProperties = new HashMap<>();
                 dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
 
                 // Currently we only support temporary destinations with delete on close lifetime policy.
@@ -215,6 +217,14 @@ public class AmqpSession implements AmqpResource {
                     if (connectionId == null) {
                         throw new AmqpProtocolException(AmqpError.PRECONDITION_FAILED.toString(), "Not a broker created temp destination");
                     }
+                }
+            }
+
+            Symbol[] remoteDesiredCapabilities = protonReceiver.getRemoteDesiredCapabilities();
+            if (remoteDesiredCapabilities != null) {
+                List<Symbol> list = Arrays.asList(remoteDesiredCapabilities);
+                if (list.contains(AmqpSupport.DELAYED_DELIVERY)) {
+                    protonReceiver.setOfferedCapabilities(new Symbol[] { AmqpSupport.DELAYED_DELIVERY });
                 }
             }
 
@@ -255,7 +265,7 @@ public class AmqpSession implements AmqpResource {
         LOG.debug("opening new sender {} on link: {}", consumerInfo.getConsumerId(), protonSender.getName());
 
         try {
-            final Map<Symbol, Object> supportedFilters = new HashMap<Symbol, Object>();
+            final Map<Symbol, Object> supportedFilters = new HashMap<>();
             protonSender.setContext(sender);
 
             boolean noLocal = false;
@@ -311,7 +321,7 @@ public class AmqpSession implements AmqpResource {
             } else if (source.getDynamic()) {
                 destination = connection.createTemporaryDestination(protonSender, source.getCapabilities());
 
-                Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
+                Map<Symbol, Object> dynamicNodeProperties = new HashMap<>();
                 dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
 
                 // Currently we only support temporary destinations with delete on close lifetime policy.
