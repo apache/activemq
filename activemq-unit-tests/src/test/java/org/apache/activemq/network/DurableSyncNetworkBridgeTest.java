@@ -76,7 +76,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     private boolean forceDurable = false;
     private boolean useVirtualDestSubs = false;
     private byte remoteBrokerWireFormatVersion = CommandTypes.PROTOCOL_VERSION;
-    public static enum FLOW {FORWARD, REVERSE};
+    public static enum FLOW {FORWARD, REVERSE}
 
     private BrokerService broker1;
     private BrokerService broker2;
@@ -533,6 +533,59 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         assertNCDurableSubsCount(broker2, topic, 1);
         assertNCDurableSubsCount(broker2, excludeTopic, 0);
 
+    }
+
+    //Test that durable sync works with more than one bridge
+    @Test
+    public void testAddOnlineSubscriptionsTwoBridges() throws Exception {
+
+        final ActiveMQTopic topic = new ActiveMQTopic(testTopicName);
+        final ActiveMQTopic excludeTopic = new ActiveMQTopic(excludeTopicName);
+        final ActiveMQTopic topic2 = new ActiveMQTopic("include.new.topic");
+
+        assertSubscriptionsCount(broker1, topic, 0);
+        assertNCDurableSubsCount(broker2, topic, 0);
+
+        //create durable that shouldn't be propagated
+        session1.createDurableSubscriber(excludeTopic, "sub-exclude");
+
+        //Add 3 online subs
+        session1.createDurableSubscriber(topic, subName);
+        session1.createDurableSubscriber(topic, "sub2");
+        session1.createDurableSubscriber(topic, "sub3");
+        //Add sub on second topic/bridge
+        session1.createDurableSubscriber(topic2, "secondTopicSubName");
+        assertSubscriptionsCount(broker1, topic, 3);
+        assertSubscriptionsCount(broker1, topic2, 1);
+
+        //Add the second network connector
+        NetworkConnector secondConnector = configureLocalNetworkConnector();
+        secondConnector.setName("networkConnector2");
+        secondConnector.setDynamicallyIncludedDestinations(
+                Lists.<ActiveMQDestination>newArrayList(
+                        new ActiveMQTopic("include.new.topic?forceDurable=" + forceDurable)));
+        localBroker.addNetworkConnector(secondConnector);
+        secondConnector.start();
+
+        //Make sure both bridges are connected
+        assertTrue(Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1 &&
+                        localBroker.getNetworkConnectors().get(1).activeBridges().size() == 1;
+            }
+        }, 10000, 500));
+
+        //Make sure NC durables exist for both bridges
+        assertNCDurableSubsCount(broker2, topic2, 1);
+        assertNCDurableSubsCount(broker2, topic, 1);
+        assertNCDurableSubsCount(broker2, excludeTopic, 0);
+
+        //Make sure message can reach remote broker
+        MessageProducer producer = session2.createProducer(topic2);
+        producer.send(session2.createTextMessage("test"));
+        waitForDispatchFromLocalBroker(broker2.getDestination(topic2).getDestinationStatistics(), 1);
+        assertLocalBrokerStatistics(broker2.getDestination(topic2).getDestinationStatistics(), 1);
     }
 
     @Test(timeout = 60 * 1000)
