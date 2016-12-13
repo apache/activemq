@@ -17,7 +17,9 @@
 package org.apache.activemq.transport.amqp.client.util;
 
 import java.util.EnumSet;
+import java.util.Map;
 
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
@@ -146,5 +148,50 @@ public class UnmodifiableSession implements Session {
     @Override
     public void setOutgoingWindow(long outgoingWindowSize) {
         throw new UnsupportedOperationException("Cannot alter the Session");
+    }
+
+    @Override
+    public Symbol[] getDesiredCapabilities() {
+        return session.getDesiredCapabilities();
+    }
+
+    @Override
+    public Symbol[] getOfferedCapabilities() {
+        return session.getOfferedCapabilities();
+    }
+
+    @Override
+    public Map<Symbol, Object> getProperties() {
+        return session.getProperties();
+    }
+
+    @Override
+    public Symbol[] getRemoteDesiredCapabilities() {
+        return session.getRemoteDesiredCapabilities();
+    }
+
+    @Override
+    public Symbol[] getRemoteOfferedCapabilities() {
+        return session.getRemoteOfferedCapabilities();
+    }
+
+    @Override
+    public Map<Symbol, Object> getRemoteProperties() {
+        return session.getRemoteProperties();
+    }
+
+    @Override
+    public void setDesiredCapabilities(Symbol[] capabilities) {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
+
+    @Override
+    public void setOfferedCapabilities(Symbol[] capabilities) {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
+
+    @Override
+    public void setProperties(Map<Symbol, Object> capabilities) {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
     }
 }

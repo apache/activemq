@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.client;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableSession;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.engine.Connection;
@@ -87,7 +89,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the sender.
      */
     public AmqpSender createSender() throws Exception {
-        return createSender(null, false);
+        return createSender(null, false, null, null, null);
     }
 
     /**
@@ -101,7 +103,39 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the sender.
      */
     public AmqpSender createSender(final String address) throws Exception {
-        return createSender(address, false);
+        return createSender(address, false, null, null, null);
+    }
+
+    /**
+     * Create a sender instance using the given address
+     *
+     * @param address
+     *        the address to which the sender will produce its messages.
+     * @param desiredCapabilities
+     *        the capabilities that the caller wants the remote to support.
+     *
+     * @return a newly created sender that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the sender.
+     */
+    public AmqpSender createSender(final String address, Symbol[] desiredCapabilities) throws Exception {
+        return createSender(address, false, desiredCapabilities, null, null);
+    }
+
+    /**
+     * Create a sender instance using the given address
+     *
+     * @param address
+     *        the address to which the sender will produce its messages.
+     * @param presettle
+     *        controls if the created sender produces message that have already been marked settled.
+     *
+     * @return a newly created sender that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the sender.
+     */
+    public AmqpSender createSender(final String address, boolean presettle) throws Exception {
+        return createSender(address, presettle, null, null, null);
     }
 
     /**
@@ -111,16 +145,26 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * 	      the address to which the sender will produce its messages.
      * @param presettle
      *        controls if the created sender produces message that have already been marked settled.
+     * @param desiredCapabilities
+     *        the capabilities that the caller wants the remote to support.
+     * @param offeredCapabilities
+     *        the capabilities that the caller wants the advertise support for.
+     * @param properties
+     *        the properties to send as part of the sender open.
      *
      * @return a newly created sender that is ready for use.
      *
      * @throws Exception if an error occurs while creating the sender.
      */
-    public AmqpSender createSender(final String address, boolean presettle) throws Exception {
+    public AmqpSender createSender(final String address, boolean presettle, Symbol[] desiredCapabilities, Symbol[] offeredCapabilities, Map<Symbol, Object> properties) throws Exception {
         checkClosed();
 
         final AmqpSender sender = new AmqpSender(AmqpSession.this, address, getNextSenderId());
         sender.setPresettle(presettle);
+        sender.setDesiredCapabilities(desiredCapabilities);
+        sender.setOfferedCapabilities(offeredCapabilities);
+        sender.setProperties(properties);
+
         final ClientFuture request = new ClientFuture();
 
         connection.getScheduler().execute(new Runnable() {
@@ -166,9 +210,35 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpSender createSender(Target target, String senderId) throws Exception {
+        return createSender(target, senderId, null, null, null);
+    }
+
+    /**
+     * Create a sender instance using the given Target
+     *
+     * @param target
+     *        the caller created and configured Target used to create the sender link.
+     * @param sender
+     *        the sender ID to assign to the newly created Sender.
+     * @param desiredCapabilities
+     *        the capabilities that the caller wants the remote to support.
+     * @param offeredCapabilities
+     *        the capabilities that the caller wants the advertise support for.
+     * @param properties
+     *        the properties to send as part of the sender open.
+     *
+     * @return a newly created sender that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpSender createSender(Target target, String senderId, Symbol[] desiredCapabilities, Symbol[] offeredCapabilities, Map<Symbol, Object> properties) throws Exception {
         checkClosed();
 
         final AmqpSender sender = new AmqpSender(AmqpSession.this, target, senderId);
+        sender.setDesiredCapabilities(desiredCapabilities);
+        sender.setOfferedCapabilities(offeredCapabilities);
+        sender.setProperties(properties);
+
         final ClientFuture request = new ClientFuture();
 
         connection.getScheduler().execute(new Runnable() {

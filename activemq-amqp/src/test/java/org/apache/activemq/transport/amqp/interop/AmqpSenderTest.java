@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp.interop;
 
+import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -23,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
@@ -31,8 +33,10 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.client.AmqpSupport;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
 import org.apache.activemq.util.Wait;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
 import org.junit.Test;
@@ -202,6 +206,40 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
                 return topic.getEnqueueCount() == MSG_COUNT;
             }
         }));
+
+        sender.close();
+        connection.close();
+    }
+
+    @Test
+    public void testDeliveryDelayOfferedWhenRequested() throws Exception {
+
+        final BrokerViewMBean brokerView = getProxyToBroker();
+
+        AmqpClient client = createAmqpClient();
+        client.setValidator(new AmqpValidator() {
+
+            @Override
+            public void inspectOpenedResource(Sender sender) {
+
+                Symbol[] offered = sender.getRemoteOfferedCapabilities();
+                if (!contains(offered, AmqpSupport.DELAYED_DELIVERY)) {
+                    markAsInvalid("Broker did not indicate it support delayed message delivery");
+                }
+            }
+        });
+
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerView.getQueues().length);
+
+        AmqpSender sender = session.createSender("queue://" + getTestName(), new Symbol[] { AmqpSupport.DELAYED_DELIVERY });
+        assertNotNull(sender);
+
+        assertEquals(1, brokerView.getQueues().length);
+
+        connection.getStateInspector().assertValid();
 
         sender.close();
         connection.close();

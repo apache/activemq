@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp.client.util;
 
+import org.apache.qpid.proton.codec.ReadableBuffer;
 import org.apache.qpid.proton.engine.Sender;
 
 /**
@@ -40,6 +41,11 @@ public class UnmodifiableSender extends UnmodifiableLink implements Sender {
 
     @Override
     public void abort() {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
+
+    @Override
+    public int send(ReadableBuffer buffer) {
         throw new UnsupportedOperationException("Cannot alter the Link state");
     }
 }
