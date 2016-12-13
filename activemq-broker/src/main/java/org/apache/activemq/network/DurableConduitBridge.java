@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
@@ -95,14 +96,19 @@ public class DurableConduitBridge extends ConduitBridge {
                         String candidateSubName = getSubscriberName(dest);
                         for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
                             String subName = subscription.getConsumerInfo().getSubscriptionName();
-                            if (subName != null && subName.equals(candidateSubName)) {
+                            if (subName != null && subName.equals(candidateSubName) &&
+                                    subscription instanceof DurableTopicSubscription) {
                                try {
-                                    // remove the NC subscription as it is no longer for a permissable dest
-                                    RemoveSubscriptionInfo sending = new RemoveSubscriptionInfo();
-                                    sending.setClientId(localClientId);
-                                    sending.setSubscriptionName(subName);
-                                    sending.setConnectionId(this.localConnectionInfo.getConnectionId());
-                                    localBroker.oneway(sending);
+                                    DurableTopicSubscription durableSub = (DurableTopicSubscription) subscription;
+                                    //check the clientId so we only remove subs for the matching bridge
+                                    if (durableSub.getSubscriptionKey().getClientId().equals(localClientId)) {
+                                        // remove the NC subscription as it is no longer for a permissible dest
+                                        RemoveSubscriptionInfo sending = new RemoveSubscriptionInfo();
+                                        sending.setClientId(localClientId);
+                                        sending.setSubscriptionName(subName);
+                                        sending.setConnectionId(this.localConnectionInfo.getConnectionId());
+                                        localBroker.oneway(sending);
+                                    }
                                 } catch (IOException e) {
                                     LOG.debug("Exception removing NC durable subscription: {}", subName, e);
                                     serviceRemoteException(e);
