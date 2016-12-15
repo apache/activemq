@@ -17,11 +17,8 @@
 package org.apache.activemq.karaf.itest;
 
 import java.io.File;
-import java.util.Date;
 import java.util.concurrent.Callable;
 
-import org.apache.karaf.features.Feature;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.MavenUtils;
@@ -32,8 +29,6 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
 @RunWith(PaxExam.class)
 public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {

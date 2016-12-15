@@ -29,6 +29,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 
 public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
 
+    @SuppressWarnings("resource")
     public static void copyFile(File from, File to) throws IOException {
         if (!to.exists()) {
             System.err.println("Creating new file for: "+ to);

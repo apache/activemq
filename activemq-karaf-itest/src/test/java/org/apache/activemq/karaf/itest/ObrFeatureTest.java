@@ -27,7 +27,6 @@ import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceReference;
 
 
 @RunWith(PaxExam.class)

@@ -18,8 +18,6 @@ package org.apache.activemq.karaf.itest;
 
 import javax.security.auth.Subject;
 
-import org.apache.felix.service.command.CommandProcessor;
-import org.apache.felix.service.command.CommandSession;
 import org.apache.karaf.features.FeaturesService;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
 import org.apache.karaf.jaas.boot.principal.UserPrincipal;
