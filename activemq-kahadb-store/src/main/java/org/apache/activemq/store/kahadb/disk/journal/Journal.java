@@ -994,11 +994,22 @@ public class Journal {
     }
 
     public DataFile getCurrentDataFile(int capacity) throws IOException {
+        //First just acquire the currentDataFile lock and return if no rotation needed
         synchronized (currentDataFile) {
-            if (currentDataFile.get().getLength() + capacity >= maxFileLength) {
-                rotateWriteFile();
+            if (currentDataFile.get().getLength() + capacity < maxFileLength) {
+                return currentDataFile.get();
             }
-            return currentDataFile.get();
+        }
+
+        //AMQ-6545 - if rotation needed, acquire dataFileIdLock first to prevent deadlocks
+        //then re-check if rotation is needed
+        synchronized (dataFileIdLock) {
+            synchronized (currentDataFile) {
+                if (currentDataFile.get().getLength() + capacity >= maxFileLength) {
+                    rotateWriteFile();
+                }
+                return currentDataFile.get();
+            }
         }
     }
 
