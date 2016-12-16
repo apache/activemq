@@ -47,6 +47,7 @@ http\://activemq.apache.org/schema/core/activemq-core-5.13.1.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.13.2.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.13.3.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.13.4.xsd=activemq.xsd
+http\://activemq.apache.org/schema/core/activemq-core-5.13.5.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.14.0.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.14.1.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.14.2.xsd=activemq.xsd
