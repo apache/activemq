@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Deactivate;
 
 @Component //
 ( //
-    configurationPid = "org.apache.activemq", //
+    name = "org.apache.activemq", //
     immediate = true, //
     configurationPolicy = ConfigurationPolicy.REQUIRE //
 )
