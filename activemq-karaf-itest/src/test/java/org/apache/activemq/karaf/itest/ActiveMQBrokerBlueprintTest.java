@@ -39,7 +39,7 @@ public class ActiveMQBrokerBlueprintTest extends AbstractJmsFeatureTest {
         {
          composite(super.configure("activemq", "activemq-blueprint")),
          replaceConfigurationFile("deploy/activemq-blueprint.xml", 
-                                  new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/activemq-blueprint.xml"))
+                                  new File("src/test/resources/org/apache/activemq/karaf/itest/activemq-blueprint.xml"))
         };
     }
 

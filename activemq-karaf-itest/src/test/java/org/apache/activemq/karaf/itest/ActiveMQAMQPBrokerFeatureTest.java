@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.karaf.itest;
 
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.Callable;
-
 import javax.jms.Connection;
 
 import org.apache.qpid.jms.JmsConnectionFactory;
@@ -29,41 +25,41 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 @RunWith(PaxExam.class)
+@ExamReactorStrategy(PerClass.class)
 public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     private static final Integer AMQP_PORT = 61636;
 
     @Configuration
     public static Option[] configure() {
-        Option[] configure = configure("activemq", "activemq-amqp-client");
-
-        Option[] configuredOptions = configureBrokerStart(configure);
-
-        return configuredOptions;
+        return new Option[] //
+        {
+         configure("activemq", "activemq-amqp-client"), //
+         configureBrokerStart()
+        };
     }
 
     @Override
-    protected Connection getConnection() throws Throwable {
-        withinReason(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                assertTrue("qpid jms client bundle installed", verifyBundleInstalled("org.apache.qpid.jms.client"));
-                return true;
+    protected Connection getConnection() throws Exception {
+        withinReason(new Runnable() {
+            public void run() {
+                getBundle("org.apache.qpid.jms.client");
             }
         });
 
         String amqpURI = "amqp://localhost:" + AMQP_PORT;
         JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
-
         factory.setUsername(AbstractFeatureTest.USER);
         factory.setPassword(AbstractFeatureTest.PASSWORD);
-
         Connection connection = factory.createConnection();
+        
         connection.start();
         return connection;
     }
-
+    
     @Override
     @Ignore
     @Test(timeout = 5 * 60 * 1000)

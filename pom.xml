@@ -135,7 +135,7 @@
     <jaxb-basics-version>0.6.4</jaxb-basics-version>
     <stompjms-version>1.19</stompjms-version>
 
-    <pax-exam-version>4.6.0</pax-exam-version>
+    <pax-exam-version>4.9.1</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
     <pax-runner-version>1.8.6</pax-runner-version>
     <pax-url-version>2.4.3</pax-url-version>

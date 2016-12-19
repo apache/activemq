@@ -39,9 +39,12 @@ public class ActiveMQBrokerNdWebConsoleFeatureTest extends ActiveMQBrokerFeature
 
     @Configuration
     public static Option[] configure() {
-        return append(CoreOptions.mavenBundle("commons-codec", "commons-codec").versionAsInProject(),
-                append(CoreOptions.mavenBundle("commons-httpclient", "commons-httpclient").versionAsInProject(),
-                configure("activemq-broker")));
+        return new Option[] //
+        {
+         CoreOptions.mavenBundle("commons-codec", "commons-codec").versionAsInProject(),
+         CoreOptions.mavenBundle("commons-httpclient", "commons-httpclient").versionAsInProject(),
+         configure("activemq-broker")
+        };
     }
 
     @Override

@@ -71,11 +71,10 @@ public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
         connection.close();
     }
 
-    protected Connection getConnection() throws Throwable {
+    protected Connection getConnection() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         Connection connection = factory.createConnection(AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
         connection.start();
-
         return connection;
     }
 }
