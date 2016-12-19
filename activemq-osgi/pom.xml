@@ -272,27 +272,6 @@
               </resources>
             </configuration>
           </execution>
-          <execution>
-            <id>copy-spring</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${basedir}/target/extra-resources/META-INF</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${basedir}/../activemq-spring/target/classes/META-INF</directory>
-                  <includes>
-                    <include>spring.*</include>
-                  </includes>
-                  <excludes>
-                      <exclude>spring.handlers</exclude>
-                  </excludes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
         </executions>
       </plugin>
 
