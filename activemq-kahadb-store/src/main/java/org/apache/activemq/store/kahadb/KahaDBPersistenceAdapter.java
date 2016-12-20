@@ -214,7 +214,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     @Override
     public long size() {
-        return this.letter.size();
+        return this.letter.isStarted() ? this.letter.size() : 0l;
     }
 
     /**

@@ -880,4 +880,8 @@ public abstract class BaseDestination implements Destination {
     public boolean isPersistJMSRedelivered() {
         return persistJMSRedelivered;
     }
+
+    public SystemUsage getSystemUsage() {
+        return systemUsage;
+    }
 }

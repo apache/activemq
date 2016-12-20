@@ -28,12 +28,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.IndexListener;
 import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -48,6 +50,7 @@ import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
+import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IOHelper;
@@ -98,6 +101,28 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             @Override
             public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
                 MultiKahaDBTransactionStore.this.removeAsyncMessage(transactionStore, context, getDelegate(), ack);
+            }
+
+            @Override
+            public void registerIndexListener(IndexListener indexListener) {
+                getDelegate().registerIndexListener(indexListener);
+                try {
+                    if (indexListener instanceof BaseDestination) {
+                        // update queue storeUsage
+                        Object matchingPersistenceAdapter = multiKahaDBPersistenceAdapter.destinationMap.chooseValue(getDelegate().getDestination());
+                        if (matchingPersistenceAdapter instanceof FilteredKahaDBPersistenceAdapter) {
+                            FilteredKahaDBPersistenceAdapter filteredAdapter = (FilteredKahaDBPersistenceAdapter) matchingPersistenceAdapter;
+                            if (filteredAdapter.getUsage() != null && filteredAdapter.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
+                                StoreUsage storeUsage = filteredAdapter.getUsage();
+                                storeUsage.setStore(filteredAdapter.getPersistenceAdapter());
+                                storeUsage.setParent(multiKahaDBPersistenceAdapter.getBrokerService().getSystemUsage().getStoreUsage());
+                                ((BaseDestination) indexListener).getSystemUsage().setStoreUsage(storeUsage);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                    LOG.warn("Failed to set mKahaDB destination store usage", ignored);
+                }
             }
         };
     }

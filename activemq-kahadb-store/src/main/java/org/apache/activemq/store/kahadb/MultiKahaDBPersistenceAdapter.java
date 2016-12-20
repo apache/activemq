@@ -56,6 +56,7 @@ import org.apache.activemq.store.TransactionIdTransformer;
 import org.apache.activemq.store.TransactionIdTransformerAware;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
+import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
@@ -391,26 +392,26 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     private void registerExistingAdapter(FilteredKahaDBPersistenceAdapter filteredAdapter, File candidate) throws IOException {
-        PersistenceAdapter adapter = adapterFromTemplate(filteredAdapter.getPersistenceAdapter(), candidate.getName());
+        PersistenceAdapter adapter = adapterFromTemplate(filteredAdapter, candidate.getName());
         startAdapter(adapter, candidate.getName());
         Set<ActiveMQDestination> destinations = adapter.getDestinations();
         if (destinations.size() != 0) {
-            registerAdapter(adapter, destinations.toArray(new ActiveMQDestination[]{})[0]);
+            registerAdapter(filteredAdapter, adapter, destinations.toArray(new ActiveMQDestination[]{})[0]);
         } else {
             stopAdapter(adapter, candidate.getName());
         }
     }
 
     private FilteredKahaDBPersistenceAdapter addAdapter(FilteredKahaDBPersistenceAdapter filteredAdapter, ActiveMQDestination destination) throws IOException {
-        PersistenceAdapter adapter = adapterFromTemplate(filteredAdapter.getPersistenceAdapter(), nameFromDestinationFilter(destination));
-        return registerAdapter(adapter, destination);
+        PersistenceAdapter adapter = adapterFromTemplate(filteredAdapter, nameFromDestinationFilter(destination));
+        return registerAdapter(filteredAdapter, adapter, destination);
     }
 
-    private PersistenceAdapter adapterFromTemplate(PersistenceAdapter template, String destinationName) throws IOException {
-        PersistenceAdapter adapter = kahaDBFromTemplate(template);
+    private PersistenceAdapter adapterFromTemplate(FilteredKahaDBPersistenceAdapter template, String destinationName) throws IOException {
+        PersistenceAdapter adapter = kahaDBFromTemplate(template.getPersistenceAdapter());
         configureAdapter(adapter);
         configureDirectory(adapter, destinationName);
-        configureIndexDirectory(adapter, template, destinationName);
+        configureIndexDirectory(adapter, template.getPersistenceAdapter(), destinationName);
         return adapter;
     }
 
@@ -449,9 +450,9 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         adapter.setDirectory(directory);
     }
 
-    private FilteredKahaDBPersistenceAdapter registerAdapter(PersistenceAdapter adapter, ActiveMQDestination destination) {
+    private FilteredKahaDBPersistenceAdapter registerAdapter(FilteredKahaDBPersistenceAdapter template, PersistenceAdapter adapter, ActiveMQDestination destination) {
         adapters.add(adapter);
-        FilteredKahaDBPersistenceAdapter result = new FilteredKahaDBPersistenceAdapter(destination, adapter);
+        FilteredKahaDBPersistenceAdapter result = new FilteredKahaDBPersistenceAdapter(template, destination, adapter);
         destinationMap.put(destination, result);
         return result;
     }

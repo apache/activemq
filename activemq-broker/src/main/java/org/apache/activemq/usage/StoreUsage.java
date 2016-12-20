@@ -98,4 +98,14 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
             usageLock.writeLock().unlock();
         }
     }
+
+    public StoreUsage copy() {
+        StoreUsage storeUsage = new StoreUsage();
+        storeUsage.name = name;
+        storeUsage.parent = parent;
+        storeUsage.total = total;
+        storeUsage.percentLimit = percentLimit;
+        storeUsage.getLimiter().setLimit(getLimiter().getLimit());
+        return storeUsage;
+    }
 }

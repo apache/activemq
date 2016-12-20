@@ -54,6 +54,12 @@ public abstract class PercentLimitUsage <T extends Usage> extends Usage<T> {
         }
     }
 
+    /**
+     * Sets the total available space in bytes. When non zero, the filesystem totalAvailableSpace is ignored.
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     *
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
     public void setTotal(long max) {
         this.total = max;
     }
