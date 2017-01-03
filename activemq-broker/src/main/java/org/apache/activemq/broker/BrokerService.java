@@ -180,11 +180,11 @@ public class BrokerService implements Service {
     private PersistenceAdapterFactory persistenceFactory;
     protected DestinationFactory destinationFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
-    private final List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
-    private final List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<NetworkConnector>();
-    private final List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<ProxyConnector>();
-    private final List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<JmsConnector>();
-    private final List<Service> services = new ArrayList<Service>();
+    private final List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<>();
+    private final List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<>();
+    private final List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<>();
+    private final List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<>();
+    private final List<Service> services = new ArrayList<>();
     private transient Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
@@ -229,7 +229,7 @@ public class BrokerService implements Service {
     private boolean dedicatedTaskRunner;
     private boolean cacheTempDestinations = false;// useful for failover
     private int timeBeforePurgeTempDestinations = 5000;
-    private final List<Runnable> shutdownHooks = new ArrayList<Runnable>();
+    private final List<Runnable> shutdownHooks = new ArrayList<>();
     private boolean systemExitOnShutdown;
     private int systemExitOnShutdownExitCode;
     private SslContext sslContext;
@@ -623,7 +623,7 @@ public class BrokerService implements Service {
             startBroker(startAsync);
             brokerRegistry.bind(getBrokerName(), BrokerService.this);
         } catch (Exception e) {
-            LOG.error("Failed to start Apache ActiveMQ ({}, {})", new Object[]{ getBrokerName(), brokerId }, e);
+            LOG.error("Failed to start Apache ActiveMQ ({}, {})", getBrokerName(), brokerId, e);
             try {
                 if (!stopped.get()) {
                     stop();
@@ -1374,7 +1374,7 @@ public class BrokerService implements Service {
     }
 
     public Map<String, String> getTransportConnectorURIsAsMap() {
-        Map<String, String> answer = new HashMap<String, String>();
+        Map<String, String> answer = new HashMap<>();
         for (TransportConnector connector : transportConnectors) {
             try {
                 URI uri = connector.getConnectUri();
@@ -1495,7 +1495,7 @@ public class BrokerService implements Service {
     }
 
     public List<TransportConnector> getTransportConnectors() {
-        return new ArrayList<TransportConnector>(transportConnectors);
+        return new ArrayList<>(transportConnectors);
     }
 
     /**
@@ -1530,11 +1530,11 @@ public class BrokerService implements Service {
     }
 
     public List<NetworkConnector> getNetworkConnectors() {
-        return new ArrayList<NetworkConnector>(networkConnectors);
+        return new ArrayList<>(networkConnectors);
     }
 
     public List<ProxyConnector> getProxyConnectors() {
-        return new ArrayList<ProxyConnector>(proxyConnectors);
+        return new ArrayList<>(proxyConnectors);
     }
 
     /**
@@ -2390,7 +2390,7 @@ public class BrokerService implements Service {
      * Create the default destination interceptor
      */
     protected DestinationInterceptor[] createDefaultDestinationInterceptor() {
-        List<DestinationInterceptor> answer = new ArrayList<DestinationInterceptor>();
+        List<DestinationInterceptor> answer = new ArrayList<>();
         if (isUseVirtualTopics()) {
             VirtualDestinationInterceptor interceptor = new VirtualDestinationInterceptor();
             VirtualTopic virtualTopic = new VirtualTopic();
@@ -2604,7 +2604,7 @@ public class BrokerService implements Service {
      */
     public void startAllConnectors() throws Exception {
         Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
-        List<TransportConnector> al = new ArrayList<TransportConnector>();
+        List<TransportConnector> al = new ArrayList<>();
         for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
             TransportConnector connector = iter.next();
             al.add(startTransportConnector(connector));
@@ -2617,7 +2617,7 @@ public class BrokerService implements Service {
         }
         this.slave = false;
         URI uri = getVmConnectorURI();
-        Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
+        Map<String, String> map = new HashMap<>(URISupport.parseParameters(uri));
         map.put("async", "false");
         map.put("create","false");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
@@ -2742,7 +2742,7 @@ public class BrokerService implements Service {
     private DestinationFilter getVirtualTopicConsumerDestinationFilter() {
         // created at startup, so no sync needed
         if (virtualConsumerDestinationFilter == null) {
-            Set <ActiveMQQueue> consumerDestinations = new HashSet<ActiveMQQueue>();
+            Set <ActiveMQQueue> consumerDestinations = new HashSet<>();
             if (destinationInterceptors != null) {
                 for (DestinationInterceptor interceptor : destinationInterceptors) {
                     if (interceptor instanceof VirtualDestinationInterceptor) {
