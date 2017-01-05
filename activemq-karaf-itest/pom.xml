@@ -67,9 +67,8 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>3.1</version>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
@@ -121,7 +120,7 @@
       <classifier>features</classifier>
       <scope>test</scope>
     </dependency>
-
+    
     <!-- test and logging -->
     <dependency>
       <groupId>junit</groupId>

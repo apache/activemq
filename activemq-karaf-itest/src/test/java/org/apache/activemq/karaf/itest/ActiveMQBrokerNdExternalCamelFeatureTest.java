@@ -31,7 +31,7 @@ import org.ops4j.pax.exam.Option;
 
 //@RunWith(PaxExam.class)
 @Ignore
-public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeatureTest {
+public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTest {
 
     @Configuration
     public static Option[] configure() {
@@ -51,15 +51,12 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeature
         installAndAssertFeature("camel");
         installAndAssertFeature("activemq-camel");
 
+        assertBrokerStarted();
         withinReason(new Runnable() {
             public void run() {
-                assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
-                assertTrue(executeCommand("activemq:bstat").trim().contains("BrokerName = amq-broker"));
                 getBundle("org.apache.activemq.activemq-camel");
             }
         });
-
-        System.err.println(executeCommand("activemq:bstat").trim());
 
         // hot deploy the camel.xml file by copying it to the deploy directory
         String karafDir = System.getProperty("karaf.base");
@@ -76,8 +73,10 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeature
         });
 
         // produce and consume
-        produceMessage("camel_in");
-        assertEquals("got our message", "camel_in", consumeMessage("camel_out"));
+        JMSTester tester = new JMSTester();
+        tester.produceMessage("camel_in");
+        assertEquals("got our message", "camel_in", tester.consumeMessage("camel_out"));
+        tester.close();
     }
 
 }

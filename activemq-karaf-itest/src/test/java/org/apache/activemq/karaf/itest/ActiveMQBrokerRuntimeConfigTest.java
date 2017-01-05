@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.karaf.itest;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
@@ -32,29 +31,23 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 
 @RunWith(PaxExam.class)
-public class ActiveMQBrokerRuntimeConfigTest extends AbstractJmsFeatureTest {
+public class ActiveMQBrokerRuntimeConfigTest extends AbstractFeatureTest {
 
-    @Configuration
-    public static Option[] configure() {
-        return new Option[] //
-            {
-                configure("activemq"),
-             editConfigurationFilePut("etc/org.apache.activemq.server-default.cfg", "config.check", "false"),
-             replaceConfigurationFile("data/tmp/modified-config.xml",
-                                      new File(RESOURCE_BASE + "activemq-runtime-config-mod.xml")),
-             configureBrokerStart("activemq-runtime-config")
-            };
-    }
+	@Configuration
+	public static Option[] configure() {
+		return new Option[] //
+		{ //
+				configure("activemq"), //
+				editConfigurationFilePut("etc/org.apache.activemq.server-default.cfg", "config.check", "false"),
+				replaceConfigurationFile("data/tmp/modified-config.xml",
+						new File(RESOURCE_BASE + "activemq-runtime-config-mod.xml")),
+				configureBrokerStart("activemq-runtime-config") };
+	}
 
     @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
-
-        withinReason(new Runnable() {
-            public void run() {
-                assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
-                assertTrue("3MB limit", executeCommand("activemq:query").trim().contains("MemoryLimit = 3145728"));
-            }
-        });
+    	assertBrokerStarted();
+        assertMemoryLimit("3145728");
 
         // ensure update will be reflected in OS fs modified window
         TimeUnit.SECONDS.sleep(4);
@@ -66,11 +59,14 @@ public class ActiveMQBrokerRuntimeConfigTest extends AbstractJmsFeatureTest {
         copyFile(new File(karafDir + "/data/tmp/modified-config.xml"), target);
         System.err.println("new mod at: " + new Date(target.lastModified()));
 
-        withinReason(new Runnable() {
+        assertMemoryLimit("4194304");
+    }
+
+	private void assertMemoryLimit(String limit) throws Exception {
+		withinReason(new Runnable() {
             public void run() {
-                assertTrue("4MB limit", executeCommand("activemq:query").trim().contains("MemoryLimit = 4194304"));
+                assertTrue("3MB limit", executeCommand("activemq:query").trim().contains("MemoryLimit = "+ limit));
             }
         });
-
-    }
+	}
 }

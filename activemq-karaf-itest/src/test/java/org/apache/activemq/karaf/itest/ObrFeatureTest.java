@@ -68,7 +68,7 @@ public class ObrFeatureTest extends AbstractFeatureTest {
 
     @Test(timeout = 5 * 60 * 1000)
     public void testClientWithSpring32() throws Throwable {
-        testWithSpringVersion("3.2.14.RELEASE_1");
+        testWithSpringVersion("3.2.17.RELEASE_1");
     }
 
     @Test(timeout = 5 * 60 * 1000)
@@ -78,12 +78,12 @@ public class ObrFeatureTest extends AbstractFeatureTest {
 
     @Test(timeout = 5 * 60 * 1000)
     public void testClientWithSpring41() throws Throwable {
-        testWithSpringVersion("4.1.7.RELEASE_2");
+        testWithSpringVersion("4.1.9.RELEASE_1");
     }
 
     @Test(timeout = 5 * 60 * 1000)
     public void testClientWithSpring42() throws Throwable {
-        testWithSpringVersion("4.2.2.RELEASE_1");
+        testWithSpringVersion("4.2.8.RELEASE_1");
     }
 
     private void testWithSpringVersion(String version) throws Exception, Throwable {

@@ -19,18 +19,11 @@ package org.apache.activemq.karaf.itest;
 import javax.jms.Connection;
 
 import org.apache.qpid.jms.JmsConnectionFactory;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerClass;
 
-@RunWith(PaxExam.class)
-@ExamReactorStrategy(PerClass.class)
-public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
+public class ActiveMQAMQPBrokerFeatureTest extends AbstractFeatureTest {
     private static final Integer AMQP_PORT = 61636;
 
     @Configuration
@@ -42,28 +35,30 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
         };
     }
 
-    @Override
-    protected Connection getConnection() throws Exception {
-        withinReason(new Runnable() {
-            public void run() {
-                getBundle("org.apache.qpid.jms.client");
-            }
-        });
-
-        String amqpURI = "amqp://localhost:" + AMQP_PORT;
-        JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
-        factory.setUsername(AbstractFeatureTest.USER);
-        factory.setPassword(AbstractFeatureTest.PASSWORD);
-        Connection connection = factory.createConnection();
-        
-        connection.start();
-        return connection;
-    }
-    
-    @Override
-    @Ignore
     @Test(timeout = 5 * 60 * 1000)
-    public void testTemporaryDestinations() throws Throwable {
-        // ignore until we have temporary destination are working in amqp
+    public void testProduceConsume() throws Throwable {
+    	JMSTester tester = new JMSTester(getQPIDConnection());
+    	tester.produceAndConsume(sessionFactory);
+    	tester.close();
     }
+
+	protected Connection getQPIDConnection() throws Exception {
+		assertBrokerStarted();
+	    assertQpidClient();
+	
+	    JmsConnectionFactory factory = new JmsConnectionFactory("amqp://localhost:" + AMQP_PORT);
+	    factory.setUsername(KarafShellHelper.USER);
+	    factory.setPassword(KarafShellHelper.PASSWORD);
+	    Connection connection = factory.createConnection();
+	    connection.start();
+	    return connection;
+	}
+
+	private void assertQpidClient() throws Exception {
+		withinReason(new Runnable() {
+	        public void run() {
+	            getBundle("org.apache.qpid.jms.client");
+	        }
+	    });
+	}
 }

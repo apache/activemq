@@ -32,7 +32,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 
 @RunWith(PaxExam.class)
-public class ActiveMQClientFactoryTest extends AbstractJmsFeatureTest {
+public class ActiveMQClientFactoryTest extends AbstractFeatureTest {
     @Inject
     ConnectionFactory connectionFactory;
 
@@ -45,7 +45,7 @@ public class ActiveMQClientFactoryTest extends AbstractJmsFeatureTest {
         {
          composite(super.configure("activemq", "activemq-broker", "activemq-cf")),
          replaceConfigurationFile("etc/org.apache.activemq.cfg", 
-                                  new File("src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq-local.cfg"))
+                                  new File(RESOURCE_BASE + "org.apache.activemq-local.cfg"))
         };
     }
 

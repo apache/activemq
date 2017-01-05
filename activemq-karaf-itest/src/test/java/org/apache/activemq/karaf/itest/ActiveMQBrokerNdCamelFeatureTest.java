@@ -31,7 +31,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfi
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
 @RunWith(PaxExam.class)
-public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
+public class ActiveMQBrokerNdCamelFeatureTest extends AbstractFeatureTest {
 
     @Configuration
     public static Option[] configure() {
@@ -48,18 +48,18 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
     public void test() throws Throwable {
         System.err.println(executeCommand("feature:list -i").trim());
         assertFeatureInstalled("activemq");
-
+        assertBrokerStarted();
         withinReason(new Runnable() {
             public void run() {
                 getBundle("org.apache.activemq.activemq-camel");
-                assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
-                assertTrue(executeCommand("activemq:bstat").trim().contains("BrokerName = amq-broker"));
                 assertTrue("we have camel consumers", executeCommand("activemq:dstat").trim().contains("camel_in"));
             }
         });
 
         // produce and consume
-        produceMessage("camel_in");
-        assertEquals("got our message", "camel_in", consumeMessage("camel_out"));
+        JMSTester jms = new JMSTester();
+        jms.produceMessage("camel_in");
+        assertEquals("got our message", "camel_in", jms.consumeMessage("camel_out"));
+        jms.close();
     }
 }

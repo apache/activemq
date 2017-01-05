@@ -20,9 +20,6 @@ import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
 import java.io.File;
-import java.util.concurrent.Callable;
-
-import javax.jms.Connection;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +28,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 
 @RunWith(PaxExam.class)
-public class ActiveMQBrokerBlueprintTest extends AbstractJmsFeatureTest {
+public class ActiveMQBrokerBlueprintTest extends AbstractFeatureTest {
 
     @Configuration
     public Option[] configure() {
@@ -39,24 +36,17 @@ public class ActiveMQBrokerBlueprintTest extends AbstractJmsFeatureTest {
         {
          composite(super.configure("activemq", "activemq-blueprint")),
          replaceConfigurationFile("deploy/activemq-blueprint.xml", 
-                                  new File("src/test/resources/org/apache/activemq/karaf/itest/activemq-blueprint.xml"))
+                                  new File(RESOURCE_BASE + "activemq-blueprint.xml"))
         };
     }
 
     @Test
     public void test() throws Throwable {
-        withinReason(new Callable<Boolean>() {
-            
-            @Override
-            public Boolean call() throws Exception {
-                Connection con;
-                try {
-                    con = getConnection();
-                } catch (Throwable e) {
-                    throw new RuntimeException(e);
-                }
-                con.close();
-                return true;
+        withinReason(() ->new Runnable() {
+			public void run() {
+            	 JMSTester jms = new JMSTester();
+            	 jms.produceAndConsume(sessionFactory);
+            	 jms.close();
             }
         });
     }
