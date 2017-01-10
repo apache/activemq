@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.ResourceAllocationException;
 
@@ -59,6 +60,7 @@ public abstract class BaseDestination implements Destination {
     public static final int MAX_PRODUCERS_TO_AUDIT = 64;
     public static final int MAX_AUDIT_DEPTH = 10000;
 
+    protected final AtomicBoolean started = new AtomicBoolean();
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
