@@ -83,7 +83,7 @@ public class Topic extends BaseDestination implements Task {
                 Topic.this.taskRunner.wakeup();
             } catch (InterruptedException e) {
             }
-        };
+        }
     };
 
     public Topic(BrokerService brokerService, ActiveMQDestination destination, TopicMessageStore store,
@@ -598,30 +598,34 @@ public class Topic extends BaseDestination implements Task {
 
     @Override
     public void start() throws Exception {
-        this.subscriptionRecoveryPolicy.start();
-        if (memoryUsage != null) {
-            memoryUsage.start();
-        }
+        if (started.compareAndSet(false, true)) {
+            this.subscriptionRecoveryPolicy.start();
+            if (memoryUsage != null) {
+                memoryUsage.start();
+            }
 
-        if (getExpireMessagesPeriod() > 0 && !AdvisorySupport.isAdvisoryTopic(getActiveMQDestination())) {
-            scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
+            if (getExpireMessagesPeriod() > 0 && !AdvisorySupport.isAdvisoryTopic(getActiveMQDestination())) {
+                scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
+            }
         }
     }
 
     @Override
     public void stop() throws Exception {
-        if (taskRunner != null) {
-            taskRunner.shutdown();
-        }
-        this.subscriptionRecoveryPolicy.stop();
-        if (memoryUsage != null) {
-            memoryUsage.stop();
-        }
-        if (this.topicStore != null) {
-            this.topicStore.stop();
-        }
+        if (started.compareAndSet(true, false)) {
+            if (taskRunner != null) {
+                taskRunner.shutdown();
+            }
+            this.subscriptionRecoveryPolicy.stop();
+            if (memoryUsage != null) {
+                memoryUsage.stop();
+            }
+            if (this.topicStore != null) {
+                this.topicStore.stop();
+            }
 
-         scheduler.cancel(expireMessagesTask);
+            scheduler.cancel(expireMessagesTask);
+        }
     }
 
     @Override

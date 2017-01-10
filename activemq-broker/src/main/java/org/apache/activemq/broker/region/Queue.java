@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.region;
 
+import static org.apache.activemq.broker.region.cursors.AbstractStoreCursor.gotToTheStore;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +38,6 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -96,8 +97,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import static org.apache.activemq.broker.region.cursors.AbstractStoreCursor.gotToTheStore;
-
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
  * subscriptions.
@@ -132,7 +131,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private CountDownLatch consumersBeforeStartsLatch;
     private final AtomicLong pendingWakeups = new AtomicLong();
     private boolean allConsumersExclusiveByDefault = false;
-    private final AtomicBoolean started = new AtomicBoolean();
 
     private volatile boolean resetNeeded;
 
@@ -217,7 +215,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 LOG.debug(getName() + "Producer Flow Control Timeout Task is stopping");
             }
         }
-    };
+    }
 
     private final FlowControlTimeoutTask flowControlTimeoutTask = new FlowControlTimeoutTask();
 
