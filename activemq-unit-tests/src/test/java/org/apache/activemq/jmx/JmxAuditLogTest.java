@@ -38,11 +38,15 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Test;
 
+import static org.apache.activemq.util.TestUtils.findOpenPort;
+
 public class JmxAuditLogTest extends TestSupport
 {
    protected BrokerService broker;
 
    protected ActiveMQQueue queue;
+
+   int portToUse;
 
    @Override
    protected void setUp() throws Exception
@@ -55,7 +59,8 @@ public class JmxAuditLogTest extends TestSupport
 
       broker = new BrokerService();
       broker.setUseJmx(true);
-      broker.setManagementContext(createManagementContext("broker", 1099));
+      portToUse = findOpenPort();
+      broker.setManagementContext(createManagementContext("broker", portToUse));
       broker.setPopulateUserNameInMBeans(true);
       broker.setDestinations(createDestinations());
       broker.start();
@@ -126,7 +131,7 @@ public class JmxAuditLogTest extends TestSupport
       };
       log4jLogger.addAppender(appender);
 
-      MBeanServerConnection conn = createJMXConnector(1099);
+      MBeanServerConnection conn = createJMXConnector(portToUse);
       ObjectName queueObjName = new ObjectName(broker.getBrokerObjectName() + ",destinationType=Queue,destinationName=" + queue.getQueueName());
 
       Object[] params = {"body", "testUser", "testPassword"};

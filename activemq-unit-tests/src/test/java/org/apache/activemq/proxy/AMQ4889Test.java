@@ -18,21 +18,6 @@
 package org.apache.activemq.proxy;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSSecurityException;
-import javax.jms.Session;
-import javax.net.ServerSocketFactory;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
@@ -44,6 +29,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSSecurityException;
+import javax.jms.Session;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.apache.activemq.util.TestUtils.findOpenPort;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class AMQ4889Test {
 
@@ -140,24 +137,4 @@ public class AMQ4889Test {
         assertEquals(val, proxyConnector.getConnectionCount());
     }
 
-    protected int findOpenPort() throws IOException {
-        int openPort = 0;
-        ServerSocket ss = null;
-        try {
-            ss = ServerSocketFactory.getDefault().createServerSocket(0);
-            openPort = ss.getLocalPort();
-        } catch (IOException e) {
-            LOG.error("Could not locate an open port: ", e);
-            throw e;
-        } finally {
-            try {
-                if (ss != null ) {
-                    ss.close();
-                }
-            } catch (IOException e) { // ignore
-            }
-        }
-
-        return openPort;
-    }
 }

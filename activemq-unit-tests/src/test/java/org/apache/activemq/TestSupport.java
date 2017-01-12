@@ -18,6 +18,7 @@ package org.apache.activemq;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Map;
 
 import javax.jms.Connection;
@@ -27,6 +28,7 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
