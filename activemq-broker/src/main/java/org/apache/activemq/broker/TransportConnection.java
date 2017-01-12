@@ -856,10 +856,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             unregisterConnectionState(info.getConnectionId());
             LOG.warn("Failed to add Connection {} due to {}", info.getConnectionId(), e);
-            if (e instanceof SecurityException) {
-                // close this down - in case the peer of this transport doesn't play nice
-                delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage(), e);
-            }
+            //AMQ-6561 - stop for all exceptions on addConnection
+            // close this down - in case the peer of this transport doesn't play nice
+            delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage(), e);
             throw e;
         }
         if (info.isManageable()) {
