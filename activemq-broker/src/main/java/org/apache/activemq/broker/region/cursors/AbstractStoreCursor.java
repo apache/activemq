@@ -110,8 +110,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             recovered = true;
         } else if (!cached) {
             // a duplicate from the store (!cached) - needs to be removed/acked - otherwise it will get re dispatched on restart
-            if (message.isRecievedByDFBridge()) {
-                // expected for messages pending acks with kahadb.concurrentStoreAndDispatchQueues=true
+            if (duplicateFromStoreExcepted(message)) {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("{} store replayed pending message due to concurrentStoreAndDispatchQueues {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
                 }
@@ -126,6 +125,12 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
         }
         return recovered;
+    }
+
+    protected boolean duplicateFromStoreExcepted(Message message) {
+        // expected for messages pending acks with kahadb.concurrentStoreAndDispatchQueues=true for
+        // which this existing unused flag has been repurposed
+        return message.isRecievedByDFBridge();
     }
 
     public static boolean gotToTheStore(Message message) throws Exception {

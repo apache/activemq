@@ -95,6 +95,14 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     }
 
     @Override
+    protected boolean duplicateFromStoreExcepted(Message message) {
+        // setBatch is not implemented - sequence order not reliable with concurrent transactions
+        // on cache exhaustion - first pageIn starts from last ack location which may replay what
+        // cursor has dispatched
+        return true;
+    }
+
+    @Override
     protected synchronized int getStoreSize() {
         try {
             return store.getMessageCount(clientId, subscriberName);
@@ -137,6 +145,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         this.storeHasMessages = false;
         this.store.recoverNextMessages(clientId, subscriberName,
                 maxBatchSize, this);
+        dealWithDuplicates();
         if (!this.storeHasMessages && (!this.batchList.isEmpty() || !hadSpace)) {
             this.storeHasMessages = true;
         }

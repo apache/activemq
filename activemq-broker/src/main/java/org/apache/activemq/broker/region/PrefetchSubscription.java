@@ -684,7 +684,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     setPendingBatchSize(pending, numberToDispatch);
                     int count = 0;
                     pending.reset();
-                    while (pending.hasNext() && !isFull() && count < numberToDispatch) {
+                    while (count < numberToDispatch && !isFull() && pending.hasNext()) {
                         MessageReference node = pending.next();
                         if (node == null) {
                             break;
