@@ -73,12 +73,12 @@ public class AMQ6463Test extends JmsTestSupport {
         producer.close();
 
         // lets not consume till producer is blocked
-        Wait.waitFor(new Wait.Condition() {
+        assertTrue("got blocked event", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return gotUsageBlocked.get();
             }
-        });
+        }));
 
         MessageConsumer consumer = session.createConsumer(queueA);
         TextMessage msg;
@@ -97,6 +97,7 @@ public class AMQ6463Test extends JmsTestSupport {
         service.setPersistent(true);
         service.setUseJmx(false);
         service.setSchedulerSupport(true);
+        service.setDeleteAllMessagesOnStartup(true);
 
         // Setup a destination policy where it takes only 1 message at a time.
         PolicyMap policyMap = new PolicyMap();
