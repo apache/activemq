@@ -1686,12 +1686,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         try {
             this.indexLock.writeLock().lock();
             try {
-                pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                Set<Integer> filesToGc = pageFile.tx().execute(new Transaction.CallableClosure<Set<Integer>, IOException>() {
                     @Override
-                    public void execute(Transaction tx) throws IOException {
-                        checkpointUpdate(tx, cleanup);
+                    public Set<Integer> execute(Transaction tx) throws IOException {
+                        return checkpointUpdate(tx, cleanup);
                     }
                 });
+                // after the index update such that partial removal does not leave dangling references in the index.
+                journal.removeDataFiles(filesToGc);
             } finally {
                 this.indexLock.writeLock().unlock();
             }
@@ -1705,7 +1707,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @param tx
      * @throws IOException
      */
-    void checkpointUpdate(Transaction tx, boolean cleanup) throws IOException {
+    Set<Integer> checkpointUpdate(Transaction tx, boolean cleanup) throws IOException {
         MDC.put("activemq.persistenceDir", getDirectory().getName());
         LOG.debug("Checkpoint started.");
 
@@ -1720,10 +1722,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         tx.store(metadata.page, metadataMarshaller, true);
         pageFile.flush();
 
+        final TreeSet<Integer> gcCandidateSet = new TreeSet<>();
         if (cleanup) {
 
             final TreeSet<Integer> completeFileSet = new TreeSet<>(journal.getFileMap().keySet());
-            final TreeSet<Integer> gcCandidateSet = new TreeSet<>(completeFileSet);
+            gcCandidateSet.addAll(completeFileSet);
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Last update: " + lastUpdate + ", full gc candidates set: " + gcCandidateSet);
@@ -1895,7 +1898,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             if (!gcCandidateSet.isEmpty()) {
                 LOG.debug("Cleanup removing the data files: {}", gcCandidateSet);
-                journal.removeDataFiles(gcCandidateSet);
                 for (Integer candidate : gcCandidateSet) {
                     for (Set<Integer> ackFiles : metadata.ackMessageFileMap.values()) {
                         ackMessageFileMapMod |= ackFiles.remove(candidate);
@@ -1941,6 +1943,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         MDC.remove("activemq.persistenceDir");
 
         LOG.debug("Checkpoint done.");
+        return gcCandidateSet;
     }
 
     private final class AckCompactionRunner implements Runnable {
@@ -2700,8 +2703,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     /**
      * Locate the storeMessageSize counter for this KahaDestination
-     * @param kahaDestination
-     * @return
      */
     protected MessageStoreStatistics getStoreStats(String kahaDestKey) {
         MessageStoreStatistics storeStats = null;
