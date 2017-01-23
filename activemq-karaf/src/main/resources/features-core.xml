@@ -33,7 +33,6 @@
         <bundle dependency="false">mvn:commons-net/commons-net/${commons-net-version}</bundle>
         <bundle dependency='true'>mvn:org.apache.zookeeper/zookeeper/${zookeeper-version}</bundle>
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
-        <bundle dependency="false">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
     </feature>
     
@@ -49,7 +48,6 @@
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
       <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
-      <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
       <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
       <bundle dependency="true">mvn:commons-codec/commons-codec/1.9</bundle>
