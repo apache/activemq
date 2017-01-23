@@ -306,8 +306,9 @@ public class Journal {
         }
 
         // ensure we don't report unused space of last journal file in size metric
-        if (totalLength.get() > maxFileLength && lastAppendLocation.get().getOffset() > 0) {
-            totalLength.addAndGet(lastAppendLocation.get().getOffset() - maxFileLength);
+        int lastFileLength = dataFiles.getTail().getLength();
+        if (totalLength.get() > lastFileLength && lastAppendLocation.get().getOffset() > 0) {
+            totalLength.addAndGet(lastAppendLocation.get().getOffset() - lastFileLength);
         }
 
         cleanupTask = scheduler.scheduleAtFixedRate(new Runnable() {
