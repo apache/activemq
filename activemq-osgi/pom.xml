@@ -61,8 +61,6 @@
       org.springframework*;version="[3,5)";resolution:=optional,
       org.xmlpull*;resolution:=optional,
       scala*;resolution:=optional,
-      org.apache.xbean.spring*;resolution:=optional;version="[3.13,5)",
-      org.apache.xbean*;version="[3.13,5)",
       javax.annotation*,
       !com.thoughtworks.qdox*,
       org.apache.commons.logging;version="[1.2,2)";resolution:=optional,
@@ -87,6 +85,7 @@
       org.apache.activemq.web*;version=${project.version};-noimport:=true;-split-package:=merge-first,
     </activemq.osgi.export>
     <activemq.osgi.private.pkg>
+         org.apache.xbean*,
          org.springframework.osgi*,
          org.fusesource.hawtdispatch*,
          org.fusesource.mqtt*,
@@ -287,6 +286,7 @@
               *;groupId=org.apache.activemq;inline=META-INF/services/*,
               *;groupId=org.apache.qpid;inline=META-INF/services/*,
               *;groupId=org.springframework.osgi;inline=true
+              *;groupId=org.apache.xbean;inline=true
               <!--
               groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,
               groupId=org.xerial.snappy;inline=org/xerial/snappy/*
