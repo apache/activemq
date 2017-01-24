@@ -1237,33 +1237,35 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public void purge() throws Exception {
         ConnectionContext c = createConnectionContext();
         List<MessageReference> list = null;
-        long originalMessageCount = this.destinationStatistics.getMessages().getCount();
-        do {
-            doPageIn(true, false, getMaxPageSize());  // signal no expiry processing needed.
-            pagedInMessagesLock.readLock().lock();
-            try {
-                list = new ArrayList<MessageReference>(pagedInMessages.values());
-            }finally {
-                pagedInMessagesLock.readLock().unlock();
-            }
-
-            for (MessageReference ref : list) {
+        try {
+            sendLock.lock();
+            long originalMessageCount = this.destinationStatistics.getMessages().getCount();
+            do {
+                doPageIn(true, false, getMaxPageSize());  // signal no expiry processing needed.
+                pagedInMessagesLock.readLock().lock();
                 try {
-                    QueueMessageReference r = (QueueMessageReference) ref;
-                    removeMessage(c, r);
-                } catch (IOException e) {
+                    list = new ArrayList<MessageReference>(pagedInMessages.values());
+                }finally {
+                    pagedInMessagesLock.readLock().unlock();
                 }
-            }
-            // don't spin/hang if stats are out and there is nothing left in the
-            // store
-        } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
 
-        if (this.destinationStatistics.getMessages().getCount() > 0) {
-            LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
+                for (MessageReference ref : list) {
+                    try {
+                        QueueMessageReference r = (QueueMessageReference) ref;
+                        removeMessage(c, r);
+                    } catch (IOException e) {
+                    }
+                }
+                // don't spin/hang if stats are out and there is nothing left in the
+                // store
+            } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
+
+            if (this.destinationStatistics.getMessages().getCount() > 0) {
+                LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
+            }
+        } finally {
+            sendLock.unlock();
         }
-        gc();
-        this.destinationStatistics.getMessages().setCount(0);
-        getMessages().clear();
     }
 
     @Override
