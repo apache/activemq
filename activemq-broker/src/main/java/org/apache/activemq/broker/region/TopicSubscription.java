@@ -76,6 +76,8 @@ public class TopicSubscription extends AbstractSubscription {
     protected final Object dispatchLock = new Object();
     protected final List<MessageReference> dispatched = new ArrayList<MessageReference>();
 
+    private boolean usePrefetchExtension = true;
+
     public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
         super(broker, context, info);
         this.usageManager = usageManager;
@@ -422,6 +424,9 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     private void incrementPrefetchExtension(int amount) {
+        if (!usePrefetchExtension) {
+            return;
+        }
         while (true) {
             int currentExtension = prefetchExtension.get();
             int newExtension = Math.max(0, currentExtension + amount);
@@ -748,7 +753,8 @@ public class TopicSubscription extends AbstractSubscription {
     @Override
     public String toString() {
         return "TopicSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + getDispatchedQueueSize() + ", delivered="
-                + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded() + ", prefetchExtension=" + prefetchExtension.get();
+                + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded() + ", prefetchExtension=" + prefetchExtension.get()
+                + ", usePrefetchExtension=" + usePrefetchExtension;
     }
 
     @Override
@@ -781,4 +787,9 @@ public class TopicSubscription extends AbstractSubscription {
             LOG.trace("Caught exception on dispatch after prefetch size change.");
         }
     }
+
+    public void setUsePrefetchExtension(boolean usePrefetchExtension) {
+        this.usePrefetchExtension = usePrefetchExtension;
+    }
+
 }
