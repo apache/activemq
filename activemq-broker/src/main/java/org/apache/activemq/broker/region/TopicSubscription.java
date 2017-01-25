@@ -232,7 +232,6 @@ public class TopicSubscription extends AbstractSubscription {
                 node.decrementReferenceCount();
                 if (node.isExpired()) {
                     matched.remove();
-                    getSubscriptionStatistics().getDispatched().increment();
                     node.decrementReferenceCount();
                     if (broker.isExpired(node)) {
                         ((Destination) node.getRegionDestination()).getDestinationStatistics().getExpired().increment();
