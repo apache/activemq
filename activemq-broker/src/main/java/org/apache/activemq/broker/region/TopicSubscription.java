@@ -422,6 +422,9 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     private void incrementPrefetchExtension(int amount) {
+        if (!isUsePrefetchExtension()) {
+            return;
+        }
         while (true) {
             int currentExtension = prefetchExtension.get();
             int newExtension = Math.max(0, currentExtension + amount);
@@ -748,7 +751,8 @@ public class TopicSubscription extends AbstractSubscription {
     @Override
     public String toString() {
         return "TopicSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + getDispatchedQueueSize() + ", delivered="
-                + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded() + ", prefetchExtension=" + prefetchExtension.get();
+                + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded() + ", prefetchExtension=" + prefetchExtension.get()
+                + ", usePrefetchExtension=" + isUsePrefetchExtension();
     }
 
     @Override
@@ -781,4 +785,5 @@ public class TopicSubscription extends AbstractSubscription {
             LOG.trace("Caught exception on dispatch after prefetch size change.");
         }
     }
+
 }
