@@ -56,7 +56,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     protected PendingMessageCursor pending;
     protected final List<MessageReference> dispatched = new ArrayList<MessageReference>();
-    protected boolean usePrefetchExtension = true;
     private int maxProducersToAudit=32;
     private int maxAuditDepth=2048;
     protected final SystemUsage usageManager;
@@ -263,7 +262,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             registerRemoveSync(context, node);
                         }
 
-                        if (usePrefetchExtension && getPrefetchSize() != 0 && ack.isInTransaction()) {
+                        if (isUsePrefetchExtension() && getPrefetchSize() != 0 && ack.isInTransaction()) {
                             // allow transaction batch to exceed prefetch
                             while (true) {
                                 int currentExtension = prefetchExtension.get();
@@ -288,7 +287,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     final MessageReference node = iter.next();
                     Destination nodeDest = (Destination) node.getRegionDestination();
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
-                        if (usePrefetchExtension && getPrefetchSize() != 0) {
+                        if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
                             // allow  batch to exceed prefetch
                             while (true) {
                                 int currentExtension = prefetchExtension.get();
@@ -328,7 +327,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         nodeDest.getDestinationStatistics().getInflight().decrement();
 
                         if (ack.getLastMessageId().equals(messageId)) {
-                            if (usePrefetchExtension && getPrefetchSize() != 0) {
+                            if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
                                 // allow  batch to exceed prefetch
                                 while (true) {
                                     int currentExtension = prefetchExtension.get();
@@ -444,7 +443,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
                     @Override
                     public void beforeEnd() {
-                        if (usePrefetchExtension && getPrefetchSize() != 0) {
+                        if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
                             while (true) {
                                 int currentExtension = prefetchExtension.get();
                                 int newExtension = Math.max(0, currentExtension - 1);
@@ -890,14 +889,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (this.pending != null) {
             this.pending.setMaxAuditDepth(maxAuditDepth);
         }
-    }
-
-    public boolean isUsePrefetchExtension() {
-        return usePrefetchExtension;
-    }
-
-    public void setUsePrefetchExtension(boolean usePrefetchExtension) {
-        this.usePrefetchExtension = usePrefetchExtension;
     }
 
     @Override
