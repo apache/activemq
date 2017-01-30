@@ -313,6 +313,7 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
         configurePrefetch(subscription);
+        subscription.setUsePrefetchExtension(isUsePrefetchExtension());
         subscription.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         if (pendingMessageLimitStrategy != null) {
             int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);

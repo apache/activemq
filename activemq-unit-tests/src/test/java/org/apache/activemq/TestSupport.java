@@ -18,7 +18,7 @@ package org.apache.activemq;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.Connection;
@@ -28,13 +28,13 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -153,6 +153,15 @@ public abstract class TestSupport extends CombinationTestSupport {
         org.apache.activemq.broker.region.Destination dest = getDestination(broker, destination);
         if (dest != null) {
             result = dest.getDestinationStatistics();
+        }
+        return result;
+    }
+
+    public static List<Subscription> getDestinationConsumers(BrokerService broker, ActiveMQDestination destination) {
+        List<Subscription> result = null;
+        org.apache.activemq.broker.region.Destination dest = getDestination(broker, destination);
+        if (dest != null) {
+            result = dest.getConsumers();
         }
         return result;
     }
