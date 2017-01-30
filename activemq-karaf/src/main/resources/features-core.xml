@@ -47,7 +47,6 @@
       <feature>connector</feature>
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
-	  <feature>spring-aspects</feature>
       <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
       <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
