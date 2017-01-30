@@ -41,7 +41,6 @@
     <feature name="activemq" description="ActiveMQ broker libraries" version="${project.version}" resolver="(obr)" start-level="50">
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
-	  <feature>spring-aspects</feature>
       <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
       <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
