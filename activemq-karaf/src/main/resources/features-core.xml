@@ -22,7 +22,7 @@
 
     <!-- Bundles needed if only client will be deployed in the container -->
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}" resolver="(obr)" start-level="50">
-        <feature version="[3.2,4)">spring</feature>
+        <feature version="[3.2,5)">spring</feature>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
@@ -46,6 +46,7 @@
     <feature name="activemq" description="ActiveMQ broker libraries" version="${project.version}" resolver="(obr)" start-level="50">
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
+	  <feature>spring-aspects</feature>
       <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
       <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
