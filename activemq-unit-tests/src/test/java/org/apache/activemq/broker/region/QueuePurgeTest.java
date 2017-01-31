@@ -191,9 +191,9 @@ public class QueuePurgeTest extends CombinationTestSupport {
     private void testConcurrentPurgeAndSend(boolean prioritizedMessages) throws Exception {
         applyBrokerSpoolingPolicy(false);
         createProducerAndSendMessages(NUM_TO_SEND / 2);
-        QueueViewMBean proxy = getProxyToQueueViewMBean();
+        final QueueViewMBean proxy = getProxyToQueueViewMBean();
         createConsumer();
-        long start = System.currentTimeMillis();
+        final long start = System.currentTimeMillis();
         ExecutorService service = Executors.newFixedThreadPool(1);
         try {
             LOG.info("purging..");
