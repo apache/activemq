@@ -105,7 +105,7 @@ public class TcpTransportCloseSocketTest {
         factory.setBrokerURL(uri);
         factory.setClientID("id");
 
-        TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByName("tcp").getServer();
+        final TcpTransportServer server = (TcpTransportServer) brokerService.getTransportConnectorByName("tcp").getServer();
 
         //Try and create 2 connections, the second should fail because of a duplicate clientId
         int failed = 0;
