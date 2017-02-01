@@ -123,7 +123,7 @@ public class DestinationGCStressTest {
                             c.start();
                             Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
                             MessageProducer producer = s.createProducer(null);
-                            Message message = session.createTextMessage();
+                            Message message = s.createTextMessage();
                             int j;
                             while ((j = max.decrementAndGet()) > 0) {
                                 producer.send(new ActiveMQTopic("A." + j), message);
