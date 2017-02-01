@@ -780,8 +780,9 @@ public abstract class BaseDestination implements Destination {
     @Override
     public boolean canGC() {
         boolean result = false;
-        if (isGcIfInactive() && this.lastActiveTime != 0l && destinationStatistics.messages.getCount() == 0L ) {
-            if ((System.currentTimeMillis() - this.lastActiveTime) >= getInactiveTimeoutBeforeGC()) {
+        final long currentLastActiveTime = this.lastActiveTime;
+        if (isGcIfInactive() && currentLastActiveTime != 0l && destinationStatistics.messages.getCount() == 0L ) {
+            if ((System.currentTimeMillis() - currentLastActiveTime) >= getInactiveTimeoutBeforeGC()) {
                 result = true;
             }
         }

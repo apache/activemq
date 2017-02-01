@@ -159,10 +159,10 @@ public abstract class AbstractRegion implements Region {
                         dest = destinationInterceptor.intercept(dest);
                     }
                     dest.start();
+                    addSubscriptionsForDestination(context, dest);
                     destinations.put(destination, dest);
                     updateRegionDestCounts(destination, 1);
                     destinationMap.put(destination, dest);
-                    addSubscriptionsForDestination(context, dest);
                 }
                 if (dest == null) {
                     throw new DestinationDoesNotExistException(destination.getQualifiedName());
