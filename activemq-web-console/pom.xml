@@ -144,6 +144,7 @@
               javax.naming,
               org.w3c.dom,
               javax.servlet;version="[2.5,4)",
+              javax.servlet.annotation;version="[2.5,4)",
               javax.servlet.http;version="[2.5,4)",
               javax.servlet.jsp,
               javax.servlet.jsp.tagext,
