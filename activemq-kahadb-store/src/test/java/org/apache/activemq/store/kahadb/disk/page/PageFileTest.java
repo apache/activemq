@@ -22,11 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.util.HashSet;
 
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
-import org.apache.activemq.util.RecoverableRandomAccessFile;
 
 import junit.framework.TestCase;
 
