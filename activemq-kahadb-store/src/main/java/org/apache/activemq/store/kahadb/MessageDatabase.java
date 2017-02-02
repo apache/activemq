@@ -2104,9 +2104,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         try {
             location = journal.getNextLocation(nextLocation);
         } catch (IOException e) {
-            LOG.warn("Failed to load next journal location: {}", e.getMessage());
+            LOG.warn("Failed to load next journal location after: {}, reason: {}", nextLocation, e);
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Failed to load next journal location", e);
+                LOG.debug("Failed to load next journal location after: {}", nextLocation, e);
             }
         }
         return location;
