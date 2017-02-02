@@ -22,9 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.util.HashSet;
 
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 
 import junit.framework.TestCase;
 
@@ -198,5 +200,33 @@ public class PageFileTest extends TestCase {
             actual.add(page.get());
         }
         assertEquals(expected, actual);
+    }
+
+    //Test for AMQ-6590
+    public void testFreePageRecoveryUncleanShutdown() throws Exception {
+
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(false);
+        pf.load();
+
+        //Allocate 10 free pages
+        Transaction tx = pf.tx();
+        tx.allocate(10);
+        tx.commit();
+        pf.flush();
+
+        //Load a second instance on the same directory fo the page file which
+        //simulates an unclean shutdown from the previous run
+        PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.setEnableRecoveryFile(false);
+        pf2.load();
+
+        long freePages = pf2.getFreePageCount();
+        pf.unload();
+        pf2.unload();
+
+        //Make sure that all 10 pages are still tracked
+        assertEquals(10, freePages);
     }
 }
