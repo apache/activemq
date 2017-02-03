@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.kahadb.disk.journal;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
@@ -821,6 +822,10 @@ public class Journal {
     }
 
     public Location getNextLocation(Location location) throws IOException, IllegalStateException {
+        return getNextLocation(location, null);
+    }
+
+    public Location getNextLocation(Location location, Location limit) throws IOException, IllegalStateException {
         Location cur = null;
         while (true) {
             if (cur == null) {
@@ -860,6 +865,10 @@ public class Journal {
                 } else {
                     cur.setDataFileId(dataFile.getDataFileId().intValue());
                     cur.setOffset(0);
+                    if (limit != null && cur.compareTo(limit) >= 0) {
+                        LOG.trace("reached limit: {} at: {}", limit, cur);
+                        return null;
+                    }
                 }
             }
 
@@ -867,6 +876,9 @@ public class Journal {
             DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
             try {
                 reader.readLocationDetails(cur);
+            } catch (EOFException eof) {
+                LOG.trace("EOF on next: " + location + ", cur: " + cur);
+                throw eof;
             } finally {
                 accessorPool.closeDataFileAccessor(reader);
             }

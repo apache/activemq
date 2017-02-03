@@ -1752,7 +1752,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
                 gcCandidateSet.remove(dataFileId);
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("gc candidates after producerSequenceIdTrackerLocation:" + dataFileId + ", " + gcCandidateSet);
+                    LOG.trace("gc candidates after producerSequenceIdTrackerLocation:" + metadata.producerSequenceIdTrackerLocation + ", " + gcCandidateSet);
                 }
             }
 
@@ -1760,7 +1760,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 int dataFileId = metadata.ackMessageFileMapLocation.getDataFileId();
                 gcCandidateSet.remove(dataFileId);
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("gc candidates after ackMessageFileMapLocation:" + dataFileId + ", " + gcCandidateSet);
+                    LOG.trace("gc candidates after ackMessageFileMapLocation:" + metadata.ackMessageFileMapLocation + ", " + gcCandidateSet);
                 }
             }
 
@@ -1771,7 +1771,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             }
             if (LOG.isTraceEnabled()) {
-                LOG.trace("gc candidates after tx range:" + Arrays.asList(inProgressTxRange) + ", " + gcCandidateSet);
+                LOG.trace("gc candidates after in progress tx range:" + Arrays.asList(inProgressTxRange) + ", " + gcCandidateSet);
             }
 
             // Go through all the destinations to see if any of them can remove GC candidates.
@@ -2038,7 +2038,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         DataFile forwardsFile = journal.reserveDataFile();
         forwardsFile.setTypeCode(COMPACTED_JOURNAL_FILE);
-        LOG.trace("Reserved now file for forwarded acks: {}", forwardsFile);
+        LOG.trace("Reserved file for forwarded acks: {}", forwardsFile);
 
         Map<Integer, Set<Integer>> updatedAckLocations = new HashMap<>();
 
@@ -2051,8 +2051,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             appender.storeItem(payload, Journal.USER_RECORD_TYPE, false);
             LOG.trace("Marked ack rewrites file as replacing file: {}", journalToRead);
 
-            Location nextLocation = getNextLocationForAckForward(new Location(journalToRead, 0));
-            while (nextLocation != null && nextLocation.getDataFileId() == journalToRead) {
+            final Location limit = new Location(journalToRead + 1, 0);
+            Location nextLocation = getNextLocationForAckForward(new Location(journalToRead, 0), limit);
+            while (nextLocation != null) {
                 JournalCommand<?> command = null;
                 try {
                     command = load(nextLocation);
@@ -2066,7 +2067,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     updatedAckLocations.put(location.getDataFileId(), journalLogsReferenced);
                 }
 
-                nextLocation = getNextLocationForAckForward(nextLocation);
+                nextLocation = getNextLocationForAckForward(nextLocation, limit);
             }
         }
 
@@ -2096,13 +2097,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         LOG.trace("ACK File Map following updates: {}", metadata.ackMessageFileMap);
     }
 
-    private Location getNextLocationForAckForward(final Location nextLocation) {
+    private Location getNextLocationForAckForward(final Location nextLocation, final Location limit) {
         //getNextLocation() can throw an IOException, we should handle it and set
         //nextLocation to null and abort gracefully
         //Should not happen in the normal case
         Location location = null;
         try {
-            location = journal.getNextLocation(nextLocation);
+            location = journal.getNextLocation(nextLocation, limit);
         } catch (IOException e) {
             LOG.warn("Failed to load next journal location after: {}, reason: {}", nextLocation, e);
             if (LOG.isDebugEnabled()) {
