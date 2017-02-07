@@ -266,8 +266,12 @@ public abstract class AbstractRegion implements Region {
         if (timeout == 0) {
             for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
                 Subscription sub = iter.next();
-                if (sub.matches(destination)) {
-                    throw new JMSException("Destination still has an active subscription: " + destination);
+                if (sub.matches(destination) ) {
+                    // may be a new sub created after gc decision, verify if really subscribed
+                    Destination toDelete  = destinations.get(destination);
+                    if (toDelete != null && toDelete.getDestinationStatistics().getConsumers().getCount() > 0 ) {
+                        throw new JMSException("Destination still has an active subscription: " + destination);
+                    }
                 }
             }
         }
