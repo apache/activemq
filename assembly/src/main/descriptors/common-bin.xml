@@ -147,6 +147,8 @@
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/camel</outputDirectory>
@@ -158,6 +160,8 @@
         <include>org.apache.camel:camel-jms</include>
         <include>org.apache.activemq:activemq-camel</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/optional</outputDirectory>
@@ -234,6 +238,8 @@
         <include>io.fabric8.insight:insight-log4j</include>
 
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/extra</outputDirectory>
@@ -247,6 +253,8 @@
         <!-- junit integration -->
         <include>org.apache.activemq.tooling:activemq-junit</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/web</outputDirectory>
@@ -283,6 +291,8 @@
         <include>org.jolokia:jolokia-core</include>
         <include>com.googlecode.json-simple:json-simple</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
   </dependencySets>
 </component>
