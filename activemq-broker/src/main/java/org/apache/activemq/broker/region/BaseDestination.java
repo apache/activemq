@@ -263,6 +263,7 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception{
         destinationStatistics.getConsumers().decrement();
+        this.lastActiveTime=0l;
     }
 
 
@@ -298,9 +299,9 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public boolean isActive() {
-        boolean isActive = destinationStatistics.getConsumers().getCount() != 0 ||
-                           destinationStatistics.getProducers().getCount() != 0;
-        if (isActive && isGcWithNetworkConsumers() && destinationStatistics.getConsumers().getCount() != 0) {
+        boolean isActive = destinationStatistics.getConsumers().getCount() > 0 ||
+                           destinationStatistics.getProducers().getCount() > 0;
+        if (isActive && isGcWithNetworkConsumers() && destinationStatistics.getConsumers().getCount() > 0) {
             isActive = hasRegularConsumers(getConsumers());
         }
         return isActive;
