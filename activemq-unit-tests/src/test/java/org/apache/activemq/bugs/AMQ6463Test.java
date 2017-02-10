@@ -102,6 +102,7 @@ public class AMQ6463Test extends JmsTestSupport {
         // Setup a destination policy where it takes only 1 message at a time.
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policy = new PolicyEntry();
+        policy.setExpireMessagesPeriod(0); // so not to effect memory usage
         policy.setMemoryLimit(1);
         policy.setPendingSubscriberPolicy(new VMPendingSubscriberMessageStoragePolicy());
         policy.setPendingQueuePolicy(new VMPendingQueueMessageStoragePolicy());
