@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 public class DestinationGCStressTest {
@@ -168,7 +169,7 @@ public class DestinationGCStressTest {
         log4jLogger.addAppender(appender);
         try {
 
-            final AtomicInteger max = new AtomicInteger(10000);
+            final AtomicInteger max = new AtomicInteger(20000);
 
             final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
             factory.setWatchTopicAdvisories(false);
@@ -201,13 +202,12 @@ public class DestinationGCStressTest {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < 100; i++) {
+                    for (int i = 0; i < 1000; i++) {
                         try {
                             MessageConsumer messageConsumer = session.createConsumer(new ActiveMQTopic(">"));
                             messageConsumer.close();
 
                         } catch (Exception ignored) {
-                            ignored.printStackTrace();
                         }
                     }
                 }
@@ -225,5 +225,76 @@ public class DestinationGCStressTest {
         }
         assertFalse("failed on unexpected log event", failed.get());
 
+    }
+
+    @Test(timeout = 60000)
+    public void testAllDestsSeeSub() throws Exception {
+
+        final AtomicInteger foundDestWithMissingSub = new AtomicInteger(0);
+
+        final AtomicInteger max = new AtomicInteger(20000);
+
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+        factory.setWatchTopicAdvisories(false);
+        Connection connection = factory.createConnection();
+        connection.start();
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i < 1; i++) {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Connection c = factory.createConnection();
+                        c.start();
+                        Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                        MessageProducer producer = s.createProducer(null);
+                        Message message = s.createTextMessage();
+                        int j;
+                        while ((j = max.decrementAndGet()) > 0) {
+                            producer.send(new ActiveMQTopic("A." + j), message);
+                        }
+                    } catch (Exception ignored) {
+                        ignored.printStackTrace();
+                    }
+                }
+            });
+        }
+
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 1000; i++) {
+                    try {
+                        MessageConsumer messageConsumer = session.createConsumer(new ActiveMQTopic(">"));
+                        if (destMissingSub(foundDestWithMissingSub)) {
+                            break;
+                        }
+                        messageConsumer.close();
+
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        });
+
+        executorService.shutdown();
+        executorService.awaitTermination(60, TimeUnit.SECONDS);
+        connection.close();
+
+        assertEquals("no dests missing sub", 0, foundDestWithMissingSub.get());
+
+    }
+
+    private boolean destMissingSub(AtomicInteger tally) {
+        for (Destination destination :
+                ((RegionBroker)brokerService.getRegionBroker()).getTopicRegion().getDestinationMap().values()) {
+            if (destination.getConsumers().isEmpty()) {
+                tally.incrementAndGet();
+                return true;
+            }
+        }
+        return false;
     }
 }

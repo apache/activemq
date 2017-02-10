@@ -192,9 +192,12 @@ public class Topic extends BaseDestination implements Task {
     @Override
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception {
         if (!sub.getConsumerInfo().isDurable()) {
-            super.removeSubscription(context, sub, lastDeliveredSequenceId);
+            boolean removed = false;
             synchronized (consumers) {
-                consumers.remove(sub);
+                removed = consumers.remove(sub);
+            }
+            if (removed) {
+                super.removeSubscription(context, sub, lastDeliveredSequenceId);
             }
         }
         sub.remove(context, this);
