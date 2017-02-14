@@ -51,7 +51,7 @@ public class StoreUsageTest extends EmbeddedBrokerTestSupport {
         Connection conn = factory.createConnection();
         conn.start();
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination dest = sess.createQueue(this.getClass().getName());
+        final Destination dest = sess.createQueue(this.getClass().getName());
         final ProducerThread producer = new ProducerThread(sess, dest);
         producer.start();
 
