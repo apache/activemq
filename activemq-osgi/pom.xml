@@ -162,6 +162,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
+      <exclusions>
+      <exclusion>
+          <artifactId>activemq-all</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -300,7 +305,6 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
-          <excludeDependencies>activemq-all;scope=compile|runtime</excludeDependencies>
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
             <Embed-Dependency>
