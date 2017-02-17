@@ -182,7 +182,9 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                 }
             }
 
-            IntrospectionSupport.setProperties(socket, transportOptions);
+            //AMQ-6599 - don't strip out set properties on the socket as we need to set them
+            //on the Transport as well later
+            IntrospectionSupport.setProperties(socket, transportOptions, false);
         }
     }
 
