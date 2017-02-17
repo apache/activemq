@@ -136,7 +136,11 @@ public final class IntrospectionSupport {
         return rc;
     }
 
-    public static boolean setProperties(Object target, Map props) {
+    public static boolean setProperties(Object target, Map<?, ?> props) {
+        return setProperties(target, props, true);
+    }
+
+    public static boolean setProperties(Object target, Map<?, ?> props, boolean removeIfSet) {
         boolean rc = false;
 
         if (target == null) {
@@ -149,7 +153,9 @@ public final class IntrospectionSupport {
         for (Iterator<?> iter = props.entrySet().iterator(); iter.hasNext();) {
             Map.Entry<?,?> entry = (Entry<?,?>)iter.next();
             if (setProperty(target, (String)entry.getKey(), entry.getValue())) {
-                iter.remove();
+                if (removeIfSet) {
+                    iter.remove();
+                }
                 rc = true;
             }
         }
