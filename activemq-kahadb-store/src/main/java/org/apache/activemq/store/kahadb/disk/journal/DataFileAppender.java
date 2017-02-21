@@ -28,6 +28,7 @@ import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStra
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -177,11 +178,6 @@ class DataFileAppender implements FileAppender {
                 thread.setDaemon(true);
                 thread.setName("ActiveMQ Data File Writer");
                 thread.start();
-                firstAsyncException = null;
-            }
-
-            if (firstAsyncException != null) {
-                throw firstAsyncException;
             }
 
             while ( true ) {
@@ -249,7 +245,6 @@ class DataFileAppender implements FileAppender {
 
     int statIdx = 0;
     int[] stats = new int[maxStat];
-    final byte[] end = new byte[]{0};
     /**
      * The async processing loop that writes to the data files and does the
      * force calls. Since the file sync() call is the slowest of all the
@@ -286,7 +281,7 @@ class DataFileAppender implements FileAppender {
                     if (file != null) {
                         if (periodicSync) {
                             if (logger.isTraceEnabled()) {
-                                logger.trace("Syning file {} on rotate", dataFile.getFile().getName());
+                                logger.trace("Syncing file {} on rotate", dataFile.getFile().getName());
                             }
                             file.sync();
                         }
@@ -355,20 +350,13 @@ class DataFileAppender implements FileAppender {
 
                 signalDone(wb);
             }
-        } catch (IOException e) {
-            logger.info("Journal failed while writing at: " + wb.offset);
+        } catch (Throwable error) {
+            logger.warn("Journal failed while writing at: " + wb.dataFile.getDataFileId() + ":" + wb.offset, error);
             synchronized (enqueueMutex) {
-                firstAsyncException = e;
-                if (wb != null) {
-                    wb.exception.set(e);
-                    wb.latch.countDown();
-                }
-                if (nextWriteBatch != null) {
-                    nextWriteBatch.exception.set(e);
-                    nextWriteBatch.latch.countDown();
-                }
+                running = false;
+                signalError(wb, error);
+                signalError(nextWriteBatch, error);
             }
-        } catch (InterruptedException e) {
         } finally {
             try {
                 if (file != null) {
@@ -396,7 +384,7 @@ class DataFileAppender implements FileAppender {
             if (!write.sync) {
                 inflightWrites.remove(new Journal.WriteKey(write.location));
             }
-            if (write.onComplete != null) {
+            if (write.onComplete != null && wb.exception.get() == null) {
                 try {
                     write.onComplete.run();
                 } catch (Throwable e) {
@@ -408,5 +396,18 @@ class DataFileAppender implements FileAppender {
 
         // Signal any waiting threads that the write is on disk.
         wb.latch.countDown();
+    }
+
+    protected void signalError(WriteBatch wb, Throwable t) {
+        if (wb != null) {
+            if (t instanceof IOException) {
+                wb.exception.set((IOException) t);
+                // revert batch increment such that next write is contiguous
+                wb.dataFile.decrementLength(wb.size);
+            } else {
+                wb.exception.set(IOExceptionSupport.create(t));
+            }
+            signalDone(wb);
+        }
     }
 }

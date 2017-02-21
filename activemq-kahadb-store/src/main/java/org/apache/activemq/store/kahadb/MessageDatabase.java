@@ -1132,7 +1132,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
             return location;
         } catch (IOException ioe) {
-            LOG.error("KahaDB failed to store to Journal", ioe);
+            LOG.error("KahaDB failed to store to Journal, command of type: " + data.type(), ioe);
             brokerService.handleIOException(ioe);
             throw ioe;
         }
