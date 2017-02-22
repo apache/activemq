@@ -480,16 +480,16 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         final int maxRedeliveries = 4;
         for (int i=0;i<=maxRedeliveries +1;i++) {
 
-            connection = (ActiveMQConnection)factory.createConnection(userName, password);
-            connections.add(connection);
+            final ActiveMQConnection consumerConnection = (ActiveMQConnection)factory.createConnection(userName, password);
+            connections.add(consumerConnection);
             // Receive a message with the JMS API
-            RedeliveryPolicy policy = connection.getRedeliveryPolicy();
+            RedeliveryPolicy policy = consumerConnection.getRedeliveryPolicy();
             policy.setInitialRedeliveryDelay(0);
             policy.setUseExponentialBackOff(false);
             policy.setMaximumRedeliveries(maxRedeliveries);
 
-            connection.start();
-            session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+            consumerConnection.start();
+            session = consumerConnection.createSession(true, Session.AUTO_ACKNOWLEDGE);
             MessageConsumer consumer = session.createConsumer(destination);
 
             ActiveMQTextMessage m = ((ActiveMQTextMessage)consumer.receive(4000));
@@ -513,11 +513,18 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
                 transportServer.stop();
             }
 
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return consumerConnection.isTransportFailed();
+                }
+            });
+
             try {
-                connection.close();
+                consumerConnection.close();
             } catch (Exception expected) {
             } finally {
-                connections.remove(connection);
+                connections.remove(consumerConnection);
             }
         }
 
@@ -553,17 +560,17 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         final int maxRedeliveries = 4;
         for (int i=0;i<=maxRedeliveries + 1;i++) {
 
-            connection = (ActiveMQConnection)factory.createConnection(userName, password);
-            connections.add(connection);
+            final ActiveMQConnection consumerConnection = (ActiveMQConnection)factory.createConnection(userName, password);
+            connections.add(consumerConnection);
             // Receive a message with the JMS API
-            RedeliveryPolicy policy = connection.getRedeliveryPolicy();
+            RedeliveryPolicy policy = consumerConnection.getRedeliveryPolicy();
             policy.setInitialRedeliveryDelay(0);
             policy.setUseExponentialBackOff(false);
             policy.setMaximumRedeliveries(maxRedeliveries);
             policy.setPreDispatchCheck(false);
 
-            connection.start();
-            session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+            consumerConnection.start();
+            session = consumerConnection.createSession(true, Session.AUTO_ACKNOWLEDGE);
             MessageConsumer consumer = session.createConsumer(destination);
 
             ActiveMQTextMessage m = ((ActiveMQTextMessage)consumer.receive(4000));
@@ -576,11 +583,18 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
                 transportServer.stop();
             }
 
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return consumerConnection.isTransportFailed();
+                }
+            });
+
             try {
-                connection.close();
+                consumerConnection.close();
             } catch (Exception expected) {
             } finally {
-                connections.remove(connection);
+                connections.remove(consumerConnection);
             }
         }
     }
