@@ -37,7 +37,7 @@ public class TaskRunnerFactoryTest {
      * @throws Exception
      */
     @Test
-    public void testConcurrentTaskRunnerCreaction() throws Exception {
+    public void testConcurrentTaskRunnerCreation() throws Exception {
 
         final TaskRunnerFactory factory = new TaskRunnerFactory();
         final ExecutorService service = Executors.newFixedThreadPool(10);
