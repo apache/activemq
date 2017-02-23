@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public class TaskRunnerFactory implements Executor {
 
     private static final Logger LOG = LoggerFactory.getLogger(TaskRunnerFactory.class);
-    private ExecutorService executor;
+    private final AtomicReference<ExecutorService> executorRef = new AtomicReference<>();
     private int maxIterationsPerRun;
     private String name;
     private int priority;
@@ -81,15 +82,23 @@ public class TaskRunnerFactory implements Executor {
     }
 
     public void init() {
-        if (initDone.compareAndSet(false, true)) {
+        if (!initDone.get()) {
             // If your OS/JVM combination has a good thread model, you may want to
             // avoid using a thread pool to run tasks and use a DedicatedTaskRunner instead.
-            if (dedicatedTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
-                executor = null;
-            } else if (executor == null) {
-                executor = createDefaultExecutor();
+            //AMQ-6602 - lock instead of using compareAndSet to prevent threads from seeing a null value
+            //for executorRef inside createTaskRunner() on contention and creating a DedicatedTaskRunner
+            synchronized(this) {
+                //need to recheck if initDone is true under the lock
+                if (!initDone.get()) {
+                    if (dedicatedTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
+                        executorRef.set(null);
+                    } else {
+                        executorRef.compareAndSet(null, createDefaultExecutor());
+                    }
+                    LOG.debug("Initialized TaskRunnerFactory[{}] using ExecutorService: {}", name, executorRef.get());
+                    initDone.set(true);
+                }
             }
-            LOG.debug("Initialized TaskRunnerFactory[{}] using ExecutorService: {}", name, executor);
         }
     }
 
@@ -99,11 +108,11 @@ public class TaskRunnerFactory implements Executor {
      * @see ThreadPoolUtils#shutdown(java.util.concurrent.ExecutorService)
      */
     public void shutdown() {
+        ExecutorService executor = executorRef.get();
         if (executor != null) {
             ThreadPoolUtils.shutdown(executor);
-            executor = null;
         }
-        initDone.set(false);
+        clearExecutor();
     }
 
     /**
@@ -112,11 +121,11 @@ public class TaskRunnerFactory implements Executor {
      * @see ThreadPoolUtils#shutdownNow(java.util.concurrent.ExecutorService)
      */
     public void shutdownNow() {
+        ExecutorService executor = executorRef.get();
         if (executor != null) {
             ThreadPoolUtils.shutdownNow(executor);
-            executor = null;
         }
-        initDone.set(false);
+        clearExecutor();
     }
 
     /**
@@ -125,15 +134,25 @@ public class TaskRunnerFactory implements Executor {
      * @see ThreadPoolUtils#shutdownGraceful(java.util.concurrent.ExecutorService)
      */
     public void shutdownGraceful() {
+        ExecutorService executor = executorRef.get();
         if (executor != null) {
             ThreadPoolUtils.shutdownGraceful(executor, shutdownAwaitTermination);
-            executor = null;
         }
-        initDone.set(false);
+        clearExecutor();
+    }
+
+    private void clearExecutor() {
+        //clear under a lock to prevent threads from seeing initDone == true
+        //but then getting null from executorRef
+        synchronized(this) {
+            executorRef.set(null);
+            initDone.set(false);
+        }
     }
 
     public TaskRunner createTaskRunner(Task task, String name) {
         init();
+        ExecutorService executor = executorRef.get();
         if (executor != null) {
             return new PooledTaskRunner(executor, task, maxIterationsPerRun);
         } else {
@@ -149,6 +168,7 @@ public class TaskRunnerFactory implements Executor {
     public void execute(Runnable runnable, String name) {
         init();
         LOG.trace("Execute[{}] runnable: {}", name, runnable);
+        ExecutorService executor = executorRef.get();
         if (executor != null) {
             executor.execute(runnable);
         } else {
@@ -198,11 +218,11 @@ public class TaskRunnerFactory implements Executor {
     }
 
     public ExecutorService getExecutor() {
-        return executor;
+        return executorRef.get();
     }
 
     public void setExecutor(ExecutorService executor) {
-        this.executor = executor;
+        this.executorRef.set(executor);
     }
 
     public int getMaxIterationsPerRun() {
