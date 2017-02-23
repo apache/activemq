@@ -46,14 +46,24 @@ public class TaskRunnerFactoryTest {
         final List<TaskRunner> runners = Collections.synchronizedList(new ArrayList<>(10));
 
         for (int i = 0; i < 10; i++) {
-            service.execute(() -> {
-                try {
-                    latch1.await();
-                } catch (InterruptedException e) {
-                   throw new IllegalStateException(e);
+            service.execute(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        latch1.await();
+                    } catch (InterruptedException e) {
+                       throw new IllegalStateException(e);
+                    }
+                    runners.add(factory.createTaskRunner(new Task() {
+
+                        @Override
+                        public boolean iterate() {
+                            return false;
+                        }
+                    }, "task"));
+                    latch2.countDown();
                 }
-                runners.add(factory.createTaskRunner(() -> true, "task") );
-                latch2.countDown();
             });
         }
 
