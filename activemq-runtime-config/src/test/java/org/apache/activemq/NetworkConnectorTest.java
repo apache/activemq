@@ -17,8 +17,13 @@
 package org.apache.activemq;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import javax.management.InstanceNotFoundException;
 
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
@@ -57,6 +62,10 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         assertEquals("one statically included", 1, networkConnector.getStaticallyIncludedDestinations().size());
         assertEquals("one dynamically included", 1, networkConnector.getDynamicallyIncludedDestinations().size());
         assertEquals("one durable", 1, networkConnector.getDurableDestinations().size());
+        assertFalse(networkConnector.getBrokerName().isEmpty());
+
+        assertNotNull(brokerService.getManagementContext().getObjectInstance(
+                brokerService.createNetworkConnectorObjectName(networkConnector)));
 
     }
 
@@ -84,6 +93,10 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         applyNewConfig(brokerConfig, configurationSeed + "-mod-one-nc", SLEEP);
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
         assertSame("same instance", modNetworkConnector, brokerService.getNetworkConnectors().get(0));
+        assertFalse(modNetworkConnector.getBrokerName().isEmpty());
+
+        assertNotNull(brokerService.getManagementContext().getObjectInstance(
+                brokerService.createNetworkConnectorObjectName(modNetworkConnector)));
     }
 
     @Test
@@ -94,6 +107,8 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
         assertEquals("correct network connectors", 2, brokerService.getNetworkConnectors().size());
+
+        NetworkConnector two = brokerService.getNetworkConnectors().get(1);
 
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
 
@@ -106,5 +121,16 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
 
         NetworkConnector remainingNetworkConnector = brokerService.getNetworkConnectors().get(0);
         assertEquals("name match", "one", remainingNetworkConnector.getName());
+
+        try {
+            brokerService.getManagementContext().getObjectInstance(
+                brokerService.createNetworkConnectorObjectName(two));
+            fail("mbean for nc2 should not exist");
+        } catch (InstanceNotFoundException e) {
+            //should throw exception
+        }
+
+        assertNotNull(brokerService.getManagementContext().getObjectInstance(
+                brokerService.createNetworkConnectorObjectName(remainingNetworkConnector)));
     }
 }

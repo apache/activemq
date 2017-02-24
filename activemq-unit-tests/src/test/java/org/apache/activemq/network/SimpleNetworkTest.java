@@ -174,6 +174,9 @@ public class SimpleNetworkTest {
         assertNull(consumer2.receive(1000));
 
         assertNetworkBridgeStatistics(MESSAGE_COUNT, 0);
+
+        assertNotNull(localBroker.getManagementContext().getObjectInstance(
+                localBroker.createNetworkConnectorObjectName(localBroker.getNetworkConnectors().get(0))));
     }
 
     private void waitForConsumerRegistration(final BrokerService brokerService, final int min, final ActiveMQDestination destination) throws Exception {

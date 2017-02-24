@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -2270,7 +2271,7 @@ public class BrokerService implements Service {
         }
     }
 
-    protected ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
+    public ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
         return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "networkConnectors", connector.getName());
     }
 
@@ -2603,7 +2604,6 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public void startAllConnectors() throws Exception {
-        Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
         List<TransportConnector> al = new ArrayList<>();
         for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
             TransportConnector connector = iter.next();
@@ -2642,26 +2642,7 @@ public class BrokerService implements Service {
             for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 final NetworkConnector connector = iter.next();
                 connector.setLocalUri(uri);
-                connector.setBrokerName(getBrokerName());
-                connector.setDurableDestinations(durableDestinations);
-                if (getDefaultSocketURIString() != null) {
-                    connector.setBrokerURL(getDefaultSocketURIString());
-                }
-                if (networkConnectorStartExecutor != null) {
-                    networkConnectorStartExecutor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                LOG.info("Async start of {}", connector);
-                                connector.start();
-                            } catch(Exception e) {
-                                LOG.error("Async start of network connector: {} failed", connector, e);
-                            }
-                        }
-                    });
-                } else {
-                    connector.start();
-                }
+                startNetworkConnector(connector, networkConnectorStartExecutor);
             }
             if (networkConnectorStartExecutor != null) {
                 // executor done when enqueued tasks are complete
@@ -2680,6 +2661,45 @@ public class BrokerService implements Service {
                 configureService(service);
                 service.start();
             }
+        }
+    }
+
+    public void startNetworkConnector(final NetworkConnector connector,
+            final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
+        connector.setBrokerName(getBrokerName());
+        //set the durable destinations to match the broker if not set on the connector
+        if (connector.getDurableDestinations() == null) {
+            connector.setDurableDestinations(getBroker().getDurableDestinations());
+        }
+        String defaultSocketURI = getDefaultSocketURIString();
+        if (defaultSocketURI != null) {
+            connector.setBrokerURL(defaultSocketURI);
+        }
+        //If using the runtime plugin to start a network connector then the mbean needs
+        //to be added, under normal start it will already exist so check for InstanceNotFoundException
+        if (isUseJmx()) {
+            ObjectName networkMbean = createNetworkConnectorObjectName(connector);
+            try {
+                getManagementContext().getObjectInstance(networkMbean);
+            } catch (InstanceNotFoundException e) {
+                LOG.debug("Network connector MBean {} not found, registering", networkMbean);
+                registerNetworkConnectorMBean(connector);
+            }
+        }
+        if (networkConnectorStartExecutor != null) {
+            networkConnectorStartExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        LOG.info("Async start of {}", connector);
+                        connector.start();
+                    } catch(Exception e) {
+                        LOG.error("Async start of network connector: {} failed", connector, e);
+                    }
+                }
+            });
+        } else {
+            connector.start();
         }
     }
 
