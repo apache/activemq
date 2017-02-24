@@ -43,7 +43,7 @@ public class TaskRunnerFactoryTest {
         final ExecutorService service = Executors.newFixedThreadPool(10);
         final CountDownLatch latch1 = new CountDownLatch(1);
         final CountDownLatch latch2 = new CountDownLatch(10);
-        final List<TaskRunner> runners = Collections.synchronizedList(new ArrayList<>(10));
+        final List<TaskRunner> runners = Collections.<TaskRunner>synchronizedList(new ArrayList<TaskRunner>(10));
 
         for (int i = 0; i < 10; i++) {
             service.execute(new Runnable() {
