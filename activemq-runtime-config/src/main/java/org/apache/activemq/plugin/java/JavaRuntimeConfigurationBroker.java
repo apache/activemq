@@ -104,7 +104,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
         try {
             if (!getBrokerService().getNetworkConnectors().contains(nc)) {
                 getBrokerService().addNetworkConnector(nc);
-                nc.start();
+                getBrokerService().startNetworkConnector(nc, null);
                 info("started new network connector: " + nc);
             } else {
                 info("skipping network connector add, already exists: " + nc);
