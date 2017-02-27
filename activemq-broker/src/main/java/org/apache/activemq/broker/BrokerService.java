@@ -2604,6 +2604,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public void startAllConnectors() throws Exception {
+        final Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
         List<TransportConnector> al = new ArrayList<>();
         for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
             TransportConnector connector = iter.next();
@@ -2642,7 +2643,7 @@ public class BrokerService implements Service {
             for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 final NetworkConnector connector = iter.next();
                 connector.setLocalUri(uri);
-                startNetworkConnector(connector, networkConnectorStartExecutor);
+                startNetworkConnector(connector, durableDestinations, networkConnectorStartExecutor);
             }
             if (networkConnectorStartExecutor != null) {
                 // executor done when enqueued tasks are complete
@@ -2666,10 +2667,16 @@ public class BrokerService implements Service {
 
     public void startNetworkConnector(final NetworkConnector connector,
             final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
+        startNetworkConnector(connector, getBroker().getDurableDestinations(), networkConnectorStartExecutor);
+    }
+
+    public void startNetworkConnector(final NetworkConnector connector,
+            final Set<ActiveMQDestination> durableDestinations,
+            final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
         connector.setBrokerName(getBrokerName());
         //set the durable destinations to match the broker if not set on the connector
         if (connector.getDurableDestinations() == null) {
-            connector.setDurableDestinations(getBroker().getDurableDestinations());
+            connector.setDurableDestinations(durableDestinations);
         }
         String defaultSocketURI = getDefaultSocketURIString();
         if (defaultSocketURI != null) {
