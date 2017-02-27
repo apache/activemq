@@ -977,6 +977,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
                 messageDispatch = null;
                 throw e;
+            } else {
+                if (TRANSPORTLOG.isDebugEnabled()) {
+                    TRANSPORTLOG.debug("Unexpected exception on asyncDispatch, command of type: " + command.getDataStructureType(), e);
+                }
             }
         } finally {
             if (messageDispatch != null) {
