@@ -108,6 +108,21 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
     }
 
+    private final class ExceptionResponseCheckAction implements ResponseHandler {
+        private final ConsumerInfo info;
+
+        public ExceptionResponseCheckAction(ConsumerInfo info) {
+            this.info = info;
+        }
+
+        @Override
+        public void onResponse(Command response) {
+            if (ExceptionResponse.DATA_STRUCTURE_TYPE == response.getDataStructureType()) {
+                processRemoveConsumer(info.getConsumerId(), 0l);
+            }
+        }
+    }
+
     private class PrepareReadonlyTransactionAction extends RemoveTransactionAction {
         public PrepareReadonlyTransactionAction(TransactionInfo info) {
             super(info);
@@ -415,6 +430,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                         SessionState ss = cs.getSessionState(sessionId);
                         if (ss != null) {
                             ss.addConsumer(info);
+                            if (info.isResponseRequired()) {
+                                return new Tracked(new ExceptionResponseCheckAction(info));
+                            }
                         }
                     }
                 }
