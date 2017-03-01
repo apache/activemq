@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.pool;
 
-import com.google.common.base.Strings;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -122,9 +121,7 @@ public class PooledConsumerTest {
                 TextMessage textMessage = (TextMessage) message;
                 try {
                     String response = textMessage.getText();
-                    LOGGER.info(Strings.repeat("=", 50));
                     LOGGER.info("Received: '{}'", response);
-                    LOGGER.info(Strings.repeat("=", 50));
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage(), e);
                 }
