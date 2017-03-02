@@ -689,10 +689,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                                     } else {
                                         LOG.debug("unexpected exception on deferred send of: {}", message, e);
                                     }
+                                } finally {
+                                    getDestinationStatistics().getBlockedSends().decrement();
+                                    producerExchangeCopy.blockingOnFlowControl(false);
                                 }
                             }
                         });
 
+                        getDestinationStatistics().getBlockedSends().increment();
+                        producerExchange.blockingOnFlowControl(true);
                         if (!context.isNetworkConnection() && systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
                             flowControlTimeoutMessages.add(new TimeoutMessage(message, context, systemUsage
                                     .getSendFailIfNoSpaceAfterTimeout()));
