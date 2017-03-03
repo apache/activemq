@@ -628,12 +628,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             isFull(context, memoryUsage);
             fastProducer(context, producerInfo);
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
-                if (warnOnProducerFlowControl) {
-                    warnOnProducerFlowControl = false;
+                if (isFlowControlLogRequired()) {
                     LOG.info("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
-                                    memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
-                }
+                                memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
 
+                }
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
                     throw new ResourceAllocationException("Usage Manager Memory Limit reached. Stopping producer ("
                             + message.getProducerId() + ") to prevent flooding "

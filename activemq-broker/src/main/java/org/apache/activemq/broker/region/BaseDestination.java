@@ -68,7 +68,7 @@ public abstract class BaseDestination implements Destination {
     protected MemoryUsage memoryUsage;
     private boolean producerFlowControl = true;
     private boolean alwaysRetroactive = false;
-    protected boolean warnOnProducerFlowControl = true;
+    protected long lastBlockedProducerWarnTime = 0l;
     protected long blockedProducerWarningInterval = DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL;
 
     private int maxProducersToAudit = 1024;
@@ -683,7 +683,6 @@ public abstract class BaseDestination implements Destination {
             }
         } else {
             long start = System.currentTimeMillis();
-            long nextWarn = start;
             producerBrokerExchange.blockingOnFlowControl(true);
             destinationStatistics.getBlockedSends().increment();
             while (!usage.waitForSpace(1000, highWaterMark)) {
@@ -691,10 +690,8 @@ public abstract class BaseDestination implements Destination {
                     throw new IOException("Connection closed, send aborted.");
                 }
 
-                long now = System.currentTimeMillis();
-                if (now >= nextWarn) {
-                    getLog().info("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((now - start) / 1000))});
-                    nextWarn = now + blockedProducerWarningInterval;
+                if (isFlowControlLogRequired()) {
+                    getLog().info("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
                 }
             }
             long finish = System.currentTimeMillis();
@@ -703,6 +700,18 @@ public abstract class BaseDestination implements Destination {
             producerBrokerExchange.incrementTimeBlocked(this,totalTimeBlocked);
             producerBrokerExchange.blockingOnFlowControl(false);
         }
+    }
+
+    protected boolean isFlowControlLogRequired() {
+        boolean answer = false;
+        if (blockedProducerWarningInterval > 0) {
+            long now = System.currentTimeMillis();
+            if (lastBlockedProducerWarnTime + blockedProducerWarningInterval <= now) {
+                lastBlockedProducerWarnTime = now;
+                answer = true;
+            }
+        }
+        return answer;
     }
 
     protected abstract Logger getLog();
