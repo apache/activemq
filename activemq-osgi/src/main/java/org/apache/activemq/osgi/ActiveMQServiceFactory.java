@@ -137,8 +137,11 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             brokerContext.setApplicationContext(ctx);
             broker.setBrokerContext(brokerContext);
 
+            broker.setStartAsync(true);
             broker.start();
-            broker.waitUntilStarted();
+
+            if (!broker.isSlave())
+                broker.waitUntilStarted();
             brokers.put(pid, broker);
         } catch (Exception e) {
             throw new ConfigurationException(null, "Cannot start the broker", e);
