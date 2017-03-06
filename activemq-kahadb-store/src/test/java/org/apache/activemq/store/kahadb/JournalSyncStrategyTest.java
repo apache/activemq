@@ -67,6 +67,7 @@ public class JournalSyncStrategyTest  {
         assertTrue(journal.isJournalDiskSyncPeriodic());
         assertFalse(store.isEnableJournalDiskSyncs());
         assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.PERIODIC.name());
+        assertEquals(store.getJournalDiskSyncStrategyEnum(), JournalDiskSyncStrategy.PERIODIC);
         assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.PERIODIC);
         assertEquals(store.getJournalDiskSyncInterval(), 800);
 
@@ -87,6 +88,7 @@ public class JournalSyncStrategyTest  {
         assertFalse(store.getJournal().isJournalDiskSyncPeriodic());
         assertTrue(store.isEnableJournalDiskSyncs());
         assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.ALWAYS.name());
+        assertEquals(store.getJournalDiskSyncStrategyEnum(), JournalDiskSyncStrategy.ALWAYS);
         assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.ALWAYS);
 
         MessageStore messageStore = store.createQueueMessageStore(new ActiveMQQueue("test"));
@@ -101,6 +103,7 @@ public class JournalSyncStrategyTest  {
         assertFalse(store.getJournal().isJournalDiskSyncPeriodic());
         assertFalse(store.isEnableJournalDiskSyncs());
         assertEquals(store.getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.NEVER.name());
+        assertEquals(store.getJournalDiskSyncStrategyEnum(), JournalDiskSyncStrategy.NEVER);
         assertEquals(store.getJournal().getJournalDiskSyncStrategy(), JournalDiskSyncStrategy.NEVER);
 
         MessageStore messageStore = store.createQueueMessageStore(new ActiveMQQueue("test"));

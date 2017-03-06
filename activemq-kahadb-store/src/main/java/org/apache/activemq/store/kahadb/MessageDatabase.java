@@ -254,7 +254,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected ScheduledExecutorService scheduler;
     private final Object schedulerLock = new Object();
 
-    protected String journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS.name();
+    protected JournalDiskSyncStrategy journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
     protected boolean archiveDataLogs;
     protected File directoryArchive;
     protected AtomicLong journalSize = new AtomicLong(0);
@@ -3141,8 +3141,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         manager.setPreallocationScope(Journal.PreallocationScope.valueOf(preallocationScope.trim().toUpperCase()));
         manager.setPreallocationStrategy(
                 Journal.PreallocationStrategy.valueOf(preallocationStrategy.trim().toUpperCase()));
-        manager.setJournalDiskSyncStrategy(
-                Journal.JournalDiskSyncStrategy.valueOf(journalDiskSyncStrategy.trim().toUpperCase()));
+        manager.setJournalDiskSyncStrategy(journalDiskSyncStrategy);
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
             manager.setDirectoryArchive(getDirectoryArchive());
@@ -3200,13 +3199,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     /**
-     * @deprecated use {@link #getJournalDiskSyncStrategy} instead
+     * @deprecated use {@link #getJournalDiskSyncStrategyEnum} or {@link #getJournalDiskSyncStrategy} instead
      * @return
      */
     @Deprecated
     public boolean isEnableJournalDiskSyncs() {
-        return journalDiskSyncStrategy != null && JournalDiskSyncStrategy.ALWAYS.name().equals(
-                journalDiskSyncStrategy.trim().toUpperCase());
+        return journalDiskSyncStrategy == JournalDiskSyncStrategy.ALWAYS;
     }
 
     /**
@@ -3216,18 +3214,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @Deprecated
     public void setEnableJournalDiskSyncs(boolean syncWrites) {
         if (syncWrites) {
-            journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS.name();
+            journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
         } else {
-            journalDiskSyncStrategy = JournalDiskSyncStrategy.NEVER.name();
+            journalDiskSyncStrategy = JournalDiskSyncStrategy.NEVER;
         }
     }
 
-    public String getJournalDiskSyncStrategy() {
+    public JournalDiskSyncStrategy getJournalDiskSyncStrategyEnum() {
         return journalDiskSyncStrategy;
     }
 
+    public String getJournalDiskSyncStrategy() {
+        return journalDiskSyncStrategy.name();
+    }
+
     public void setJournalDiskSyncStrategy(String journalDiskSyncStrategy) {
-        this.journalDiskSyncStrategy = journalDiskSyncStrategy;
+        this.journalDiskSyncStrategy = JournalDiskSyncStrategy.valueOf(journalDiskSyncStrategy.trim().toUpperCase());
     }
 
     public long getJournalDiskSyncInterval() {
