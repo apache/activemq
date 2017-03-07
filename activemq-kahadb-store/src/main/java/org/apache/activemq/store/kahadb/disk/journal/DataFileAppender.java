@@ -355,7 +355,11 @@ class DataFileAppender implements FileAppender {
             synchronized (enqueueMutex) {
                 running = false;
                 signalError(wb, error);
-                signalError(nextWriteBatch, error);
+                if (nextWriteBatch != null) {
+                    signalError(nextWriteBatch, error);
+                    nextWriteBatch = null;
+                    enqueueMutex.notifyAll();
+                }
             }
         } finally {
             try {
@@ -402,12 +406,23 @@ class DataFileAppender implements FileAppender {
         if (wb != null) {
             if (t instanceof IOException) {
                 wb.exception.set((IOException) t);
-                // revert batch increment such that next write is contiguous
-                wb.dataFile.decrementLength(wb.size);
+                // revert sync batch increment such that next write is contiguous
+                if (syncBatch(wb.writes)) {
+                    wb.dataFile.decrementLength(wb.size);
+                }
             } else {
                 wb.exception.set(IOExceptionSupport.create(t));
             }
             signalDone(wb);
         }
+    }
+
+    // async writes will already be in the index so reuse is not an option
+    private boolean syncBatch(LinkedNodeList<Journal.WriteCommand> writes) {
+        Journal.WriteCommand write = writes.getHead();
+        while (write != null && write.sync) {
+            write = write.getNext();
+        }
+        return write == null;
     }
 }
