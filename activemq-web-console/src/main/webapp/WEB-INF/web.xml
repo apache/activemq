@@ -124,12 +124,15 @@
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <!--         Factor out common headers in JSP pages            -->
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!-- Removing the auto prelude as long as the workaround is in place -->
+  <!-- 
   <jsp-config>
     <jsp-property-group>
       <url-pattern>*.jsp</url-pattern>
       <include-prelude>/WEB-INF/jspf/headertags.jspf</include-prelude>
     </jsp-property-group>
   </jsp-config>
+  -->
   
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <!--         Error pages       -->
