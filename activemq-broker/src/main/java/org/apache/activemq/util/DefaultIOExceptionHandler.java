@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
     @Override
     public void handle(IOException exception) {
         if (ignoreAllErrors) {
+            allowIOResumption();
             LOG.info("Ignoring IO exception, " + exception, exception);
             return;
         }
@@ -62,6 +63,7 @@ import org.slf4j.LoggerFactory;
                 String message = cause.getMessage();
                 if (message != null && message.contains(noSpaceMessage)) {
                     LOG.info("Ignoring no space left exception, " + exception, exception);
+                    allowIOResumption();
                     return;
                 }
                 cause = cause.getCause();
@@ -106,6 +108,7 @@ import org.slf4j.LoggerFactory;
                                 @Override
                                 public void run() {
                                     try {
+                                        allowIOResumption();
                                         while (hasLockOwnership() && isPersistenceAdapterDown()) {
                                             LOG.info("waiting for broker persistence adapter checkpoint to succeed before restarting transports");
                                             TimeUnit.MILLISECONDS.sleep(resumeCheckSleepPeriod);
@@ -160,6 +163,9 @@ import org.slf4j.LoggerFactory;
         // They will see a delay till they see a disconnect via socket.close
         // at which point failover: can kick in.
         throw new SuppressReplyException("ShutdownBrokerInitiated", exception);
+    }
+
+    protected void allowIOResumption() {
     }
 
     private void stopBroker(Exception exception) {

@@ -353,6 +353,7 @@ class DataFileAppender implements FileAppender {
         } catch (Throwable error) {
             logger.warn("Journal failed while writing at: " + wb.dataFile.getDataFileId() + ":" + wb.offset, error);
             synchronized (enqueueMutex) {
+                shutdown = true;
                 running = false;
                 signalError(wb, error);
                 if (nextWriteBatch != null) {

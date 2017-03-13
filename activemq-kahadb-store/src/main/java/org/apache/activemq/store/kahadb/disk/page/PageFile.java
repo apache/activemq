@@ -493,6 +493,10 @@ public class PageFile {
         return loaded.get();
     }
 
+    public void allowIOResumption() {
+        loaded.set(true);
+    }
+
     /**
      * Flush and sync all write buffers to disk.
      *
@@ -1101,6 +1105,13 @@ public class PageFile {
             if (enableDiskSyncs) {
                 writeFile.sync();
             }
+
+        } catch (IOException ioError) {
+            LOG.info("Unexpected io error on pagefile write of " + batch.size() + " pages.", ioError);
+            // any subsequent write needs to be prefaced with a considered call to redoRecoveryUpdates
+            // to ensure disk image is self consistent
+            loaded.set(false);
+            throw  ioError;
         } finally {
             synchronized (writes) {
                 for (PageWrite w : batch) {

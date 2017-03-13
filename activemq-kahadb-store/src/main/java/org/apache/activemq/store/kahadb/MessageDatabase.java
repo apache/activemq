@@ -302,6 +302,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         unload();
     }
 
+    public void allowIOResumption() {
+        if (pageFile != null) {
+            pageFile.allowIOResumption();
+        }
+        if (journal != null) {
+            journal.allowIOResumption();
+        }
+    }
+
     private void loadPageFile() throws IOException {
         this.indexLock.writeLock().lock();
         try {

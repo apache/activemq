@@ -109,6 +109,13 @@ public class Journal {
         return accessorPool;
     }
 
+    public void allowIOResumption() {
+        if (appender instanceof DataFileAppender) {
+            DataFileAppender dataFileAppender = (DataFileAppender)appender;
+            dataFileAppender.shutdown = false;
+        }
+    }
+
     public enum PreallocationStrategy {
         SPARSE_FILE,
         OS_KERNEL_COPY,

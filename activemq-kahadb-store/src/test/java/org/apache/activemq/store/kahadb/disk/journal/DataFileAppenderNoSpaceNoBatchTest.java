@@ -80,6 +80,7 @@ public class DataFileAppenderNoSpaceNoBatchTest {
                 underTest.storeItem(byteSequence, (byte) 1, true);
                 fail("expect no space");
             } catch (IOException expected) {
+                underTest.shutdown = false;
             }
         }
 
@@ -88,7 +89,45 @@ public class DataFileAppenderNoSpaceNoBatchTest {
 
     }
 
-    
+    @Test
+    public void testSingleNoSpaceNextWriteSameBatch() throws Exception {
+        final List<Long> seekPositions = Collections.synchronizedList(new ArrayList<Long>());
+
+        final DataFile currentDataFile = new DataFile(dataFileDir.newFile(), 0) {
+            public RecoverableRandomAccessFile appendRandomAccessFile() throws IOException {
+
+                return new RecoverableRandomAccessFile(dataFileDir.newFile(), "rw") {
+
+                    public void seek(long pos) throws IOException {
+                        seekPositions.add(pos);
+                    }
+
+                    public void write(byte[] bytes, int offset, int len) throws IOException {
+                        throw new IOException("No space on device");
+                    }
+                };
+            };
+        };
+
+        underTest = new DataFileAppender(new Journal() {
+            @Override
+            public DataFile getCurrentDataFile(int capacity) throws IOException {
+                return currentDataFile;
+            };
+        });
+
+        final ByteSequence byteSequence = new ByteSequence(new byte[4*1024]);
+        for (int i=0; i<2; i++) {
+            try {
+                underTest.storeItem(byteSequence, (byte) 1, true);
+                fail("expect no space");
+            } catch (IOException expected) {
+            }
+        }
+
+        assertEquals("got 1 seeks: " + seekPositions, 1, seekPositions.size());
+    }
+
     @Test(timeout = 10000)
     public void testNoSpaceNextWriteSameBatchAsync() throws Exception {
         final List<Long> seekPositions = Collections.synchronizedList(new ArrayList<Long>());
@@ -129,9 +168,13 @@ public class DataFileAppenderNoSpaceNoBatchTest {
         ConcurrentLinkedQueue<Location> locations = new ConcurrentLinkedQueue<Location>();
         HashSet<CountDownLatch> latches = new HashSet<CountDownLatch>();
         for (int i = 0; i <= 20; i++) {
-            Location location = underTest.storeItem(byteSequence, (byte) 1, false);
-            locations.add(location);
-            latches.add(location.getLatch());
+            try {
+                Location location = underTest.storeItem(byteSequence, (byte) 1, false);
+                locations.add(location);
+                latches.add(location.getLatch());
+            } catch (IOException expected) {
+                underTest.shutdown = false;
+            }
         }
 
         for (CountDownLatch latch: latches) {
