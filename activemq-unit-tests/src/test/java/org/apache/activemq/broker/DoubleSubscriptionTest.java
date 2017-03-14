@@ -17,6 +17,7 @@
 package org.apache.activemq.broker;
 
 import javax.jms.DeliveryMode;
+import javax.jms.InvalidClientIDException;
 
 import junit.framework.Test;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -88,10 +89,13 @@ public class DoubleSubscriptionTest extends NetworkTestSupport {
         // Now we're going to resend the same consumer commands again and see if
         // the broker
         // can handle it.
-        connection1.send(connectionInfo1);
-        connection1.send(sessionInfo1);
-        connection1.request(consumerInfo1);
-
+        try {
+            connection1.send(connectionInfo1);
+            connection1.send(sessionInfo1);
+            connection1.request(consumerInfo1);
+        } catch (InvalidClientIDException expected) {
+            // //AMQ-6561 - delayed stop for all exceptions on addConnection
+        }
         // After this there should be 2 messages on the broker...
         connection2.request(createMessage(producerInfo2, destination, DeliveryMode.PERSISTENT));
 
