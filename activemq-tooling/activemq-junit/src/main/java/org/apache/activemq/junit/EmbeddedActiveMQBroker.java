@@ -46,13 +46,14 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
      *
      * The defaults are:
      *  - the broker name is 'embedded-broker'
-     *  - JMX is disabled
+     *  - JMX is enabled but no management connector will be created.
      *  - Persistence is disabled
      *
      */
     public EmbeddedActiveMQBroker() {
         brokerService = new BrokerService();
-        brokerService.setUseJmx(false);
+        brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
         brokerService.setUseShutdownHook(false);
         brokerService.setPersistent(false);
         brokerService.setBrokerName("embedded-broker");
