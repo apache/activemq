@@ -16,10 +16,13 @@
  */
 package org.apache.activemq.junit;
 
+import static org.apache.activemq.command.ActiveMQDestination.QUEUE_TYPE;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -45,8 +48,6 @@ import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.activemq.command.ActiveMQDestination.QUEUE_TYPE;
-
 /**
  * A JUnit Rule that embeds an ActiveMQ broker into a test.
  */
@@ -61,12 +62,13 @@ public class EmbeddedActiveMQBroker extends ExternalResource {
      * <p>
      * The defaults are:
      * - the broker name is 'embedded-broker'
-     * - JMX is disabled
+     * - JMX is enable but no management connector is created.
      * - Persistence is disabled
      */
     public EmbeddedActiveMQBroker() {
         brokerService = new BrokerService();
-        brokerService.setUseJmx(false);
+        brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
         brokerService.setUseShutdownHook(false);
         brokerService.setPersistent(false);
         brokerService.setBrokerName("embedded-broker");
