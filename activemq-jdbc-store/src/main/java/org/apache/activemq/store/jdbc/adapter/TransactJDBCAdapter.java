@@ -35,6 +35,7 @@ public class TransactJDBCAdapter extends ImageBasedJDBCAdaptor {
         }
 
         statements.setLockCreateStatement(lockCreateStatement);
+        statements.setDropAckPKAlterStatementEnd("DROP CONSTRAINT PK_" + statements.getDurableSubAcksTableName());
 
         super.setStatements(statements);
     }
