@@ -1161,6 +1161,27 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
     @Override
     public Set<ActiveMQDestination> getDestinations() {
+        //Filter out empty topics
+        return getDestinations(nonEmptyTopicFilter);
+    }
+
+    /**
+     * Return all destinations, including empty topics
+     *
+     * @return
+     */
+    public Set<ActiveMQDestination> getAllDestinations() {
+        return getDestinations(null);
+    }
+
+    /**
+     * Returns destinations that match a filter.  If the filter is null all destinations
+     * will be returned. See AMQ-5875
+     *
+     * @param filter
+     * @return
+     */
+    private Set<ActiveMQDestination> getDestinations(final StoredDestinationFilter filter) {
         try {
             final HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
             indexLock.writeLock().lock();
@@ -1171,8 +1192,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         for (Iterator<Entry<String, StoredDestination>> iterator = metadata.destinations.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<String, StoredDestination> entry = iterator.next();
-                            //Removing isEmpty topic check - see AMQ-5875
-                            rc.add(convert(entry.getKey()));
+                            if (filter == null || filter.matches(entry, tx)) {
+                                rc.add(convert(entry.getKey()));
+                            }
                         }
                     }
                 });
@@ -1184,6 +1206,24 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * This filter is used to filter out Topics that are empty
+     */
+    private StoredDestinationFilter nonEmptyTopicFilter = new StoredDestinationFilter() {
+        @Override
+        public boolean matches(Entry<String, StoredDestination> entry, Transaction tx) throws IOException {
+            boolean isEmptyTopic = false;
+            ActiveMQDestination dest = convert(entry.getKey());
+            if (dest.isTopic()) {
+                StoredDestination loadedStore = getStoredDestination(convert(dest), tx);
+                if (loadedStore.subscriptionAcks.isEmpty(tx)) {
+                    isEmptyTopic = true;
+                }
+            }
+            return !isEmptyTopic;
+        }
+    };
 
     @Override
     public long getLastMessageBrokerSequenceId() throws IOException {

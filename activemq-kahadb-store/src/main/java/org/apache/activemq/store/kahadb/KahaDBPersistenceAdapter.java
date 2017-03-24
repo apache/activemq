@@ -149,6 +149,14 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     /**
+     * Return all destinations, including empty topics
+     * @return
+     */
+    public Set<ActiveMQDestination> getFullDestinations() {
+        return this.letter.getAllDestinations();
+    }
+
+    /**
      * @return lastMessageBrokerSequenceId
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#getLastMessageBrokerSequenceId()

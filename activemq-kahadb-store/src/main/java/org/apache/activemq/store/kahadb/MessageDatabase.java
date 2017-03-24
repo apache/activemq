@@ -2310,6 +2310,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+    public interface StoredDestinationFilter {
+        boolean matches(Entry<String, StoredDestination> entry, Transaction tx) throws IOException;
+    }
+
     protected class StoredDestinationMarshaller extends VariableMarshaller<StoredDestination> {
 
         final MessageKeysMarshaller messageKeysMarshaller = new MessageKeysMarshaller();

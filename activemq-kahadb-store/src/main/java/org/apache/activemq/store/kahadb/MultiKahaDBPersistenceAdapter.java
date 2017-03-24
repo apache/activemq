@@ -296,7 +296,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
+        if (isEligibleForRemoval(adapter)) {
             adapter.removeQueueMessageStore(destination);
             removeMessageStore(adapter, destination);
             destinationMap.removeAll(destination);
@@ -311,10 +311,27 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
+        if (isEligibleForRemoval(adapter)) {
             adapter.removeTopicMessageStore(destination);
             removeMessageStore(adapter, destination);
             destinationMap.removeAll(destination);
+        }
+    }
+
+    /**
+     * Determines whether or not this PersistenceAdapter can be
+     * removed.
+     *
+     * @param adapter
+     * @return
+     */
+    private boolean isEligibleForRemoval(PersistenceAdapter adapter) {
+        if (adapter instanceof KahaDBPersistenceAdapter) {
+            return (((KahaDBPersistenceAdapter) adapter).getFullDestinations().isEmpty());
+        } else if (adapter instanceof PersistenceAdapter) {
+            return adapter.getDestinations().isEmpty();
+        } else {
+            return false;
         }
     }
 
