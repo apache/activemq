@@ -229,7 +229,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             if (TRANSPORTLOG.isDebugEnabled()) {
                 TRANSPORTLOG.debug(this + " failed: " + e, e);
             } else if (TRANSPORTLOG.isWarnEnabled() && !expected(e)) {
-                TRANSPORTLOG.warn(this + " failed: " + e);
+                TRANSPORTLOG.warn(this + " failed: " + e, e);
             }
             stopAsync(e);
         }
