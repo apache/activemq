@@ -45,6 +45,54 @@
         <property name="constraint" ref="adminSecurityConstraint" />
         <property name="pathSpec" value="*.action" />
     </bean>
+
+    <bean id="rewriteHandler" class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
+        <property name="rules">
+            <list>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                  <property name="pattern" value="*"/>
+                  <property name="name" value="X-FRAME-OPTIONS"/>
+                  <property name="value" value="SAMEORIGIN"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+    
+	<bean id="secHandlerCollection" class="org.eclipse.jetty.server.handler.HandlerCollection">
+		<property name="handlers">
+			<list>
+                <ref bean="rewriteHandler"/>
+				<bean class="org.eclipse.jetty.webapp.WebAppContext">
+					<property name="contextPath" value="/admin" />
+					<property name="resourceBase" value="${activemq.home}/webapps/admin" />
+					<property name="logUrlOnStart" value="true" />
+				</bean>
+				<bean class="org.eclipse.jetty.webapp.WebAppContext">
+					<property name="contextPath" value="/demo" />
+					<property name="resourceBase" value="${activemq.home}/webapps-demo/demo" />
+					<property name="logUrlOnStart" value="true" />
+				</bean>
+				<bean class="org.eclipse.jetty.webapp.WebAppContext">
+					<property name="contextPath" value="/api" />
+					<property name="resourceBase" value="${activemq.home}/webapps/api" />
+					<property name="logUrlOnStart" value="true" />
+				</bean>
+				<bean class="org.eclipse.jetty.server.handler.ResourceHandler">
+					<property name="directoriesListed" value="false" />
+					<property name="welcomeFiles">
+						<list>
+							<value>index.html</value>
+						</list>
+					</property>
+					<property name="resourceBase" value="${activemq.home}/webapps/" />
+				</bean>
+				<bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler">
+					<property name="serveIcon" value="false" />
+				</bean>
+			</list>
+		</property>
+	</bean>    
+	
     <bean id="securityHandler" class="org.eclipse.jetty.security.ConstraintSecurityHandler">
         <property name="loginService" ref="securityLoginService" />
         <property name="authenticator">
@@ -56,48 +104,9 @@
                 <ref bean="securityConstraintMapping" />
             </list>
         </property>
-        <property name="handler">
-            <bean id="sec" class="org.eclipse.jetty.server.handler.HandlerCollection">
-                <property name="handlers">
-                    <list>
-                        <bean class="org.eclipse.jetty.webapp.WebAppContext">
-                            <property name="contextPath" value="/admin" />
-                            <property name="resourceBase" value="${activemq.home}/webapps/admin" />
-                            <property name="logUrlOnStart" value="true" />
-                        </bean>
-                        <bean class="org.eclipse.jetty.webapp.WebAppContext">
-                            <property name="contextPath" value="/fileserver" />
-                            <property name="resourceBase" value="${activemq.home}/webapps/fileserver" />
-                            <property name="logUrlOnStart" value="true" />
-                            <property name="parentLoaderPriority" value="true" />
-                        </bean>
-                        <bean class="org.eclipse.jetty.webapp.WebAppContext">
-                            <property name="contextPath" value="/demo" />
-                            <property name="resourceBase" value="${activemq.home}/webapps-demo/demo" />
-                            <property name="logUrlOnStart" value="true" />
-                        </bean>
-                        <bean class="org.eclipse.jetty.webapp.WebAppContext">
-                            <property name="contextPath" value="/api" />
-                            <property name="resourceBase" value="${activemq.home}/webapps/api" />
-                            <property name="logUrlOnStart" value="true" />
-                        </bean>
-                        <bean class="org.eclipse.jetty.server.handler.ResourceHandler">
-                            <property name="directoriesListed" value="false" />
-                            <property name="welcomeFiles">
-                                <list>
-                                    <value>index.html</value>
-                                </list>
-                            </property>
-                            <property name="resourceBase" value="${activemq.home}/webapps/" />
-                        </bean>
-                        <bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler">
-                            <property name="serveIcon" value="false" />
-                        </bean>
-                    </list>
-                </property>
-            </bean>
-        </property>
+        <property name="handler" ref="secHandlerCollection" />
     </bean>
+
 
     <bean id="contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection">
     </bean>
@@ -106,28 +115,9 @@
              <!-- the default port number for the web console -->
         <property name="port" value="8161"/>
     </bean>
-
-    <bean id="Server" depends-on="jettyPort" class="org.eclipse.jetty.server.Server" init-method="start"
+    
+        <bean id="Server" depends-on="jettyPort" class="org.eclipse.jetty.server.Server"
         destroy-method="stop">
-
-        <property name="connectors">
-            <list>
-                <bean id="Connector" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                     <!-- see the jettyPort bean -->
-                    <property name="port" value="#{systemProperties['jetty.port']}" />
-                </bean>
-                <!--
-                    Enable this connector if you wish to use https with web console
-                -->
-                <!--
-                <bean id="SecureConnector" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
-                    <property name="port" value="8162" />
-                    <property name="keystore" value="file:${activemq.conf}/broker.ks" />
-                    <property name="password" value="password" />
-                </bean>
-                -->
-            </list>
-        </property>
 
         <property name="handler">
             <bean id="handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
@@ -141,5 +131,51 @@
         </property>
 
     </bean>
+
+    <bean id="invokeConnectors" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+    	<property name="targetObject" ref="Server" />
+    	<property name="targetMethod" value="setConnectors" />
+    	<property name="arguments">
+    	<list>
+            	<bean id="Connector" class="org.eclipse.jetty.server.ServerConnector">
+            		<constructor-arg ref="Server" />
+                     <!-- see the jettyPort bean -->
+                    <property name="port" value="#{systemProperties['jetty.port']}" />
+                </bean>
+                <!--
+                    Enable this connector if you wish to use https with web console
+                -->
+                <!-- bean id="SecureConnector" class="org.eclipse.jetty.server.ServerConnector">
+					<constructor-arg ref="Server" />
+					<constructor-arg>
+						<bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory">
+						
+							<property name="keyStorePath" value="${activemq.conf}/broker.ks" />
+							<property name="keyStorePassword" value="password" />
+						</bean>
+					</constructor-arg>
+					<property name="port" value="8162" />
+				</bean -->
+            </list>
+    	</property>
+    </bean>
+    
+    
+    <bean id="configureJetty" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="staticMethod" value="org.apache.activemq.web.config.JspConfigurer.configureJetty" />
+		<property name="arguments">
+			<list>
+				<ref bean="Server" />
+				<ref bean="secHandlerCollection" />
+			</list>
+		</property>
+	</bean>
+    
+    <bean id="invokeStart" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" 
+    	depends-on="configureJetty, invokeConnectors">
+    	<property name="targetObject" ref="Server" />
+    	<property name="targetMethod" value="start" />  	
+    </bean>
+    
 
 </beans>

@@ -66,14 +66,17 @@ public final class ListNode<Key, Value> {
             this.value = value;
         }
 
+        @Override
         public Key getKey() {
             return key;
         }
 
+        @Override
         public Value getValue() {
             return value;
         }
 
+        @Override
         public Value setValue(Value value) {
             Value oldValue = this.value;
             this.value = value;
@@ -98,10 +101,12 @@ public final class ListNode<Key, Value> {
             index = current.getContainingList();
         }
 
+        @Override
         public boolean hasNext() {
             return nextEntry != null;
         }
 
+        @Override
         public ListNode<Key, Value> next() {
             ListNode<Key, Value> current = nextEntry;
             if (current != null) {
@@ -121,6 +126,7 @@ public final class ListNode<Key, Value> {
             return current;
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
@@ -171,6 +177,7 @@ public final class ListNode<Key, Value> {
             return result;
         }
 
+        @Override
         public boolean hasNext() {
             if (nextEntry == null) {
                 nextEntry = getFromNextNode();
@@ -178,6 +185,7 @@ public final class ListNode<Key, Value> {
             return nextEntry != null;
         }
 
+        @Override
         public Entry<Key, Value> next() {
             if (nextEntry != null) {
                 entryToRemove = nextEntry;
@@ -188,6 +196,7 @@ public final class ListNode<Key, Value> {
             }
         }
 
+        @Override
         public void remove() {
             if (entryToRemove == null) {
                 throw new IllegalStateException("can only remove once, call hasNext();next() again");
@@ -228,7 +237,7 @@ public final class ListNode<Key, Value> {
                         currentNode = previousNode;
                     }
                 }
-                targetList.onRemove();
+                targetList.onRemove(entryToRemove);
 
                 if (toRemoveNode != null) {
                     tx.free(toRemoveNode.getPage());
@@ -262,6 +271,7 @@ public final class ListNode<Key, Value> {
             this.valueMarshaller = valueMarshaller;
         }
 
+        @Override
         public void writePayload(ListNode<Key, Value> node, DataOutput os) throws IOException {
             os.writeLong(node.next);
             short count = (short) node.entries.size(); // cast may truncate
@@ -279,6 +289,7 @@ public final class ListNode<Key, Value> {
             }
         }
 
+        @Override
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ListNode<Key, Value> readPayload(DataInput is) throws IOException {
             ListNode<Key, Value> node = new ListNode<Key, Value>();

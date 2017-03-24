@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
     private String sqlExceptionMessage = ""; // match all
     private long resumeCheckSleepPeriod = 5*1000;
     private final AtomicBoolean handlingException = new AtomicBoolean(false);
+    private boolean systemExitOnShutdown = false;
 
     @Override
     public void handle(IOException exception) {
@@ -170,6 +171,7 @@ import org.slf4j.LoggerFactory;
                     if( broker.isRestartAllowed() ) {
                         broker.requestRestart();
                     }
+                    broker.setSystemExitOnShutdown(isSystemExitOnShutdown());
                     broker.stop();
                 } catch (Exception e) {
                     LOG.warn("Failure occurred while stopping broker", e);
@@ -241,5 +243,13 @@ import org.slf4j.LoggerFactory;
 
     public void setResumeCheckSleepPeriod(long resumeCheckSleepPeriod) {
         this.resumeCheckSleepPeriod = resumeCheckSleepPeriod;
+    }
+
+    public void setSystemExitOnShutdown(boolean systemExitOnShutdown) {
+        this.systemExitOnShutdown = systemExitOnShutdown;
+    }
+
+    public boolean isSystemExitOnShutdown() {
+        return systemExitOnShutdown;
     }
 }

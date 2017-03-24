@@ -102,6 +102,8 @@ public interface TopicMessageStore extends MessageStore {
      */
     int getMessageCount(String clientId, String subscriberName) throws IOException;
 
+    long getMessageSize(String clientId, String subscriberName) throws IOException;
+
     /**
      * Finds the subscriber entry for the given consumer info
      *

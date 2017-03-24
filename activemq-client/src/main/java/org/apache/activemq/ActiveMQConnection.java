@@ -19,7 +19,11 @@ package org.apache.activemq;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -322,16 +326,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
-        if(!transacted) {
-            if (acknowledgeMode==Session.SESSION_TRANSACTED) {
+        if (!transacted) {
+            if (acknowledgeMode == Session.SESSION_TRANSACTED) {
                 throw new JMSException("acknowledgeMode SESSION_TRANSACTED cannot be used for an non-transacted Session");
             } else if (acknowledgeMode < Session.SESSION_TRANSACTED || acknowledgeMode > ActiveMQSession.MAX_ACK_CONSTANT) {
                 throw new JMSException("invalid acknowledgeMode: " + acknowledgeMode + ". Valid values are Session.AUTO_ACKNOWLEDGE (1), " +
                         "Session.CLIENT_ACKNOWLEDGE (2), Session.DUPS_OK_ACKNOWLEDGE (3), ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE (4) or for transacted sessions Session.SESSION_TRANSACTED (0)");
             }
         }
-        return new ActiveMQSession(this, getNextSessionId(), transacted ? Session.SESSION_TRANSACTED : (acknowledgeMode == Session.SESSION_TRANSACTED
-            ? Session.AUTO_ACKNOWLEDGE : acknowledgeMode), isDispatchAsync(), isAlwaysSessionAsync());
+        return new ActiveMQSession(this, getNextSessionId(), transacted ? Session.SESSION_TRANSACTED : acknowledgeMode, isDispatchAsync(), isAlwaysSessionAsync());
     }
 
     /**
@@ -630,12 +633,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public void close() throws JMSException {
-        // Store the interrupted state and clear so that cleanup happens without
-        // leaking connection resources.  Reset in finally to preserve state.
-        boolean interrupted = Thread.interrupted();
-
         try {
-
             // If we were running, lets stop first.
             if (!closed.get() && !transportFailed.get()) {
                 // do not fail if already closed as according to JMS spec we must not
@@ -723,9 +721,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             ServiceSupport.dispose(this.transport);
 
             factoryStats.removeConnection(this);
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
         }
     }
 
@@ -1434,7 +1429,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         }
     }
 
-    private Response doSyncSendPacket(Command command, int timeout)
+    protected Response doSyncSendPacket(Command command, int timeout)
             throws JMSException {
         try {
             Response response = (Response) (timeout > 0

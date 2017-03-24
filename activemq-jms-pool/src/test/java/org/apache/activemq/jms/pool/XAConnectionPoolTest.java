@@ -156,6 +156,8 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
             sync.afterCompletion(1);
         }
         connection.close();
+
+        pcf.stop();
     }
 
     @Test(timeout = 60000)
@@ -256,6 +258,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
             sync.afterCompletion(1);
         }
         connection.close();
+        pcf.stop();
     }
 
     @Test(timeout = 60000)
@@ -263,6 +266,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof QueueConnectionFactory);
         assertTrue(pcf instanceof TopicConnectionFactory);
+        pcf.stop();
     }
 
     @Test(timeout = 60000)
@@ -271,6 +275,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
         assertTrue(pcf instanceof ObjectFactory);
         assertTrue(((ObjectFactory)pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
         assertTrue(pcf.isTmFromJndi());
+        pcf.stop();
     }
 
     @Test(timeout = 60000)
@@ -281,6 +286,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
         environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
         assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
         assertFalse(pcf.isTmFromJndi());
+        pcf.stop();
     }
 
     @Test(timeout = 60000)
@@ -302,6 +308,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
         assertNotNull(topicPublisher.getTopic().getTopicName());
 
         topicConnection.close();
+        pcf.stop();
     }
 
     @Test(timeout = 60000)
@@ -362,6 +369,7 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
         assertNotNull("can create session(false, 0)", connection.createQueueSession(false, 0));
 
         connection.close();
+        pcf.stop();
     }
 
     static class XAConnectionFactoryOnly implements XAConnectionFactory {

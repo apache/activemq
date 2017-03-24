@@ -23,6 +23,7 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.VERSION;
 import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.Map;
 
@@ -113,6 +114,35 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testConnectionCarriesContainerId() throws Exception {
+        AmqpClient client = createAmqpClient();
+        assertNotNull(client);
+
+        client.setValidator(new AmqpValidator() {
+
+            @Override
+            public void inspectOpenedResource(Connection connection) {
+                String remoteContainer = connection.getRemoteContainer();
+                if (remoteContainer == null || !remoteContainer.equals(brokerService.getBrokerName())) {
+                    markAsInvalid("Broker did not send a valid container ID");
+                } else {
+                    LOG.info("Broker container ID = {}", remoteContainer);
+                }
+            }
+        });
+
+        AmqpConnection connection = client.connect();
+        assertNotNull(connection);
+
+        assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
+
+        connection.getStateInspector().assertValid();
+        connection.close();
+
+        assertEquals(0, getProxyToBroker().getCurrentConnectionsCount());
+    }
+
+    @Test(timeout = 60000)
     public void testCanConnectWithDifferentContainerIds() throws Exception {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
@@ -162,38 +192,36 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
             @Override
             public void inspectClosedResource(Connection connection) {
                 ErrorCondition remoteError = connection.getRemoteCondition();
-                if (remoteError == null) {
+                if (remoteError == null || remoteError.getCondition() == null) {
                     markAsInvalid("Broker did not add error condition for duplicate client ID");
-                }
+                } else {
+                    if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
+                        markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    }
 
-                if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
-                    markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
-                }
-
-                if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
-                    markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    if (!remoteError.getCondition().equals(AmqpError.INVALID_FIELD)) {
+                        markAsInvalid("Broker did not set condition to " + AmqpError.INVALID_FIELD);
+                    }
                 }
 
                 // Validate the info map contains a hint that the container/client id was the problem
                 Map<?, ?> infoMap = remoteError.getInfo();
-                if(infoMap == null) {
+                if (infoMap == null) {
                     markAsInvalid("Broker did not set an info map on condition");
-                }
-
-                if(!infoMap.containsKey(AmqpSupport.INVALID_FIELD)) {
+                } else if (!infoMap.containsKey(AmqpSupport.INVALID_FIELD)) {
                     markAsInvalid("Info map does not contain expected key");
-                }
-
-                Object value = infoMap.get(AmqpSupport.INVALID_FIELD);
-                if(!AmqpSupport.CONTAINER_ID.equals(value)) {
-                    markAsInvalid("Info map does not contain expected value: " + value);
+                } else {
+                    Object value = infoMap.get(AmqpSupport.INVALID_FIELD);
+                    if(!AmqpSupport.CONTAINER_ID.equals(value)) {
+                        markAsInvalid("Info map does not contain expected value: " + value);
+                    }
                 }
             }
         });
 
         try {
             connection2.connect();
-            //fail("Should not be able to connect with same container Id.");
+            fail("Should not be able to connect with same container Id.");
         } catch (Exception ex) {
             LOG.info("Second connection with same container Id failed as expected.");
         }

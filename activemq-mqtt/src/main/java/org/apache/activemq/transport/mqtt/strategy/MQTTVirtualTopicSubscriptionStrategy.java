@@ -182,10 +182,25 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
     @Override
     public ActiveMQDestination onSend(String topicName) {
-        if (!topicName.startsWith(VIRTUALTOPIC_PREFIX)) {
-            return new ActiveMQTopic(VIRTUALTOPIC_PREFIX + topicName);
+        ActiveMQTopic topic = new ActiveMQTopic(topicName);
+        if (topic.isComposite()) {
+           ActiveMQDestination[] composites = topic.getCompositeDestinations();
+           for (ActiveMQDestination composite : composites) {
+                composite.setPhysicalName(prefix(composite.getPhysicalName()));
+           }
+           ActiveMQTopic result = new ActiveMQTopic();
+           result.setCompositeDestinations(composites);
+           return result;
         } else {
-            return new ActiveMQTopic(topicName);
+          return new ActiveMQTopic(prefix(topicName));
+        }
+    }
+
+    private String prefix(String topicName) {
+        if (!topicName.startsWith(VIRTUALTOPIC_PREFIX)) {
+            return VIRTUALTOPIC_PREFIX + topicName;
+        } else {
+            return topicName;
         }
     }
 

@@ -27,6 +27,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
@@ -81,6 +82,7 @@ public class AMQ4323Test {
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(500);
         adapter.setCleanupInterval(500);
+        adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
 
         if (!deleteAllOnStart) {
             adapter.setForceRecoverIndex(true);

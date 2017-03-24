@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -35,24 +35,21 @@ import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 /**
  * Represents a composite {@link Destination} where send()s are replicated to
  * each Destination instance.
- * 
- * 
  */
 public class CompositeDestinationFilter extends DestinationFilter {
 
     private Collection forwardDestinations;
     private boolean forwardOnly;
-    private boolean copyMessage;
     private boolean concurrentSend = false;
 
-    public CompositeDestinationFilter(Destination next, Collection forwardDestinations, boolean forwardOnly, boolean copyMessage, boolean concurrentSend) {
+    public CompositeDestinationFilter(Destination next, Collection forwardDestinations, boolean forwardOnly, boolean concurrentSend) {
         super(next);
         this.forwardDestinations = forwardDestinations;
         this.forwardOnly = forwardOnly;
-        this.copyMessage = copyMessage;
         this.concurrentSend = concurrentSend;
     }
 
+    @Override
     public void send(final ProducerBrokerExchange context, final Message message) throws Exception {
         MessageEvaluationContext messageContext = null;
 
@@ -113,17 +110,13 @@ public class CompositeDestinationFilter extends DestinationFilter {
     }
 
     private void doForward(ProducerBrokerExchange context, Message message, Broker regionBroker, ActiveMQDestination destination) throws Exception {
-        Message forwarded_message;
-        if (copyMessage) {
-            forwarded_message = message.copy();
-            forwarded_message.setDestination(destination);
-        }
-        else {
-            forwarded_message = message;
-        }
+        Message forwardedMessage = message.copy();
+
+        forwardedMessage.setOriginalDestination( message.getDestination() );
+        forwardedMessage.setDestination(destination);
 
         // Send it back through the region broker for routing.
         context.setMutable(true);
-        regionBroker.send(context, forwarded_message);
+        regionBroker.send(context, forwardedMessage);
     }
 }

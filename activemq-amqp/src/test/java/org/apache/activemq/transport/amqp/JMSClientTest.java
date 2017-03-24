@@ -57,7 +57,7 @@ import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
-import org.junit.Ignore;
+import org.apache.qpid.jms.JmsConnection;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
@@ -1108,7 +1108,6 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Ignore("Legacy QPid client does not support creation of TemporaryTopics correctly")
     @Test(timeout=30000)
     public void testDeleteTemporaryQueue() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -1177,6 +1176,33 @@ public class JMSClientTest extends JMSClientTestSupport {
                 }
             }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(50)));
         }
+    }
+
+    @Test(timeout = 60000)
+    public void testZeroPrefetchWithTwoConsumers() throws Exception {
+        connection = createConnection();
+        ((JmsConnection)connection).getPrefetchPolicy().setAll(0);
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(getDestinationName());
+
+        MessageProducer producer = session.createProducer(queue);
+        producer.send(session.createTextMessage("Msg1"));
+        producer.send(session.createTextMessage("Msg2"));
+
+        // now lets receive it
+        MessageConsumer consumer1 = session.createConsumer(queue);
+        MessageConsumer consumer2 = session.createConsumer(queue);
+        TextMessage answer = (TextMessage)consumer1.receive(5000);
+        assertNotNull(answer);
+        assertEquals("Should have received a message!", answer.getText(), "Msg1");
+        answer = (TextMessage)consumer2.receive(5000);
+        assertNotNull(answer);
+        assertEquals("Should have received a message!", answer.getText(), "Msg2");
+
+        answer = (TextMessage)consumer2.receiveNoWait();
+        assertNull("Should have not received a message!", answer);
     }
 
     protected void receiveMessages(MessageConsumer consumer) throws Exception {

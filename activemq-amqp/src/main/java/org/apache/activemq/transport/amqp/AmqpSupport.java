@@ -102,7 +102,7 @@ public class AmqpSupport {
     public static Map.Entry<Symbol, DescribedType> findFilter(Map<Symbol, Object> filters, Object[] filterIds) {
 
         if (filterIds == null || filterIds.length == 0) {
-            throw new IllegalArgumentException("Invalid Filter Ids array passed: " + filterIds);
+            throw new IllegalArgumentException("Invalid empty Filter Ids array passed: ");
         }
 
         if (filters == null || filters.isEmpty()) {

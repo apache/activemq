@@ -51,6 +51,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         currentCursor = persistent;
     }
 
+    @Override
     public synchronized void start() throws Exception {
         started = true;
         super.start();
@@ -73,6 +74,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         pendingCount = persistent.size() + nonPersistent.size();
     }
 
+    @Override
     public synchronized void stop() throws Exception {
         started = false;
         if (nonPersistent != null) {
@@ -87,14 +89,15 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         pendingCount = 0;
     }
 
-    public synchronized boolean addMessageLast(MessageReference node) throws Exception {
+    @Override
+    public synchronized boolean tryAddMessageLast(MessageReference node, long maxWait) throws Exception {
         boolean result = true;
         if (node != null) {
             Message msg = node.getMessage();
             if (started) {
                 pendingCount++;
                 if (!msg.isPersistent()) {
-                    nonPersistent.addMessageLast(node);
+                    result = nonPersistent.tryAddMessageLast(node, maxWait);
                 }
             }
             if (msg.isPersistent()) {
@@ -104,6 +107,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         return result;
     }
 
+    @Override
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
@@ -119,10 +123,12 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
 
+    @Override
     public synchronized void clear() {
         pendingCount = 0;
     }
 
+    @Override
     public synchronized boolean hasNext() {
         try {
             getNextCursor();
@@ -133,11 +139,13 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
        return currentCursor != null ? currentCursor.hasNext() : false;
     }
 
+    @Override
     public synchronized MessageReference next() {
         MessageReference result = currentCursor != null ? currentCursor.next() : null;
         return result;
     }
 
+    @Override
     public synchronized void remove() {
         if (currentCursor != null) {
             currentCursor.remove();
@@ -145,6 +153,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         pendingCount--;
     }
 
+    @Override
     public synchronized void remove(MessageReference node) {
         if (!node.isPersistent()) {
             nonPersistent.remove(node);
@@ -154,18 +163,21 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         pendingCount--;
     }
 
+    @Override
     public synchronized void reset() {
         nonPersistent.reset();
         persistent.reset();
         pendingCount = persistent.size() + nonPersistent.size();
     }
 
+    @Override
     public void release() {
         nonPersistent.release();
         persistent.release();
     }
 
 
+    @Override
     public synchronized int size() {
         if (pendingCount < 0) {
             pendingCount = persistent.size() + nonPersistent.size();
@@ -173,6 +185,12 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         return pendingCount;
     }
 
+    @Override
+    public synchronized long messageSize() {
+        return persistent.messageSize() + nonPersistent.messageSize();
+    }
+
+    @Override
     public synchronized boolean isEmpty() {
         // if negative, more messages arrived in store since last reset so non empty
         return pendingCount == 0;
@@ -185,6 +203,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
      * @see org.apache.activemq.broker.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
+    @Override
     public boolean isRecoveryRequired() {
         return false;
     }
@@ -203,6 +222,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         this.nonPersistent = nonPersistent;
     }
 
+    @Override
     public void setMaxBatchSize(int maxBatchSize) {
         persistent.setMaxBatchSize(maxBatchSize);
         if (nonPersistent != null) {
@@ -212,6 +232,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     }
 
 
+    @Override
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         if (persistent != null) {
@@ -222,6 +243,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
 
+    @Override
     public void setMaxAuditDepth(int maxAuditDepth) {
         super.setMaxAuditDepth(maxAuditDepth);
         if (persistent != null) {
@@ -232,6 +254,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
 
+    @Override
     public void setEnableAudit(boolean enableAudit) {
         super.setEnableAudit(enableAudit);
         if (persistent != null) {
@@ -266,6 +289,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
 
 
+    @Override
     public synchronized void gc() {
         if (persistent != null) {
             persistent.gc();
@@ -276,6 +300,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         pendingCount = persistent.size() + nonPersistent.size();
     }
 
+    @Override
     public void setSystemUsage(SystemUsage usageManager) {
         super.setSystemUsage(usageManager);
         if (persistent != null) {

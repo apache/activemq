@@ -69,7 +69,7 @@ public class VirtualTopicDLQTest extends TestCase {
 
     // Expected Individual Dead Letter Queue names that are tied to the
     // Subscriber Queues
-    private static final String dlqPrefix = "ActiveMQ.DLQ.Topic.";
+    private static final String dlqPrefix = "ActiveMQ.DLQ.Queue.";
 
     // Number of messages
     private static final int numberMessages = 6;

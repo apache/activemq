@@ -40,7 +40,20 @@ import javax.jms.MessageListener;
 import javax.jms.TransactionRolledBackException;
 
 import org.apache.activemq.blob.BlobDownloader;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQBlobMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQTempDestination;
+import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.management.JMSConsumerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -199,6 +212,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         this.session = session;
         this.redeliveryPolicy = session.connection.getRedeliveryPolicyMap().getEntryFor(dest);
+        if (this.redeliveryPolicy == null) {
+            this.redeliveryPolicy = new RedeliveryPolicy();
+        }
         setTransformer(session.getTransformer());
 
         this.info = new ConsumerInfo(consumerId);
@@ -718,23 +734,23 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     void doClose() throws JMSException {
-        // Store interrupted state and clear so that Transport operations don't
-        // throw InterruptedException and we ensure that resources are cleaned up.
-        boolean interrupted = Thread.interrupted();
         dispose();
         RemoveInfo removeCommand = info.createRemoveCommand();
         LOG.debug("remove: {}, lastDeliveredSequenceId: {}", getConsumerId(), lastDeliveredSequenceId);
         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
         this.session.asyncSendPacket(removeCommand);
-        if (interrupted) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     void inProgressClearRequired() {
         inProgressClearRequiredFlag.incrementAndGet();
         // deal with delivered messages async to avoid lock contention with in progress acks
         clearDeliveredList = true;
+        // force a rollback if we will be acking in a transaction after/during failover
+        // bc acks are async they may not get there reliably on reconnect and the consumer
+        // may not be aware of the reconnect in a timely fashion if in onMessage
+        if (!deliveredMessages.isEmpty() && session.getTransactionContext().isInTransaction()) {
+            session.getTransactionContext().setRollbackOnly(true);
+        }
     }
 
     void clearMessagesInProgress() {
@@ -847,7 +863,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (!this.info.isBrowser()) {
                 for (MessageDispatch old : list) {
                     // ensure we don't filter this as a duplicate
-                    LOG.debug("on close, rollback duplicate: {}", old.getMessage().getMessageId());
+                    if (old.getMessage() != null) {
+                        LOG.debug("on close, rollback duplicate: {}", old.getMessage().getMessageId());
+                    }
                     session.connection.rollbackDuplicate(this, old.getMessage());
                 }
             }
@@ -916,7 +934,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         registerSync();
         MessageAck ack = new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
         ack.setTransactionId(session.getTransactionContext().getTransactionId());
-        session.syncSendPacket(ack);
+        session.sendAck(ack);
     }
 
     private void afterMessageIsConsumed(MessageDispatch md, boolean messageExpired) throws JMSException {
@@ -1387,13 +1405,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 afterMessageIsConsumed(md, expired);
                             } catch (RuntimeException e) {
                                 LOG.error("{} Exception while processing message: {}", getConsumerId(), md.getMessage().getMessageId(), e);
+                                md.setRollbackCause(e);
                                 if (isAutoAcknowledgeBatch() || isAutoAcknowledgeEach() || session.isIndividualAcknowledge()) {
                                     // schedual redelivery and possible dlq processing
-                                    md.setRollbackCause(e);
                                     rollback();
                                 } else {
-                                    // Transacted or Client ack: Deliver the
-                                    // next message.
+                                    // Transacted or Client ack: Deliver the next message.
                                     afterMessageIsConsumed(md, false);
                                 }
                             }

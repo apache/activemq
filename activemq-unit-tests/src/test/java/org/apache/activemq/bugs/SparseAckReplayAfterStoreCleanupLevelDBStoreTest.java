@@ -18,6 +18,7 @@ package org.apache.activemq.bugs;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.leveldb.LevelDBStore;
+import org.junit.Ignore;
 
 
 public class SparseAckReplayAfterStoreCleanupLevelDBStoreTest extends AMQ2832Test {
@@ -27,4 +28,12 @@ public class SparseAckReplayAfterStoreCleanupLevelDBStoreTest extends AMQ2832Tes
         store.setFlushDelay(0);
         brokerService.setPersistenceAdapter(store);
     }
+
+    @Ignore
+    @Override
+    public void testAckRemovedMessageReplayedAfterRecovery() throws Exception { }
+
+    @Ignore
+    @Override
+    public void testNoRestartOnMissingAckDataFile() throws Exception { }
 }

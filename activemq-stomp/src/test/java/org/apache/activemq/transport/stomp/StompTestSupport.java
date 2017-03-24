@@ -62,6 +62,10 @@ public class StompTestSupport {
     protected int sslPort;
     protected int nioPort;
     protected int nioSslPort;
+    protected int autoPort;
+    protected int autoSslPort;
+    protected int autoNioPort;
+    protected int autoNioSslPort;
     protected String jmsUri = "vm://localhost";
     protected StompConnection stompConnection;
     protected ActiveMQConnectionFactory cf;
@@ -81,6 +85,10 @@ public class StompTestSupport {
         s.port = 5676;
         s.nioPort = 5677;
         s.nioSslPort = 5678;
+        s.autoPort = 5679;
+        s.autoSslPort = 5680;
+        s.autoNioPort = 5681;
+        s.autoNioSslPort = 5682;
 
         s.startBroker();
         while(true) {
@@ -287,25 +295,49 @@ public class StompTestSupport {
             connector = brokerService.addConnector(
                 "stomp://0.0.0.0:" + port + getAdditionalConfig());
             port = connector.getConnectUri().getPort();
-            LOG.debug("Using amqp port " + port);
+            LOG.debug("Using stomp port " + port);
         }
         if (isUseSslConnector()) {
             connector = brokerService.addConnector(
                 "stomp+ssl://0.0.0.0:" + sslPort + getAdditionalConfig());
             sslPort = connector.getConnectUri().getPort();
-            LOG.debug("Using amqp+ssl port " + sslPort);
+            LOG.debug("Using stomp+ssl port " + sslPort);
         }
         if (isUseNioConnector()) {
             connector = brokerService.addConnector(
                 "stomp+nio://0.0.0.0:" + nioPort + getAdditionalConfig());
             nioPort = connector.getConnectUri().getPort();
-            LOG.debug("Using amqp+nio port " + nioPort);
+            LOG.debug("Using stomp+nio port " + nioPort);
         }
         if (isUseNioPlusSslConnector()) {
             connector = brokerService.addConnector(
                 "stomp+nio+ssl://0.0.0.0:" + nioSslPort + getAdditionalConfig());
             nioSslPort = connector.getConnectUri().getPort();
-            LOG.debug("Using amqp+nio+ssl port " + nioSslPort);
+            LOG.debug("Using stomp+nio+ssl port " + nioSslPort);
+        }
+        if (isUseAutoConnector()) {
+            connector = brokerService.addConnector(
+                "auto://0.0.0.0:" + autoPort + getAdditionalConfig());
+            autoPort = connector.getConnectUri().getPort();
+            LOG.debug("Using auto port " + autoPort);
+        }
+        if (isUseAutoSslConnector()) {
+            connector = brokerService.addConnector(
+                "auto+ssl://0.0.0.0:" + autoSslPort + getAdditionalConfig());
+            autoSslPort = connector.getConnectUri().getPort();
+            LOG.debug("Using auto+ssl port " + autoSslPort);
+        }
+        if (isUseAutoNioConnector()) {
+            connector = brokerService.addConnector(
+                "auto+nio://0.0.0.0:" + autoNioPort + getAdditionalConfig());
+            autoNioPort = connector.getConnectUri().getPort();
+            LOG.debug("Using auto+nio port " + autoNioPort);
+        }
+        if (isUseAutoNioPlusSslConnector()) {
+            connector = brokerService.addConnector(
+                "auto+nio+ssl://0.0.0.0:" + autoNioSslPort + getAdditionalConfig());
+            autoNioSslPort = connector.getConnectUri().getPort();
+            LOG.debug("Using auto+nio+ssl port " + autoNioSslPort);
         }
     }
 
@@ -330,6 +362,22 @@ public class StompTestSupport {
     }
 
     protected boolean isUseNioPlusSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoNioConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoNioPlusSslConnector() {
         return false;
     }
 

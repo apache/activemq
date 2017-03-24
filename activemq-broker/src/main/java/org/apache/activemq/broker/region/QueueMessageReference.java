@@ -18,25 +18,28 @@ package org.apache.activemq.broker.region;
 
 /**
  * Queue specific MessageReference.
- * 
+ *
  * @author fateev@amazon.com
- * 
+ *
  */
 public interface QueueMessageReference extends MessageReference {
 
     QueueMessageReference NULL_MESSAGE = new NullMessageReference();
 
     boolean isAcked();
-    
+
     void setAcked(boolean b);
-    
+
     void drop();
- 
+
+    boolean dropIfLive();
+
+    @Override
     boolean isDropped();
-        
+
     boolean lock(LockOwner subscription);
-    
+
     boolean unlock();
-    
+
     LockOwner getLockOwner();
 }

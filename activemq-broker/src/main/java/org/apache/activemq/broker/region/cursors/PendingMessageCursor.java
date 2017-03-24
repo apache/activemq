@@ -30,14 +30,16 @@ import org.apache.activemq.usage.SystemUsage;
 /**
  * Interface to pending message (messages awaiting disptach to a consumer)
  * cursor
- * 
- * 
+ *
+ *
  */
 public interface PendingMessageCursor extends Service {
 
+    static final long INFINITE_WAIT = 0;
+
     /**
      * Add a destination
-     * 
+     *
      * @param context
      * @param destination
      * @throws Exception
@@ -46,7 +48,7 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * remove a destination
-     * 
+     *
      * @param context
      * @param destination
      * @throws Exception
@@ -60,7 +62,7 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * check if a Destination is Empty for this cursor
-     * 
+     *
      * @param destination
      * @return true id the Destination is empty
      */
@@ -79,7 +81,7 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * add message to await dispatch
-     * 
+     *
      * @param node
      * @return boolean true if successful, false if cursor traps a duplicate
      * @throws IOException
@@ -89,9 +91,9 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * add message to await dispatch - if it can
-     * 
+     *
      * @param node
-     * @param maxWaitTime 
+     * @param maxWaitTime
      * @return true if successful
      * @throws IOException
      * @throws Exception
@@ -100,7 +102,7 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * add message to await dispatch
-     * 
+     *
      * @param node
      * @throws Exception
      */
@@ -108,7 +110,7 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * Add a message recovered from a retroactive policy
-     * 
+     *
      * @param node
      * @throws Exception
      */
@@ -134,6 +136,8 @@ public interface PendingMessageCursor extends Service {
      */
     int size();
 
+    long messageSize();
+
     /**
      * clear all pending messages
      */
@@ -142,7 +146,7 @@ public interface PendingMessageCursor extends Service {
     /**
      * Informs the Broker if the subscription needs to intervention to recover
      * it's state e.g. DurableTopicSubscriber may do
-     * 
+     *
      * @return true if recovery required
      */
     boolean isRecoveryRequired();
@@ -154,7 +158,7 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * Set the max batch size
-     * 
+     *
      * @param maxBatchSize
      */
     void setMaxBatchSize(int maxBatchSize);
@@ -167,7 +171,7 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * remove a node
-     * 
+     *
      * @param node
      */
     void remove(MessageReference node);
@@ -179,7 +183,7 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * Set the UsageManager
-     * 
+     *
      * @param systemUsage
      * @see org.apache.activemq.usage.SystemUsage
      */
@@ -204,7 +208,7 @@ public interface PendingMessageCursor extends Service {
      * @return true if the cursor is full
      */
     boolean isFull();
-    
+
     /**
      * @return true if the cursor has space to page messages into
      */
@@ -217,41 +221,41 @@ public interface PendingMessageCursor extends Service {
 
     /**
      * destroy the cursor
-     * 
+     *
      * @throws Exception
      */
     void destroy() throws Exception;
 
     /**
      * Page in a restricted number of messages and increment the reference count
-     * 
+     *
      * @param maxItems
      * @return a list of paged in messages
      */
     LinkedList<MessageReference> pageInList(int maxItems);
-    
+
     /**
      * set the maximum number of producers to track at one time
      * @param value
      */
     void setMaxProducersToAudit(int value);
-    
+
     /**
      * @return the maximum number of producers to audit
      */
     int getMaxProducersToAudit();
-    
+
     /**
      * Set the maximum depth of message ids to track
-     * @param depth 
+     * @param depth
      */
     void setMaxAuditDepth(int depth);
-    
+
     /**
      * @return the audit depth
      */
     int getMaxAuditDepth();
-    
+
     /**
      * @return the enableAudit
      */
@@ -260,37 +264,37 @@ public interface PendingMessageCursor extends Service {
      * @param enableAudit the enableAudit to set
      */
     public void setEnableAudit(boolean enableAudit);
-    
+
     /**
-     * @return true if the underlying state of this cursor 
+     * @return true if the underlying state of this cursor
      * disappears when the broker shuts down
      */
     public boolean isTransient();
-    
-    
+
+
     /**
      * set the audit
      * @param audit
      */
     public void setMessageAudit(ActiveMQMessageAudit audit);
-    
-    
+
+
     /**
      * @return the audit - could be null
      */
     public ActiveMQMessageAudit getMessageAudit();
-    
+
     /**
      * use a cache to improve performance
      * @param useCache
      */
     public void setUseCache(boolean useCache);
-    
+
     /**
      * @return true if a cache may be used
      */
     public boolean isUseCache();
-    
+
     /**
      * remove from auditing the message id
      * @param id

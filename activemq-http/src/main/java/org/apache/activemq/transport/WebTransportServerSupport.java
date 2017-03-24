@@ -18,10 +18,15 @@ package org.apache.activemq.transport;
 
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.Map;
 
 import org.apache.activemq.util.InetAddressUtil;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.security.Constraint;
 
 abstract public class WebTransportServerSupport extends TransportServerSupport {
 
@@ -30,6 +35,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
     protected Connector connector;
     protected SocketConnectorFactory socketConnectorFactory;
     protected String host;
+    protected final HttpOptions httpOptions = new HttpOptions();
 
     public WebTransportServerSupport(URI location) {
         super(location);
@@ -38,15 +44,16 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
     private <T> void setConnectorProperty(String name, Class<T> type, T value) throws Exception {
         connector.getClass().getMethod("set" + name, type).invoke(connector, value);
     }
-    
+
     protected void createServer() {
         server = new Server();
         try {
             server.getClass().getMethod("setStopTimeout", Long.TYPE).invoke(server, 500l);
         } catch (Throwable t) {
-            //ignore, jetty 8.  
+            //ignore, jetty 8.
         }
     }
+
     public URI bind() throws Exception {
 
         URI bind = getBindLocation();
@@ -58,9 +65,6 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
 
         setConnectorProperty("Host", String.class, host);
         setConnectorProperty("Port", Integer.TYPE, bindAddress.getPort());
-        if (Server.getVersion().startsWith("8")) {
-            connector.setServer(server);
-        }
         server.addConnector(connector);
         if (addr.isAnyLocalAddress()) {
             host = InetAddressUtil.getLocalHostName();
@@ -69,5 +73,36 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         URI boundUri = new URI(bind.getScheme(), bind.getUserInfo(), host, bindAddress.getPort(), bind.getPath(), bind.getQuery(), bind.getFragment());
         setConnectURI(boundUri);
         return boundUri;
+    }
+
+    protected void configureTraceMethod(ConstraintSecurityHandler securityHandler,
+            boolean enableTrace) {
+        Constraint constraint = new Constraint();
+        constraint.setName("trace-security");
+        //If enableTrace is true, then we want to set authenticate to false to allow it
+        constraint.setAuthenticate(!enableTrace);
+        ConstraintMapping mapping = new ConstraintMapping();
+        mapping.setConstraint(constraint);
+        mapping.setMethod("TRACE");
+        mapping.setPathSpec("/");
+        securityHandler.addConstraintMapping(mapping);
+    }
+
+    public void setHttpOptions(Map<String, Object> options) {
+        if (options != null) {
+            IntrospectionSupport.setProperties(this.httpOptions, options);
+        }
+    }
+
+    protected static class HttpOptions {
+        private boolean enableTrace = false;
+
+        public boolean isEnableTrace() {
+            return enableTrace;
+        }
+
+        public void setEnableTrace(boolean enableTrace) {
+            this.enableTrace = enableTrace;
+        }
     }
 }

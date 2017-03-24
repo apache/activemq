@@ -29,25 +29,51 @@ public class FutureResponse {
     private static final Logger LOG = LoggerFactory.getLogger(FutureResponse.class);
 
     private final ResponseCallback responseCallback;
+    private final TransportFilter transportFilter;
+
     private final ArrayBlockingQueue<Response> responseSlot = new ArrayBlockingQueue<Response>(1);
 
     public FutureResponse(ResponseCallback responseCallback) {
+        this(responseCallback, null);
+    }
+
+    public FutureResponse(ResponseCallback responseCallback, TransportFilter transportFilter) {
         this.responseCallback = responseCallback;
+        this.transportFilter = transportFilter;
     }
 
     public Response getResult() throws IOException {
+        boolean hasInterruptPending = Thread.interrupted();
         try {
             return responseSlot.take();
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Operation interupted: " + e, e);
+            hasInterruptPending = false;
+            throw dealWithInterrupt(e);
+        } finally {
+            if (hasInterruptPending) {
+                Thread.currentThread().interrupt();
             }
-            throw new InterruptedIOException("Interrupted.");
         }
     }
 
+    private InterruptedIOException dealWithInterrupt(InterruptedException e) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Operation interrupted: " + e, e);
+        }
+        InterruptedIOException interruptedIOException = new InterruptedIOException(e.getMessage());
+        interruptedIOException.initCause(e);
+        try {
+            if (transportFilter != null) {
+                transportFilter.onException(interruptedIOException);
+            }
+        } finally {
+            Thread.currentThread().interrupt();
+        }
+        return interruptedIOException;
+    }
+
     public Response getResult(int timeout) throws IOException {
+        final boolean wasInterrupted = Thread.interrupted();
         try {
             Response result = responseSlot.poll(timeout, TimeUnit.MILLISECONDS);
             if (result == null && timeout > 0) {
@@ -55,7 +81,11 @@ public class FutureResponse {
             }
             return result;
         } catch (InterruptedException e) {
-            throw new InterruptedIOException("Interrupted.");
+            throw dealWithInterrupt(e);
+        } finally {
+            if (wasInterrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

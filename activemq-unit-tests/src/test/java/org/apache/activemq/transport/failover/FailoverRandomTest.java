@@ -24,23 +24,29 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 
 public class FailoverRandomTest extends TestCase {
-	
+
     BrokerService brokerA, brokerB;
-   
+
+    @Override
     public void setUp() throws Exception {
         brokerA = createBroker("A");
         brokerB = createBroker("B");
     }
-    
+
+    @Override
     public void tearDown() throws Exception {
         brokerA.stop();
         brokerB.stop();
     }
-    
+
+    protected String getBrokerUrl() {
+        return "tcp://localhost:0";
+    }
+
 	private BrokerService createBroker(String name) throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("Broker"+ name);
-        broker.addConnector("tcp://localhost:0");
+        broker.addConnector(getBrokerUrl());
         broker.getManagementContext().setCreateConnector(false);
         broker.setPersistent(false);
         broker.setUseJmx(false);
@@ -55,14 +61,14 @@ public class FailoverRandomTest extends TestCase {
             + brokerB.getTransportConnectors().get(0).getConnectUri()
             + ")";
 		ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(failoverUrl);
-		
-		
+
+
 		ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
 		connection.start();
 		String brokerName1 = connection.getBrokerName();
 		assertNotNull(brokerName1);
 		connection.close();
-		
+
 		String brokerName2 = brokerName1;
 		int attempts = 40;
 		while (brokerName1.equals(brokerName2) && attempts-- > 0) {

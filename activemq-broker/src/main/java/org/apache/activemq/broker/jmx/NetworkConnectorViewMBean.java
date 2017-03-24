@@ -28,6 +28,13 @@ public interface NetworkConnectorViewMBean extends Service {
 
     int getPrefetchSize();
 
+    /**
+     * @return Advisory prefetch setting.
+     */
+    @MBeanInfo("The prefetch setting for the advisory message consumer.  If set to <= 0 then this setting is disabled "
+            + "and the prefetchSize attribute is used instead for configuring the advisory consumer.")
+    int getAdvisoryPrefetchSize();
+
     String getUserName();
 
     boolean isBridgeTempDestinations();
@@ -61,6 +68,8 @@ public interface NetworkConnectorViewMBean extends Service {
     void setPassword(String password);
 
     void setPrefetchSize(int prefetchSize);
+
+    void setAdvisoryPrefetchSize(int advisoryPrefetchSize);
 
     void setUserName(String userName);
 

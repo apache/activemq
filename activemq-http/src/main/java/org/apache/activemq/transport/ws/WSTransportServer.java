@@ -26,8 +26,10 @@ import javax.servlet.Servlet;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.WebTransportServerSupport;
+import org.apache.activemq.transport.ws.jetty9.WSServlet;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -60,9 +62,14 @@ public class WSTransportServer extends WebTransportServerSupport {
         URI boundTo = bind();
 
         ServletContextHandler contextHandler =
-                new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
+                new ServletContextHandler(server, "/", ServletContextHandler.SECURITY);
 
         ServletHolder holder = new ServletHolder();
+
+        //AMQ-6182 - disabling trace by default
+        configureTraceMethod((ConstraintSecurityHandler) contextHandler.getSecurityHandler(),
+                httpOptions.isEnableTrace());
+
         Map<String, Object> webSocketOptions = IntrospectionSupport.extractProperties(transportOptions, "websocket.");
         for(Map.Entry<String,Object> webSocketEntry : webSocketOptions.entrySet()) {
             Object value = webSocketEntry.getValue();
@@ -81,7 +88,7 @@ public class WSTransportServer extends WebTransportServerSupport {
         // Update the Connect To URI with our actual location in case the configured port
         // was set to zero so that we report the actual port we are listening on.
 
-        int port = getConnectorLocalPort(); 
+        int port = getConnectorLocalPort();
         if (port == -1) {
             port = boundTo.getPort();
         }
@@ -98,18 +105,15 @@ public class WSTransportServer extends WebTransportServerSupport {
     }
 
     private Servlet createWSServlet() throws Exception {
-        if (Server.getVersion().startsWith("9")) {
-            return (Servlet)Class.forName("org.apache.activemq.transport.ws.jetty9.WSServlet", true,
-                                          getClass().getClassLoader()).newInstance();
-        }
-        return (Servlet)Class.forName("org.apache.activemq.transport.ws.jetty8.WSServlet", true,
-                                      getClass().getClassLoader()).newInstance();
+        WSServlet servlet = new WSServlet();
+        servlet.setTransportOptions(transportOptions);
+        return servlet;
     }
 
     private int getConnectorLocalPort() throws Exception {
         return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
     }
-    
+
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         Server temp = server;
@@ -136,7 +140,7 @@ public class WSTransportServer extends WebTransportServerSupport {
     public void setTransportOption(Map<String, Object> transportOptions) {
         Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(transportOptions, "transport.");
         socketConnectorFactory.setTransportOptions(socketOptions);
-        super.setTransportOption(transportOptions);
+        super.setTransportOption(socketOptions);
     }
 
     @Override

@@ -17,6 +17,7 @@
 package org.apache.activemq.store.memory;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Connection;
 
@@ -45,47 +46,51 @@ public class MemoryMessageStoreSizeStatTest extends AbstractMessageStoreSizeStat
     }
 
     @Override
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testMessageSizeOneDurable() throws Exception {
+        AtomicLong publishedMessageSize = new AtomicLong();
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
         connection.setClientID("clientId");
         connection.start();
 
         //The expected value is only 100 because for durables a LRUCache is being used
         //with a max size of 100
-        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1"}, 200, 100);
+        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1"}, 200, 100, publishedMessageSize);
 
         //verify the count and size, should be 100 because of the LRUCache
-        verifyStats(dest, 100, 100 * messageSize);
+        //verify size is at least the minimum of 100 messages times 100 bytes
+        verifyStats(dest, 100, 100 * 100);
 
-        consumeDurableTestMessages(connection, "sub1", 100);
+        consumeDurableTestMessages(connection, "sub1", 100, publishedMessageSize);
 
         //Since an LRU cache is used and messages are kept in memory, this should be 100 still
-        verifyStats(dest, 100, 100 * messageSize);
+        verifyStats(dest, 100, publishedMessageSize.get());
 
         connection.stop();
 
     }
 
     @Override
-    @Test(timeout=10000)
+    @Test(timeout=30000)
     public void testMessageSizeTwoDurables() throws Exception {
+        AtomicLong publishedMessageSize = new AtomicLong();
         Connection connection = new ActiveMQConnectionFactory(brokerConnectURI).createConnection();
         connection.setClientID("clientId");
         connection.start();
 
         //The expected value is only 100 because for durables a LRUCache is being used
         //with a max size of 100, so only 100 messages are kept
-        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1", "sub2"}, 200, 100);
+        Destination dest = publishTestMessagesDurable(connection, new String[] {"sub1", "sub2"}, 200, 100, publishedMessageSize);
 
         //verify the count and size
-        verifyStats(dest, 100, 100 * messageSize);
+        //verify size is at least the minimum of 100 messages times 100 bytes
+        verifyStats(dest, 100, 100 * 100);
 
         //consume for sub1
-        consumeDurableTestMessages(connection, "sub1", 100);
+        consumeDurableTestMessages(connection, "sub1", 100, publishedMessageSize);
 
         //Should be 100 messages still
-        verifyStats(dest, 100, 100 * messageSize);
+        verifyStats(dest, 100, publishedMessageSize.get());
 
         connection.stop();
 

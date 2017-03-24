@@ -33,6 +33,7 @@ import javax.jms.TopicSession;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,6 +65,18 @@ public class PooledSessionTest extends JmsPoolTestSupport {
         pooledFactory.setBlockIfSessionPoolIsFull(false);
     }
 
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        try {
+            pooledFactory.stop();
+        } catch (Exception ex) {
+            // ignored
+        }
+
+        super.tearDown();
+    }
+        
     @Test(timeout = 60000)
     public void testPooledSessionStats() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();

@@ -104,6 +104,11 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
         }
 
         assertEquals(2, list.size());
+
+        String healthStatus = health.healthStatus();
+        String currentStatus = health.getCurrentStatus();
+
+        assertEquals(healthStatus, currentStatus);
     }
 
     protected ObjectName assertRegisteredObjectName(String name) throws MalformedObjectNameException, NullPointerException {

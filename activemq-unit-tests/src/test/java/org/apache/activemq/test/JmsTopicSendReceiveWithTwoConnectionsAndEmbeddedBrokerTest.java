@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,20 +18,20 @@ package org.apache.activemq.test;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 
-/**
- * 
- */
 public class JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
     protected BrokerService broker;
-    protected String bindAddress = "tcp://localhost:61616";
+    protected String bindAddress = "tcp://localhost:0";
+    protected String connectionAddress;
 
     /**
      * Sets up a test where the producer and consumer have their own connection.
-     * 
+     *
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
@@ -39,31 +39,37 @@ public class JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest extends 
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
 
         if (broker != null) {
             broker.stop();
+            broker = null;
         }
     }
 
     /**
      * Factory method to create a new broker
-     * 
+     *
      * @throws Exception
      */
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
-        configureBroker(answer);
+        TransportConnector connector = configureBroker(answer);
         answer.start();
+
+        connectionAddress = connector.getPublishableConnectString();
+
         return answer;
     }
 
-    protected void configureBroker(BrokerService answer) throws Exception {
-        answer.addConnector(bindAddress);
+    protected TransportConnector configureBroker(BrokerService answer) throws Exception {
+        return answer.addConnector(bindAddress);
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory(bindAddress);
+        return new ActiveMQConnectionFactory(connectionAddress);
     }
 }

@@ -17,15 +17,16 @@
 
 package org.apache.activemq.web.tool;
 
-import org.eclipse.jetty.server.Connector;
+import org.apache.activemq.web.config.JspConfigurer;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
  * A simple bootstrap class for starting Jetty in your IDE using the local web
  * application.
- * 
- * 
+ *
+ *
  */
 public final class Main {
 
@@ -45,6 +46,7 @@ public final class Main {
             String text = args[0];
             port = Integer.parseInt(text);
         }
+
         System.out.println("Starting Web Server on port: " + port);
         System.setProperty("jetty.port", "" + port);
         Server server = new Server(port);
@@ -54,11 +56,16 @@ public final class Main {
         //System.setProperty("webconsole.jmx.url","service:jmx:rmi:///jndi/rmi://localhost:1099/karaf-root");
 
         WebAppContext context = new WebAppContext();
+        ContextHandlerCollection handlers = new ContextHandlerCollection();
+        handlers.setHandlers(new WebAppContext[] {context});
+
+        JspConfigurer.configureJetty(server, handlers);
+
 
         context.setResourceBase(WEBAPP_DIR);
         context.setContextPath(WEBAPP_CTX);
         context.setServer(server);
-        server.setHandler(context);
+        server.setHandler(handlers);
         server.start();
 
         System.out.println();
@@ -67,4 +74,6 @@ public final class Main {
         System.out.println("==============================================================================");
         System.out.println();
     }
+
+
 }

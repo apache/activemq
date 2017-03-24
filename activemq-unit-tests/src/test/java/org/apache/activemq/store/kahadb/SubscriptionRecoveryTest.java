@@ -40,6 +40,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -75,6 +76,7 @@ public class SubscriptionRecoveryTest {
         File dataFile=new File("KahaDB");
         pa.setDirectory(dataFile);
         pa.setJournalMaxFileLength(10*1024);
+        pa.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
         pa.setCheckpointInterval(TimeUnit.SECONDS.toMillis(5));
         pa.setCleanupInterval(TimeUnit.SECONDS.toMillis(5));
         //Delete the index files on recovery

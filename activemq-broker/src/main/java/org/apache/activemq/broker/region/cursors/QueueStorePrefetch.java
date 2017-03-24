@@ -32,14 +32,14 @@ import org.slf4j.LoggerFactory;
 /**
  * persist pending messages pending message (messages awaiting dispatch to a
  * consumer) cursor
- * 
- * 
+ *
+ *
  */
 class QueueStorePrefetch extends AbstractStoreCursor {
     private static final Logger LOG = LoggerFactory.getLogger(QueueStorePrefetch.class);
     private final MessageStore store;
     private final Broker broker;
-   
+
     /**
      * Construct it
      * @param queue
@@ -51,6 +51,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
 
     }
 
+    @Override
     public boolean recoverMessageReference(MessageId messageReference) throws Exception {
         Message msg = this.store.getMessage(messageReference);
         if (msg != null) {
@@ -62,36 +63,46 @@ class QueueStorePrefetch extends AbstractStoreCursor {
         }
     }
 
-   
-        
+
+
     @Override
     protected synchronized int getStoreSize() {
         try {
             int result = this.store.getMessageCount();
             return result;
-            
+
         } catch (IOException e) {
             LOG.error("Failed to get message count", e);
             throw new RuntimeException(e);
         }
     }
-    
+
+    @Override
+    protected synchronized long getStoreMessageSize() {
+        try {
+            return this.store.getMessageSize();
+        } catch (IOException e) {
+            LOG.error("Failed to get message size", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     protected synchronized boolean isStoreEmpty() {
         try {
             return this.store.isEmpty();
-            
+
         } catch (Exception e) {
             LOG.error("Failed to get message count", e);
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     protected void resetBatch() {
         this.store.resetBatching();
     }
-    
+
     @Override
     protected void setBatch(MessageId messageId) throws Exception {
         if (LOG.isTraceEnabled()) {
@@ -101,7 +112,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
         batchResetNeeded = false;
     }
 
-    
+
     @Override
     protected void doFillBatch() throws Exception {
         hadSpace = this.hasSpace();

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
+import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -385,7 +386,10 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     public void execute(List<String> tokens) throws Exception {
         try {
             super.execute(tokens);
-        } finally {
+        } catch (Exception exception) {
+            handleException(exception, jmxServiceUrl.toString());
+            return;
+        }finally {
             closeJmxConnection();
         }
     }

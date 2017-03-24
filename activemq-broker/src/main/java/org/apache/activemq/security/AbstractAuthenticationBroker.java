@@ -38,7 +38,6 @@ public abstract class AbstractAuthenticationBroker extends BrokerFilter implemen
         next.removeDestination(context, destination, timeout);
 
         for (SecurityContext sc : securityContexts) {
-            sc.getAuthorizedReadDests().remove(destination);
             sc.getAuthorizedWriteDests().remove(destination);
         }
     }
@@ -53,7 +52,6 @@ public abstract class AbstractAuthenticationBroker extends BrokerFilter implemen
 
     public void refresh() {
         for (SecurityContext sc : securityContexts) {
-            sc.getAuthorizedReadDests().clear();
             sc.getAuthorizedWriteDests().clear();
         }
     }

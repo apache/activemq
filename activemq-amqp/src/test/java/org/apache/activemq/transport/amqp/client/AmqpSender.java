@@ -29,14 +29,18 @@ import javax.jms.InvalidDestinationException;
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableSender;
+import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Modified;
 import org.apache.qpid.proton.amqp.messaging.Outcome;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Released;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transaction.TransactionalState;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
@@ -131,7 +135,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             public void run() {
                 try {
                     doSend(message, sendRequest);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(sendRequest);
                 } catch (Exception e) {
                     sendRequest.onFailure(e);
                     session.getConnection().fireClientException(e);
@@ -161,7 +165,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
                 public void run() {
                     checkClosed();
                     close(request);
-                    session.pumpToProtonTransport();
+                    session.pumpToProtonTransport(request);
                 }
             });
 
@@ -316,19 +320,24 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
     }
 
     private void doSend(AmqpMessage message, AsyncResult request) throws Exception {
-
         LOG.trace("Producer sending message: {}", message);
 
-        byte[] tag = tagGenerator.getNextTag();
         Delivery delivery = null;
-
         if (presettle) {
             delivery = getEndpoint().delivery(EMPTY_BYTE_ARRAY, 0, 0);
         } else {
+            byte[] tag = tagGenerator.getNextTag();
             delivery = getEndpoint().delivery(tag, 0, tag.length);
         }
 
         delivery.setContext(request);
+
+        if (session.isInTransaction()) {
+            Binary amqpTxId = session.getTransactionId().getRemoteTxId();
+            TransactionalState state = new TransactionalState();
+            state.setTxnId(amqpTxId);
+            delivery.disposition(state);
+        }
 
         encodeAndSend(message.getWrappedMessage(), delivery);
 
@@ -390,26 +399,38 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             }
 
             AsyncResult request = (AsyncResult) delivery.getContext();
+            Exception deliveryError = null;
 
             if (outcome instanceof Accepted) {
                 LOG.trace("Outcome of delivery was accepted: {}", delivery);
-                tagGenerator.returnTag(delivery.getTag());
                 if (request != null && !request.isComplete()) {
                     request.onSuccess();
                 }
             } else if (outcome instanceof Rejected) {
-                Exception remoteError = getRemoteError();
                 LOG.trace("Outcome of delivery was rejected: {}", delivery);
-                tagGenerator.returnTag(delivery.getTag());
-                if (request != null && !request.isComplete()) {
-                    request.onFailure(remoteError);
-                } else {
-                    connection.fireClientException(getRemoteError());
+                ErrorCondition remoteError = ((Rejected) outcome).getError();
+                if (remoteError == null) {
+                    remoteError = getEndpoint().getRemoteCondition();
                 }
-            } else if (outcome != null) {
-                LOG.warn("Message send updated with unsupported outcome: {}", outcome);
+
+                deliveryError = AmqpSupport.convertToException(remoteError);
+            } else if (outcome instanceof Released) {
+                LOG.trace("Outcome of delivery was released: {}", delivery);
+                deliveryError = new IOException("Delivery failed: released by receiver");
+            } else if (outcome instanceof Modified) {
+                LOG.trace("Outcome of delivery was modified: {}", delivery);
+                deliveryError = new IOException("Delivery failed: failure at remote");
             }
 
+            if (deliveryError != null) {
+                if (request != null && !request.isComplete()) {
+                    request.onFailure(deliveryError);
+                } else {
+                    connection.fireClientException(deliveryError);
+                }
+            }
+
+            tagGenerator.returnTag(delivery.getTag());
             delivery.settle();
             toRemove.add(delivery);
         }

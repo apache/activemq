@@ -228,9 +228,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     if (keepDurableSubsActive && pending.isTransient()) {
                         pending.addMessageFirst(node);
                         pending.rollback(node.getMessageId());
-                        // not sure why pending.addMessageFirst does not take ownership of message reference
-                        // by incrementing
-                        node.incrementReferenceCount();
                     }
                     // createMessageDispatch increments on remove from pending for dispatch
                     node.decrementReferenceCount();
@@ -330,6 +327,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         regionDestination.acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
+        ((Destination)node.getRegionDestination()).getDestinationStatistics().getDequeues().increment();
     }
 
     @Override

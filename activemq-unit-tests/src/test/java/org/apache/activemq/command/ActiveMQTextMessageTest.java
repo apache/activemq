@@ -16,8 +16,10 @@
  */
 package org.apache.activemq.command;
 
+import java.beans.Transient;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 import javax.jms.JMSException;
 import javax.jms.MessageNotReadableException;
@@ -147,6 +149,11 @@ public class ActiveMQTextMessageTest extends TestCase {
     	ActiveMQTextMessage nullMessage = new ActiveMQTextMessage();
     	setContent(nullMessage, null);
     	assertTrue(nullMessage.toString().contains("text = null"));
+    }
+
+    public void testTransient() throws Exception {
+        Method method = ActiveMQTextMessage.class.getMethod("getRegionDestination", null);
+        assertTrue(method.isAnnotationPresent(Transient.class));
     }
     
     protected void setContent(Message message, String text) throws Exception {

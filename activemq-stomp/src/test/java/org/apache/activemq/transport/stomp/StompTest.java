@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
@@ -321,6 +322,32 @@ public class StompTest extends StompTestSupport {
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
         assertEquals("getJMSPriority", 4, message.getJMSPriority());
+    }
+
+    @Test(timeout = 60000)
+    public void testSendFrameWithInvalidAction() throws Exception {
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        final int connectionCount = getProxyToBroker().getCurrentConnectionsCount();
+
+        frame = "SED\n" + "AMQ_SCHEDULED_DELAY:2000\n"  + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("ERROR"));
+
+        assertTrue("Should drop connection", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connectionCount > getProxyToBroker().getCurrentConnectionsCount();
+            }
+        }));
     }
 
     @Test(timeout = 60000)
@@ -865,10 +892,10 @@ public class StompTest extends StompTestSupport {
         String frame = "CONNECT\n" + "login: dejanb\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        String f = stompConnection.receiveFrame();
-
-        assertTrue(f.startsWith("ERROR"));
-        assertClients(1);
+        try {
+            String f = stompConnection.receiveFrame();
+            assertTrue(f.startsWith("ERROR"));
+        } catch (IOException socketMayBeClosedFirstByBroker) {}
     }
 
     @Test(timeout = 60000)
@@ -877,10 +904,10 @@ public class StompTest extends StompTestSupport {
         String frame = "CONNECT\n" + "login:system\n" + "passcode: dejanb\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        String f = stompConnection.receiveFrame();
-
-        assertTrue(f.startsWith("ERROR"));
-        assertClients(1);
+        try {
+            String f = stompConnection.receiveFrame();
+            assertTrue(f.startsWith("ERROR"));
+        } catch (IOException socketMayBeClosedFirstByBroker) {}
     }
 
     @Test(timeout = 60000)

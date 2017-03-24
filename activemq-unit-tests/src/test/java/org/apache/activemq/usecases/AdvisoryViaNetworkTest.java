@@ -18,7 +18,9 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 import java.util.Arrays;
+
 import javax.jms.MessageConsumer;
+
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.DestinationInterceptor;
@@ -39,6 +41,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(AdvisoryViaNetworkTest.class);
 
 
+    @Override
     protected BrokerService createBroker(String brokerName) throws Exception {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
@@ -74,6 +77,197 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
         messagesA.assertMessagesReceived(2);
         messagesB.assertMessagesReceived(2);
+    }
+
+    /**
+     * Test that explicitly setting advisoryPrefetchSize works for advisory topics
+     * on a network connector
+     *
+     * @throws Exception
+     */
+    public void testAdvisoryPrefetchSize() throws Exception {
+        ActiveMQTopic advisoryTopic = new ActiveMQTopic("ActiveMQ.Advisory.Consumer.Topic.A.>");
+        ActiveMQTopic topic1 = new ActiveMQTopic("A.FOO");
+
+        createBroker("A");
+        BrokerService brokerB = createBroker("B");
+        NetworkConnector networkBridge = bridgeBrokers("A", "B");
+        networkBridge.addStaticallyIncludedDestination(advisoryTopic);
+        networkBridge.addStaticallyIncludedDestination(topic1);
+        networkBridge.setDuplex(true);
+        networkBridge.setAdvisoryPrefetchSize(10);
+        networkBridge.setPrefetchSize(1);
+
+        startAllBrokers();
+        verifyPeerBrokerInfo(brokers.get("A"), 1);
+
+        createConsumer("A", topic1);
+        createConsumer("A", new ActiveMQTopic("A.FOO2"));
+
+        //verify that brokerB's advisory prefetch is 10 but normal topic prefetch is 1
+        assertEquals(10, brokerB.getDestination(advisoryTopic).getConsumers().get(0).getPrefetchSize());
+        assertEquals(1, brokerB.getDestination(topic1).getConsumers().get(0).getPrefetchSize());
+
+        //both advisory messages are not acked yet because of optimized acks
+        assertDeqInflight(0, 2);
+    }
+
+    /**
+     * Test that explicitly setting advisoryPrefetchSize to 1 works for advisory topics
+     * on a network connector
+     *
+     * @throws Exception
+     */
+    public void testAdvisoryPrefetchSize1() throws Exception {
+        ActiveMQTopic advisoryTopic = new ActiveMQTopic("ActiveMQ.Advisory.Consumer.Topic.A.>");
+        ActiveMQTopic topic1 = new ActiveMQTopic("A.FOO");
+
+        createBroker("A");
+        BrokerService brokerB = createBroker("B");
+        NetworkConnector networkBridge = bridgeBrokers("A", "B");
+        networkBridge.addStaticallyIncludedDestination(advisoryTopic);
+        networkBridge.addStaticallyIncludedDestination(topic1);
+        networkBridge.setDuplex(true);
+        networkBridge.setAdvisoryPrefetchSize(1);
+        networkBridge.setPrefetchSize(10);
+
+        startAllBrokers();
+        verifyPeerBrokerInfo(brokers.get("A"), 1);
+
+        createConsumer("A", topic1);
+        createConsumer("A", new ActiveMQTopic("A.FOO2"));
+
+        //verify that brokerB's advisory prefetch is 1 but normal topic prefetch is 10
+        assertEquals(1, brokerB.getDestination(advisoryTopic).getConsumers().get(0).getPrefetchSize());
+        assertEquals(10, brokerB.getDestination(topic1).getConsumers().get(0).getPrefetchSize());
+
+        assertDeqInflight(2, 0);
+    }
+
+    /**
+     * Test that if advisoryPrefetchSize isn't set then prefetchSize is used instead
+     * for backwards compatibility
+     *
+     * @throws Exception
+     */
+    public void testAdvisoryPrefetchSizeNotSet() throws Exception {
+        ActiveMQTopic advisoryTopic = new ActiveMQTopic("ActiveMQ.Advisory.Consumer.Topic.A.>");
+        ActiveMQTopic topic1 = new ActiveMQTopic("A.FOO");
+
+        createBroker("A");
+        BrokerService brokerB = createBroker("B");
+        NetworkConnector networkBridge = bridgeBrokers("A", "B");
+        networkBridge.addStaticallyIncludedDestination(advisoryTopic);
+        networkBridge.addStaticallyIncludedDestination(topic1);
+        networkBridge.setDuplex(true);
+        networkBridge.setPrefetchSize(10);
+
+        startAllBrokers();
+        verifyPeerBrokerInfo(brokers.get("A"), 1);
+
+        createConsumer("A", topic1);
+        createConsumer("A", new ActiveMQTopic("A.FOO2"));
+
+        //verify that both consumers have a prefetch of 10
+        assertEquals(10, brokerB.getDestination(advisoryTopic).getConsumers().get(0).getPrefetchSize());
+        assertEquals(10, brokerB.getDestination(topic1).getConsumers().get(0).getPrefetchSize());
+
+        assertDeqInflight(0, 2);
+    }
+
+    /**
+     * Test that if advisoryPrefetchSize isn't set then prefetchSize is used instead
+     * for backwards compatibility (test when set to 1)
+     *
+     * @throws Exception
+     */
+    public void testPrefetchSize1() throws Exception {
+        ActiveMQTopic advisoryTopic = new ActiveMQTopic("ActiveMQ.Advisory.Consumer.Topic.A.>");
+        ActiveMQTopic topic1 = new ActiveMQTopic("A.FOO");
+
+        createBroker("A");
+        BrokerService brokerB = createBroker("B");
+        NetworkConnector networkBridge = bridgeBrokers("A", "B");
+        networkBridge.addStaticallyIncludedDestination(advisoryTopic);
+        networkBridge.setDuplex(true);
+        networkBridge.setPrefetchSize(1);
+
+        startAllBrokers();
+        verifyPeerBrokerInfo(brokers.get("A"), 1);
+
+        createConsumer("A", topic1);
+        createConsumer("A", new ActiveMQTopic("A.FOO2"));
+
+        //verify that both consumers have a prefetch of 1
+        assertEquals(1, brokerB.getDestination(advisoryTopic).getConsumers().get(0).getPrefetchSize());
+        assertEquals(1, brokerB.getDestination(topic1).getConsumers().get(0).getPrefetchSize());
+
+        assertDeqInflight(2, 0);
+    }
+
+    /**
+     * Test configuring the advisoryAckPercentage works with advisoryPrefetchSize
+     * @throws Exception
+     */
+    public void testAdvisoryPrefetchSizePercent() throws Exception {
+        ActiveMQTopic advisoryTopic = new ActiveMQTopic("ActiveMQ.Advisory.Consumer.Topic.A.>");
+
+        createBroker("A");
+        createBroker("B");
+        NetworkConnector networkBridge = bridgeBrokers("A", "B");
+        networkBridge.addStaticallyIncludedDestination(advisoryTopic);
+        networkBridge.setDuplex(true);
+        networkBridge.setAdvisoryPrefetchSize(10);
+        networkBridge.setAdvisoryAckPercentage(65);
+
+        startAllBrokers();
+        verifyPeerBrokerInfo(brokers.get("A"), 1);
+
+        for (int i = 0; i < 10; i++) {
+            createConsumer("A", new ActiveMQTopic("A.FOO"));
+        }
+
+        assertDeqInflight(7, 3);
+    }
+
+    /**
+     * Test configuring the advisoryAckPercentage works when only prefetchSize exists
+     * and is applied against that instead for advisory consumers
+     *
+     * @throws Exception
+     */
+    public void testPrefetchSizePercent() throws Exception {
+        ActiveMQTopic advisoryTopic = new ActiveMQTopic("ActiveMQ.Advisory.Consumer.Topic.A.>");
+
+        createBroker("A");
+        createBroker("B");
+        NetworkConnector networkBridge = bridgeBrokers("A", "B");
+        networkBridge.addStaticallyIncludedDestination(advisoryTopic);
+        networkBridge.setDuplex(true);
+        networkBridge.setPrefetchSize(10);
+        networkBridge.setAdvisoryAckPercentage(65);
+
+        startAllBrokers();
+        verifyPeerBrokerInfo(brokers.get("A"), 1);
+
+        for (int i = 0; i < 10; i++) {
+            createConsumer("A", new ActiveMQTopic("A.FOO"));
+        }
+
+        assertDeqInflight(7, 3);
+    }
+
+    private void assertDeqInflight(final int dequeue, final int inflight) throws Exception {
+        assertTrue("deq and inflight as expected", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                RegionBroker regionBroker = (RegionBroker) brokers.get("A").broker.getRegionBroker();
+                LOG.info("A Deq:" + regionBroker.getDestinationStatistics().getDequeues().getCount());
+                LOG.info("A Inflight:" + regionBroker.getDestinationStatistics().getInflight().getCount());
+                return regionBroker.getDestinationStatistics().getDequeues().getCount() == dequeue
+                        && regionBroker.getDestinationStatistics().getInflight().getCount() == inflight;
+            }
+        }));
     }
 
 

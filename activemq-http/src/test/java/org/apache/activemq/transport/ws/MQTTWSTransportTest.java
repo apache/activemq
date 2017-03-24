@@ -25,8 +25,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.util.Wait;
-import org.eclipse.jetty.websocket.WebSocketClient;
-import org.eclipse.jetty.websocket.WebSocketClientFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.codec.CONNACK;
 import org.fusesource.mqtt.codec.CONNECT;
@@ -40,21 +41,22 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
 
     protected WebSocketClient wsClient;
     protected MQTTWSConnection wsMQTTConnection;
+    protected ClientUpgradeRequest request;
 
     @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
 
-        WebSocketClientFactory clientFactory = new WebSocketClientFactory();
-        clientFactory.start();
+        wsClient = new WebSocketClient(new SslContextFactory(true));
+        wsClient.start();
 
-        wsClient = clientFactory.newWebSocketClient();
-        wsClient.setProtocol("mqttv3.1");
+        request = new ClientUpgradeRequest();
+        request.setSubProtocols("mqttv3.1");
 
         wsMQTTConnection = new MQTTWSConnection();
 
-        wsClient.open(wsConnectUri, wsMQTTConnection);
+        wsClient.connect(wsMQTTConnection, wsConnectUri, request);
         if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to MQTT WS endpoint");
         }
@@ -79,7 +81,7 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
 
             wsMQTTConnection = new MQTTWSConnection();
 
-            wsClient.open(wsConnectUri, wsMQTTConnection);
+            wsClient.connect(wsMQTTConnection, wsConnectUri, request);
             if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
                 throw new IOException("Could not connect to MQTT WS endpoint");
             }

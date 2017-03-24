@@ -74,6 +74,13 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
 
     }
 
+    /**
+     * @return the description of the command.
+     */
+    public String description() {
+        return command.getOneLineDescription();
+    }
+
     public Command getCommand() {
         return command;
     }

@@ -16,18 +16,16 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.broker.region.Destination;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.Set;
-
-import static org.junit.Assert.assertTrue;
 
 public class DestinationsTest extends RuntimeConfigTestSupport {
     public static final Logger LOG = LoggerFactory.getLogger(DestinationsTest.class);

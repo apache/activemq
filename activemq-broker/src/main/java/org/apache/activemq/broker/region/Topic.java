@@ -356,6 +356,8 @@ public class Topic extends BaseDestination implements Task {
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0
                 && !context.isInRecoveryMode();
 
+        message.setRegionDestination(this);
+
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
         if (message.isExpired()) {
@@ -494,7 +496,6 @@ public class Topic extends BaseDestination implements Task {
     synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message)
             throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
-        message.setRegionDestination(this);
         message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
         Future<Object> result = null;
 
@@ -656,6 +657,7 @@ public class Topic extends BaseDestination implements Task {
                 for (Message message : toExpire) {
                     for (DurableTopicSubscription sub : durableSubscribers.values()) {
                         if (!sub.isActive()) {
+                            message.setRegionDestination(this);
                             messageExpired(connectionContext, sub, message);
                         }
                     }

@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AMQ6000Test {
 
-    private static Logger LOG = LoggerFactory.getLogger(AMQ5921Test.class);
+    private static Logger LOG = LoggerFactory.getLogger(AMQ6000Test.class);
 
     private ActiveMQConnection connection;
     private BrokerService broker;

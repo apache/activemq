@@ -279,37 +279,16 @@ public class TopicSubscription extends AbstractSubscription {
         if (ack.isStandardAck() || ack.isPoisonAck() || ack.isIndividualAck()) {
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
-
                     @Override
                     public void afterCommit() throws Exception {
-                        synchronized (TopicSubscription.this) {
-                            if (singleDestination && destination != null) {
-                                destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
-                            }
-                        }
-                        getSubscriptionStatistics().getDequeues().add(ack.getMessageCount());
-                        updateInflightMessageSizeOnAck(ack);
+                        updateStatsOnAck(ack);
                         dispatchMatched();
                     }
                 });
             } else {
-                if (singleDestination && destination != null) {
-                    destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
-                    destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
-                    if (info.isNetworkSubscription()) {
-                        destination.getDestinationStatistics().getForwards().add(ack.getMessageCount());
-                    }
-                }
-                getSubscriptionStatistics().getDequeues().add(ack.getMessageCount());
-                updateInflightMessageSizeOnAck(ack);
+                updateStatsOnAck(ack);
             }
-            while (true) {
-                int currentExtension = prefetchExtension.get();
-                int newExtension = Math.max(0, currentExtension - ack.getMessageCount());
-                if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
-                    break;
-                }
-            }
+            updatePrefetch(ack);
             dispatchMatched();
             return;
         } else if (ack.isDeliveredAck()) {
@@ -318,19 +297,8 @@ public class TopicSubscription extends AbstractSubscription {
             dispatchMatched();
             return;
         } else if (ack.isExpiredAck()) {
-            if (singleDestination && destination != null) {
-                destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
-                destination.getDestinationStatistics().getExpired().add(ack.getMessageCount());
-                destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
-            }
-            getSubscriptionStatistics().getDequeues().add(ack.getMessageCount());
-            while (true) {
-                int currentExtension = prefetchExtension.get();
-                int newExtension = Math.max(0, currentExtension - ack.getMessageCount());
-                if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
-                    break;
-                }
-            }
+            updateStatsOnAck(ack);
+            updatePrefetch(ack);
             dispatchMatched();
             return;
         } else if (ack.isRedeliveredAck()) {
@@ -393,10 +361,10 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     /**
-     * Update the inflight statistics on message ack.
+     * Update the statistics on message ack.
      * @param ack
      */
-    private void updateInflightMessageSizeOnAck(final MessageAck ack) {
+    private void updateStatsOnAck(final MessageAck ack) {
         synchronized(dispatchLock) {
             boolean inAckRange = false;
             List<MessageReference> removeList = new ArrayList<MessageReference>();
@@ -417,6 +385,25 @@ public class TopicSubscription extends AbstractSubscription {
             for (final MessageReference node : removeList) {
                 dispatched.remove(node);
                 getSubscriptionStatistics().getInflightMessageSize().addSize(-node.getSize());
+                getSubscriptionStatistics().getDequeues().increment();
+                ((Destination)node.getRegionDestination()).getDestinationStatistics().getDequeues().increment();
+                ((Destination)node.getRegionDestination()).getDestinationStatistics().getInflight().decrement();
+                if (info.isNetworkSubscription()) {
+                    ((Destination)node.getRegionDestination()).getDestinationStatistics().getForwards().add(ack.getMessageCount());
+                }
+                if (ack.isExpiredAck()) {
+                    destination.getDestinationStatistics().getExpired().add(ack.getMessageCount());
+                }
+            }
+        }
+    }
+
+    private void updatePrefetch(MessageAck ack) {
+        while (true) {
+            int currentExtension = prefetchExtension.get();
+            int newExtension = Math.max(0, currentExtension - ack.getMessageCount());
+            if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                break;
             }
         }
     }
@@ -429,6 +416,13 @@ public class TopicSubscription extends AbstractSubscription {
     @Override
     public int getPendingQueueSize() {
         return matched();
+    }
+
+    @Override
+    public long getPendingMessageSize() {
+        synchronized (matchedListMutex) {
+            return matched.messageSize();
+        }
     }
 
     @Override

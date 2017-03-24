@@ -33,6 +33,8 @@ public interface MQTTTransport {
 
     public X509Certificate[] getPeerCertificates();
 
+    public void setPeerCertificates(X509Certificate[] certificates);
+
     public void onException(IOException error);
 
     public MQTTInactivityMonitor getInactivityMonitor();

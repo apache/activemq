@@ -78,21 +78,21 @@ public class NIOSSLBasicTest {
 
     @Test
     public void basicConnector() throws Exception {
-        BrokerService broker = createBroker("nio+ssl", "nio+ssl://localhost:0?transport.needClientAuth=true");
+        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
         stopBroker(broker);
     }
 
     @Test
     public void enabledCipherSuites() throws Exception {
-        BrokerService broker = createBroker("nio+ssl", "nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=SSL_RSA_WITH_RC4_128_SHA,SSL_DH_anon_WITH_3DES_EDE_CBC_SHA");
+        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=SSL_RSA_WITH_RC4_128_SHA,SSL_DH_anon_WITH_3DES_EDE_CBC_SHA");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
         stopBroker(broker);
     }
 
     @Test
     public void enabledProtocols() throws Exception {
-        BrokerService broker = createBroker("nio+ssl", "nio+ssl://localhost:61616?transport.needClientAuth=true&transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2");
+        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true&transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
         stopBroker(broker);
     }
@@ -111,5 +111,9 @@ public class NIOSSLBasicTest {
         MessageConsumer consumer = session.createConsumer(destination);
         Message received = consumer.receive(2000);
         TestCase.assertEquals(body, ((TextMessage)received).getText());
+    }
+
+    protected String getTransportType() {
+        return "nio+ssl";
     }
 }

@@ -155,6 +155,12 @@ case class RecordLog(directory: File, logSuffix:String) {
           onDelete(info.file)
           onDelete(id)
           log_infos.remove(id)
+          reader_cache.synchronized {
+            val reader = reader_cache.remove(info.file);
+            if( reader!=null ) {
+              reader.release();
+            }
+          }
         }
       }
     }

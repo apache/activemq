@@ -79,6 +79,15 @@ public class AmqpTestSupport {
     protected URI amqpNioPlusSslURI;
     protected int amqpNioPlusSslPort;
 
+    protected URI autoURI;
+    protected int autoPort;
+    protected URI autoSslURI;
+    protected int autoSslPort;
+    protected URI autoNioURI;
+    protected int autoNioPort;
+    protected URI autoNioPlusSslURI;
+    protected int autoNioPlusSslPort;
+
     protected URI openwireURI;
     protected int openwirePort;
 
@@ -176,6 +185,34 @@ public class AmqpTestSupport {
             amqpNioPlusSslURI = connector.getPublishableConnectURI();
             LOG.debug("Using amqp+nio+ssl port " + amqpNioPlusSslPort);
         }
+        if (isUseAutoConnector()) {
+            connector = brokerService.addConnector(
+                "auto://0.0.0.0:" + autoPort + getAdditionalConfig());
+            autoPort = connector.getConnectUri().getPort();
+            autoURI = connector.getPublishableConnectURI();
+            LOG.debug("Using auto port " + autoPort);
+        }
+        if (isUseAutoSslConnector()) {
+            connector = brokerService.addConnector(
+                "auto+ssl://0.0.0.0:" + autoSslPort + getAdditionalConfig());
+            autoSslPort = connector.getConnectUri().getPort();
+            autoSslURI = connector.getPublishableConnectURI();
+            LOG.debug("Using auto+ssl port " + autoSslPort);
+        }
+        if (isUseAutoNioConnector()) {
+            connector = brokerService.addConnector(
+                "auto+nio://0.0.0.0:" + autoNioPort + getAdditionalConfig());
+            autoNioPort = connector.getConnectUri().getPort();
+            autoNioURI = connector.getPublishableConnectURI();
+            LOG.debug("Using auto+nio port " + autoNioPort);
+        }
+        if (isUseAutoNioPlusSslConnector()) {
+            connector = brokerService.addConnector(
+                "auto+nio+ssl://0.0.0.0:" + autoNioPlusSslPort + getAdditionalConfig());
+            autoNioPlusSslPort = connector.getConnectUri().getPort();
+            autoNioPlusSslURI = connector.getPublishableConnectURI();
+            LOG.debug("Using auto+nio+ssl port " + autoNioPlusSslPort);
+        }
     }
 
     protected boolean isPersistent() {
@@ -207,6 +244,22 @@ public class AmqpTestSupport {
     }
 
     protected boolean isUseNioPlusSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoNioConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoNioPlusSslConnector() {
         return false;
     }
 

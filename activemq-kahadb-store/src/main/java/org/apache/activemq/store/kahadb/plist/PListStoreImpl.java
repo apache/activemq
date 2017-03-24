@@ -276,6 +276,7 @@ public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware
                     this.directory = new File(IOHelper.getDefaultDataDirectory() + File.pathSeparator + "delayedDB");
                 }
                 IOHelper.mkdirs(this.directory);
+                IOHelper.deleteChildren(this.directory);
                 lock();
                 this.journal = new Journal();
                 this.journal.setDirectory(directory);

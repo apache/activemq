@@ -29,6 +29,7 @@ import org.apache.activemq.command.ConsumerInfo;
 public class NetworkBridgeConfiguration {
 
     private boolean conduitSubscriptions = true;
+    private boolean useVirtualDestSubs;
     private boolean dynamicOnly;
     private boolean dispatchAsync = true;
     private boolean decreaseNetworkConsumerPriority;
@@ -36,6 +37,12 @@ public class NetworkBridgeConfiguration {
     private boolean duplex;
     private boolean bridgeTempDestinations = true;
     private int prefetchSize = 1000;
+    /**
+     * By default set to 0, which is disabled and prefetchSize value will be
+     * used instead.
+     */
+    private int advisoryPrefetchSize = 0;
+    private int advisoryAckPercentage = 75;
     private int networkTTL = 1;
     private int consumerTTL = networkTTL;
     private int messageTTL = networkTTL;
@@ -204,7 +211,41 @@ public class NetworkBridgeConfiguration {
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setPrefetchSize(int prefetchSize) {
+        if (prefetchSize < 1) {
+            throw new IllegalArgumentException("prefetchSize must be > 0"
+                    + " because network consumers do not poll for messages.");
+        }
         this.prefetchSize = prefetchSize;
+    }
+
+    public int getAdvisoryPrefetchSize() {
+        return advisoryPrefetchSize;
+    }
+
+    /**
+     * Prefetch size for advisory consumers.  Just like prefetchSize, if set, this
+     * value must be greater than 0 because network consumers do not poll for messages.
+     * Setting this to 0 or less means this value is disabled and prefetchSize will be
+     * used instead.
+     *
+     * @param advisoryPrefetchSize
+     */
+    public void setAdvisoryPrefetchSize(int advisoryPrefetchSize) {
+        this.advisoryPrefetchSize = advisoryPrefetchSize;
+    }
+
+    public int getAdvisoryAckPercentage() {
+        return advisoryAckPercentage;
+    }
+
+    /**
+     * @param advisoryAckPercentage the percentage of the advisory prefetch size
+     * value that can be dispatched before an ack will be sent, defaults to 75
+     * which means that when the number of received messages is greater than 75% of
+     * the prefetch size an ack will be sent back
+     */
+    public void setAdvisoryAckPercentage(int advisoryAckPercentage) {
+        this.advisoryAckPercentage = advisoryAckPercentage;
     }
 
     /**
@@ -237,11 +278,27 @@ public class NetworkBridgeConfiguration {
                         filter.append(".");
                         filter.append(destination.getPhysicalName());
                         delimiter = ",";
+
+                        if (useVirtualDestSubs) {
+                            filter.append(delimiter);
+                            filter.append(AdvisorySupport.VIRTUAL_DESTINATION_CONSUMER_ADVISORY_TOPIC_PREFIX);
+                            filter.append(destination.getDestinationTypeAsString());
+                            filter.append(".");
+                            filter.append(destination.getPhysicalName());
+                        }
                     }
                 }
                 return filter.toString();
             }   else {
-                return AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX + ">";
+                StringBuffer filter = new StringBuffer();
+                filter.append(AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX);
+                filter.append(">");
+                if (useVirtualDestSubs) {
+                    filter.append(",");
+                    filter.append(AdvisorySupport.VIRTUAL_DESTINATION_CONSUMER_ADVISORY_TOPIC_PREFIX);
+                    filter.append(">");
+                }
+                return filter.toString();
             }
         } else {
             // prepend consumer advisory prefix
@@ -447,6 +504,23 @@ public class NetworkBridgeConfiguration {
 
     public void setCheckDuplicateMessagesOnDuplex(boolean checkDuplicateMessagesOnDuplex) {
         this.checkDuplicateMessagesOnDuplex = checkDuplicateMessagesOnDuplex;
+    }
+
+    public boolean isUseVirtualDestSubs() {
+        return useVirtualDestSubs;
+    }
+
+    /**
+     * This was a typo, so this is deprecated as of 5.13.1
+     */
+    @Deprecated
+    public boolean isUseVirtualDestSus() {
+        return useVirtualDestSubs;
+    }
+
+    public void setUseVirtualDestSubs(
+            boolean useVirtualDestSubs) {
+        this.useVirtualDestSubs = useVirtualDestSubs;
     }
 
 }

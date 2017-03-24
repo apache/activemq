@@ -61,7 +61,7 @@ public class AMQ2910Test extends JmsMultipleClientsTestSupport {
         return broker;
     }
 
-    @Test(timeout = 30 * 1000)
+    @Test(timeout = 60 * 1000)
     public void testConcurrentSendToPendingCursor() throws Exception {
         final ActiveMQConnectionFactory factory =
                 new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());

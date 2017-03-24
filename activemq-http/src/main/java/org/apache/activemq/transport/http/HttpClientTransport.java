@@ -184,6 +184,7 @@ public class HttpClientTransport extends HttpTransportSupport {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             onException(new InterruptedIOException());
+                            Thread.currentThread().interrupt();
                             break;
                         }
                     } else {

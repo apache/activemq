@@ -239,9 +239,12 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             }
 
             private void onAcceptError(Exception error, String remoteHost) {
-                LOG.error("Could not accept connection " + (remoteHost == null ? "" : "from " + remoteHost) + ": "
-                        + error);
-                LOG.debug("Reason: " + error, error);
+                if (brokerService != null && brokerService.isStopping()) {
+                    LOG.info("Could not accept connection during shutdown {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error);
+                } else {
+                    LOG.error("Could not accept connection {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error);
+                    LOG.debug("Reason: " + error, error);
+                }
             }
         });
         getServer().setBrokerInfo(brokerInfo);
@@ -560,6 +563,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     /**
      * @return the updateClusterFilter
      */
+    @Override
     public String getUpdateClusterFilter() {
         return this.updateClusterFilter;
     }

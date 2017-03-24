@@ -31,43 +31,58 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
         this.bridge = bridge;
     }
 
+    @Override
     public void start() throws Exception {
         bridge.start();
     }
 
+    @Override
     public void stop() throws Exception {
         bridge.stop();
     }
 
+    @Override
     public String getLocalAddress() {
         return bridge.getLocalAddress();
     }
 
+    @Override
     public String getRemoteAddress() {
         return bridge.getRemoteAddress();
     }
 
+    @Override
     public String getRemoteBrokerName() {
         return bridge.getRemoteBrokerName();
     }
 
 
+    @Override
     public String getRemoteBrokerId() {
         return bridge.getRemoteBrokerId();
     }
 
+    @Override
     public String getLocalBrokerName() {
         return bridge.getLocalBrokerName();
     }
 
+    @Override
     public long getEnqueueCounter() {
         return bridge.getEnqueueCounter();
     }
 
+    @Override
     public long getDequeueCounter() {
         return bridge.getDequeueCounter();
     }
 
+    @Override
+    public long getReceivedCounter() {
+        return bridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
+    }
+
+    @Override
     public boolean isCreatedByDuplex() {
         return createByDuplex;
     }
@@ -76,6 +91,7 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
         this.createByDuplex = createByDuplex;
     }
 
+    @Override
     public void resetStats(){
         bridge.resetStats();
         for (NetworkDestinationView networkDestinationView:networkDestinationViewList){

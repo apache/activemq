@@ -18,6 +18,7 @@
 package org.apache.activemq.jaas;
 
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
     private static final String USER_FILE_PROP_NAME = "org.apache.activemq.jaas.textfiledn.user";
     private static final String GROUP_FILE_PROP_NAME = "org.apache.activemq.jaas.textfiledn.group";
 
-    private Properties groups;
+    private Map<String, Set<String>> groupsByUser;
     private Map<String, String> usersByDn;
 
     /**
@@ -57,7 +58,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         super.initialize(subject, callbackHandler, sharedState, options);
 
         usersByDn = load(USER_FILE_PROP_NAME, "", options).invertedPropertiesMap();
-        groups = load(GROUP_FILE_PROP_NAME, "", options).getProps();
+        groupsByUser = load(GROUP_FILE_PROP_NAME, "", options).invertedPropertiesValuesMap();
      }
 
     /**
@@ -89,18 +90,10 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
      */
     @Override
     protected Set<String> getUserGroups(String username) throws LoginException {
-        Set<String> userGroups = new HashSet<String>();
-        for (Enumeration<Object> enumeration = groups.keys(); enumeration.hasMoreElements();) {
-            String groupName = (String)enumeration.nextElement();
-            String[] userList = (groups.getProperty(groupName) + "").split(",");
-            for (int i = 0; i < userList.length; i++) {
-                if (username.equals(userList[i])) {
-                    userGroups.add(groupName);
-                    break;
-                }
-            }
+        Set<String> userGroups = groupsByUser.get(username);
+        if (userGroups == null) {
+            userGroups = Collections.emptySet();
         }
-
         return userGroups;
     }
 }

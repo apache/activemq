@@ -41,7 +41,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
 
     static {
         serializablePackages = System.getProperty("org.apache.activemq.SERIALIZABLE_PACKAGES",
-                    "java.lang,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper").split(",");
+                    "java.lang,javax.security,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper").split(",");
     }
 
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {

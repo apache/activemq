@@ -170,12 +170,6 @@ public class XATransaction extends Transaction {
         }
     }
 
-    public static XAException newXAException(String s, int errorCode) {
-        XAException xaException = new XAException(s + " " + TransactionContext.xaErrorCodeMarker + errorCode);
-        xaException.errorCode = errorCode;
-        return xaException;
-    }
-
     @Override
     public int prepare() throws XAException, IOException {
         if (LOG.isDebugEnabled()) {

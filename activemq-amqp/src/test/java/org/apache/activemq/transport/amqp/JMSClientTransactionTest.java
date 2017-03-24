@@ -20,9 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
@@ -30,6 +35,7 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,13 +192,107 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
         assertEquals(MSG_COUNT, getProxyToQueue(getDestinationName()).getQueueSize());
         SubscriptionViewMBean subscription = getProxyToQueueSubscriber(getDestinationName());
         assertNotNull(subscription);
+        LOG.info("Subscription[{}]: prefetch size after rollback = {}", subscription.getSubscriptionId(), subscription.getPrefetchSize());
         assertTrue(subscription.getPrefetchSize() > 0);
 
         for (int i = 1; i <= MSG_COUNT; i++) {
             LOG.info("Trying to receive message: {}", i);
             TextMessage message = (TextMessage) consumer.receive(1000);
-            assertNotNull("Message " + i + "should be available", message);
+            assertNotNull("Message " + i + " should be available", message);
             assertEquals("Should get message: " + i, i , message.getIntProperty("MessageSequence"));
         }
+
+        session.commit();
+    }
+
+    @Test(timeout = 60000)
+    public void testQueueTXRollbackAndCommitAsyncConsumer() throws Exception {
+        final int MSG_COUNT = 3;
+
+        final AtomicInteger counter = new AtomicInteger();
+
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        Queue destination = session.createQueue(getDestinationName());
+
+        MessageProducer producer = session.createProducer(destination);
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        consumer.setMessageListener(new MessageListener() {
+
+            @Override
+            public void onMessage(Message message) {
+                try {
+                    LOG.info("Received Message {}", message.getJMSMessageID());
+                } catch (JMSException e) {
+                }
+                counter.incrementAndGet();
+            }
+        });
+
+        int msgIndex = 0;
+        for (int i = 1; i <= MSG_COUNT; i++) {
+            LOG.info("Sending message: {} to rollback", msgIndex++);
+            TextMessage message = session.createTextMessage("Rolled back Message: " + msgIndex);
+            message.setIntProperty("MessageSequence", msgIndex);
+            producer.send(message);
+        }
+
+        LOG.info("ROLLBACK of sent message here:");
+        session.rollback();
+
+        assertEquals(0, getProxyToQueue(getDestinationName()).getQueueSize());
+
+        for (int i = 1; i <= MSG_COUNT; i++) {
+            LOG.info("Sending message: {} to commit", msgIndex++);
+            TextMessage message = session.createTextMessage("Commit Message: " + msgIndex);
+            message.setIntProperty("MessageSequence", msgIndex);
+            producer.send(message);
+        }
+
+        LOG.info("COMMIT of sent message here:");
+        session.commit();
+
+        assertEquals(MSG_COUNT, getProxyToQueue(getDestinationName()).getQueueSize());
+        SubscriptionViewMBean subscription = getProxyToQueueSubscriber(getDestinationName());
+        assertNotNull(subscription);
+        LOG.info("Subscription[{}]: prefetch size after rollback = {}", subscription.getSubscriptionId(), subscription.getPrefetchSize());
+        assertTrue(subscription.getPrefetchSize() > 0);
+
+        assertTrue("Should read all " + MSG_COUNT + " messages.", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return counter.get() == MSG_COUNT;
+            }
+        }));
+
+        LOG.info("COMMIT of first received batch here:");
+        session.commit();
+
+        assertTrue(subscription.getPrefetchSize() > 0);
+        for (int i = 1; i <= MSG_COUNT; i++) {
+            LOG.info("Sending message: {} to commit", msgIndex++);
+            TextMessage message = session.createTextMessage("Commit Message: " + msgIndex);
+            message.setIntProperty("MessageSequence", msgIndex);
+            producer.send(message);
+        }
+
+        LOG.info("COMMIT of next sent message batch here:");
+        session.commit();
+
+        LOG.info("WAITING -> for next three messages to arrive:");
+
+        assertTrue(subscription.getPrefetchSize() > 0);
+        assertTrue("Should read all " + MSG_COUNT + " messages.", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Read {} messages so far", counter.get());
+                return counter.get() == MSG_COUNT * 2;
+            }
+        }));
     }
 }

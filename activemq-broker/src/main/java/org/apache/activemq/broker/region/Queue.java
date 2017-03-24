@@ -47,6 +47,7 @@ import javax.jms.JMSException;
 import javax.jms.ResourceAllocationException;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.cursors.OrderedPendingList;
@@ -131,7 +132,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private boolean allConsumersExclusiveByDefault = false;
     private final AtomicBoolean started = new AtomicBoolean();
 
-    private boolean resetNeeded;
+    private volatile boolean resetNeeded;
 
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         @Override
@@ -285,12 +286,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
             // Message could have expired while it was being
             // loaded..
+            message.setRegionDestination(Queue.this);
             if (message.isExpired() && broker.isExpired(message)) {
                 toExpire.add(message);
                 return true;
             }
             if (hasSpace()) {
-                message.setRegionDestination(Queue.this);
                 messagesLock.writeLock().lock();
                 try {
                     try {
@@ -407,14 +408,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         public BrowserDispatch(QueueBrowserSubscription browserSubscription) {
             browser = browserSubscription;
             browser.incrementQueueRef();
-        }
-
-        void done() {
-            try {
-                browser.decrementQueueRef();
-            } catch (Exception e) {
-                LOG.warn("decrement ref on browser: " + browser, e);
-            }
         }
 
         public QueueBrowserSubscription getBrowser() {
@@ -555,7 +548,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
 
-                for (MessageReference ref : unAckedMessages) {
+                for (Iterator<MessageReference> unackedListIterator = unAckedMessages.iterator(); unackedListIterator.hasNext(); ) {
+                    MessageReference ref = unackedListIterator.next();
                     // AMQ-5107: don't resend if the broker is shutting down
                     if ( this.brokerService.isStopping() ) {
                         break;
@@ -577,10 +571,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             }
                         }
                     }
-                    if (!qmr.isDropped()) {
-                        dispatchPendingList.addMessageForRedelivery(qmr);
+                    if (qmr.isDropped()) {
+                        unackedListIterator.remove();
                     }
                 }
+                dispatchPendingList.addForRedelivery(unAckedMessages, strictOrderDispatch && consumers.isEmpty());
                 if (sub instanceof QueueBrowserSubscription) {
                     ((QueueBrowserSubscription)sub).decrementQueueRef();
                     browserDispatches.remove(sub);
@@ -826,14 +821,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         ListenableFuture<Object> result = null;
 
         producerExchange.incrementSend();
-        checkUsage(context, producerExchange, message);
-        sendLock.lockInterruptibly();
-        try {
+        do {
+            checkUsage(context, producerExchange, message);
             message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
             if (store != null && message.isPersistent()) {
                 message.getMessageId().setFutureOrSequenceLong(null);
                 try {
-                    if (messages.isCacheEnabled()) {
+                    //AMQ-6133 - don't store async if using persistJMSRedelivered
+                    //This flag causes a sync update later on dispatch which can cause a race
+                    //condition if the original add is processed after the update, which can cause
+                    //a duplicate message to be stored
+                    if (messages.isCacheEnabled() && !isPersistJMSRedelivered()) {
                         result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
                         result.addListener(new PendingMarshalUsageTracker(message));
                     } else {
@@ -849,13 +847,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     throw e;
                 }
             }
-            orderedCursorAdd(message, context);
-        } finally {
-            sendLock.unlock();
-        }
-        if (store == null || (!context.isInTransaction() && !message.isPersistent())) {
-            messageSent(context, message);
-        }
+            if(tryOrderedCursorAdd(message, context)) {
+                break;
+            }
+        } while (started.get());
+
         if (result != null && message.isResponseRequired() && !result.isCancelled()) {
             try {
                 result.get();
@@ -866,15 +862,20 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    private void orderedCursorAdd(Message message, ConnectionContext context) throws Exception {
+    private boolean tryOrderedCursorAdd(Message message, ConnectionContext context) throws Exception {
+        boolean result = true;
+
         if (context.isInTransaction()) {
             context.getTransaction().addSynchronization(new CursorAddSync(new MessageContext(context, message, null)));
         } else if (store != null && message.isPersistent()) {
             doPendingCursorAdditions();
         } else {
             // no ordering issue with non persistent messages
-            cursorAdd(message);
+            result = tryCursorAdd(message);
+            messageSent(context, message);
         }
+
+        return result;
     }
 
     private void checkUsage(ConnectionContext context,ProducerBrokerExchange producerBrokerExchange, Message message) throws ResourceAllocationException, IOException, InterruptedException {
@@ -931,6 +932,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
         }
         return msg;
+    }
+
+    public long getPendingMessageSize() {
+        messagesLock.readLock().lock();
+        try{
+            return messages.messageSize();
+        } finally {
+            messagesLock.readLock().unlock();
+        }
+    }
+
+    public long getPendingMessageCount() {
+         return this.destinationStatistics.getMessages().getCount();
     }
 
     @Override
@@ -1103,22 +1117,23 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         final ConnectionContext connectionContext = createConnectionContext();
         try {
             int maxPageInAttempts = 1;
-            messagesLock.readLock().lock();
-            try {
-                maxPageInAttempts += (messages.size() / getMaxPageSize());
-            } finally {
-                messagesLock.readLock().unlock();
+            if (max > 0) {
+                messagesLock.readLock().lock();
+                try {
+                    maxPageInAttempts += (messages.size() / max);
+                } finally {
+                    messagesLock.readLock().unlock();
+                }
+                while (shouldPageInMoreForBrowse(max) && maxPageInAttempts-- > 0) {
+                    pageInMessages(!memoryUsage.isFull(110), max);
+                }
             }
-
-            while (shouldPageInMoreForBrowse(max) && maxPageInAttempts-- > 0) {
-                pageInMessages(!memoryUsage.isFull(110));
-            };
-
             doBrowseList(browseList, max, dispatchPendingList, pagedInPendingDispatchLock, connectionContext, "redeliveredWaitingDispatch+pagedInPendingDispatch");
             doBrowseList(browseList, max, pagedInMessages, pagedInMessagesLock, connectionContext, "pagedInMessages");
 
             // we need a store iterator to walk messages on disk, independent of the cursor which is tracking
             // the next message batch
+        } catch (BrokerStoppedException ignored) {
         } catch (Exception e) {
             LOG.error("Problem retrieving message for browse", e);
         }
@@ -1220,7 +1235,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         List<MessageReference> list = null;
         long originalMessageCount = this.destinationStatistics.getMessages().getCount();
         do {
-            doPageIn(true, false);  // signal no expiry processing needed.
+            doPageIn(true, false, getMaxPageSize());  // signal no expiry processing needed.
             pagedInMessagesLock.readLock().lock();
             try {
                 list = new ArrayList<MessageReference>(pagedInMessages.values());
@@ -1579,27 +1594,23 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 pagedInPendingDispatchLock.readLock().unlock();
             }
 
-            // Perhaps we should page always into the pagedInPendingDispatch
-            // list if
-            // !messages.isEmpty(), and then if
-            // !pagedInPendingDispatch.isEmpty()
-            // then we do a dispatch.
-            boolean hasBrowsers = browserDispatches.size() > 0;
+            boolean hasBrowsers = !browserDispatches.isEmpty();
 
             if (pageInMoreMessages || hasBrowsers || !dispatchPendingList.hasRedeliveries()) {
                 try {
-                    pageInMessages(hasBrowsers);
+                    pageInMessages(hasBrowsers && getMaxBrowsePageSize() > 0, getMaxPageSize());
                 } catch (Throwable e) {
                     LOG.error("Failed to page in more queue messages ", e);
                 }
             }
 
             if (hasBrowsers) {
-                ArrayList<MessageReference> alreadyDispatchedMessages = null;
+                PendingList messagesInMemory = isPrioritizedMessages() ?
+                        new PrioritizedPendingList() : new OrderedPendingList();
                 pagedInMessagesLock.readLock().lock();
-                try{
-                    alreadyDispatchedMessages = new ArrayList<MessageReference>(pagedInMessages.values());
-                }finally {
+                try {
+                    messagesInMemory.addAll(pagedInMessages);
+                } finally {
                     pagedInMessagesLock.readLock().unlock();
                 }
 
@@ -1612,9 +1623,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                         QueueBrowserSubscription browser = browserDispatch.getBrowser();
 
-                        LOG.debug("dispatch to browser: {}, already dispatched/paged count: {}", browser, alreadyDispatchedMessages.size());
+                        LOG.debug("dispatch to browser: {}, already dispatched/paged count: {}", browser, messagesInMemory.size());
                         boolean added = false;
-                        for (MessageReference node : alreadyDispatchedMessages) {
+                        for (MessageReference node : messagesInMemory) {
                             if (!((QueueMessageReference)node).isAcked() && !browser.isDuplicate(node.getMessageId()) && !browser.atMax()) {
                                 msgContext.setMessageReference(node);
                                 if (browser.matches(node, msgContext)) {
@@ -1724,7 +1735,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
-            getDestinationStatistics().getDequeues().increment();
             dropMessage(reference);
         } else {
             try {
@@ -1734,7 +1744,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                     @Override
                     public void afterCommit() throws Exception {
-                        getDestinationStatistics().getDequeues().increment();
                         dropMessage(reference);
                         wakeup();
                     }
@@ -1764,9 +1773,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private void dropMessage(QueueMessageReference reference) {
-        if (!reference.isDropped()) {
-            reference.drop();
-            destinationStatistics.getMessages().decrement();
+        //use dropIfLive so we only process the statistics at most one time
+        if (reference.dropIfLive()) {
+            getDestinationStatistics().getDequeues().increment();
+            getDestinationStatistics().getMessages().decrement();
             pagedInMessagesLock.writeLock().lock();
             try {
                 pagedInMessages.remove(reference);
@@ -1798,10 +1808,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    final boolean cursorAdd(final Message msg) throws Exception {
+    private final boolean cursorAdd(final Message msg) throws Exception {
         messagesLock.writeLock().lock();
         try {
             return messages.addMessageLast(msg);
+        } finally {
+            messagesLock.writeLock().unlock();
+        }
+    }
+
+    private final boolean tryCursorAdd(final Message msg) throws Exception {
+        messagesLock.writeLock().lock();
+        try {
+            return messages.tryAddMessageLast(msg, 50);
         } finally {
             messagesLock.writeLock().unlock();
         }
@@ -1844,11 +1863,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private void doPageIn(boolean force) throws Exception {
-        doPageIn(force, true);
+        doPageIn(force, true, getMaxPageSize());
     }
 
-    private void doPageIn(boolean force, boolean processExpired) throws Exception {
-        PendingList newlyPaged = doPageInForDispatch(force, processExpired);
+    private void doPageIn(boolean force, boolean processExpired, int maxPageSize) throws Exception {
+        PendingList newlyPaged = doPageInForDispatch(force, processExpired, maxPageSize);
         pagedInPendingDispatchLock.writeLock().lock();
         try {
             if (dispatchPendingList.isEmpty()) {
@@ -1866,11 +1885,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    private PendingList doPageInForDispatch(boolean force, boolean processExpired) throws Exception {
+    private PendingList doPageInForDispatch(boolean force, boolean processExpired, int maxPageSize) throws Exception {
         List<QueueMessageReference> result = null;
         PendingList resultList = null;
 
-        int toPageIn = Math.min(getMaxPageSize(), messages.size());
+        int toPageIn = maxPageSize;
+        messagesLock.readLock().lock();
+        try {
+            toPageIn = Math.min(toPageIn, messages.size());
+        } finally {
+            messagesLock.readLock().unlock();
+        }
         int pagedInPendingSize = 0;
         pagedInPendingDispatchLock.readLock().lock();
         try {
@@ -1878,24 +1903,29 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         } finally {
             pagedInPendingDispatchLock.readLock().unlock();
         }
-
-        LOG.debug("{} toPageIn: {}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}",
-                new Object[]{
-                        this,
-                        toPageIn,
-                        destinationStatistics.getInflight().getCount(),
-                        pagedInMessages.size(),
-                        pagedInPendingSize,
-                        destinationStatistics.getEnqueues().getCount(),
-                        destinationStatistics.getDequeues().getCount(),
-                        getMemoryUsage().getUsage()
-                });
         if (isLazyDispatch() && !force) {
             // Only page in the minimum number of messages which can be
             // dispatched immediately.
-            toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
+            toPageIn = Math.min(toPageIn, getConsumerMessageCountBeforeFull());
         }
-        if (toPageIn > 0 && (force || (!consumers.isEmpty() && pagedInPendingSize < getMaxPageSize()))) {
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("{} toPageIn: {}, force:{}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}, maxPageSize:{}",
+                    new Object[]{
+                            this,
+                            toPageIn,
+                            force,
+                            destinationStatistics.getInflight().getCount(),
+                            pagedInMessages.size(),
+                            pagedInPendingSize,
+                            destinationStatistics.getEnqueues().getCount(),
+                            destinationStatistics.getDequeues().getCount(),
+                            getMemoryUsage().getUsage(),
+                            maxPageSize
+                    });
+        }
+
+        if (toPageIn > 0 && (force || (haveRealConsumer() && pagedInPendingSize < maxPageSize))) {
             int count = 0;
             result = new ArrayList<QueueMessageReference>(toPageIn);
             messagesLock.writeLock().lock();
@@ -1903,7 +1933,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 try {
                     messages.setMaxBatchSize(toPageIn);
                     messages.reset();
-                    while (messages.hasNext() && count < toPageIn) {
+                    while (count < toPageIn && messages.hasNext()) {
                         MessageReference node = messages.next();
                         messages.remove();
 
@@ -1962,11 +1992,25 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         return resultList;
     }
 
+    private final boolean haveRealConsumer() {
+        return consumers.size() - browserDispatches.size() > 0;
+    }
+
     private void doDispatch(PendingList list) throws Exception {
         boolean doWakeUp = false;
 
         pagedInPendingDispatchLock.writeLock().lock();
         try {
+            if (isPrioritizedMessages() && !dispatchPendingList.isEmpty() && list != null && !list.isEmpty()) {
+                // merge all to select priority order
+                for (MessageReference qmr : list) {
+                    if (!dispatchPendingList.contains(qmr)) {
+                        dispatchPendingList.addMessageLast(qmr);
+                    }
+                }
+                list = null;
+            }
+
             doActualDispatch(dispatchPendingList);
             // and now see if we can dispatch the new stuff.. and append to the pending
             // list anything that does not actually get dispatched.
@@ -2112,8 +2156,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         subs.getConsumerInfo().incrementAssignedGroupCount(destination);
     }
 
-    protected void pageInMessages(boolean force) throws Exception {
-        doDispatch(doPageInForDispatch(force, true));
+    protected void pageInMessages(boolean force, int maxPageSize) throws Exception {
+        doDispatch(doPageInForDispatch(force, true, maxPageSize));
     }
 
     private void addToConsumerList(Subscription sub) {
@@ -2131,19 +2175,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     private int getConsumerMessageCountBeforeFull() throws Exception {
         int total = 0;
-        boolean zeroPrefetch = false;
         consumersLock.readLock().lock();
         try {
             for (Subscription s : consumers) {
-                zeroPrefetch |= s.getPrefetchSize() == 0;
+                if (s.isBrowser()) {
+                    continue;
+                }
                 int countBeforeFull = s.countBeforeFull();
                 total += countBeforeFull;
             }
         } finally {
             consumersLock.readLock().unlock();
-        }
-        if (total == 0 && zeroPrefetch) {
-            total = 1;
         }
         return total;
     }

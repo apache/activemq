@@ -14,7 +14,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.12.4-SNAPSHOT</version>
+    <version>5.14.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-all</artifactId>
@@ -127,6 +127,7 @@
                   <include>org.springframework:spring-context</include>
                   <include>org.springframework:spring-expression</include>
                   <include>org.springframework:spring-jms</include>
+                  <include>org.springframework:spring-messaging</include>
                   <include>org.springframework:spring-tx</include>
                   <include>org.apache.xbean:xbean-spring</include>
                   <include>org.apache.camel:camel-jms</include>

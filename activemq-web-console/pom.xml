@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.12.4-SNAPSHOT</version>
+    <version>5.14.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-web-console</artifactId>
@@ -32,7 +32,7 @@
 
   <properties>
     <jetty.port>8080</jetty.port>
-    <jetty.maven.groupid>org.mortbay.jetty</jetty.maven.groupid>
+    <jetty.maven.groupid>org.eclipse.jetty</jetty.maven.groupid>
   </properties>
 
   <build>
@@ -57,7 +57,7 @@
         <version>${jetty-version}</version>
         <configuration>
           <connectors>
-            <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+            <connector implementation="org.eclipse.jetty.server.ServerConnector">
               <port>${jetty.port}</port>
               <maxIdleTime>60000</maxIdleTime>
             </connector>
@@ -160,7 +160,7 @@
               org.slf4j.spi;version="[1.6,2)";resolution:=optional,
               org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
               org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional,
-              org.eclipse.jetty*;resolution:=optional;version="[8.1,10)"
+              org.eclipse.jetty*;resolution:=optional;version="[9.0,10)"
             </Import-Package>
           </instructions>
         </configuration>
@@ -169,18 +169,17 @@
   </build>
 
   <dependencies>
-
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-servlet_3.0_spec</artifactId>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
-        <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jsp_2.1_spec</artifactId>
-        <scope>provided</scope>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-websocket-api</artifactId>
+      <scope>provided</scope>
     </dependency>
-
+      
     <!-- j2ee jars -->
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -209,8 +208,8 @@
               <artifactId>activemq-all</artifactId>
           </exclusion>
           <exclusion>
-              <groupId>org.eclipse.jetty</groupId>
-              <artifactId>jetty-websocket</artifactId>
+              <groupId>org.eclipse.jetty.websocket</groupId>
+              <artifactId>websocket-server</artifactId>
           </exclusion>
           <exclusion>
               <groupId>org.eclipse.jetty</groupId>
@@ -249,10 +248,10 @@
       <artifactId>jetty-all</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.eclipse.jdt</groupId>
-      <artifactId>core</artifactId>
-      <version>3.1.1</version>
+     <dependency>
+      <groupId>org.eclipse.jetty.orbit</groupId>
+      <artifactId>org.eclipse.jdt.core</artifactId>
+      <version>3.8.2.v20130121</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -269,15 +268,25 @@
     </dependency>
 
     <!-- JSTL support -->
+    
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>jstl</artifactId>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>apache-jstl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+     <!-- Tag Libs -->
+    <dependency>
+      <groupId>org.apache.taglibs</groupId>
+      <artifactId>taglibs-standard-spec</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>taglibs</groupId>
-      <artifactId>standard</artifactId>
+      <groupId>org.apache.taglibs</groupId>
+      <artifactId>taglibs-standard-impl</artifactId>
+      <scope>provided</scope>
     </dependency>
-
+    
     <!-- used for testing -->
     <dependency>
       <groupId>junit</groupId>
@@ -285,6 +294,41 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-unit-tests</artifactId>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-broker</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>apache-jsp</artifactId>
+      <scope>provided</scope>
+      <exclusions>
+          <exclusion>
+              <groupId>javax.servlet</groupId>
+              <artifactId>javax.servlet-api</artifactId>
+          </exclusion>
+      </exclusions>
+    </dependency>
+    
+     <dependency>
+       <groupId>org.apache.geronimo.specs</groupId>
+       <artifactId>geronimo-annotation_1.0_spec</artifactId>
+    </dependency>
+ 
+
+	<dependency>
+		<groupId>org.ow2.asm</groupId>
+		<artifactId>asm</artifactId>
+	</dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
@@ -294,7 +338,7 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
-      <version>4.3.1</version>
+      <version>${org.osgi.core-version}</version>
       <scope>provided</scope>
     </dependency>
 

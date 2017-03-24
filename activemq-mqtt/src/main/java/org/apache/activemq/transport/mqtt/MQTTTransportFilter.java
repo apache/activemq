@@ -27,6 +27,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -165,14 +166,17 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+        X509Certificate[] peerCerts = null;
         if (next instanceof SslTransport) {
-            X509Certificate[] peerCerts = ((SslTransport) next).getPeerCertificates();
-            if (trace && peerCerts != null) {
-                LOG.debug("Peer Identity has been verified\n");
-            }
-            return peerCerts;
+            peerCerts = ((SslTransport) next).getPeerCertificates();
         }
-        return null;
+        if (next instanceof  NIOSSLTransport) {
+            peerCerts = ((NIOSSLTransport)next).getPeerCertificates();
+        }
+        if (trace && peerCerts != null) {
+            LOG.debug("Peer Identity has been verified\n");
+        }
+        return peerCerts;
     }
 
     public boolean isTrace() {
@@ -275,4 +279,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     public void setMaxFrameSize(int maxFrameSize) {
         wireFormat.setMaxFrameSize(maxFrameSize);
     }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {}
 }

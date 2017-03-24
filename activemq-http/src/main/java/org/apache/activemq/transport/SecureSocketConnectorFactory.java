@@ -19,10 +19,10 @@ package org.apache.activemq.transport;
 import javax.net.ssl.SSLContext;
 
 import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.transport.https.Krb5AndCertsSslSocketConnector;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 public class SecureSocketConnectorFactory extends SocketConnectorFactory {
@@ -43,9 +43,9 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 
     private SslContext context;
     private SslContextFactory contextFactory;
-    
+
     public SecureSocketConnectorFactory() {
-        
+
     }
     public SecureSocketConnectorFactory(SslContext context) {
         this.context = context;
@@ -113,21 +113,16 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
             factory = contextFactory;
         }
 
-        
+
         if ("KRB".equals(auth) || "BOTH".equals(auth)
             && Server.getVersion().startsWith("8")) {
-            return new Krb5AndCertsSslSocketConnector(factory, auth);
+            //return new Krb5AndCertsSslSocketConnector(factory, auth);
+            return null;
         } else {
-            try {
-                Class<?> cls = Class.forName("org.eclipse.jetty.server.ssl.SslSelectChannelConnector", true, Server.class.getClassLoader());
-                return (Connector)cls.getConstructor(SslContextFactory.class).newInstance(factory);
-            } catch (Throwable t) {
-                Class<?> c = Class.forName("org.eclipse.jetty.server.ServerConnector", true, Server.class.getClassLoader());
-                Connector connector = (Connector)c.getConstructor(Server.class, SslContextFactory.class).newInstance(server, factory);
-                Server.class.getMethod("setStopTimeout", Long.TYPE).invoke(server, 500);
-                connector.getClass().getMethod("setStopTimeout", Long.TYPE).invoke(connector, 500);
-                return connector;
-            }
+            ServerConnector connector = new ServerConnector(server, factory);
+            server.setStopTimeout(500);
+            connector.setStopTimeout(500);
+            return connector;
         }
     }
     private void setTrustStore(SslContextFactory factory, String trustStore2) throws Exception {
@@ -136,7 +131,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     }
 
 
-    
+
     // Properties
     // --------------------------------------------------------------------------------
 

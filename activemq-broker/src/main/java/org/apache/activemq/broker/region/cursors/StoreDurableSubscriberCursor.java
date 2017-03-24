@@ -183,7 +183,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public synchronized boolean addMessageLast(MessageReference node) throws Exception {
+    public synchronized boolean tryAddMessageLast(MessageReference node, long wait) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
             if (isStarted()) {
@@ -300,6 +300,15 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             pendingCount += tsp.size();
         }
         return pendingCount;
+    }
+
+    @Override
+    public synchronized long messageSize() {
+        long pendingSize=0;
+        for (PendingMessageCursor tsp : storePrefetches) {
+            pendingSize += tsp.messageSize();
+        }
+        return pendingSize;
     }
 
     @Override

@@ -17,6 +17,7 @@
 package org.apache.activemq.bugs;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -74,6 +75,7 @@ public class AMQ4221Test extends TestSupport {
     private String brokerUrlString;
     ExecutorService executorService = Executors.newCachedThreadPool();
     final AtomicBoolean done = new AtomicBoolean(false);
+    final LinkedList<String> errorsInLog = new LinkedList<String>();
 
     public static Test suite() {
         return suite(AMQ4221Test.class);
@@ -87,18 +89,15 @@ public class AMQ4221Test extends TestSupport {
             @Override
             public void doAppend(LoggingEvent event) {
                 if (event.getLevel().isGreaterOrEqual(Level.ERROR)) {
-                    System.err.println("exit on error: " + event.getMessage());
+                    System.err.println("Fail on error in log: " + event.getMessage());
                     done.set(true);
-                    new Thread() {
-                        public void run() {
-                            System.exit(787);
-                        }
-                    }.start();
+                    errorsInLog.add(event.getRenderedMessage());
                 }
             }
         });
 
         done.set(false);
+        errorsInLog.clear();
         brokerService = new BrokerService();
         brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.setDestinations(new ActiveMQDestination[]{new ActiveMQQueue("ActiveMQ.DLQ")});
@@ -186,6 +185,7 @@ public class AMQ4221Test extends TestSupport {
         executorService.awaitTermination(5, TimeUnit.MINUTES);
 
         assertTrue("no exceptions:" + exceptions, exceptions.isEmpty());
+        assertTrue("No ERROR in log:" + errorsInLog, errorsInLog.isEmpty());
 
     }
 

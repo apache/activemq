@@ -214,16 +214,15 @@ public class LegacyFrameTranslator implements FrameTranslator {
                         ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(fallbackName);
                         if (fallback != null) {
                             destinationBuilder.append(fallback.getQualifiedName());
-                            continue;
                         }
                     } catch (JMSException e) {
                         throw new ProtocolException("Illegal destination name: [" + fallbackName + "] -- ActiveMQ STOMP destinations "
                                 + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/", false, e);
                     }
+                } else {
+                    throw new ProtocolException("Illegal destination name: [" + originalName + "] -- ActiveMQ STOMP destinations "
+                                                + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
                 }
-
-                throw new ProtocolException("Illegal destination name: [" + originalName + "] -- ActiveMQ STOMP destinations "
-                                            + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
             }
 
             if (i < destinations.length - 1) {

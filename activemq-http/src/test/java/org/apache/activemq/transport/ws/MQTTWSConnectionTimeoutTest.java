@@ -23,8 +23,8 @@ import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.util.Wait;
-import org.eclipse.jetty.websocket.WebSocketClient;
-import org.eclipse.jetty.websocket.WebSocketClientFactory;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,15 +39,16 @@ public class MQTTWSConnectionTimeoutTest extends WSTransportTestSupport {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-
-        WebSocketClientFactory clientFactory = new WebSocketClientFactory();
-        clientFactory.start();
-
-        wsClient = clientFactory.newWebSocketClient();
-        wsClient.setProtocol("mqttv3.1");
         wsMQTTConnection = new MQTTWSConnection();
 
-        wsClient.open(wsConnectUri, wsMQTTConnection);
+        wsClient = new WebSocketClient();
+        wsClient.start();
+
+        ClientUpgradeRequest request = new ClientUpgradeRequest();
+        request.setSubProtocols("mqttv3.1");
+
+        wsClient.connect(wsMQTTConnection, wsConnectUri, request);
+
         if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
             throw new IOException("Could not connect to MQTT WS endpoint");
         }

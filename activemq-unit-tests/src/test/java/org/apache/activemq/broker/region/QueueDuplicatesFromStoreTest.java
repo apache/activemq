@@ -228,6 +228,11 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
             }
 
             @Override
+            public long getPendingMessageSize() {
+                return 0;
+            }
+
+            @Override
             public int getPrefetchSize() {
                 return 0;
             }
@@ -354,10 +359,12 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
                 return 0;
             }
 
+            @Override
             public void incrementConsumedCount(){
 
             }
 
+            @Override
             public void resetConsumedCount(){
 
             }

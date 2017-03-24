@@ -114,11 +114,6 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
     }
 
     @Override
-    public void removeJobAtScheduledTime(String time) throws Exception {
-        removeAllJobsAtScheduledTime(time);
-    }
-
-    @Override
     public void removeJob(String jobId) throws Exception {
         this.jobScheduler.remove(jobId);
     }

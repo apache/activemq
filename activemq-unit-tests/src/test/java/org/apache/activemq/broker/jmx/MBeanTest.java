@@ -820,6 +820,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         super.setUp();
         ManagementContext managementContext = broker.getManagementContext();
         mbeanServer = managementContext.getMBeanServer();
+
+        broker.getTransportConnectorByScheme("tcp").setUpdateClusterClientsOnRemove(true);
     }
 
     @Override
@@ -1518,7 +1520,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertNotNull(connector);
 
         assertFalse(connector.isRebalanceClusterClients());
-        assertFalse(connector.isUpdateClusterClientsOnRemove());
+        assertTrue(connector.isUpdateClusterClientsOnRemove());
         assertFalse(connector.isUpdateClusterClients());
         assertFalse(connector.isAllowLinkStealingEnabled());
     }
@@ -1627,7 +1629,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
     }
 
-    public void testSubscriptionView() throws Exception {
+    public void testTopicView() throws Exception {
         connection = connectionFactory.createConnection();
         connection.setClientID("test");
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -1642,7 +1644,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         MessageConsumer consumer1 = session.createConsumer(singleTopic);
         MessageConsumer consumer2 = session.createConsumer(wildcardTopic);
 
-        final ArrayList<Message> messages = new ArrayList<Message>();
+        final ArrayList<Message> messages = new ArrayList<>();
 
         MessageListener listener = new MessageListener() {
             @Override
@@ -1709,5 +1711,132 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             assertEquals(0, subscriberView.getDispatchedCounter());
             assertEquals(0, subscriberView.getDequeueCounter());
         }
+    }
+
+    public void testSubscriptionView() throws Exception {
+        connection = connectionFactory.createConnection();
+        connection.setClientID("test");
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        connection.start();
+
+        Topic singleTopic = session.createTopic("test.topic");
+        Topic wildcardTopic = session.createTopic("test.>");
+
+        TopicSubscriber durable1 = session.createDurableSubscriber(singleTopic, "single");
+        TopicSubscriber durable2 = session.createDurableSubscriber(wildcardTopic, "wildcard");
+
+        MessageConsumer consumer1 = session.createConsumer(singleTopic);
+        MessageConsumer consumer2 = session.createConsumer(wildcardTopic);
+
+        final ArrayList<Message> messages = new ArrayList<>();
+
+        MessageListener listener = new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                messages.add(message);
+            }
+        };
+
+        durable1.setMessageListener(listener);
+        durable2.setMessageListener(listener);
+        consumer1.setMessageListener(listener);
+        consumer2.setMessageListener(listener);
+
+        MessageProducer producer = session.createProducer(singleTopic);
+        producer.send(session.createTextMessage("test"));
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return messages.size() == 4;
+            }
+        });
+
+        ObjectName topicObjName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test.topic");
+        final TopicViewMBean topicView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+        ArrayList<SubscriptionViewMBean> subscriberViews = new ArrayList<SubscriptionViewMBean>();
+        for (ObjectName name : topicView.getSubscriptions()) {
+            subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
+        }
+
+        assertEquals(4, subscriberViews.size());
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(1, subscriberView.getEnqueueCounter());
+            assertEquals(1, subscriberView.getDispatchedCounter());
+            assertEquals(0, subscriberView.getDequeueCounter());
+        }
+
+        for (Message message : messages) {
+            try {
+                message.acknowledge();
+            } catch (JMSException ignore) {}
+        }
+
+        // Wait so that each subscription gets updated
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return topicView.getDequeueCount() == 4;
+            }
+        });
+
+        assertEquals(1, topicView.getEnqueueCount());
+        assertEquals(4, topicView.getDispatchCount());
+        assertEquals(0, topicView.getInFlightCount());
+        assertEquals(4, topicView.getDequeueCount());
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(1, subscriberView.getEnqueueCounter());
+            assertEquals(1, subscriberView.getDispatchedCounter());
+            assertEquals(1, subscriberView.getDequeueCounter());
+        }
+    }
+
+    public void testSubscriptionViewProperties() throws Exception {
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Topic topic1 = session.createTopic("test.topic1?consumer.dispatchAsync=false&consumer.retroactive=true");
+        Topic topic2 = session.createTopic("test.topic2?consumer.dispatchAsync=true&consumer.retroactive=false&consumer.exclusive=true");
+        MessageConsumer consumer1 = session.createConsumer(topic1);
+        MessageConsumer consumer2 = session.createConsumer(topic2);
+
+        assertNotNull(consumer1);
+        assertNotNull(consumer2);
+
+        ObjectName topicObjName = assertRegisteredObjectName(
+            domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=" + topic1.getTopicName());
+        final TopicViewMBean topic1View = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+        ArrayList<SubscriptionViewMBean> subscriberViews = new ArrayList<SubscriptionViewMBean>();
+        for (ObjectName name : topic1View.getSubscriptions()) {
+            subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
+        }
+
+        assertEquals(1, subscriberViews.size());
+
+        SubscriptionViewMBean subscription = subscriberViews.get(0);
+
+        assertFalse(subscription.isDispatchAsync());
+        assertTrue(subscription.isRetroactive());
+        assertFalse(subscription.isExclusive());
+
+        topicObjName = assertRegisteredObjectName(
+            domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=" + topic2.getTopicName());
+        final TopicViewMBean topic2View = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+        subscriberViews = new ArrayList<SubscriptionViewMBean>();
+        for (ObjectName name : topic2View.getSubscriptions()) {
+            subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
+        }
+
+        assertEquals(1, subscriberViews.size());
+
+        subscription = subscriberViews.get(0);
+
+        assertTrue(subscription.isDispatchAsync());
+        assertFalse(subscription.isRetroactive());
+        assertTrue(subscription.isExclusive());
     }
 }

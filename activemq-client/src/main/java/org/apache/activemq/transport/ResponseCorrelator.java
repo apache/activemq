@@ -64,7 +64,7 @@ public class ResponseCorrelator extends TransportFilter {
         Command command = (Command) o;
         command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(true);
-        FutureResponse future = new FutureResponse(responseCallback);
+        FutureResponse future = new FutureResponse(responseCallback, this);
         IOException priorError = null;
         synchronized (requestMap) {
             priorError = this.error;
@@ -122,7 +122,7 @@ public class ResponseCorrelator extends TransportFilter {
      * any of current requests. Lets let them know of the problem.
      */
     public void onException(IOException error) {
-        dispose(error);
+        dispose(new TransportDisposedIOException("Disposed due to prior exception", error));
         super.onException(error);
     }
     

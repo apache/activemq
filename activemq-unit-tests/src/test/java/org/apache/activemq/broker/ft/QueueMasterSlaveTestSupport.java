@@ -130,7 +130,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         MessageConsumer qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
         assertNull("No message there yet", qConsumer.receive(1000));
         qConsumer.close();
-        assertTrue(!master.isSlave());
+        assertTrue("master is indeed the master", !master.isSlave());
         master.stop();
         assertTrue("slave started", slaveStarted.await(60, TimeUnit.SECONDS));
         assertTrue(!slave.get().isSlave());

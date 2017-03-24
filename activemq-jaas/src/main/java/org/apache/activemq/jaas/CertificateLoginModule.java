@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,7 +51,6 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
 
     private X509Certificate certificates[];
     private String username;
-    private Set<String> groups;
     private Set<Principal> principals = new HashSet<Principal>();
 
     /**
@@ -87,8 +85,6 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
             throw new FailedLoginException("No user for client certificate: " + getDistinguishedName(certificates));
         }
 
-        groups = getUserGroups(username);
-
         if (debug) {
             LOG.debug("Certificate for user: " + username);
         }
@@ -102,7 +98,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
     public boolean commit() throws LoginException {
         principals.add(new UserPrincipal(username));
 
-        for (String group : groups) {
+        for (String group : getUserGroups(username)) {
              principals.add(new GroupPrincipal(group));
         }
 
@@ -147,8 +143,8 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
      * Helper method.
      */
     private void clear() {
-        groups.clear();
         certificates = null;
+        username = null;
     }
 
     /**

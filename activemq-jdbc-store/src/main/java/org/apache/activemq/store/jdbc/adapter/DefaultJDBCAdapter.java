@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
+import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
+import static javax.xml.bind.DatatypeConverter.printBase64Binary;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,7 +40,6 @@ import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCMessageIdScanListener;
 import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
-import org.apache.activemq.store.jdbc.JDBCMessageStore;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.JdbcMemoryTransactionStore;
 import org.apache.activemq.store.jdbc.Statements;
@@ -45,9 +47,6 @@ import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
-import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 
 /**
  * Implements all the default JDBC operations that are used by the JDBCPersistenceAdapter. <p/> sub-classing is
@@ -65,6 +64,7 @@ import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultJDBCAdapter.class);
     public static final int MAX_ROWS = org.apache.activemq.ActiveMQPrefetchPolicy.MAX_PREFETCH_SIZE;
+    private static final String FAILURE_MESSAGE = "Failure was: %s Message: %s SQLState: %s Vendor code: %s";
     protected Statements statements;
     private boolean batchStatements = true;
     //This is deprecated and should be removed in a future release
@@ -82,58 +82,68 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     @Override
-    public void doCreateTables(TransactionContext c) throws SQLException, IOException {
-        Statement s = null;
+    public void doCreateTables(TransactionContext transactionContext) throws SQLException, IOException {
         cleanupExclusiveLock.writeLock().lock();
         try {
-            // Check to see if the table already exists. If it does, then don't
-            // log warnings during startup.
-            // Need to run the scripts anyways since they may contain ALTER
-            // statements that upgrade a previous version
-            // of the table
-            boolean alreadyExists = false;
-            ResultSet rs = null;
-            try {
-                rs = c.getConnection().getMetaData().getTables(null, null, this.statements.getFullMessageTableName(),
-                        new String[] { "TABLE" });
-                alreadyExists = rs.next();
-            } catch (Throwable ignore) {
-            } finally {
-                close(rs);
-            }
-            s = c.getConnection().createStatement();
-            String[] createStatments = this.statements.getCreateSchemaStatements();
-            for (int i = 0; i < createStatments.length; i++) {
+            // Check to see if the table already exists. If it does, then don't log warnings during startup.
+            // Need to run the scripts anyways since they may contain ALTER statements that upgrade a previous version of the table
+            boolean messageTableAlreadyExists = messageTableAlreadyExists(transactionContext);
+
+            for (String createStatement : this.statements.getCreateSchemaStatements()) {
                 // This will fail usually since the tables will be
                 // created already.
-                try {
-                    LOG.debug("Executing SQL: " + createStatments[i]);
-                    s.execute(createStatments[i]);
-                } catch (SQLException e) {
-                    if (alreadyExists) {
-                        LOG.debug("Could not create JDBC tables; The message table already existed." + " Failure was: "
-                                + createStatments[i] + " Message: " + e.getMessage() + " SQLState: " + e.getSQLState()
-                                + " Vendor code: " + e.getErrorCode());
-                    } else {
-                        LOG.warn("Could not create JDBC tables; they could already exist." + " Failure was: "
-                                + createStatments[i] + " Message: " + e.getMessage() + " SQLState: " + e.getSQLState()
-                                + " Vendor code: " + e.getErrorCode());
-                        JDBCPersistenceAdapter.log("Failure details: ", e);
-                    }
-                }
-            }
-
-            // if autoCommit used do not call commit
-            if(!c.getConnection().getAutoCommit()){
-                c.getConnection().commit();
+                executeStatement(transactionContext, createStatement, messageTableAlreadyExists);
             }
 
         } finally {
             cleanupExclusiveLock.writeLock().unlock();
-            try {
-                s.close();
-            } catch (Throwable e) {
+        }
+    }
+
+    private boolean messageTableAlreadyExists(TransactionContext transactionContext) {
+        boolean alreadyExists = false;
+        ResultSet rs = null;
+        try {
+            rs = transactionContext.getConnection().getMetaData().getTables(null, null, this.statements.getFullMessageTableName(), new String[] { "TABLE" });
+            alreadyExists = rs.next();
+        } catch (Throwable ignore) {
+        } finally {
+            close(rs);
+        }
+        return alreadyExists;
+    }
+
+    private void executeStatement(TransactionContext transactionContext, String createStatement, boolean ignoreStatementExecutionFailure) throws IOException {
+        Statement statement = null;
+        try {
+            LOG.debug("Executing SQL: " + createStatement);
+            statement = transactionContext.getConnection().createStatement();
+            statement.execute(createStatement);
+
+            commitIfAutoCommitIsDisabled(transactionContext);
+        } catch (SQLException e) {
+            if (ignoreStatementExecutionFailure) {
+                LOG.debug("Could not create JDBC tables; The message table already existed. " + String.format(FAILURE_MESSAGE, createStatement, e.getMessage(), e.getSQLState(), e.getErrorCode()));
+            } else {
+                LOG.warn("Could not create JDBC tables; they could already exist. " + String.format(FAILURE_MESSAGE, createStatement, e.getMessage(), e.getSQLState(), e.getErrorCode()));
+                JDBCPersistenceAdapter.log("Failure details: ", e);
             }
+        } finally {
+            closeStatement(statement);
+        }
+    }
+
+    private void closeStatement(Statement statement) {
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException ignored) {}
+    }
+
+    private void commitIfAutoCommitIsDisabled(TransactionContext c) throws SQLException, IOException {
+        if (!c.getConnection().getAutoCommit()) {
+            c.getConnection().commit();
         }
     }
 
@@ -157,10 +167,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     JDBCPersistenceAdapter.log("Failure details: ", e);
                 }
             }
-            // if autoCommit used do not call commit
-            if(!c.getConnection().getAutoCommit()){
-               c.getConnection().commit();
-            }
+            commitIfAutoCommitIsDisabled(c);
         } finally {
             cleanupExclusiveLock.writeLock().unlock();
             try {
@@ -1126,9 +1133,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         cleanupExclusiveLock.readLock().lock();
         try {
             if (isPrioritizedMessages) {
-                s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesByPriorityStatement());
+                s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesByPriorityStatement()));
             } else {
-                s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
+                s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesStatement()));
             }
             s.setMaxRows(Math.min(maxReturned, maxRows));
             s.setString(1, destination.getQualifiedName());
@@ -1252,4 +1259,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
+    public String limitQuery(String query) {
+        return query;
+    }
 }

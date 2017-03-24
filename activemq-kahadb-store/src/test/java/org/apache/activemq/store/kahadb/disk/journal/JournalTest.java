@@ -18,6 +18,7 @@ package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;

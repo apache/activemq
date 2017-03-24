@@ -18,11 +18,14 @@
 package org.apache.activemq.transport.ws.jetty9;
 
 import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.activemq.jms.pool.IntrospectionSupport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.util.HttpTransportUtils;
@@ -41,6 +44,21 @@ public class WSServlet extends WebSocketServlet {
     private static final long serialVersionUID = -4716657876092884139L;
 
     private TransportAcceptListener listener;
+
+    private final static Map<String, Integer> stompProtocols = new ConcurrentHashMap<> ();
+    private final static Map<String, Integer> mqttProtocols = new ConcurrentHashMap<> ();
+
+    private Map<String, Object> transportOptions;
+
+    static {
+        stompProtocols.put("v12.stomp", 3);
+        stompProtocols.put("v11.stomp", 2);
+        stompProtocols.put("v10.stomp", 1);
+        stompProtocols.put("stomp", 0);
+
+        mqttProtocols.put("mqttv3.1", 1);
+        mqttProtocols.put("mqtt", 0);
+    }
 
     @Override
     public void init() throws ServletException {
@@ -62,16 +80,64 @@ public class WSServlet extends WebSocketServlet {
             @Override
             public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
                 WebSocketListener socket;
-                if (req.getSubProtocols().contains("mqtt")) {
+                boolean isMqtt = false;
+                for (String subProtocol : req.getSubProtocols()) {
+                    if (subProtocol.startsWith("mqtt")) {
+                        isMqtt = true;
+                    }
+                }
+                if (isMqtt) {
                     socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
-                    resp.setAcceptedSubProtocol("mqtt");
+                    resp.setAcceptedSubProtocol(getAcceptedSubProtocol(mqttProtocols,req.getSubProtocols(), "mqtt"));
+                    ((MQTTSocket)socket).setTransportOptions(new HashMap(transportOptions));
+                    ((MQTTSocket)socket).setPeerCertificates(req.getCertificates());
                 } else {
                     socket = new StompSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
-                    resp.setAcceptedSubProtocol("stomp");
+                    ((StompSocket)socket).setCertificates(req.getCertificates());
+                    resp.setAcceptedSubProtocol(getAcceptedSubProtocol(stompProtocols,req.getSubProtocols(), "stomp"));
                 }
                 listener.onAccept((Transport) socket);
                 return socket;
             }
         });
+    }
+
+    private String getAcceptedSubProtocol(final Map<String, Integer> protocols,
+            List<String> subProtocols, String defaultProtocol) {
+        List<SubProtocol> matchedProtocols = new ArrayList<>();
+        if (subProtocols != null && subProtocols.size() > 0) {
+            //detect which subprotocols match accepted protocols and add to the list
+            for (String subProtocol : subProtocols) {
+                Integer priority = protocols.get(subProtocol);
+                if(subProtocol != null && priority != null) {
+                    //only insert if both subProtocol and priority are not null
+                    matchedProtocols.add(new SubProtocol(subProtocol, priority));
+                }
+            }
+            //sort the list by priority
+            if (matchedProtocols.size() > 0) {
+                Collections.sort(matchedProtocols, new Comparator<SubProtocol>() {
+                    @Override
+                    public int compare(SubProtocol s1, SubProtocol s2) {
+                        return s2.priority.compareTo(s1.priority);
+                    }
+                });
+                return matchedProtocols.get(0).protocol;
+            }
+        }
+        return defaultProtocol;
+    }
+
+    private class SubProtocol {
+        private String protocol;
+        private Integer priority;
+        public SubProtocol(String protocol, Integer priority) {
+            this.protocol = protocol;
+            this.priority = priority;
+        }
+    }
+
+    public void setTransportOptions(Map<String, Object> transportOptions) {
+        this.transportOptions = transportOptions;
     }
 }

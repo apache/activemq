@@ -21,6 +21,7 @@ import java.net.URI;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -28,12 +29,16 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * 
@@ -48,6 +53,7 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
     public String messageSelector1, messageSelector2 = null;
 
 
+    @Test
     public void testVirtualTopicCreation() throws Exception {
         if (connection == null) {
             connection = createConnection();
@@ -83,11 +89,25 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
         }
 
         assertMessagesArrived(messageList1, messageList2);
+        assertOriginalDestination(messageList1, messageList2);
+
     }
 
     protected void assertMessagesArrived(ConsumerBean messageList1, ConsumerBean messageList2) {
         messageList1.assertMessagesArrived(total);
         messageList2.assertMessagesArrived(total);
+    }
+
+    protected void assertOriginalDestination(ConsumerBean messageList1, ConsumerBean messageList2) {
+        for( Message message: messageList1.getMessages()) {
+            ActiveMQMessage amqMessage = (ActiveMQMessage)message;
+            assertEquals( getProducerDestination(), amqMessage.getOriginalDestination() );
+        }
+
+        for( Message message: messageList1.getMessages()) {
+            ActiveMQMessage amqMessage = (ActiveMQMessage)message;
+            assertEquals( getProducerDestination(), amqMessage.getOriginalDestination() );
+        }
     }
 
     protected TextMessage createMessage(Session session, int i) throws JMSException {

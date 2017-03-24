@@ -108,6 +108,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private static final Logger SERVICELOG = LoggerFactory.getLogger(TransportConnection.class.getName() + ".Service");
     // Keeps track of the broker and connector that created this connection.
     protected final Broker broker;
+    protected final BrokerService brokerService;
     protected final TransportConnector connector;
     // Keeps track of the state of the connections.
     // protected final ConcurrentHashMap localConnectionStates=new
@@ -162,6 +163,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                                TaskRunnerFactory taskRunnerFactory, TaskRunnerFactory stopTaskRunnerFactory) {
         this.connector = connector;
         this.broker = broker;
+        this.brokerService = broker.getBrokerService();
+
         RegionBroker rb = (RegionBroker) broker.getAdaptor(RegionBroker.class);
         brokerConnectionStates = rb.getConnectionStates();
         if (connector != null) {
@@ -171,7 +174,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.taskRunnerFactory = taskRunnerFactory;
         this.stopTaskRunnerFactory = stopTaskRunnerFactory;
         this.transport = transport;
-        final BrokerService brokerService = this.broker.getBrokerService();
         if( this.transport instanceof BrokerServiceAware ) {
             ((BrokerServiceAware)this.transport).setBrokerService(brokerService);
         }
@@ -223,20 +225,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public void serviceTransportException(IOException e) {
-        BrokerService bService = connector.getBrokerService();
-        if (bService.isShutdownOnSlaveFailure()) {
-            if (brokerInfo != null) {
-                if (brokerInfo.isSlaveBroker()) {
-                    LOG.error("Slave has exception: {} shutting down master now.", e.getMessage(), e);
-                    try {
-                        doStop();
-                        bService.stop();
-                    } catch (Exception ex) {
-                        LOG.warn("Failed to stop the master", ex);
-                    }
-                }
-            }
-        }
         if (!stopping.get() && !pendingStop) {
             transportException.set(e);
             if (TRANSPORTLOG.isDebugEnabled()) {
@@ -357,6 +345,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
                 response = new ExceptionResponse(e);
             } else {
+                forceRollbackOnlyOnFailedAsyncTransactionOp(e, command);
                 serviceException(e);
             }
         }
@@ -377,6 +366,42 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         MDC.remove("activemq.connector");
         return response;
+    }
+
+    private void forceRollbackOnlyOnFailedAsyncTransactionOp(Throwable e, Command command) {
+        if (brokerService.isRollbackOnlyOnAsyncException() && !(e instanceof IOException) && isInTransaction(command)) {
+            Transaction transaction = getActiveTransaction(command);
+            if (transaction != null && !transaction.isRollbackOnly()) {
+                LOG.debug("on async exception, force rollback of transaction for: " + command, e);
+                transaction.setRollbackOnly(e);
+            }
+        }
+    }
+
+    private Transaction getActiveTransaction(Command command) {
+        Transaction transaction = null;
+        try {
+            if (command instanceof Message) {
+                Message messageSend = (Message) command;
+                ProducerId producerId = messageSend.getProducerId();
+                ProducerBrokerExchange producerExchange = getProducerBrokerExchange(producerId);
+                transaction = producerExchange.getConnectionContext().getTransactions().get(messageSend.getTransactionId());
+            } else if (command instanceof  MessageAck) {
+                MessageAck messageAck = (MessageAck) command;
+                ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(messageAck.getConsumerId());
+                if (consumerExchange != null) {
+                    transaction = consumerExchange.getConnectionContext().getTransactions().get(messageAck.getTransactionId());
+                }
+            }
+        } catch(Exception ignored){
+            LOG.trace("failed to find active transaction for command: " + command, ignored);
+        }
+        return transaction;
+    }
+
+    private boolean isInTransaction(Command command) {
+        return command instanceof Message && ((Message)command).isInTransaction()
+                || command instanceof MessageAck && ((MessageAck)command).isInTransaction();
     }
 
     @Override
@@ -1390,10 +1415,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 if (duplexName.contains("#")) {
                     duplexName = duplexName.substring(duplexName.lastIndexOf("#"));
                 }
-                MBeanNetworkListener listener = new MBeanNetworkListener(broker.getBrokerService(), config, broker.getBrokerService().createDuplexNetworkConnectorObjectName(duplexName));
+                MBeanNetworkListener listener = new MBeanNetworkListener(brokerService, config, brokerService.createDuplexNetworkConnectorObjectName(duplexName));
                 listener.setCreatedByDuplex(true);
                 duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteBridgeTransport, listener);
-                duplexBridge.setBrokerService(broker.getBrokerService());
+                duplexBridge.setBrokerService(brokerService);
                 // now turn duplex off this side
                 info.setDuplexConnection(false);
                 duplexBridge.setCreatedByDuplex(true);
@@ -1483,7 +1508,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 context = state.getContext();
                 result.setConnectionContext(context);
                 if (context.isReconnect() || (context.isNetworkConnection() && connector.isAuditNetworkProducers())) {
-                    result.setLastStoredSequenceId(broker.getBrokerService().getPersistenceAdapter().getLastProducerSequenceId(id));
+                    result.setLastStoredSequenceId(brokerService.getPersistenceAdapter().getLastProducerSequenceId(id));
                 }
                 SessionState ss = state.getSessionState(id.getParentId());
                 if (ss != null) {

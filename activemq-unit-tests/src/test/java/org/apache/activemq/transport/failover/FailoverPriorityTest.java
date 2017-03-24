@@ -52,7 +52,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         createClients(5);
 
         assertAllConnectedTo(urls.get(BROKER_A_NAME));
-
+        assertBrokerInfo(BROKER_A_NAME);
 
         restart(false, BROKER_A_NAME, BROKER_B_NAME);
 
@@ -169,8 +169,10 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
         if (primary) {
             assertAllConnectedTo(urls.get(secondaryName));
+            assertBrokerInfo(secondaryName);
         } else {
             assertAllConnectedTo(urls.get(primaryName));
+            assertBrokerInfo(primaryName);
         }
 
         if (primary) {
@@ -186,6 +188,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         Thread.sleep(5000);
 
         assertAllConnectedTo(urls.get(primaryName));
+        assertBrokerInfo(primaryName);
 
     }
 

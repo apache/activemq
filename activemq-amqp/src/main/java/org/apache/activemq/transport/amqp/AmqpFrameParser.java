@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.activemq.transport.amqp.AmqpWireFormat.ResetListener;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.fusesource.hawtbuf.Buffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +85,7 @@ public class AmqpFrameParser {
         }
 
         if (frameSize > maxFrameSize) {
-            throw new IOException("Frame size of " + frameSize + " larger than max allowed " + maxFrameSize);
+            throw IOExceptionSupport.createFrameSizeException(frameSize, maxFrameSize);
         }
     }
 
