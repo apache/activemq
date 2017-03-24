@@ -56,6 +56,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     private final AtomicBoolean inSend = new AtomicBoolean(false);
     private final AtomicBoolean failed = new AtomicBoolean(false);
 
+    private boolean connectionNegotiated;
     private final AtomicBoolean commandReceived = new AtomicBoolean(true);
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
     private final AtomicInteger lastReceiveCounter = new AtomicInteger(0);
@@ -288,10 +289,13 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     }
                 }
             } else {
-                if (command.getClass() == WireFormatInfo.class) {
+                final boolean treatAnyCommandAsConnectionSuccess = wireFormat == null;
+                final boolean isWireFormatCommand = command.getClass() == WireFormatInfo.class;
+                if (isWireFormatCommand || (treatAnyCommandAsConnectionSuccess && !connectionNegotiated)) {
                     synchronized (this) {
+                        connectionNegotiated = true;
                         try {
-                            processInboundWireFormatInfo((WireFormatInfo) command);
+                            processInboundWireFormatInfo(isWireFormatCommand ? (WireFormatInfo) command : null);
                         } catch (IOException e) {
                             onException(e);
                         }
