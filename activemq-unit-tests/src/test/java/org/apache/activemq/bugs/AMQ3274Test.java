@@ -496,10 +496,10 @@ public class AMQ3274Test {
 
             if (queue_f) {
                 prefix = "queue";
-                excl_dest = ActiveMQDestination.createDestination(">", ActiveMQDestination.QUEUE_TYPE);
+                excl_dest = ActiveMQDestination.createDestination(">", ActiveMQDestination.TOPIC_TYPE);
             } else {
                 prefix = "topic";
-                excl_dest = ActiveMQDestination.createDestination(">", ActiveMQDestination.TOPIC_TYPE);
+                excl_dest = ActiveMQDestination.createDestination(">", ActiveMQDestination.QUEUE_TYPE);
             }
 
             excludes = new ArrayList<ActiveMQDestination>();

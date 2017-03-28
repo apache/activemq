@@ -785,7 +785,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 case ConsumerInfo.DATA_STRUCTURE_TYPE:
                                     localStartedLatch.await();
                                     if (started.get()) {
-                                        addConsumerInfo((ConsumerInfo) command);
+                                        final ConsumerInfo consumerInfo = (ConsumerInfo) command;
+                                        if (isDuplicateSuppressionOff(consumerInfo)) {
+                                            addConsumerInfo(consumerInfo);
+                                        } else {
+                                            synchronized (brokerService.getVmConnectorURI()) {
+                                                addConsumerInfo(consumerInfo);
+                                            }
+                                        }
                                     } else {
                                         // received a subscription whilst stopping
                                         LOG.warn("Stopping - ignoring ConsumerInfo: {}", command);
@@ -867,8 +874,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
             // in a cyclic network there can be multiple bridges per broker that can propagate
             // a network subscription so there is a need to synchronize on a shared entity
-            synchronized (brokerService.getVmConnectorURI()) {
+            // if duplicate suppression is required
+            if (isDuplicateSuppressionOff(info)) {
                 addConsumerInfo(info);
+            } else {
+                synchronized (brokerService.getVmConnectorURI()) {
+                    addConsumerInfo(info);
+                }
             }
         } else if (data.getClass() == DestinationInfo.class) {
             // It's a destination info - we want to pass up information about temporary destinations
@@ -1027,8 +1039,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void addSubscription(DemandSubscription sub) throws IOException {
         if (sub != null) {
-            if (isDuplex()) {
-                // async vm transport, need to wait for completion
+            if (isCreatedByDuplex() && !isDuplicateSuppressionOff(sub.getRemoteInfo())) {
+                // async vm transport on duplex end, need to wait for completion
                 localBroker.request(sub.getLocalInfo());
             } else {
                 localBroker.oneway(sub.getLocalInfo());
@@ -1332,8 +1344,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         final ConsumerInfo consumerInfo = candidate.getRemoteInfo();
         boolean suppress = false;
 
-        if (consumerInfo.getDestination().isQueue() && !configuration.isSuppressDuplicateQueueSubscriptions() || consumerInfo.getDestination().isTopic()
-                && !configuration.isSuppressDuplicateTopicSubscriptions()) {
+        if (isDuplicateSuppressionOff(consumerInfo)) {
             return suppress;
         }
 
@@ -1353,6 +1364,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
         }
         return suppress;
+    }
+
+    private boolean isDuplicateSuppressionOff(final ConsumerInfo consumerInfo) {
+        return !configuration.isSuppressDuplicateQueueSubscriptions() && !configuration.isSuppressDuplicateTopicSubscriptions()
+                || consumerInfo.getDestination().isQueue() && !configuration.isSuppressDuplicateQueueSubscriptions()
+                || consumerInfo.getDestination().isTopic() && !configuration.isSuppressDuplicateTopicSubscriptions();
     }
 
     private boolean isInActiveDurableSub(Subscription sub) {
