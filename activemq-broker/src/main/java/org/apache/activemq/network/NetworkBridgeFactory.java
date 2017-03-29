@@ -58,10 +58,17 @@ public final class NetworkBridgeFactory {
         return result;
     }
 
-    public static Transport createLocalTransport(Broker broker) throws Exception {
-        URI uri = broker.getVmConnectorURI();
+    public static Transport createLocalTransport(URI uri) throws Exception {
+        return createLocalTransport(uri, false);
+    }
+
+    public static Transport createLocalAsyncTransport(URI uri) throws Exception {
+        return createLocalTransport(uri, true);
+    }
+
+    private static Transport createLocalTransport(URI uri, boolean async) throws Exception {
         HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-        map.put("async", "true");
+        map.put("async", String.valueOf(async));
         map.put("create", "false"); // we don't want a vm connect during shutdown to trigger a broker create
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         return TransportFactory.connect(uri);

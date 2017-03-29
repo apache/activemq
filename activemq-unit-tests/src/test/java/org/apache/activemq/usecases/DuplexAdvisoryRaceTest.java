@@ -126,9 +126,9 @@ public class DuplexAdvisoryRaceTest {
                 + "?jms.watchTopicAdvisories=false");
 
         // populate dests
-        final int numDests = 200;
-        final int numMessagesPerDest = 300;
-        final int numConsumersPerDest = 100;
+        final int numDests = 800;
+        final int numMessagesPerDest = 50;
+        final int numConsumersPerDest = 5;
         populate(brokerAFactory, 0, numDests/2, numMessagesPerDest);
         populate(brokerBFactory, numDests/2, numDests, numMessagesPerDest);
 
@@ -148,7 +148,7 @@ public class DuplexAdvisoryRaceTest {
                 LOG.info("received: " + responseReceived.get());
                 return responseReceived.get() >= numMessagesPerDest * numDests;
             }
-        }, 2*60*1000)) {
+        }, 5*60*1000)) {
 
            org.apache.activemq.TestSupport.dumpAllThreads("DD");
 
@@ -177,7 +177,6 @@ public class DuplexAdvisoryRaceTest {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final BytesMessage message = session.createBytesMessage();
-        //message.writeBytes(new byte[50]);
         MessageProducer producer = session.createProducer(null);;
         for (int i=minDest; i<maxDest; i++) {
             Destination destination = qFromInt(i);
@@ -236,7 +235,7 @@ public class DuplexAdvisoryRaceTest {
 
     protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker) throws Exception {
 
-        String uri = "static:(failover:(" + networkConnectorUrlString + "?socketBufferSize=1024)?maxReconnectAttempts=0)";
+        String uri = "static:(failover:(" + networkConnectorUrlString + "?socketBufferSize=1024&trace=false)?maxReconnectAttempts=0)";
 
         NetworkConnector connector = new DiscoveryNetworkConnector(new URI(uri));
         connector.setName(localBroker.getBrokerName() + "-to-" + remoteBroker.getBrokerName());
