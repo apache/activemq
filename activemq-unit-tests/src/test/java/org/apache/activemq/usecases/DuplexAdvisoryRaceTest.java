@@ -107,7 +107,7 @@ public class DuplexAdvisoryRaceTest {
                 Subscription subscription = super.addConsumer(context, info);
                 // delay return to allow dispatch to interleave
                 if (context.isNetworkConnection()) {
-                    TimeUnit.MILLISECONDS.sleep(300);
+                    TimeUnit.MILLISECONDS.sleep(200);
                 }
                 return subscription;
             };
@@ -126,7 +126,7 @@ public class DuplexAdvisoryRaceTest {
                 + "?jms.watchTopicAdvisories=false");
 
         // populate dests
-        final int numDests = 800;
+        final int numDests = 400;
         final int numMessagesPerDest = 50;
         final int numConsumersPerDest = 5;
         populate(brokerAFactory, 0, numDests/2, numMessagesPerDest);
@@ -148,7 +148,7 @@ public class DuplexAdvisoryRaceTest {
                 LOG.info("received: " + responseReceived.get());
                 return responseReceived.get() >= numMessagesPerDest * numDests;
             }
-        }, 5*60*1000)) {
+        }, 10*60*1000)) {
 
            org.apache.activemq.TestSupport.dumpAllThreads("DD");
 
