@@ -140,7 +140,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     }
 
     protected Transport createLocalTransport() throws Exception {
-        return NetworkBridgeFactory.createLocalTransport(localURI);
+        return NetworkBridgeFactory.createLocalTransport(this, localURI);
     }
 
     public static ActiveMQDestination[] getDurableTopicDestinations(final Set<ActiveMQDestination> durableDestinations) {

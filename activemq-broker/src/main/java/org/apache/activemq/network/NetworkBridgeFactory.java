@@ -58,8 +58,9 @@ public final class NetworkBridgeFactory {
         return result;
     }
 
-    public static Transport createLocalTransport(URI uri) throws Exception {
-        return createLocalTransport(uri, false);
+    public static Transport createLocalTransport(NetworkBridgeConfiguration configuration, URI uri) throws Exception {
+        // one end of the localbroker<->bridge transport needs to be async to allow concurrent forwards and acks
+        return createLocalTransport(uri, !configuration.isDispatchAsync());
     }
 
     public static Transport createLocalAsyncTransport(URI uri) throws Exception {

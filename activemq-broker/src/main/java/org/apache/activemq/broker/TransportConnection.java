@@ -1428,7 +1428,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     }
                     setDuplexNetworkConnectorId(duplexNetworkConnectorId);
                 }
-                Transport localTransport = NetworkBridgeFactory.createLocalTransport(broker.getVmConnectorURI());
+                Transport localTransport = NetworkBridgeFactory.createLocalTransport(config, broker.getVmConnectorURI());
                 Transport remoteBridgeTransport = transport;
                 if (! (remoteBridgeTransport instanceof ResponseCorrelator)) {
                     // the vm transport case is already wrapped
