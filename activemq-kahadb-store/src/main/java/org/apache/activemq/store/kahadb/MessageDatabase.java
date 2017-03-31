@@ -1515,7 +1515,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 decrementAndSubSizeToStoreStat(command.getDestination(), previousKeys.location.getSize());
 
                 //update all the subscription metrics
-                if (enableSubscriptionStatistics && location.getSize() != previousKeys.location.getSize()) {
+                if (enableSubscriptionStatistics && sd.ackPositions != null && location.getSize() != previousKeys.location.getSize()) {
                     Iterator<Entry<String, SequenceSet>> iter = sd.ackPositions.iterator(tx);
                     while (iter.hasNext()) {
                         Entry<String, SequenceSet> e = iter.next();
@@ -2961,33 +2961,38 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return sd.subscriptionAcks.get(tx, subscriptionKey);
     }
 
-    public long getStoredMessageCount(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
-        SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
-        if (messageSequences != null) {
-            long result = messageSequences.rangeSize();
-            // if there's anything in the range the last value is always the nextMessage marker, so remove 1.
-            return result > 0 ? result - 1 : 0;
+    protected long getStoredMessageCount(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
+        if (sd.ackPositions != null) {
+            SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
+            if (messageSequences != null) {
+                long result = messageSequences.rangeSize();
+                // if there's anything in the range the last value is always the nextMessage marker, so remove 1.
+                return result > 0 ? result - 1 : 0;
+            }
         }
 
         return 0;
     }
 
-    public long getStoredMessageSize(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
-        //grab the messages attached to this subscription
-        SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
-
+    protected long getStoredMessageSize(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
         long locationSize = 0;
-        if (messageSequences != null) {
-            Sequence head = messageSequences.getHead();
-            if (head != null) {
-                //get an iterator over the order index starting at the first unacked message
-                //and go over each message to add up the size
-                Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx,
-                        new MessageOrderCursor(head.getFirst()));
 
-                while (iterator.hasNext()) {
-                    Entry<Long, MessageKeys> entry = iterator.next();
-                    locationSize += entry.getValue().location.getSize();
+        if (sd.ackPositions != null) {
+            //grab the messages attached to this subscription
+            SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
+
+            if (messageSequences != null) {
+                Sequence head = messageSequences.getHead();
+                if (head != null) {
+                    //get an iterator over the order index starting at the first unacked message
+                    //and go over each message to add up the size
+                    Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx,
+                            new MessageOrderCursor(head.getFirst()));
+
+                    while (iterator.hasNext()) {
+                        Entry<Long, MessageKeys> entry = iterator.next();
+                        locationSize += entry.getValue().location.getSize();
+                    }
                 }
             }
         }
