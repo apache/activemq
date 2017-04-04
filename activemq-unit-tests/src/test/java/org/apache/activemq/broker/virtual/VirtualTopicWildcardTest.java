@@ -70,9 +70,9 @@ public class VirtualTopicWildcardTest {
     @Test
     public void testWildcardAndSimpleConsumerShareMessages() throws Exception {
 
-        final ConsumerBean messageList1 = new ConsumerBean("1:");
-        final ConsumerBean messageList2 = new ConsumerBean("2:");
-        final ConsumerBean messageList3 = new ConsumerBean("3:");
+        ConsumerBean messageList1 = new ConsumerBean("1:");
+        ConsumerBean messageList2 = new ConsumerBean("2:");
+        ConsumerBean messageList3 = new ConsumerBean("3:");
 
         messageList1.setVerbose(true);
         messageList2.setVerbose(true);
@@ -120,7 +120,7 @@ public class VirtualTopicWildcardTest {
         return cf.createConnection();
     }
 
-    protected void assertMessagesArrived(ConsumerBean messageList1, ConsumerBean messageList2) {
+    protected void assertMessagesArrived(final ConsumerBean messageList1, final ConsumerBean messageList2) {
         try {
             assertTrue("expected", Wait.waitFor(new Wait.Condition() {
                 @Override
