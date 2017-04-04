@@ -1733,7 +1733,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             if (lastUpdate != null) {
-                gcCandidateSet.remove(lastUpdate.getDataFileId());
+                // we won't delete past the last update, ackCompaction journal can be a candidate in error
+                gcCandidateSet.removeAll(new TreeSet<Integer>(gcCandidateSet.tailSet(lastUpdate.getDataFileId())));
             }
 
             // Don't GC files under replication
