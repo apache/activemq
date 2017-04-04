@@ -48,34 +48,34 @@ public class MappedQueueFilter extends DestinationFilter {
         // recover messages for first consumer only
         boolean noSubs = getConsumers().isEmpty();
 
-        if (!sub.getActiveMQDestination().isPattern() || sub.getActiveMQDestination().equals(next.getActiveMQDestination())) {
+        // for virtual consumer wildcard dests, only subscribe to exact match to ensure no duplicates
+        if (sub.getActiveMQDestination().compareTo(next.getActiveMQDestination()) == 0) {
             super.addSubscription(context, sub);
+        }
+        if (noSubs && !getConsumers().isEmpty()) {
+            // new subscription added, recover retroactive messages
+            final RegionBroker regionBroker = (RegionBroker) context.getBroker().getAdaptor(RegionBroker.class);
+            final Set<Destination> virtualDests = regionBroker.getDestinations(virtualDestination);
 
-            if (noSubs && !getConsumers().isEmpty()) {
-                // new subscription added, recover retroactive messages
-                final RegionBroker regionBroker = (RegionBroker) context.getBroker().getAdaptor(RegionBroker.class);
-                final Set<Destination> virtualDests = regionBroker.getDestinations(virtualDestination);
+            final ActiveMQDestination newDestination = sub.getActiveMQDestination();
+            final BaseDestination regionDest = getBaseDestination((Destination) regionBroker.getDestinations(newDestination).toArray()[0]);
 
-                final ActiveMQDestination newDestination = sub.getActiveMQDestination();
-                final BaseDestination regionDest = getBaseDestination((Destination) regionBroker.getDestinations(newDestination).toArray()[0]);
+            for (Destination virtualDest : virtualDests) {
+                if (virtualDest.getActiveMQDestination().isTopic() &&
+                        (virtualDest.isAlwaysRetroactive() || sub.getConsumerInfo().isRetroactive())) {
 
-                for (Destination virtualDest : virtualDests) {
-                    if (virtualDest.getActiveMQDestination().isTopic() &&
-                            (virtualDest.isAlwaysRetroactive() || sub.getConsumerInfo().isRetroactive())) {
+                    Topic topic = (Topic) getBaseDestination(virtualDest);
+                    if (topic != null) {
+                        // re-use browse() to get recovered messages
+                        final Message[] messages = topic.getSubscriptionRecoveryPolicy().browse(topic.getActiveMQDestination());
 
-                        Topic topic = (Topic) getBaseDestination(virtualDest);
-                        if (topic != null) {
-                            // re-use browse() to get recovered messages
-                            final Message[] messages = topic.getSubscriptionRecoveryPolicy().browse(topic.getActiveMQDestination());
-
-                            // add recovered messages to subscription
-                            for (Message message : messages) {
-                                final Message copy = message.copy();
-                                copy.setOriginalDestination(message.getDestination());
-                                copy.setDestination(newDestination);
-                                copy.setRegionDestination(regionDest);
-                                sub.addRecoveredMessage(context, newDestination.isQueue() ? new IndirectMessageReference(copy) : copy);
-                            }
+                        // add recovered messages to subscription
+                        for (Message message : messages) {
+                            final Message copy = message.copy();
+                            copy.setOriginalDestination(message.getDestination());
+                            copy.setDestination(newDestination);
+                            copy.setRegionDestination(regionDest);
+                            sub.addRecoveredMessage(context, newDestination.isQueue() ? new IndirectMessageReference(copy) : copy);
                         }
                     }
                 }

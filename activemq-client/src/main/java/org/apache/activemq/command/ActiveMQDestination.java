@@ -159,6 +159,12 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
             return 1;
         } else {
             if (destination.getDestinationType() == destination2.getDestinationType()) {
+
+                if (destination.isPattern() && destination2.isPattern() ) {
+                    if (destination.getPhysicalName().compareTo(destination2.getPhysicalName()) == 0) {
+                        return 0;
+                    }
+                }
                 if (destination.isPattern()) {
                     DestinationFilter filter = DestinationFilter.parseFilter(destination);
                     if (filter.matches(destination2)) {
