@@ -18,6 +18,11 @@ package org.apache.activemq.blob;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQBlobMessage;
+import org.apache.activemq.command.MessageId;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * 
@@ -28,5 +33,34 @@ public class BlobTransferPolicyUriTest extends TestCase {
         BlobTransferPolicy policy = factory.getBlobTransferPolicy();
         assertEquals("http://foo.com", policy.getDefaultUploadUrl());
         assertEquals("http://foo.com", policy.getUploadUrl());
+    }
+
+    public void testDefaultUploadStrategySensibleError() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+        BlobTransferPolicy policy = factory.getBlobTransferPolicy();
+        BlobUploadStrategy strategy = policy.getUploadStrategy();
+        ActiveMQBlobMessage message = new ActiveMQBlobMessage();
+        message.setMessageId(new MessageId("1:0:0:0"));
+        try {
+            strategy.uploadStream(message, message.getInputStream());
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("8080"));
+            expected.printStackTrace();
+        }
+    }
+
+    public void testDefaultDownlaodStrategySensibleError() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+        BlobTransferPolicy policy = factory.getBlobTransferPolicy();
+        BlobDownloadStrategy strategy = policy.getDownloadStrategy();
+        ActiveMQBlobMessage message = new ActiveMQBlobMessage();
+        message.setMessageId(new MessageId("1:0:0:0"));
+        try {
+            strategy.deleteFile(message);
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("8080"));
+            expected.printStackTrace();
+        }
+
     }
 }

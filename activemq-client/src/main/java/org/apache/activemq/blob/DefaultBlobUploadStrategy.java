@@ -63,10 +63,12 @@ public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUp
                 os.write(buf, 0, c);
                 os.flush();
             }
+        } catch (IOException error) {
+            throw new IOException("PUT failed to: " + url, error);
         }
 
         if (!isSuccessfulCode(connection.getResponseCode())) {
-            throw new IOException("PUT was not successful: " + connection.getResponseCode() + " "
+            throw new IOException("PUT to " + url + " was not successful: " + connection.getResponseCode() + " "
                                   + connection.getResponseMessage());
         }
 
