@@ -70,9 +70,9 @@ public class VirtualTopicWildcardTest {
     @Test
     public void testWildcardAndSimpleConsumerShareMessages() throws Exception {
 
-        ConsumerBean messageList1 = new ConsumerBean("1:");
-        ConsumerBean messageList2 = new ConsumerBean("2:");
-        ConsumerBean messageList3 = new ConsumerBean("3:");
+        final ConsumerBean messageList1 = new ConsumerBean("1:");
+        final ConsumerBean messageList2 = new ConsumerBean("2:");
+        final ConsumerBean messageList3 = new ConsumerBean("3:");
 
         messageList1.setVerbose(true);
         messageList2.setVerbose(true);
