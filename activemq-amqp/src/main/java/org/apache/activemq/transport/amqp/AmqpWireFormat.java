@@ -32,8 +32,12 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.Buffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AmqpWireFormat implements WireFormat {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpWireFormat.class);
 
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
     public static final int NO_AMQP_MAX_FRAME_SIZE = -1;
@@ -137,18 +141,22 @@ public class AmqpWireFormat implements WireFormat {
      */
     public boolean isHeaderValid(AmqpHeader header, boolean authenticated) {
         if (!header.hasValidPrefix()) {
+            LOG.trace("AMQP Header arrived with invalid prefix: {}", header);
             return false;
         }
 
         if (!(header.getProtocolId() == 0 || header.getProtocolId() == SASL_PROTOCOL)) {
+            LOG.trace("AMQP Header arrived with invalid protocol ID: {}", header);
             return false;
         }
 
         if (!authenticated && !isAllowNonSaslConnections() && header.getProtocolId() != SASL_PROTOCOL) {
+            LOG.trace("AMQP Header arrived without SASL and server requires SASL: {}", header);
             return false;
         }
 
         if (header.getMajor() != 1 || header.getMinor() != 0 || header.getRevision() != 0) {
+            LOG.trace("AMQP Header arrived invalid version: {}", header);
             return false;
         }
 
