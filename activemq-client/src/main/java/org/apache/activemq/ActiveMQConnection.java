@@ -1965,7 +1965,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     @Override
     public void onException(final IOException error) {
         onAsyncException(error);
-        if (!closing.get() && !closed.get()) {
+        if (!closed.get() && !closing.get()) {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
