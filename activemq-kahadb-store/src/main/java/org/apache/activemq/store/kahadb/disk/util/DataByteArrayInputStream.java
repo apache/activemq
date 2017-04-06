@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.UTFDataFormatException;
 
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.MarshallingSupport;
 
 /**
  * Optimized ByteArrayInputStream that can be used more than once
@@ -286,36 +287,13 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     @Override
     public String readUTF() throws IOException {
         int length = readUnsignedShort();
-        int endPos = pos + length;
-        int count = 0, a;
-        char[] characters = new char[length];
-        while (pos < endPos) {
-            if ((characters[count] = (char) buf[pos++]) < '\u0080')
-                count++;
-            else if (((a = characters[count]) & 0xE0) == 0xC0) {
-                if (pos >= endPos) {
-                    throw new UTFDataFormatException("bad string");
-                }
-                int b = buf[pos++];
-                if ((b & 0xC0) != 0x80) {
-                    throw new UTFDataFormatException("bad string");
-                }
-                characters[count++] = (char) (((a & 0x1F) << 6) | (b & 0x3F));
-            } else if ((a & 0xf0) == 0xe0) {
-                if (pos + 1 >= endPos) {
-                    throw new UTFDataFormatException("bad string");
-                }
-                int b = buf[pos++];
-                int c = buf[pos++];
-                if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80)) {
-                    throw new UTFDataFormatException("bad string");
-                }
-                characters[count++] = (char) (((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
-            } else {
-                throw new UTFDataFormatException("bad string");
-            }
+        if (pos + length > buf.length) {
+            throw new UTFDataFormatException("bad string");
         }
-        return new String(characters, 0, count);
+        char chararr[] = new char[length];
+        String result = MarshallingSupport.convertUTF8WithBuf(buf, chararr, pos, length);
+        pos += length;
+        return result;
     }
 
     public int getPos() {
