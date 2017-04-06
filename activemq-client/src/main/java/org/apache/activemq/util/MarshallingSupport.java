@@ -296,115 +296,100 @@ public final class MarshallingSupport {
 
     public static void writeUTF8(DataOutput dataOut, String text) throws IOException {
         if (text != null) {
-            int strlen = text.length();
-            int utflen = 0;
-            char[] charr = new char[strlen];
-            int c = 0;
-            int count = 0;
+            long utfCount = countUTFBytes(text);
+            dataOut.writeInt((int)utfCount);
 
-            text.getChars(0, strlen, charr, 0);
+            byte[] buffer = new byte[(int)utfCount];
+            int len = writeUTFBytesToBuffer(text, (int) utfCount, buffer, 0);
+            dataOut.write(buffer, 0, len);
 
-            for (int i = 0; i < strlen; i++) {
-                c = charr[i];
-                if ((c >= 0x0001) && (c <= 0x007F)) {
-                    utflen++;
-                } else if (c > 0x07FF) {
-                    utflen += 3;
-                } else {
-                    utflen += 2;
-                }
-            }
-            // TODO diff: Sun code - removed
-            byte[] bytearr = new byte[utflen + 4]; // TODO diff: Sun code
-            bytearr[count++] = (byte)((utflen >>> 24) & 0xFF); // TODO diff:
-            // Sun code
-            bytearr[count++] = (byte)((utflen >>> 16) & 0xFF); // TODO diff:
-            // Sun code
-            bytearr[count++] = (byte)((utflen >>> 8) & 0xFF);
-            bytearr[count++] = (byte)((utflen >>> 0) & 0xFF);
-            for (int i = 0; i < strlen; i++) {
-                c = charr[i];
-                if ((c >= 0x0001) && (c <= 0x007F)) {
-                    bytearr[count++] = (byte)c;
-                } else if (c > 0x07FF) {
-                    bytearr[count++] = (byte)(0xE0 | ((c >> 12) & 0x0F));
-                    bytearr[count++] = (byte)(0x80 | ((c >> 6) & 0x3F));
-                    bytearr[count++] = (byte)(0x80 | ((c >> 0) & 0x3F));
-                } else {
-                    bytearr[count++] = (byte)(0xC0 | ((c >> 6) & 0x1F));
-                    bytearr[count++] = (byte)(0x80 | ((c >> 0) & 0x3F));
-                }
-            }
-            dataOut.write(bytearr);
-
+            assert utfCount==len;
         } else {
             dataOut.writeInt(-1);
         }
     }
 
-    public static String readUTF8(DataInput dataIn) throws IOException {
-        int utflen = dataIn.readInt(); // TODO diff: Sun code
-        if (utflen > -1) {
-            StringBuffer str = new StringBuffer(utflen);
-            byte bytearr[] = new byte[utflen];
-            int c;
-            int char2;
-            int char3;
-            int count = 0;
-
-            dataIn.readFully(bytearr, 0, utflen);
-
-            while (count < utflen) {
-                c = bytearr[count] & 0xff;
-                switch (c >> 4) {
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                    /* 0xxxxxxx */
-                    count++;
-                    str.append((char)c);
-                    break;
-                case 12:
-                case 13:
-                    /* 110x xxxx 10xx xxxx */
-                    count += 2;
-                    if (count > utflen) {
-                        throw new UTFDataFormatException();
-                    }
-                    char2 = bytearr[count - 1];
-                    if ((char2 & 0xC0) != 0x80) {
-                        throw new UTFDataFormatException();
-                    }
-                    str.append((char)(((c & 0x1F) << 6) | (char2 & 0x3F)));
-                    break;
-                case 14:
-                    /* 1110 xxxx 10xx xxxx 10xx xxxx */
-                    count += 3;
-                    if (count > utflen) {
-                        throw new UTFDataFormatException();
-                    }
-                    char2 = bytearr[count - 2]; // TODO diff: Sun code
-                    char3 = bytearr[count - 1]; // TODO diff: Sun code
-                    if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80)) {
-                        throw new UTFDataFormatException();
-                    }
-                    str.append((char)(((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0)));
-                    break;
-                default:
-                    /* 10xx xxxx, 1111 xxxx */
-                    throw new UTFDataFormatException();
-                }
+    /**
+     * From: http://svn.apache.org/repos/asf/harmony/enhanced/java/trunk/classlib/modules/luni/src/main/java/java/io/DataOutputStream.java
+     */
+    public static long countUTFBytes(String str) {
+        int utfCount = 0, length = str.length();
+        for (int i = 0; i < length; i++) {
+            int charValue = str.charAt(i);
+            if (charValue > 0 && charValue <= 127) {
+                utfCount++;
+            } else if (charValue <= 2047) {
+                utfCount += 2;
+            } else {
+                utfCount += 3;
             }
-            // The number of chars produced may be less than utflen
-            return new String(str);
+        }
+        return utfCount;
+    }
+
+    /**
+     * From: http://svn.apache.org/repos/asf/harmony/enhanced/java/trunk/classlib/modules/luni/src/main/java/java/io/DataOutputStream.java
+     */
+    public static int writeUTFBytesToBuffer(String str, long count,
+                                     byte[] buffer, int offset) throws IOException {
+        int length = str.length();
+        for (int i = 0; i < length; i++) {
+            int charValue = str.charAt(i);
+            if (charValue > 0 && charValue <= 127) {
+                buffer[offset++] = (byte) charValue;
+            } else if (charValue <= 2047) {
+                buffer[offset++] = (byte) (0xc0 | (0x1f & (charValue >> 6)));
+                buffer[offset++] = (byte) (0x80 | (0x3f & charValue));
+            } else {
+                buffer[offset++] = (byte) (0xe0 | (0x0f & (charValue >> 12)));
+                buffer[offset++] = (byte) (0x80 | (0x3f & (charValue >> 6)));
+                buffer[offset++] = (byte) (0x80 | (0x3f & charValue));
+            }
+        }
+        return offset;
+    }
+
+    public static String readUTF8(DataInput dataIn) throws IOException {
+        int utflen = dataIn.readInt();
+        if (utflen > -1) {
+            byte bytearr[] = new byte[utflen];
+            char chararr[] = new char[utflen];
+            dataIn.readFully(bytearr, 0, utflen);
+            return convertUTF8WithBuf(bytearr, chararr, 0, utflen);
         } else {
             return null;
         }
+    }
+
+    /**
+     * From: http://svn.apache.org/repos/asf/harmony/enhanced/java/trunk/classlib/modules/luni/src/main/java/org/apache/harmony/luni/util/Util.java
+     */
+    public static String convertUTF8WithBuf(byte[] buf, char[] out, int offset,
+                                            int utfSize) throws UTFDataFormatException {
+        int count = 0, s = 0, a;
+        while (count < utfSize) {
+            if ((out[s] = (char) buf[offset + count++]) < '\u0080')
+                s++;
+            else if (((a = out[s]) & 0xe0) == 0xc0) {
+                if (count >= utfSize)
+                    throw new UTFDataFormatException();
+                int b = buf[offset + count++];
+                if ((b & 0xC0) != 0x80)
+                    throw new UTFDataFormatException();
+                out[s++] = (char) (((a & 0x1F) << 6) | (b & 0x3F));
+            } else if ((a & 0xf0) == 0xe0) {
+                if (count + 1 >= utfSize)
+                    throw new UTFDataFormatException();
+                int b = buf[offset + count++];
+                int c = buf[offset + count++];
+                if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80))
+                    throw new UTFDataFormatException();
+                out[s++] = (char) (((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
+            } else {
+                throw new UTFDataFormatException();
+            }
+        }
+        return new String(out, 0, s);
     }
 
     public static String propertiesToString(Properties props) throws IOException {
