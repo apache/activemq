@@ -66,6 +66,7 @@
       <bundle>mvn:io.netty/netty-codec/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-codec-http/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-handler/${netty-all-version}</bundle>
+      <bundle>mvn:io.netty/netty-resolver/${netty-all-version}</bundle>
       <bundle>mvn:org.apache.qpid/proton-j/${qpid-jms-proton-version}</bundle>
       <bundle>mvn:org.apache.qpid/qpid-jms-client/${qpid-jms-version}</bundle>
     </feature>

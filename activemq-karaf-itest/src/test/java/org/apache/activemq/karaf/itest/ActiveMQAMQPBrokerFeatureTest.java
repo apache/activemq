@@ -21,6 +21,7 @@ import javax.jms.Connection;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.Test;
 import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 
 public class ActiveMQAMQPBrokerFeatureTest extends AbstractFeatureTest {
@@ -30,6 +31,7 @@ public class ActiveMQAMQPBrokerFeatureTest extends AbstractFeatureTest {
     public static Option[] configure() {
         return new Option[] //
         {
+         CoreOptions.mavenBundle("org.apache.geronimo.specs","geronimo-jms_2.0_spec").version("1.0-alpha-2"),
          configure("activemq", "activemq-amqp-client"), //
          configureBrokerStart()
         };
