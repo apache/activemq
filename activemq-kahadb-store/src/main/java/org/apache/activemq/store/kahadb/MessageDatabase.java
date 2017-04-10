@@ -1701,6 +1701,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         return checkpointUpdate(tx, cleanup);
                     }
                 });
+                pageFile.flush();
                 // after the index update such that partial removal does not leave dangling references in the index.
                 journal.removeDataFiles(filesToGc);
             } finally {
@@ -1729,7 +1730,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         Location[] inProgressTxRange = getInProgressTxLocationRange();
         metadata.firstInProgressTransactionLocation = inProgressTxRange[0];
         tx.store(metadata.page, metadataMarshaller, true);
-        pageFile.flush();
 
         final TreeSet<Integer> gcCandidateSet = new TreeSet<>();
         if (cleanup) {
