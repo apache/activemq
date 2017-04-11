@@ -122,7 +122,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         BROKER_PLATFORM = "Java/" + (javaVersion == null ? "unknown" : javaVersion);
 
         InputStream in = null;
-        String version = "5.12.0";
+        String version = "<unknown-5.x>";
         if ((in = AmqpConnection.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             try {
@@ -152,9 +152,9 @@ public class AmqpConnection implements AmqpProtocolConverter {
     private boolean closedSocket;
     private AmqpAuthenticator authenticator;
 
-    private final Map<TransactionId, AmqpTransactionCoordinator> transactions = new HashMap<TransactionId, AmqpTransactionCoordinator>();
-    private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
-    private final ConcurrentMap<ConsumerId, AmqpSender> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, AmqpSender>();
+    private final Map<TransactionId, AmqpTransactionCoordinator> transactions = new HashMap<>();
+    private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ConsumerId, AmqpSender> subscriptionsByConsumerId = new ConcurrentHashMap<>();
 
     public AmqpConnection(AmqpTransport transport, BrokerService brokerService) {
         this.amqpTransport = transport;
@@ -199,7 +199,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
      * @return the properties that are offered to the incoming connection.
      */
     protected Map<Symbol, Object> getConnetionProperties() {
-        Map<Symbol, Object> properties = new HashMap<Symbol, Object>();
+        Map<Symbol, Object> properties = new HashMap<>();
 
         properties.put(QUEUE_PREFIX, "queue://");
         properties.put(TOPIC_PREFIX, "topic://");
@@ -218,7 +218,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
      * @return the properties that are offered to the incoming connection.
      */
     protected Map<Symbol, Object> getFailedConnetionProperties() {
-        Map<Symbol, Object> properties = new HashMap<Symbol, Object>();
+        Map<Symbol, Object> properties = new HashMap<>();
 
         properties.put(CONNECTION_OPEN_FAILED, true);
 
@@ -478,7 +478,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
                         } else if (exception instanceof InvalidClientIDException) {
                             ErrorCondition condition = new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage());
 
-                            Map<Symbol, Object> infoMap = new HashMap<Symbol, Object> ();
+                            Map<Symbol, Object> infoMap = new HashMap<> ();
                             infoMap.put(INVALID_FIELD, CONTAINER_ID);
                             condition.setInfo(infoMap);
 
