@@ -142,7 +142,7 @@ public class JournalMetaDataCheckpointTest {
 
         // verify metadata is correct on disk
         final MessageDatabase.Metadata[] fromDiskMetaData = new MessageDatabase.Metadata[1];
-        KahaDBStore messageStore = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore();
+        final KahaDBStore messageStore = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore();
 
         // need to avoid cache and in-progress writes of existing pageFile
         PageFile fromDiskPageFile = new PageFile(messageStore.getIndexDirectory(), "db");
