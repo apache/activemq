@@ -161,6 +161,10 @@ public abstract class DestinationBridge implements Service, MessageListener {
         return doHandleReplyTo;
     }
 
+    protected boolean getDoHandlReplyTo() {
+        return isDoHandleReplyTo();
+    }
+
     /**
      * @param doHandleReplyTo The doHandleReplyTo to set.
      */
