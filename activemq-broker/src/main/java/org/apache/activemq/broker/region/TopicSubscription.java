@@ -450,6 +450,11 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     @Override
+    public int countBeforeFull() {
+        return getPrefetchSize() == 0 ? prefetchExtension.get() : info.getPrefetchSize() + prefetchExtension.get() - getDispatchedQueueSize();
+    }
+
+    @Override
     public int getPendingQueueSize() {
         return matched();
     }
