@@ -28,6 +28,8 @@ import org.apache.activemq.transport.amqp.client.util.UnmodifiableSession;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
+import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Session;
 
@@ -136,6 +138,42 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      */
     public AmqpSender createSender(final String address, boolean presettle) throws Exception {
         return createSender(address, presettle, null, null, null);
+    }
+
+    /**
+     * Create a sender instance using the given address
+     *
+     * @param address
+     *        the address to which the sender will produce its messages.
+     * @param senderSettlementMode
+     *        controls the settlement mode used by the created Sender
+     * @param receiverSettlementMode
+     *        controls the desired settlement mode used by the remote Receiver
+     *
+     * @return a newly created sender that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the sender.
+     */
+    public AmqpSender createSender(final String address, final SenderSettleMode senderMode, ReceiverSettleMode receiverMode) throws Exception {
+        checkClosed();
+
+        final AmqpSender sender = new AmqpSender(AmqpSession.this, address, getNextSenderId(), senderMode, receiverMode);
+        final ClientFuture request = new ClientFuture();
+
+        connection.getScheduler().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+                sender.setStateInspector(getStateInspector());
+                sender.open(request);
+                pumpToProtonTransport(request);
+            }
+        });
+
+        request.sync();
+
+        return sender;
     }
 
     /**
@@ -332,6 +370,42 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         if (selector != null && !selector.isEmpty()) {
             receiver.setSelector(selector);
         }
+
+        connection.getScheduler().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+                receiver.setStateInspector(getStateInspector());
+                receiver.open(request);
+                pumpToProtonTransport(request);
+            }
+        });
+
+        request.sync();
+
+        return receiver;
+    }
+
+    /**
+     * Create a receiver instance using the given address
+     *
+     * @param address
+     *        the address to which the receiver will subscribe for its messages.
+     * @param senderSettlementMode
+     *        controls the desired settlement mode used by the remote Sender
+     * @param receiverSettlementMode
+     *        controls the settlement mode used by the created Receiver
+     *
+     * @return a newly created receiver that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpReceiver createReceiver(String address, SenderSettleMode senderMode, ReceiverSettleMode receiverMode) throws Exception {
+        checkClosed();
+
+        final ClientFuture request = new ClientFuture();
+        final AmqpReceiver receiver = new AmqpReceiver(AmqpSession.this, address, getNextReceiverId(), senderMode, receiverMode);
 
         connection.getScheduler().execute(new Runnable() {
 
