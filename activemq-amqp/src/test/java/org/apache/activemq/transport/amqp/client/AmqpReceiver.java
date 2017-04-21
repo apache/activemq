@@ -65,12 +65,15 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpReceiver.class);
 
     private final AtomicBoolean closed = new AtomicBoolean();
-    private final BlockingQueue<AmqpMessage> prefetch = new LinkedBlockingDeque<AmqpMessage>();
+    private final BlockingQueue<AmqpMessage> prefetch = new LinkedBlockingDeque<>();
 
     private final AmqpSession session;
     private final String address;
     private final String receiverId;
+
     private final Source userSpecifiedSource;
+    private final SenderSettleMode userSpecifiedSenderSettlementMode;
+    private final ReceiverSettleMode userSpecifiedReceiverSettlementMode;
 
     private String subscriptionName;
     private String selector;
@@ -84,13 +87,31 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * Create a new receiver instance.
      *
      * @param session
-     * 		  The parent session that created the receiver.
+     *        The parent session that created the receiver.
      * @param address
      *        The address that this receiver should listen on.
      * @param receiverId
      *        The unique ID assigned to this receiver.
      */
     public AmqpReceiver(AmqpSession session, String address, String receiverId) {
+        this(session, address, receiverId, null, null);
+    }
+
+    /**
+     * Create a new receiver instance.
+     *
+     * @param session
+     * 		  The parent session that created the receiver.
+     * @param address
+     *        The address that this receiver should listen on.
+     * @param receiverId
+     *        The unique ID assigned to this receiver.
+     * @param senderMode
+     *        The {@link SenderSettleMode} to use on open.
+     * @param receiverMode
+     *        The {@link ReceiverSettleMode} to use on open.
+     */
+    public AmqpReceiver(AmqpSession session, String address, String receiverId, SenderSettleMode senderMode, ReceiverSettleMode receiverMode) {
 
         if (address != null && address.isEmpty()) {
             throw new IllegalArgumentException("Address cannot be empty.");
@@ -100,6 +121,8 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         this.session = session;
         this.address = address;
         this.receiverId = receiverId;
+        this.userSpecifiedSenderSettlementMode = senderMode;
+        this.userSpecifiedReceiverSettlementMode = receiverMode;
     }
 
     /**
@@ -122,6 +145,8 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         this.userSpecifiedSource = source;
         this.address = source.getAddress();
         this.receiverId = receiverId;
+        this.userSpecifiedSenderSettlementMode = null;
+        this.userSpecifiedReceiverSettlementMode = null;
     }
 
     /**
@@ -715,12 +740,25 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         Receiver receiver = session.getEndpoint().receiver(receiverName);
         receiver.setSource(source);
         receiver.setTarget(target);
-        if (isPresettle()) {
-            receiver.setSenderSettleMode(SenderSettleMode.SETTLED);
+
+        if (userSpecifiedSenderSettlementMode != null) {
+            receiver.setSenderSettleMode(userSpecifiedSenderSettlementMode);
+            if (SenderSettleMode.SETTLED.equals(userSpecifiedSenderSettlementMode)) {
+                setPresettle(true);
+            }
         } else {
-            receiver.setSenderSettleMode(SenderSettleMode.UNSETTLED);
+            if (isPresettle()) {
+                receiver.setSenderSettleMode(SenderSettleMode.SETTLED);
+            } else {
+                receiver.setSenderSettleMode(SenderSettleMode.UNSETTLED);
+            }
         }
-        receiver.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+
+        if (userSpecifiedReceiverSettlementMode != null) {
+            receiver.setReceiverSettleMode(userSpecifiedReceiverSettlementMode);
+        } else {
+            receiver.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+        }
 
         setEndpoint(receiver);
 
@@ -788,7 +826,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     protected void configureSource(Source source) {
-        Map<Symbol, DescribedType> filters = new HashMap<Symbol, DescribedType>();
+        Map<Symbol, DescribedType> filters = new HashMap<>();
         Symbol[] outcomes = new Symbol[]{Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL,
                                          Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
 

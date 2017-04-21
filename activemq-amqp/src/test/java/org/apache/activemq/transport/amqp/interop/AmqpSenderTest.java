@@ -37,6 +37,8 @@ import org.apache.activemq.transport.amqp.client.AmqpSupport;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
+import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
 import org.junit.Test;
@@ -49,6 +51,7 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateQueueSender() throws Exception {
         AmqpClient client = createAmqpClient();
+
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
@@ -80,6 +83,87 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         assertEquals(1, brokerService.getAdminView().getTopicProducers().length);
         sender.close();
         assertEquals(0, brokerService.getAdminView().getTopicProducers().length);
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testSenderSettlementModeSettledIsHonored() throws Exception {
+        doTestSenderSettlementModeIsHonored(SenderSettleMode.SETTLED);
+    }
+
+    @Test(timeout = 60000)
+    public void testSenderSettlementModeUnsettledIsHonored() throws Exception {
+        doTestSenderSettlementModeIsHonored(SenderSettleMode.UNSETTLED);
+    }
+
+    @Test(timeout = 60000)
+    public void testSenderSettlementModeMixedIsHonored() throws Exception {
+        doTestSenderSettlementModeIsHonored(SenderSettleMode.MIXED);
+    }
+
+    public void doTestSenderSettlementModeIsHonored(SenderSettleMode settleMode) throws Exception {
+        AmqpClient client = createAmqpClient();
+
+        client.setTraceFrames(true);
+
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerService.getAdminView().getQueues().length);
+
+        AmqpSender sender = session.createSender(
+            "queue://" + getTestName(), settleMode, ReceiverSettleMode.FIRST);
+
+        assertEquals(1, brokerService.getAdminView().getQueues().length);
+        assertNotNull(getProxyToQueue(getTestName()));
+        assertEquals(1, brokerService.getAdminView().getQueueProducers().length);
+
+        assertEquals(settleMode, sender.getEndpoint().getRemoteSenderSettleMode());
+
+        AmqpMessage message = new AmqpMessage();
+        message.setText("Test-Message");
+        sender.send(message);
+
+        sender.close();
+        assertEquals(0, brokerService.getAdminView().getQueueProducers().length);
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testReceiverSettlementModeSetToFirst() throws Exception {
+        doTestReceiverSettlementModeForcedToFirst(ReceiverSettleMode.FIRST);
+    }
+
+    @Test(timeout = 60000)
+    public void testReceiverSettlementModeSetToSecond() throws Exception {
+        doTestReceiverSettlementModeForcedToFirst(ReceiverSettleMode.SECOND);
+    }
+
+    /*
+     * The Broker does not currently support ReceiverSettleMode of SECOND so we ensure that
+     * it always drops that back to FIRST to let the client know.  The client will need to
+     * check and react accordingly.
+     */
+    private void doTestReceiverSettlementModeForcedToFirst(ReceiverSettleMode modeToUse) throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerService.getAdminView().getQueues().length);
+
+        AmqpSender sender = session.createSender(
+            "queue://" + getTestName(), SenderSettleMode.UNSETTLED, modeToUse);
+
+        assertEquals(1, brokerService.getAdminView().getQueues().length);
+        assertNotNull(getProxyToQueue(getTestName()));
+        assertEquals(1, brokerService.getAdminView().getQueueProducers().length);
+
+        assertEquals(ReceiverSettleMode.FIRST, sender.getEndpoint().getRemoteReceiverSettleMode());
+
+        sender.close();
+        assertEquals(0, brokerService.getAdminView().getQueueProducers().length);
 
         connection.close();
     }

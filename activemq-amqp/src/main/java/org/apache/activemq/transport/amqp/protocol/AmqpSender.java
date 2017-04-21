@@ -52,6 +52,7 @@ import org.apache.qpid.proton.amqp.transaction.TransactionalState;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Link;
@@ -77,8 +78,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
     private final OutboundTransformer outboundTransformer = new AutoOutboundTransformer();
     private final AmqpTransferTagGenerator tagCache = new AmqpTransferTagGenerator();
-    private final LinkedList<MessageDispatch> outbound = new LinkedList<MessageDispatch>();
-    private final LinkedList<Delivery> dispatchedInTx = new LinkedList<Delivery>();
+    private final LinkedList<MessageDispatch> outbound = new LinkedList<>();
+    private final LinkedList<Delivery> dispatchedInTx = new LinkedList<>();
 
     private final ConsumerInfo consumerInfo;
     private AbstractSubscription subscription;
@@ -106,8 +107,14 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     public AmqpSender(AmqpSession session, Sender endpoint, ConsumerInfo consumerInfo) {
         super(session, endpoint);
 
+        // We don't support second so enforce it as First and let remote decide what to do
+        this.endpoint.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+
+        // Match what the sender mode is
+        this.endpoint.setSenderSettleMode(endpoint.getRemoteSenderSettleMode());
+
         this.consumerInfo = consumerInfo;
-        this.presettle = getEndpoint().getRemoteSenderSettleMode() == SenderSettleMode.SETTLED;
+        this.presettle = getEndpoint().getSenderSettleMode() == SenderSettleMode.SETTLED;
     }
 
     @Override

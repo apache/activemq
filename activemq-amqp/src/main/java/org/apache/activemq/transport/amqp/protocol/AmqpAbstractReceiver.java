@@ -18,6 +18,7 @@ package org.apache.activemq.transport.amqp.protocol;
 
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
 import org.fusesource.hawtbuf.Buffer;
@@ -47,6 +48,12 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
     public AmqpAbstractReceiver(AmqpSession session, Receiver endpoint) {
         super(session, endpoint);
         this.configuredCredit = session.getConnection().getConfiguredReceiverCredit();
+
+        // We don't support second so enforce it as First and let remote decide what to do
+        this.endpoint.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+
+        // Match what the sender mode is
+        this.endpoint.setSenderSettleMode(endpoint.getRemoteSenderSettleMode());
     }
 
     @Override
