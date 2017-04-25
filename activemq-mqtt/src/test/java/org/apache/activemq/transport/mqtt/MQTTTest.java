@@ -1961,4 +1961,31 @@ public class MQTTTest extends MQTTTestSupport {
 
         connection.disconnect();
     }
+
+    @Test
+    public void testConnectWithLargePassword() throws Exception {
+       for (String version : Arrays.asList("3.1", "3.1.1")) {
+          String longString = new String(new char[65535]);
+
+          BlockingConnection connection = null;
+          try {
+             MQTT mqtt = createMQTTConnection("test-" + version, true);
+             mqtt.setUserName(longString);
+             mqtt.setPassword(longString);
+             mqtt.setConnectAttemptsMax(1);
+             mqtt.setVersion(version);
+             connection = mqtt.blockingConnection();
+             connection.connect();
+             final BlockingConnection con = connection;
+             assertTrue(Wait.waitFor(new Wait.Condition() {
+                 @Override
+                 public boolean isSatisified() throws Exception {
+                     return con.isConnected();
+                 }
+             }));
+          } finally {
+             if (connection != null && connection.isConnected()) connection.disconnect();
+          }
+       }
+    }
 }

@@ -16,30 +16,32 @@
  */
 package org.apache.activemq.transport.protocol;
 
+import java.nio.ByteBuffer;
+
 /**
  *
  *
  */
 public class MqttProtocolVerifier implements ProtocolVerifier {
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.broker.transport.protocol.ProtocolVerifier#isProtocol(byte[])
-     */
     @Override
     public boolean isProtocol(byte[] value) {
-        boolean mqtt311 = value[4] == 77 && // M
-                value[5] == 81 && // Q
-                value[6] == 84 && // T
-                value[7] == 84;   // T
+       ByteBuffer buf = ByteBuffer.wrap(value);
 
-        boolean mqtt31  = value[4] == 77  && // M
-                        value[5] == 81  && // Q
-                        value[6] == 73  && // I
-                        value[7] == 115;   // s
-
-        return mqtt311 || mqtt31;
+       if (!(buf.get() == 16 && validateRemainingLength(buf) && buf.get() == (byte) 0)) {
+           return false;
+       }
+       byte b = buf.get() ;
+       return ((b == 4 || b == 6) && (buf.get() == 77));
     }
 
-
-
+    private boolean validateRemainingLength(ByteBuffer buffer) {
+       byte msb = (byte) 0b10000000;
+       for (byte i = 0; i < 4; i++) {
+          if ((buffer.get() & msb) != msb) {
+             return true;
+          }
+       }
+       return false;
+    }
 }
