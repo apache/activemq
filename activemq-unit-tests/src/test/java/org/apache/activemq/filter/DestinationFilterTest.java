@@ -20,13 +20,46 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
 import junit.framework.TestCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DestinationFilterTest extends TestCase {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DestinationFilterTest.class);
+
+    public void testSuffixFilter() throws Exception {
+        DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue("<"));
+        assertTrue("Filter not parsed into wrong type: " + filter.getClass(), filter instanceof SuffixDestinationFilter);
+        assertFalse("Filter matched wrong destination type", filter.matches(new ActiveMQTopic("A")));
+        assertTrue("Filter is not wildcard", filter.isWildcard());
+        assertMatches("<", "A");
+        assertMatches("<", "A.B");
+        assertMatches("<.B", "A.B");
+        assertNotMatches("<.B", "A.B.C");
+        assertMatches("<.<.B", "B");
+        assertMatches("<.<.B", "A.B");
+        assertNotMatches("<.<.B", "A.B.C");
+        assertMatches("<.B.C", "A.B.C");
+
+        assertMatches("<.B.C", "*.C");
+        assertMatches("<.*.C", "B.C");
+    }
+
+    private void assertMatches(String pattern, String name) {
+        DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue(pattern));
+        LOGGER.info("Checking name {} against filter {}...", name, filter);
+        assertTrue("Filter '" + pattern + "' did not match '" + name + "'.", filter.matches(new ActiveMQQueue(name)));
+    }
+
+    private void assertNotMatches(String pattern, String name) {
+        DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue(pattern));
+        LOGGER.info("Checking name {} against filter {}...", name, filter);
+        assertFalse("Filter '" + pattern + "' matched '" + name + "'.", filter.matches(new ActiveMQQueue(name)));
+    }
 
 	public void testPrefixFilter() throws Exception {
 		DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue(">"));
 		assertTrue("Filter not parsed well: " + filter.getClass(), filter instanceof PrefixDestinationFilter);
-		System.out.println(filter);
 		assertFalse("Filter matched wrong destination type", filter.matches(new ActiveMQTopic(">")));
 	}
 

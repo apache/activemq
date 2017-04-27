@@ -28,6 +28,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
  */
 public abstract class DestinationFilter implements BooleanExpression {
 
+    public static final String ANY_ANCESTOR = "<";
     public static final String ANY_DESCENDENT = ">";
     public static final String ANY_CHILD = "*";
 
@@ -55,6 +56,10 @@ public abstract class DestinationFilter implements BooleanExpression {
         String[] paths = DestinationPath.getDestinationPaths(destination);
         int idx = paths.length - 1;
         if (idx >= 0) {
+            if(ANY_ANCESTOR.equals(paths[0])) {
+                return new SuffixDestinationFilter(paths, destination.getDestinationType());
+            }
+
             String lastPath = paths[idx];
             if (lastPath.equals(ANY_DESCENDENT)) {
                 return new PrefixDestinationFilter(paths, destination.getDestinationType());
