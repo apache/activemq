@@ -488,8 +488,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     while (originalTransport instanceof TransportFilter) {
                         originalTransport = ((TransportFilter) originalTransport).getNext();
                     }
-                    if (originalTransport instanceof SslTransport) {
-                        X509Certificate[] peerCerts = ((SslTransport) originalTransport).getPeerCertificates();
+                    if (originalTransport instanceof TcpTransport) {
+                        X509Certificate[] peerCerts = originalTransport.getPeerCertificates();
                         localConnectionInfo.setTransportContext(peerCerts);
                     }
                     // sync requests that may fail
@@ -513,8 +513,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         duplexLocalConnectionInfo.setUserName(configuration.getUserName());
                         duplexLocalConnectionInfo.setPassword(configuration.getPassword());
 
-                        if (originalTransport instanceof SslTransport) {
-                            X509Certificate[] peerCerts = ((SslTransport) originalTransport).getPeerCertificates();
+                        if (originalTransport instanceof TcpTransport) {
+                            X509Certificate[] peerCerts = originalTransport.getPeerCertificates();
                             duplexLocalConnectionInfo.setTransportContext(peerCerts);
                         }
                         // sync requests that may fail
