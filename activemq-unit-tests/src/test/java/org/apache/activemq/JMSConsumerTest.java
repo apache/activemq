@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
+import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
@@ -161,7 +162,9 @@ public class JMSConsumerTest extends JmsTestSupport {
                     if (count % 200 == 0) {
                         // ensure there are some outstanding messages
                         // ack every 200
-                        message.acknowledge();
+                        try {
+                            message.acknowledge();
+                        } catch (IllegalStateException okForAck) {}
                     }
                 } catch (Exception e) {
                     LOG.error("Exception on close or ack:", e);
