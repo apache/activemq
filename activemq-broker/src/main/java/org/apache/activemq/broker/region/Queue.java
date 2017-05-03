@@ -38,6 +38,7 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -114,6 +115,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     // Messages that are paged in but have not yet been targeted at a subscription
     private final ReentrantReadWriteLock pagedInPendingDispatchLock = new ReentrantReadWriteLock();
     protected QueueDispatchPendingList dispatchPendingList = new QueueDispatchPendingList();
+    private AtomicInteger pendingSends = new AtomicInteger(0);
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new CachedMessageGroupMapFactory();
@@ -149,7 +151,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     private final Object iteratingMutex = new Object();
 
-
+    // gate on enabling cursor cache to ensure no outstanding sync
+    // send before async sends resume
+    public boolean singlePendingSend() {
+        return pendingSends.get() <= 1;
+    }
 
     class TimeoutMessage implements Delayed {
 
@@ -825,6 +831,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         ListenableFuture<Object> result = null;
 
         producerExchange.incrementSend();
+        pendingSends.incrementAndGet();
         do {
             checkUsage(context, producerExchange, message);
             message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
@@ -845,6 +852,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     // we may have a store in inconsistent state, so reset the cursor
                     // before restarting normal broker operations
                     resetNeeded = true;
+                    pendingSends.decrementAndGet();
                     throw e;
                 }
             }
@@ -1837,6 +1845,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     final void messageSent(final ConnectionContext context, final Message msg) throws Exception {
+        pendingSends.decrementAndGet();
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         destinationStatistics.getMessageSize().addSize(msg.getSize());
@@ -1983,7 +1992,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         // store should have trapped duplicate in it's index, or cursor audit trapped insert
                         // or producerBrokerExchange suppressed send.
                         // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
-                        LOG.warn("{}, duplicate message {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessage());
+                        LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
                         if (store != null) {
                             ConnectionContext connectionContext = createConnectionContext();
                             dropMessage(ref);
