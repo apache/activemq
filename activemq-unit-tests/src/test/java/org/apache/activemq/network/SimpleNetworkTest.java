@@ -258,6 +258,10 @@ public class SimpleNetworkTest {
                 return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
             }
         }, 10000, 500));
+
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            assertNotNull("message count: " + i, remoteConsumer.receive(2500));
+        }
         remoteConsumer.close();
     }
 
@@ -287,6 +291,10 @@ public class SimpleNetworkTest {
                 return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
             }
         }, 10000, 500));
+
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            assertNotNull("message count: " + i, remoteConsumer.receive(2500));
+        }
         remoteConsumer.close();
     }
 
