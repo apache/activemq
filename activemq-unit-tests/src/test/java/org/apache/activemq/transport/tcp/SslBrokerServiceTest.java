@@ -68,7 +68,7 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         KeyManager[] km = getKeyManager();
         TrustManager[] tm = getTrustManager();
         connector = service.addSslConnector(getBindLocation(), km, tm, null);
-        limitedCipherSuites = service.addSslConnector("ssl://localhost:0?transport.enabledCipherSuites=SSL_RSA_WITH_RC4_128_SHA,SSL_DH_anon_WITH_3DES_EDE_CBC_SHA", km, tm, null);
+        limitedCipherSuites = service.addSslConnector("ssl://localhost:0?transport.enabledCipherSuites=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", km, tm, null);
         needClientAuthConnector = service.addSslConnector("ssl://localhost:0?transport.needClientAuth=true", km, tm, null);
         
         // for client side
@@ -113,7 +113,7 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         }
 
         // ok with the enabled one
-        makeSSLConnection(context, new String[]{ "SSL_RSA_WITH_RC4_128_SHA" }, limitedCipherSuites);
+        makeSSLConnection(context, new String[]{ "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256" }, limitedCipherSuites);
     }
 
     private void makeSSLConnection(SSLContext context, String enabledSuites[], TransportConnector connector) throws Exception,
