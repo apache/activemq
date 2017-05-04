@@ -45,12 +45,13 @@ public class AmqpWireFormat implements WireFormat {
     public static final int DEFAULT_IDLE_TIMEOUT = 30000;
     public static final int DEFAULT_PRODUCER_CREDIT = 1000;
     public static final boolean DEFAULT_ALLOW_NON_SASL_CONNECTIONS = false;
+    public static final int DEFAULT_ANQP_FRAME_SIZE = NO_AMQP_MAX_FRAME_SIZE;
 
     private static final int SASL_PROTOCOL = 3;
 
     private int version = 1;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
-    private int maxAmqpFrameSize = NO_AMQP_MAX_FRAME_SIZE;
+    private int maxAmqpFrameSize = DEFAULT_ANQP_FRAME_SIZE;
     private int connectAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
     private int idelTimeout = DEFAULT_IDLE_TIMEOUT;
     private int producerCredit = DEFAULT_PRODUCER_CREDIT;

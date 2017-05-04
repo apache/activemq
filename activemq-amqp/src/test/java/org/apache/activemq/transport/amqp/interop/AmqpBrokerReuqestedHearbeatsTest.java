@@ -44,7 +44,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
 
-    private final int TEST_IDLE_TIMEOUT = 3000;
+    private final int TEST_IDLE_TIMEOUT = 1000;
 
     @Parameters(name="connector={0}")
     public static Collection<Object[]> data() {
@@ -165,7 +165,7 @@ public class AmqpBrokerReuqestedHearbeatsTest extends AmqpClientTestSupport {
         connection.connect();
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
-        assertFalse(disconnected.await(10, TimeUnit.SECONDS));
+        assertFalse(disconnected.await(5, TimeUnit.SECONDS));
 
         connection.close();
 

@@ -681,6 +681,12 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     //----- Private implementation details -----------------------------------//
 
     @Override
+    protected void doOpen() {
+        getEndpoint().setIncomingCapacity(Integer.MAX_VALUE);
+        super.doOpen();
+    }
+
+    @Override
     protected void doOpenInspection() {
         try {
             getStateInspector().inspectOpenedResource(getSession());

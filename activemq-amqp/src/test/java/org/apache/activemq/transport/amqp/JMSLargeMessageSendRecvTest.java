@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -29,13 +32,32 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JMSLargeMessageSendRecvTest extends AmqpTestSupport {
+@RunWith(Parameterized.class)
+public class JMSLargeMessageSendRecvTest extends AmqpClientTestSupport {
+
+    @Parameters(name="{0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+            {"amqp", false},
+            {"amqp+ws", false},
+            {"amqp+ssl", true},
+            {"amqp+wss", true}
+        });
+    }
+
+    public JMSLargeMessageSendRecvTest(String connectorScheme, boolean secure) {
+        super(connectorScheme, secure);
+    }
 
     @Rule
     public TestName testName = new TestName();
@@ -77,7 +99,7 @@ public class JMSLargeMessageSendRecvTest extends AmqpTestSupport {
         String payload = createLargeString(expectedSize);
         assertEquals(expectedSize, payload.getBytes().length);
 
-        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI);
+        Connection connection = JMSClientContext.INSTANCE.createConnection(getBrokerAmqpConnectionURI());
         long startTime = System.currentTimeMillis();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(testName.getMethodName());
