@@ -112,7 +112,7 @@ public class WSServlet extends WebSocketServlet implements BrokerServiceAware {
                 switch (requestedProtocol) {
                     case MQTT:
                         socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
-                        ((MQTTSocket) socket).setTransportOptions(new HashMap<String, Object>(transportOptions));
+                        ((MQTTSocket) socket).setTransportOptions(new HashMap<>(transportOptions));
                         ((MQTTSocket) socket).setPeerCertificates(req.getCertificates());
                         resp.setAcceptedSubProtocol(getAcceptedSubProtocol(mqttProtocols, req.getSubProtocols(), "mqtt"));
                         break;

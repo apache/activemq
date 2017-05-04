@@ -28,11 +28,16 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.amqp.AmqpSupport;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
+import org.apache.activemq.transport.amqp.client.AmqpMessage;
+import org.apache.activemq.transport.amqp.client.AmqpReceiver;
+import org.apache.activemq.transport.amqp.client.AmqpSender;
+import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
@@ -257,5 +262,43 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
         connection1.close();
         assertEquals(0, getProxyToBroker().getCurrentConnectionsCount());
+    }
+
+    @Test(timeout = 60000)
+    public void testSimpleSendOneReceive() throws Exception {
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+
+        AmqpMessage message = new AmqpMessage();
+
+        final int PAYLOAD_SIZE = 1024 * 1024;
+
+        byte[] payload = new byte[PAYLOAD_SIZE];
+        for (int i = 0; i < PAYLOAD_SIZE; i++) {
+            payload[i] = (byte) (i % PAYLOAD_SIZE);
+        }
+
+        message.setMessageId("msg" + 1);
+        message.setMessageAnnotation("serialNo", 1);
+        message.setBytes(payload);
+
+        sender.send(message);
+        sender.close();
+
+        LOG.info("Attempting to read message with receiver");
+        receiver.flow(2);
+        AmqpMessage received = receiver.receive(10, TimeUnit.SECONDS);
+        assertNotNull("Should have read message", received);
+        assertEquals("msg1", received.getMessageId());
+        received.accept();
+
+        receiver.close();
+
+        connection.close();
     }
 }

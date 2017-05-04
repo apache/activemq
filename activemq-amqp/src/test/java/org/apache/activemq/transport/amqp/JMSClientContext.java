@@ -168,9 +168,39 @@ public class JMSClientContext {
     private ConnectionFactory createConnectionFactory(
         URI remoteURI, String username, String password, boolean syncPublish) {
 
-        boolean useSSL = remoteURI.getScheme().toLowerCase().contains("ssl");
+        String clientScheme;
+        boolean useSSL = false;
 
-        String amqpURI = (useSSL ? "amqps://" : "amqp://") + remoteURI.getHost() + ":" + remoteURI.getPort();
+        switch (remoteURI.getScheme()) {
+            case "tcp" :
+            case "amqp":
+            case "auto":
+            case "amqp+nio":
+            case "auto+nio":
+                clientScheme = "amqp://";
+                break;
+            case "ssl":
+            case "amqp+ssl":
+            case "auto+ssl":
+            case "amqp+nio+ssl":
+            case "auto+nio+ssl":
+                clientScheme = "amqps://";
+                useSSL = true;
+                break;
+            case "ws":
+            case "amqp+ws":
+                clientScheme = "amqpws://";
+                break;
+            case "wss":
+            case "amqp+wss":
+                clientScheme = "amqpwss://";
+                useSSL = true;
+                break;
+            default:
+                clientScheme = "amqp://";
+        }
+
+        String amqpURI = clientScheme + remoteURI.getHost() + ":" + remoteURI.getPort();
 
         if (useSSL) {
             amqpURI += "?transport.verifyHost=false";

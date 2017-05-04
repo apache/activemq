@@ -100,6 +100,11 @@ public class AmqpWSTransport extends TransportSupport implements WSTransport, AM
     }
 
     @Override
+    public int getMaxFrameSize() {
+        return (int) Math.min(((AmqpWireFormat) getWireFormat()).getMaxFrameSize(), Integer.MAX_VALUE);
+    }
+
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         // Currently nothing needed here since we have no async workers.
     }

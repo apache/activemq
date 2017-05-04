@@ -56,6 +56,11 @@ public interface WSTransport extends Transport {
     }
 
     /**
+     * @return the maximum frame size allowed for this WS Transport.
+     */
+    int getMaxFrameSize();
+
+    /**
      * @return the WS sub-protocol that this transport is supplying.
      */
     String getSubProtocol();

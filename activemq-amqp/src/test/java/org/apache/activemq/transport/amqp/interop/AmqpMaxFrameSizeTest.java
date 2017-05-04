@@ -43,6 +43,8 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
 
+    private final int TEST_IDLE_TIMEOUT = 500;
+
     private final String testName;
     private final int maxFrameSize;
     private final int maxAmqpFrameSize;
@@ -54,6 +56,8 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
                 { "amqp-> MFS < MAFS", "amqp", false, 2048, 1024 },
                 { "amqp+nio-> MFS > MAFS", "amqp+nio", false, 1024, 2048 },
                 { "amqp+nio-> MFS < MAFS", "amqp+nio", false, 2048, 1024 },
+                { "amqp+ws-> MFS > MAFS", "amqp+ws", false, 1024, 2048 },
+                { "amqp+ws-> MFS < MAFS", "amqp+ws", false, 2048, 1024 },
             });
     }
 
@@ -89,12 +93,13 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
             }
         });
 
+        connection.setIdleTimeout(TEST_IDLE_TIMEOUT);
         connection.connect();
 
         AmqpSession session = connection.createSession();
         AmqpSender sender = session.createSender("queue://" + getTestName(), true);
 
-        byte[] payload = new byte[maxFrameSize];
+        byte[] payload = new byte[maxFrameSize * 2];
         for (int i = 0; i < payload.length; ++i) {
             payload[i] = 42;
         }
@@ -104,7 +109,7 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
 
         sender.send(message);
 
-        assertTrue("Connection should have failed", failed.await(10, TimeUnit.SECONDS));
+        assertTrue("Connection should have failed", failed.await(30, TimeUnit.SECONDS));
 
         assertNotNull(getProxyToQueue(getTestName()));
         assertEquals(0, getProxyToQueue(getTestName()).getQueueSize());
