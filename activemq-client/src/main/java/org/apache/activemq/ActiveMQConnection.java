@@ -1555,6 +1555,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         doCleanup(false);
     }
 
+    public boolean isUserSpecifiedClientID() {
+        return userSpecifiedClientID;
+    }
+
     public void doCleanup(boolean removeConnection) throws JMSException {
         if (advisoryConsumer != null && !isTransportFailed()) {
             advisoryConsumer.dispose();
