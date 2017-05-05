@@ -82,6 +82,7 @@ import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
@@ -1244,12 +1245,19 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 case KAHA_UPDATE_MESSAGE_COMMAND:
                     addMessage = ((KahaUpdateMessageCommand) command).getMessage();
                     break;
-                default:
+                case KAHA_ADD_MESSAGE_COMMAND:
                     addMessage = (KahaAddMessageCommand) command;
+                    break;
+                default:
+                    throw new IOException("Could not load journal record, unexpected command type: " + command.type() + " at location: " + location);
+            }
+            if (!addMessage.hasMessage()) {
+                throw new IOException("Could not load journal record, null message content at location: " + location);
             }
             Message msg = (Message) wireFormat.unmarshal(new DataInputStream(addMessage.getMessage().newInput()));
             return msg;
-        } catch (IOException ioe) {
+        } catch (Throwable t) {
+            IOException ioe = IOExceptionSupport.create("Unexpected error on journal read at: " + location , t);
             LOG.error("Failed to load message at: {}", location , ioe);
             brokerService.handleIOException(ioe);
             throw ioe;

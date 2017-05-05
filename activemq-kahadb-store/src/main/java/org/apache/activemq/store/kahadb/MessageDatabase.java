@@ -1170,7 +1170,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             try {
                 is.close();
             } catch (IOException e) {}
-            throw new IOException("Could not load journal record. Invalid location: "+location);
+            throw new IOException("Could not load journal record, null type information from: " + readByte + " at location: "+location);
         }
         JournalCommand<?> message = (JournalCommand<?>)type.createMessage();
         message.mergeFramed(is);
