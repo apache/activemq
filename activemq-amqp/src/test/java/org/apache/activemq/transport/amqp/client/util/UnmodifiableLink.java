@@ -20,6 +20,7 @@ import java.util.EnumSet;
 import java.util.Map;
 
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -301,6 +302,21 @@ public class UnmodifiableLink implements Link {
 
     @Override
     public void setOfferedCapabilities(Symbol[] capabilities) {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
+
+    @Override
+    public UnsignedLong getMaxMessageSize() {
+        return link.getMaxMessageSize();
+    }
+
+    @Override
+    public UnsignedLong getRemoteMaxMessageSize() {
+        return link.getRemoteMaxMessageSize();
+    }
+
+    @Override
+    public void setMaxMessageSize(UnsignedLong maxMessageSize) {
         throw new UnsupportedOperationException("Cannot alter the Link state");
     }
 }
