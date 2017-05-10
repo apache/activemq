@@ -22,6 +22,8 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.junit.After;
 import org.junit.Test;
@@ -67,10 +69,12 @@ public class JournalCorruptionExceptionTest {
     public static Iterable<Object[]> parameters() {
         // corruption can be valid record type values
         return Arrays.asList(new Object[][]{
+                {Byte.valueOf("0"), 6},
+                {Byte.valueOf("1"), 8},
+                {Byte.valueOf("-1"), 6},
                 {Byte.valueOf("0"), 10},
                 {Byte.valueOf("1"), 10},
-                {Byte.valueOf("1"), 9},
-                {Byte.valueOf("2"), 20},
+                {Byte.valueOf("2"), 10},
                 {Byte.valueOf("-1"), 10}
         });
     }
@@ -143,10 +147,18 @@ public class JournalCorruptionExceptionTest {
         DataFile dataFile = (DataFile) files.toArray()[id];
 
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
-        int offset = 2415;
 
-        if (fillLength < 10) {
-            offset += (fillLength * 2);
+        final ByteSequence header = new ByteSequence(Journal.BATCH_CONTROL_RECORD_HEADER);
+        byte data[] = new byte[1024 * 20];
+        ByteSequence bs = new ByteSequence(data, 0, randomAccessFile.read(data, 0, data.length));
+
+        int offset = bs.indexOf(header, 0);
+
+        offset += Journal.BATCH_CONTROL_RECORD_SIZE;
+
+        if (fillLength >= 10) {
+            offset += 4; // location size
+            offset += 1; // location type
         }
 
         LOG.info("Whacking batch record in file:" + id + ", at offset: " + offset + " with fill:" + fill);
