@@ -35,7 +35,7 @@ import javax.jms.InvalidDestinationException;
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.IOExceptionSupport;
-import org.apache.activemq.transport.amqp.client.util.UnmodifiableReceiver;
+import org.apache.activemq.transport.amqp.client.util.UnmodifiableProxy;
 import org.apache.qpid.jms.JmsOperationTimedOutException;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
@@ -670,7 +670,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * @return an unmodifiable view of the underlying Receiver instance.
      */
     public Receiver getReceiver() {
-        return new UnmodifiableReceiver(getEndpoint());
+        return UnmodifiableProxy.receiverProxy(getEndpoint());
     }
 
     //----- Receiver configuration properties --------------------------------//

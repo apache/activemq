@@ -17,6 +17,8 @@
 package org.apache.activemq.transport.amqp.interop;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
@@ -43,6 +45,39 @@ public class AmqpSessionTest extends AmqpClientTestSupport {
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
         assertNotNull(session);
+
+        Session protonSession = session.getSession();
+
+        try {
+            protonSession.close();
+            fail("Should not be able to mutate.");
+        } catch (UnsupportedOperationException ex) {}
+
+        try {
+            protonSession.free();
+            fail("Should not be able to mutate.");
+        } catch (UnsupportedOperationException ex) {}
+
+        try {
+            protonSession.getConnection().close();
+            fail("Should not be able to mutate.");
+        } catch (UnsupportedOperationException ex) {}
+
+        try {
+            protonSession.open();
+            fail("Should not be able to mutate.");
+        } catch (UnsupportedOperationException ex) {}
+
+        assertNull(protonSession.getProperties());
+        assertNull(protonSession.getOfferedCapabilities());
+
+        assertNotNull(protonSession.getContext());
+
+        try {
+            protonSession.receiver("sender");
+            fail("Should not be able to mutate.");
+        } catch (UnsupportedOperationException ex) {}
+
         connection.close();
     }
 

@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.activemq.transport.amqp.client.util.UnmodifiableDelivery;
+import org.apache.activemq.transport.amqp.client.util.UnmodifiableProxy;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
@@ -104,7 +104,7 @@ public class AmqpMessage {
      */
     public Delivery getWrappedDelivery() {
         if (delivery != null) {
-            return new UnmodifiableDelivery(delivery);
+            return UnmodifiableProxy.deliveryProxy(delivery);
         }
 
         return null;

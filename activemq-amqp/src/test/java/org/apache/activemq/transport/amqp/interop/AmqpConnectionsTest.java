@@ -23,6 +23,7 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.VERSION;
 import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -82,6 +83,32 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         assertNotNull(connection);
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
+
+
+        Connection protonConnection = connection.getConnection();
+        org.apache.qpid.proton.engine.Transport protonTransport = protonConnection.getTransport();
+
+        protonTransport.getChannelMax();
+
+        assertNull(protonTransport.head());
+        assertNull(protonTransport.tail());
+        assertNull(protonTransport.getInputBuffer());
+        assertNull(protonTransport.getOutputBuffer());
+
+        try {
+            protonTransport.bind(protonConnection);
+            fail("Should not be able to mutate");
+        } catch (UnsupportedOperationException e) {}
+
+        try {
+            protonTransport.close();
+            fail("Should not be able to mutate");
+        } catch (UnsupportedOperationException e) {}
+
+        try {
+            protonTransport.setChannelMax(1);
+            fail("Should not be able to mutate");
+        } catch (UnsupportedOperationException e) {}
 
         connection.close();
 

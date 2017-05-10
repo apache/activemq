@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
-import org.apache.activemq.transport.amqp.client.util.UnmodifiableSession;
+import org.apache.activemq.transport.amqp.client.util.UnmodifiableProxy;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -597,7 +597,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     }
 
     public Session getSession() {
-        return new UnmodifiableSession(getEndpoint());
+        return UnmodifiableProxy.sessionProxy(getEndpoint());
     }
 
     public boolean isInTransaction() {

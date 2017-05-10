@@ -39,7 +39,7 @@ import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.IdGenerator;
 import org.apache.activemq.transport.amqp.client.util.NoOpAsyncResult;
-import org.apache.activemq.transport.amqp.client.util.UnmodifiableConnection;
+import org.apache.activemq.transport.amqp.client.util.UnmodifiableProxy;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
@@ -413,7 +413,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     public Connection getConnection() {
-        return new UnmodifiableConnection(getEndpoint());
+        return UnmodifiableProxy.connectionProxy(getEndpoint());
     }
 
     public AmqpConnectionListener getListener() {
