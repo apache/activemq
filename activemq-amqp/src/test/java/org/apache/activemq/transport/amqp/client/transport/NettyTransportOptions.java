@@ -30,6 +30,7 @@ public class NettyTransportOptions implements Cloneable {
     public static final int DEFAULT_SO_TIMEOUT = -1;
     public static final int DEFAULT_CONNECT_TIMEOUT = 60000;
     public static final int DEFAULT_TCP_PORT = 5672;
+    public static final boolean DEFAULT_TRACE_BYTES = false;
 
     public static final NettyTransportOptions INSTANCE = new NettyTransportOptions();
 
@@ -42,6 +43,7 @@ public class NettyTransportOptions implements Cloneable {
     private boolean tcpKeepAlive = DEFAULT_TCP_KEEP_ALIVE;
     private boolean tcpNoDelay = DEFAULT_TCP_NO_DELAY;
     private int defaultTcpPort = DEFAULT_TCP_PORT;
+    private boolean traceBytes = DEFAULT_TRACE_BYTES;
 
     /**
      * @return the currently set send buffer size in bytes.
@@ -161,6 +163,23 @@ public class NettyTransportOptions implements Cloneable {
 
     public void setDefaultTcpPort(int defaultTcpPort) {
         this.defaultTcpPort = defaultTcpPort;
+    }
+
+    /**
+     * @return true if the transport should enable byte tracing
+     */
+    public boolean isTraceBytes() {
+        return traceBytes;
+    }
+
+    /**
+     * Determines if the transport should add a logger for bytes in / out
+     *
+     * @param traceBytes
+     *      should the transport log the bytes in and out.
+     */
+    public void setTraceBytes(boolean traceBytes) {
+        this.traceBytes = traceBytes;
     }
 
     public boolean isSSL() {

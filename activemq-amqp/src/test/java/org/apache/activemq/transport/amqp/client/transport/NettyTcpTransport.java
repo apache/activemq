@@ -42,6 +42,7 @@ import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -53,7 +54,6 @@ public class NettyTcpTransport implements NettyTransport {
 
     private static final Logger LOG = LoggerFactory.getLogger(NettyTcpTransport.class);
 
-    private static final int QUIET_PERIOD = 20;
     private static final int SHUTDOWN_TIMEOUT = 100;
 
     protected Bootstrap bootstrap;
@@ -66,7 +66,7 @@ public class NettyTcpTransport implements NettyTransport {
     private final AtomicBoolean connected = new AtomicBoolean();
     private final AtomicBoolean closed = new AtomicBoolean();
     private final CountDownLatch connectLatch = new CountDownLatch(1);
-    private IOException failureCause;
+    private volatile IOException failureCause;
 
     /**
      * Create a new transport instance
@@ -163,7 +163,10 @@ public class NettyTcpTransport implements NettyTransport {
                 channel = null;
             }
             if (group != null) {
-                group.shutdownGracefully(QUIET_PERIOD, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+                Future<?> fut = group.shutdownGracefully(0, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+                if (!fut.awaitUninterruptibly(2 * SHUTDOWN_TIMEOUT)) {
+                    LOG.trace("Channel group shutdown failed to complete in allotted time");
+                }
                 group = null;
             }
 
@@ -196,11 +199,17 @@ public class NettyTcpTransport implements NettyTransport {
     public void close() throws IOException {
         if (closed.compareAndSet(false, true)) {
             connected.set(false);
-            if (channel != null) {
-                channel.close().syncUninterruptibly();
-            }
-            if (group != null) {
-                group.shutdownGracefully(QUIET_PERIOD, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+            try {
+                if (channel != null) {
+                    channel.close().syncUninterruptibly();
+                }
+            } finally {
+                if (group != null) {
+                    Future<?> fut = group.shutdownGracefully(0, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+                    if (!fut.awaitUninterruptibly(2 * SHUTDOWN_TIMEOUT)) {
+                        LOG.trace("Channel group shutdown failed to complete in allotted time");
+                    }
+                }
             }
         }
     }
@@ -369,6 +378,10 @@ public class NettyTcpTransport implements NettyTransport {
     private void configureChannel(final Channel channel, final SslHandler sslHandler) throws Exception {
         if (isSSL()) {
             channel.pipeline().addLast(sslHandler);
+        }
+
+        if (getTransportOptions().isTraceBytes()) {
+            channel.pipeline().addLast("logger", new LoggingHandler(getClass()));
         }
 
         addAdditionalHandlers(channel.pipeline());
