@@ -74,6 +74,11 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         super(connectorScheme, secure);
     }
 
+    @Override
+    protected String getAdditionalConfig() {
+        return "&wireFormat.maxAmqpFrameSize=1048576";
+    }
+
     @Test(timeout = 60000)
     public void testCanConnect() throws Exception {
         AmqpClient client = createAmqpClient();

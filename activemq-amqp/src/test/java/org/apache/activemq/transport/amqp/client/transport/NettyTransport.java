@@ -49,4 +49,8 @@ public interface NettyTransport {
 
     Principal getLocalPrincipal();
 
+    void setMaxFrameSize(int maxFrameSize);
+
+    int getMaxFrameSize();
+
 }

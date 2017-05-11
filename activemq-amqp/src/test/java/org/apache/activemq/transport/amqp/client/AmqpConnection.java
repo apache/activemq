@@ -132,6 +132,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         this.serializer.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
 
         this.transport.setTransportListener(this);
+        this.transport.setMaxFrameSize(getMaxFrameSize());
     }
 
     public void connect() throws Exception {

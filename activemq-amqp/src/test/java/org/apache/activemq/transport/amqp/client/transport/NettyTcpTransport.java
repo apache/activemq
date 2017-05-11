@@ -55,6 +55,7 @@ public class NettyTcpTransport implements NettyTransport {
     private static final Logger LOG = LoggerFactory.getLogger(NettyTcpTransport.class);
 
     private static final int SHUTDOWN_TIMEOUT = 100;
+    public static final int DEFAULT_MAX_FRAME_SIZE = 65535;
 
     protected Bootstrap bootstrap;
     protected EventLoopGroup group;
@@ -62,6 +63,7 @@ public class NettyTcpTransport implements NettyTransport {
     protected NettyTransportListener listener;
     protected final NettyTransportOptions options;
     protected final URI remote;
+    protected int maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
 
     private final AtomicBoolean connected = new AtomicBoolean();
     private final AtomicBoolean closed = new AtomicBoolean();
@@ -263,6 +265,20 @@ public class NettyTcpTransport implements NettyTransport {
         }
 
         return result;
+    }
+
+    @Override
+    public void setMaxFrameSize(int maxFrameSize) {
+        if (connected.get()) {
+            throw new IllegalStateException("Cannot change Max Frame Size while connected.");
+        }
+
+        this.maxFrameSize = maxFrameSize;
+    }
+
+    @Override
+    public int getMaxFrameSize() {
+        return maxFrameSize;
     }
 
     //----- Internal implementation details, can be overridden as needed -----//
