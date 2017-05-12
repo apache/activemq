@@ -416,4 +416,10 @@ public class HttpClientTransport extends HttpTransportSupport {
     public WireFormat getWireFormat() {
         return getTextWireFormat();
     }
+
+    @Override
+    protected String getSystemPropertyPrefix() {
+        return "http.";
+    }
+
 }
