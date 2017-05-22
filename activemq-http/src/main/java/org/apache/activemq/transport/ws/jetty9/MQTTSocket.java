@@ -21,26 +21,33 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.activemq.transport.mqtt.MQTTCodec;
 import org.apache.activemq.transport.ws.AbstractMQTTSocket;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.DataByteArrayInputStream;
 import org.fusesource.mqtt.codec.DISCONNECT;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener {
+public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFrameSink, WebSocketListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTSocket.class);
 
     private final int ORDERLY_CLOSE_TIMEOUT = 10;
     private Session session;
-    final AtomicBoolean receivedDisconnect = new AtomicBoolean();
+    private final AtomicBoolean receivedDisconnect = new AtomicBoolean();
+
+    private final MQTTCodec codec;
 
     public MQTTSocket(String remoteAddress) {
         super(remoteAddress);
+
+        this.codec = new MQTTCodec(this, getWireFormat());
     }
 
     @Override
@@ -78,11 +85,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
         protocolLock.lock();
         try {
             receiveCounter += length;
-            MQTTFrame frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(bytes, offset, length));
-            if (frame.messageType() == DISCONNECT.TYPE) {
-                receivedDisconnect.set(true);
-            }
-            getProtocolConverter().onMQTTCommand(frame);
+            codec.parse(new DataByteArrayInputStream(new Buffer(bytes, offset, length)), length);
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
         } finally {
@@ -126,5 +129,19 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
 
     private static int getDefaultSendTimeOut() {
         return Integer.getInteger("org.apache.activemq.transport.ws.MQTTSocket.sendTimeout", 30);
+    }
+
+    //----- MQTTCodec Frame Sink event point ---------------------------------//
+
+    @Override
+    public void onFrame(MQTTFrame mqttFrame) {
+        try {
+            if (mqttFrame.messageType() == DISCONNECT.TYPE) {
+                receivedDisconnect.set(true);
+            }
+            getProtocolConverter().onMQTTCommand(mqttFrame);
+        } catch (Exception e) {
+            onException(IOExceptionSupport.create(e));
+        }
     }
 }

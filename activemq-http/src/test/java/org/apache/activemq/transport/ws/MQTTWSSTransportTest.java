@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,7 +16,27 @@
  */
 package org.apache.activemq.transport.ws;
 
+import java.util.Arrays;
+import java.util.Collection;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
+@RunWith(Parameterized.class)
 public class MQTTWSSTransportTest extends MQTTWSTransportTest {
+
+    @Parameters(name="{0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+            {"complete-frames", false},
+            {"partial-frames", false}
+        });
+    }
+
+    public MQTTWSSTransportTest(String testName, boolean partialFrames) {
+        super(testName, partialFrames);
+    }
 
     @Override
     protected String getWSConnectorURI() {
