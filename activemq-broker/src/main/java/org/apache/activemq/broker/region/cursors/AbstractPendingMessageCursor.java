@@ -174,7 +174,17 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     @Override
     public boolean hasSpace() {
         // allow isFull to verify parent usage and otherwise enforce local memoryUsageHighWaterMark
-        return systemUsage != null ? (!isFull() && systemUsage.getMemoryUsage().getPercentUsage() < memoryUsageHighWaterMark) : true;
+        return systemUsage != null ? (!isParentFull() && systemUsage.getMemoryUsage().getPercentUsage() < memoryUsageHighWaterMark) : true;
+    }
+
+    private boolean isParentFull() {
+        boolean result = false;
+        if (systemUsage != null) {
+            if (systemUsage.getMemoryUsage().getParent() != null) {
+                return systemUsage.getMemoryUsage().getParent().getPercentUsage() >= 100;
+            }
+        }
+        return result;
     }
 
     @Override

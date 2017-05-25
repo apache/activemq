@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import static org.apache.activemq.broker.region.cursors.AbstractStoreCursor.gotToTheStore;
+import static org.apache.activemq.transaction.Transaction.IN_USE_STATE;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -667,9 +668,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                                 try {
                                     // While waiting for space to free up... the
-                                    // message may have expired.
+                                    // transaction may be done
+                                    if (message.isInTransaction()) {
+                                        if (context.getTransaction().getState() > IN_USE_STATE) {
+                                            throw new JMSException("Send transaction completed while waiting for space");
+                                        }
+                                    }
+
+                                    // the message may have expired.
                                     if (message.isExpired()) {
-                                        LOG.error("expired waiting for space..");
+                                        LOG.error("message expired waiting for space");
                                         broker.messageExpired(context, message, null);
                                         destinationStatistics.getExpired().increment();
                                     } else {
