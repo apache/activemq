@@ -191,7 +191,7 @@ public class FailoverTransport implements CompositeTransport {
         if (command.isResponse()) {
             Object object = null;
             synchronized (requestMap) {
-                object = requestMap.remove(Integer.valueOf(((Response) command).getCorrelationId()));
+                object = requestMap.remove(((Response) command).getCorrelationId());
             }
             if (object != null && object.getClass() == Tracked.class) {
                 ((Tracked) object).onResponses(command);
@@ -659,9 +659,9 @@ public class FailoverTransport implements CompositeTransport {
                         // it later.
                         synchronized (requestMap) {
                             if (tracked != null && tracked.isWaitingForResponse()) {
-                                requestMap.put(Integer.valueOf(command.getCommandId()), tracked);
+                                requestMap.put(command.getCommandId(), tracked);
                             } else if (tracked == null && command.isResponseRequired()) {
-                                requestMap.put(Integer.valueOf(command.getCommandId()), command);
+                                requestMap.put(command.getCommandId(), command);
                             }
                         }
 
@@ -683,7 +683,7 @@ public class FailoverTransport implements CompositeTransport {
                                 // map so that it is not sent 2 times on
                                 // recovery
                                 if (command.isResponseRequired()) {
-                                    requestMap.remove(Integer.valueOf(command.getCommandId()));
+                                    requestMap.remove(command.getCommandId());
                                 }
 
                                 // Rethrow the exception so it will handled by

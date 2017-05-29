@@ -125,21 +125,21 @@ public final class MarshallingSupport {
         if (value == null) {
             marshalNull(out);
         } else if (value.getClass() == Boolean.class) {
-            marshalBoolean(out, ((Boolean)value).booleanValue());
+            marshalBoolean(out, (Boolean) value);
         } else if (value.getClass() == Byte.class) {
-            marshalByte(out, ((Byte)value).byteValue());
+            marshalByte(out, (Byte) value);
         } else if (value.getClass() == Character.class) {
-            marshalChar(out, ((Character)value).charValue());
+            marshalChar(out, (Character) value);
         } else if (value.getClass() == Short.class) {
-            marshalShort(out, ((Short)value).shortValue());
+            marshalShort(out, (Short) value);
         } else if (value.getClass() == Integer.class) {
-            marshalInt(out, ((Integer)value).intValue());
+            marshalInt(out, (Integer) value);
         } else if (value.getClass() == Long.class) {
-            marshalLong(out, ((Long)value).longValue());
+            marshalLong(out, (Long) value);
         } else if (value.getClass() == Float.class) {
-            marshalFloat(out, ((Float)value).floatValue());
+            marshalFloat(out, (Float) value);
         } else if (value.getClass() == Double.class) {
-            marshalDouble(out, ((Double)value).doubleValue());
+            marshalDouble(out, (Double) value);
         } else if (value.getClass() == byte[].class) {
             marshalByteArray(out, (byte[])value);
         } else if (value.getClass() == String.class) {
@@ -166,28 +166,28 @@ public final class MarshallingSupport {
         byte type = in.readByte();
         switch (type) {
         case BYTE_TYPE:
-            value = Byte.valueOf(in.readByte());
+            value = in.readByte();
             break;
         case BOOLEAN_TYPE:
             value = in.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
             break;
         case CHAR_TYPE:
-            value = Character.valueOf(in.readChar());
+            value = in.readChar();
             break;
         case SHORT_TYPE:
-            value = Short.valueOf(in.readShort());
+            value = in.readShort();
             break;
         case INTEGER_TYPE:
-            value = Integer.valueOf(in.readInt());
+            value = in.readInt();
             break;
         case LONG_TYPE:
-            value = Long.valueOf(in.readLong());
+            value = in.readLong();
             break;
         case FLOAT_TYPE:
-            value = Float.valueOf(in.readFloat());
+            value = in.readFloat();
             break;
         case DOUBLE_TYPE:
-            value = Double.valueOf(in.readDouble());
+            value = in.readDouble();
             break;
         case BYTE_ARRAY_TYPE:
             value = new byte[in.readInt()];

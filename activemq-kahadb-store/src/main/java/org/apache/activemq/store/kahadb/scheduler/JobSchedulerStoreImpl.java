@@ -460,7 +460,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
     protected void incrementJournalCount(Transaction tx, Location location) throws IOException {
         int logId = location.getDataFileId();
         Integer val = metaData.getJournalRC().get(tx, logId);
-        int refCount = val != null ? val.intValue() + 1 : 1;
+        int refCount = val != null ? val + 1 : 1;
         metaData.getJournalRC().put(tx, logId, refCount);
     }
 

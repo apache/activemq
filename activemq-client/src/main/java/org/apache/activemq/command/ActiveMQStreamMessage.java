@@ -215,7 +215,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readBoolean();
             }
             if (type == MarshallingSupport.STRING_TYPE) {
-                return Boolean.valueOf(this.dataIn.readUTF()).booleanValue();
+                return Boolean.valueOf(this.dataIn.readUTF());
             }
             if (type == MarshallingSupport.NULL) {
                 this.dataIn.reset();
@@ -258,7 +258,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readByte();
             }
             if (type == MarshallingSupport.STRING_TYPE) {
-                return Byte.valueOf(this.dataIn.readUTF()).byteValue();
+                return Byte.valueOf(this.dataIn.readUTF());
             }
             if (type == MarshallingSupport.NULL) {
                 this.dataIn.reset();
@@ -311,7 +311,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readByte();
             }
             if (type == MarshallingSupport.STRING_TYPE) {
-                return Short.valueOf(this.dataIn.readUTF()).shortValue();
+                return Short.valueOf(this.dataIn.readUTF());
             }
             if (type == MarshallingSupport.NULL) {
                 this.dataIn.reset();
@@ -416,7 +416,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readByte();
             }
             if (type == MarshallingSupport.STRING_TYPE) {
-                return Integer.valueOf(this.dataIn.readUTF()).intValue();
+                return Integer.valueOf(this.dataIn.readUTF());
             }
             if (type == MarshallingSupport.NULL) {
                 this.dataIn.reset();
@@ -476,7 +476,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readByte();
             }
             if (type == MarshallingSupport.STRING_TYPE) {
-                return Long.valueOf(this.dataIn.readUTF()).longValue();
+                return Long.valueOf(this.dataIn.readUTF());
             }
             if (type == MarshallingSupport.NULL) {
                 this.dataIn.reset();
@@ -525,7 +525,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readFloat();
             }
             if (type == MarshallingSupport.STRING_TYPE) {
-                return Float.valueOf(this.dataIn.readUTF()).floatValue();
+                return Float.valueOf(this.dataIn.readUTF());
             }
             if (type == MarshallingSupport.NULL) {
                 this.dataIn.reset();
@@ -578,7 +578,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readFloat();
             }
             if (type == MarshallingSupport.STRING_TYPE) {
-                return Double.valueOf(this.dataIn.readUTF()).doubleValue();
+                return Double.valueOf(this.dataIn.readUTF());
             }
             if (type == MarshallingSupport.NULL) {
                 this.dataIn.reset();
@@ -808,28 +808,28 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readUTF();
             }
             if (type == MarshallingSupport.LONG_TYPE) {
-                return Long.valueOf(this.dataIn.readLong());
+                return this.dataIn.readLong();
             }
             if (type == MarshallingSupport.INTEGER_TYPE) {
-                return Integer.valueOf(this.dataIn.readInt());
+                return this.dataIn.readInt();
             }
             if (type == MarshallingSupport.SHORT_TYPE) {
-                return Short.valueOf(this.dataIn.readShort());
+                return this.dataIn.readShort();
             }
             if (type == MarshallingSupport.BYTE_TYPE) {
-                return Byte.valueOf(this.dataIn.readByte());
+                return this.dataIn.readByte();
             }
             if (type == MarshallingSupport.FLOAT_TYPE) {
-                return Float.valueOf(this.dataIn.readFloat());
+                return this.dataIn.readFloat();
             }
             if (type == MarshallingSupport.DOUBLE_TYPE) {
-                return Double.valueOf(this.dataIn.readDouble());
+                return this.dataIn.readDouble();
             }
             if (type == MarshallingSupport.BOOLEAN_TYPE) {
                 return this.dataIn.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
             }
             if (type == MarshallingSupport.CHAR_TYPE) {
-                return Character.valueOf(this.dataIn.readChar());
+                return this.dataIn.readChar();
             }
             if (type == MarshallingSupport.BYTE_ARRAY_TYPE) {
                 int len = this.dataIn.readInt();
@@ -1106,23 +1106,23 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
         } else if (value instanceof String) {
             writeString(value.toString());
         } else if (value instanceof Character) {
-            writeChar(((Character)value).charValue());
+            writeChar((Character) value);
         } else if (value instanceof Boolean) {
-            writeBoolean(((Boolean)value).booleanValue());
+            writeBoolean((Boolean) value);
         } else if (value instanceof Byte) {
-            writeByte(((Byte)value).byteValue());
+            writeByte((Byte) value);
         } else if (value instanceof Short) {
-            writeShort(((Short)value).shortValue());
+            writeShort((Short) value);
         } else if (value instanceof Integer) {
-            writeInt(((Integer)value).intValue());
+            writeInt((Integer) value);
         } else if (value instanceof Float) {
-            writeFloat(((Float)value).floatValue());
+            writeFloat((Float) value);
         } else if (value instanceof Double) {
-            writeDouble(((Double)value).doubleValue());
+            writeDouble((Double) value);
         } else if (value instanceof byte[]) {
             writeBytes((byte[])value);
         }else if (value instanceof Long) {
-            writeLong(((Long)value).longValue());
+            writeLong((Long) value);
         }else {
             throw new MessageFormatException("Unsupported Object type: " + value.getClass());
         }

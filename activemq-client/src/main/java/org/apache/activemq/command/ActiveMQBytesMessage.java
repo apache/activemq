@@ -778,21 +778,21 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         }
         initializeWriting();
         if (value instanceof Boolean) {
-            writeBoolean(((Boolean)value).booleanValue());
+            writeBoolean((Boolean) value);
         } else if (value instanceof Character) {
-            writeChar(((Character)value).charValue());
+            writeChar((Character) value);
         } else if (value instanceof Byte) {
-            writeByte(((Byte)value).byteValue());
+            writeByte((Byte) value);
         } else if (value instanceof Short) {
-            writeShort(((Short)value).shortValue());
+            writeShort((Short) value);
         } else if (value instanceof Integer) {
-            writeInt(((Integer)value).intValue());
+            writeInt((Integer) value);
         } else if (value instanceof Long) {
-            writeLong(((Long)value).longValue());
+            writeLong((Long) value);
         } else if (value instanceof Float) {
-            writeFloat(((Float)value).floatValue());
+            writeFloat((Float) value);
         } else if (value instanceof Double) {
-            writeDouble(((Double)value).doubleValue());
+            writeDouble((Double) value);
         } else if (value instanceof String) {
             writeUTF(value.toString());
         } else if (value instanceof byte[]) {

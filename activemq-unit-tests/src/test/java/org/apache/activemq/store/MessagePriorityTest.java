@@ -200,7 +200,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
     public void initCombosForTestQueues() {
         addCombinationValues("useCache", new Object[] {Boolean.TRUE, Boolean.FALSE});
-        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
+        addCombinationValues("deliveryMode", new Object[] {DeliveryMode.NON_PERSISTENT, DeliveryMode.PERSISTENT});
     }
 
     public void testQueues() throws Exception {
@@ -232,7 +232,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     public void initCombosForTestDurableSubs() {
-        addCombinationValues("prefetchVal", new Object[] {Integer.valueOf(1000), Integer.valueOf(MSG_NUM/4)});
+        addCombinationValues("prefetchVal", new Object[] {1000, MSG_NUM / 4});
     }
 
     public void testDurableSubs() throws Exception {
@@ -281,7 +281,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     public void initCombosForTestDurableSubsReconnect() {
-        addCombinationValues("prefetchVal", new Object[] {Integer.valueOf(1000), Integer.valueOf(MSG_NUM/2)});
+        addCombinationValues("prefetchVal", new Object[] {1000, MSG_NUM / 2});
         // REVISIT = is dispatchAsync = true a problem or is it just the test?
         addCombinationValues("dispatchAsync", new Object[] {Boolean.FALSE});
         addCombinationValues("useCache", new Object[] {Boolean.TRUE, Boolean.FALSE});
@@ -571,7 +571,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         addCombinationValues("useCache", new Object[] {Boolean.FALSE});
         // expiry processing can fill the cursor with a snapshot of the producer
         // priority, before producers are complete
-        addCombinationValues("expireMessagePeriod", new Object[] {Integer.valueOf(0)});
+        addCombinationValues("expireMessagePeriod", new Object[] {0});
     }
 
     public void testQueueBacklog() throws Exception {
@@ -611,7 +611,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         addCombinationValues("useCache", new Object[] {Boolean.FALSE});
         // expiry processing can fill the cursor with a snapshot of the producer
         // priority, before producers are complete
-        addCombinationValues("expireMessagePeriod", new Object[] {Integer.valueOf(0)});
+        addCombinationValues("expireMessagePeriod", new Object[] {0});
     }
 
     public void testLowThenHighBatch() throws Exception {
@@ -724,7 +724,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         addCombinationValues("useCache", new Object[] {Boolean.FALSE, Boolean.TRUE});
         // expiry processing can fill the cursor with a snapshot of the producer
         // priority, before producers are complete
-        addCombinationValues("expireMessagePeriod", new Object[] {Integer.valueOf(0)});
+        addCombinationValues("expireMessagePeriod", new Object[] {0});
     }
 
     public void testEveryXHi() throws Exception {

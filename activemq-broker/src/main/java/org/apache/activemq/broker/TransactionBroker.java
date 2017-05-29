@@ -160,7 +160,7 @@ public class TransactionBroker extends BrokerFilter {
         @Override
         public int hashCode() {
             return System.identityHashCode(destination) +
-                    System.identityHashCode(Boolean.valueOf(messageSend));
+                    System.identityHashCode(messageSend);
         }
 
         @Override

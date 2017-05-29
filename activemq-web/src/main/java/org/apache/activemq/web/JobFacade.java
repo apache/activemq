@@ -38,23 +38,23 @@ public class JobFacade {
     public long getDelay() {
         Long result = (Long) data.get("delay");
         if (result != null) {
-            return result.longValue();
+            return result;
         }
-        return 0l;
+        return 0L;
     }
 
     public long getPeriod() {
         Long result = (Long) data.get("period");
         if (result != null) {
-            return result.longValue();
+            return result;
         }
-        return 0l;
+        return 0L;
     }
 
     public int getRepeat() {
         Integer result = (Integer) data.get("repeat");
         if (result != null) {
-            return result.intValue();
+            return result;
         }
         return 0;
     }

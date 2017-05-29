@@ -165,9 +165,9 @@ public final class OpenTypeSupport {
             rc.put("JMSReplyTo",toString(m.getJMSReplyTo()));
             rc.put("JMSType", m.getJMSType());
             rc.put("JMSDeliveryMode", m.getJMSDeliveryMode() == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON-PERSISTENT");
-            rc.put("JMSExpiration", Long.valueOf(m.getJMSExpiration()));
-            rc.put("JMSPriority", Integer.valueOf(m.getJMSPriority()));
-            rc.put("JMSRedelivered", Boolean.valueOf(m.getJMSRedelivered()));
+            rc.put("JMSExpiration", m.getJMSExpiration());
+            rc.put("JMSPriority", m.getJMSPriority());
+            rc.put("JMSRedelivered", m.getJMSRedelivered());
             rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
             rc.put(CompositeDataConstants.JMSXGROUP_ID, m.getGroupID());
             rc.put(CompositeDataConstants.JMSXGROUP_SEQ, m.getGroupSequence());
@@ -288,9 +288,9 @@ public final class OpenTypeSupport {
             long length = 0;
             try {
                 length = m.getBodyLength();
-                rc.put(CompositeDataConstants.BODY_LENGTH, Long.valueOf(length));
+                rc.put(CompositeDataConstants.BODY_LENGTH, length);
             } catch (JMSException e) {
-                rc.put(CompositeDataConstants.BODY_LENGTH, Long.valueOf(0));
+                rc.put(CompositeDataConstants.BODY_LENGTH, 0L);
             }
             try {
                 byte preview[] = new byte[(int)Math.min(length, 255)];
@@ -302,7 +302,7 @@ public final class OpenTypeSupport {
                 // In 1.6 it seems it is supported.. but until then...
                 Byte data[] = new Byte[preview.length];
                 for (int i = 0; i < data.length; i++) {
-                    data[i] = Byte.valueOf(preview[i]);
+                    data[i] = preview[i];
                 }
 
                 rc.put(CompositeDataConstants.BODY_PREVIEW, data);
@@ -482,8 +482,8 @@ public final class OpenTypeSupport {
             SlowConsumerEntry entry = (SlowConsumerEntry) o;
             Map<String, Object> rc = super.getFields(o);
             rc.put("subscription", entry.getSubscription());
-            rc.put("slowCount", Integer.valueOf(entry.getSlowCount()));
-            rc.put("markCount", Integer.valueOf(entry.getMarkCount()));
+            rc.put("slowCount", entry.getSlowCount());
+            rc.put("markCount", entry.getMarkCount());
             return rc;
         }
     }

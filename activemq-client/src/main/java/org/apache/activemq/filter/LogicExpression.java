@@ -113,7 +113,7 @@ public abstract class LogicExpression implements BooleanExpression {
             boolean someNulls = false;
             for (BooleanExpression expression : expressions) {
                 Boolean lv = (Boolean)expression.evaluate(message);
-                if (lv != null && lv.booleanValue()) {
+                if (lv != null && lv) {
                     return Boolean.TRUE;
                 }
                 if (lv == null) {
@@ -154,7 +154,7 @@ public abstract class LogicExpression implements BooleanExpression {
             boolean someNulls = false;
             for (BooleanExpression expression : expressions) {
                 Boolean lv = (Boolean)expression.evaluate(message);
-                if (lv != null && !lv.booleanValue()) {
+                if (lv != null && !lv) {
                     return Boolean.FALSE;
                 }
                 if (lv == null) {

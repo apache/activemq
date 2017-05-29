@@ -76,7 +76,7 @@ public final class SimpleProducer {
         destinationName = args[0];
         LOG.info("Destination name is " + destinationName);
         if (args.length == 2) {
-            numMsgs = (Integer.valueOf(args[1])).intValue();
+            numMsgs = new Integer(args[1]);
         } else {
             numMsgs = 1;
         }

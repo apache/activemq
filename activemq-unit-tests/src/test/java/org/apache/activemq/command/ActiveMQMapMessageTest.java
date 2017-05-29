@@ -208,7 +208,7 @@ public class ActiveMQMapMessageTest {
         Boolean booleanValue = Boolean.TRUE;
         Byte byteValue = Byte.valueOf("1");
         byte[] bytesValue = new byte[3];
-        Character charValue = Character.valueOf('a');
+        Character charValue = 'a';
         Double doubleValue = Double.valueOf("1.5");
         Float floatValue = Float.valueOf("1.5");
         Integer intValue = Integer.valueOf("1");
@@ -237,7 +237,7 @@ public class ActiveMQMapMessageTest {
 
         assertTrue(msg.getObject("boolean") instanceof Boolean);
         assertEquals(msg.getObject("boolean"), booleanValue);
-        assertEquals(msg.getBoolean("boolean"), booleanValue.booleanValue());
+        assertEquals(msg.getBoolean("boolean"), booleanValue);
         assertTrue(msg.getObject("byte") instanceof Byte);
         assertEquals(msg.getObject("byte"), byteValue);
         assertEquals(msg.getByte("byte"), byteValue.byteValue());
@@ -249,10 +249,10 @@ public class ActiveMQMapMessageTest {
         assertEquals(msg.getChar("char"), charValue.charValue());
         assertTrue(msg.getObject("double") instanceof Double);
         assertEquals(msg.getObject("double"), doubleValue);
-        assertEquals(msg.getDouble("double"), doubleValue.doubleValue(), 0);
+        assertEquals(msg.getDouble("double"), doubleValue, 0);
         assertTrue(msg.getObject("float") instanceof Float);
         assertEquals(msg.getObject("float"), floatValue);
-        assertEquals(msg.getFloat("float"), floatValue.floatValue(), 0);
+        assertEquals(msg.getFloat("float"), floatValue, 0);
         assertTrue(msg.getObject("int") instanceof Integer);
         assertEquals(msg.getObject("int"), intValue);
         assertEquals(msg.getInt("int"), intValue.intValue());

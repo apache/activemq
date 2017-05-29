@@ -138,8 +138,8 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         String queueSearchSubtree = options.get(QUEUE_SEARCH_SUBTREE);
         topicSearchMatchingFormat = new MessageFormat(topicSearchMatching);
         queueSearchMatchingFormat = new MessageFormat(queueSearchMatching);
-        topicSearchSubtreeBool = Boolean.valueOf(topicSearchSubtree).booleanValue();
-        queueSearchSubtreeBool = Boolean.valueOf(queueSearchSubtree).booleanValue();
+        topicSearchSubtreeBool = Boolean.valueOf(topicSearchSubtree);
+        queueSearchSubtreeBool = Boolean.valueOf(queueSearchSubtree);
     }
 
     public Set<GroupPrincipal> getTempDestinationAdminACLs() {

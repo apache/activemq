@@ -28,7 +28,7 @@ public class ActiveMQWASInitialContextFactoryTest extends JNDITestSupport {
         originalEnvironment.put("java.naming.connectionFactoryNames", "ConnectionFactory");
         originalEnvironment.put("java.naming.topic.jms.systemMessageTopic", "jms/systemMessageTopic");
         originalEnvironment.put(Context.PROVIDER_URL, "tcp://localhost:61616;tcp://localhost:61617");
-        originalEnvironment.put("non-string", Integer.valueOf(43));
+        originalEnvironment.put("non-string", 43);
         originalEnvironment.put("java.naming.queue", "jms/systemMessageQueue");
 
         Hashtable<Object, Object> transformedEnvironment = new ActiveMQWASInitialContextFactory().transformEnvironment(originalEnvironment);

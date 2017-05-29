@@ -304,7 +304,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             if ((recoveredAccumulator % 10000) == 0) {
                 LOG.info("cursor for {} has recovered {} messages. {}% complete",
                         getActiveMQDestination().getQualifiedName(), recoveredAccumulator,
-                        Integer.valueOf((int) (recoveredAccumulator * 100 / totalMessageCount)));
+                        (int) (recoveredAccumulator * 100 / totalMessageCount));
             }
             // Message could have expired while it was being
             // loaded..

@@ -239,7 +239,7 @@ public class AMQ5212Test {
                 super.send(producerExchange, messageSend);
                 Object seq = messageSend.getProperty("seq");
                 if (seq instanceof Integer) {
-                    if  ( ((Integer) seq).intValue() %200 == 0 && producerExchange.getConnectionContext().getConnection() != null) {
+                    if  ((Integer) seq %200 == 0 && producerExchange.getConnectionContext().getConnection() != null) {
                         producerExchange.getConnectionContext().setDontSendReponse(true);
                         producerExchange.getConnectionContext().getConnection().serviceException(new IOException("force reconnect"));
                     }

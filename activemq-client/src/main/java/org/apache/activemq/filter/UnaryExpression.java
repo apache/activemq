@@ -152,7 +152,7 @@ public abstract class UnaryExpression implements Expression {
                 if (!rvalue.getClass().equals(Boolean.class)) {
                     return Boolean.FALSE;
                 }
-                return ((Boolean)rvalue).booleanValue() ? Boolean.TRUE : Boolean.FALSE;
+                return (Boolean) rvalue ? Boolean.TRUE : Boolean.FALSE;
             }
 
             public String toString() {
@@ -168,13 +168,13 @@ public abstract class UnaryExpression implements Expression {
     private static Number negate(Number left) {
         Class clazz = left.getClass();
         if (clazz == Integer.class) {
-            return Integer.valueOf(-left.intValue());
+            return -left.intValue();
         } else if (clazz == Long.class) {
-            return Long.valueOf(-left.longValue());
+            return -left.longValue();
         } else if (clazz == Float.class) {
-            return Float.valueOf(-left.floatValue());
+            return -left.floatValue();
         } else if (clazz == Double.class) {
-            return Double.valueOf(-left.doubleValue());
+            return -left.doubleValue();
         } else if (clazz == BigDecimal.class) {
             // We ussually get a big deciamal when we have Long.MIN_VALUE
             // constant in the
@@ -187,7 +187,7 @@ public abstract class UnaryExpression implements Expression {
             bd = bd.negate();
 
             if (BD_LONG_MIN_VALUE.compareTo(bd) == 0) {
-                return Long.valueOf(Long.MIN_VALUE);
+                return Long.MIN_VALUE;
             }
             return bd;
         } else {

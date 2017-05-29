@@ -101,32 +101,32 @@ public class ClassLoadingAwareObjectInputStreamTest {
 
     @Test
     public void testReadObjectByte() throws Exception {
-        doTestReadObject(Byte.valueOf((byte) 255), ACCEPTS_ALL_FILTER);
+        doTestReadObject((byte) 255, ACCEPTS_ALL_FILTER);
     }
 
     @Test
     public void testReadObjectShort() throws Exception {
-        doTestReadObject(Short.valueOf((short) 255), ACCEPTS_ALL_FILTER);
+        doTestReadObject((short) 255, ACCEPTS_ALL_FILTER);
     }
 
     @Test
     public void testReadObjectInteger() throws Exception {
-        doTestReadObject(Integer.valueOf(255), ACCEPTS_ALL_FILTER);
+        doTestReadObject(255, ACCEPTS_ALL_FILTER);
     }
 
     @Test
     public void testReadObjectLong() throws Exception {
-        doTestReadObject(Long.valueOf(255l), ACCEPTS_ALL_FILTER);
+        doTestReadObject(255L, ACCEPTS_ALL_FILTER);
     }
 
     @Test
     public void testReadObjectFloat() throws Exception {
-        doTestReadObject(Float.valueOf(255.0f), ACCEPTS_ALL_FILTER);
+        doTestReadObject(255.0f, ACCEPTS_ALL_FILTER);
     }
 
     @Test
     public void testReadObjectDouble() throws Exception {
-        doTestReadObject(Double.valueOf(255.0), ACCEPTS_ALL_FILTER);
+        doTestReadObject(255.0, ACCEPTS_ALL_FILTER);
     }
 
     @Test
@@ -321,7 +321,7 @@ public class ClassLoadingAwareObjectInputStreamTest {
         }
 
         // Replace the filtered type and try again
-        value[3] = Integer.valueOf(20);
+        value[3] = 20;
 
         serialized = serializeObject(value);
 

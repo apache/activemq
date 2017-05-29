@@ -58,7 +58,7 @@ public class BooleanFunctionCallExpr extends FunctionCallExpression implements B
         result = (Boolean) evaluate(message_ctx);
 
         if (result != null)
-            return result.booleanValue();
+            return result;
 
         return false;
     }

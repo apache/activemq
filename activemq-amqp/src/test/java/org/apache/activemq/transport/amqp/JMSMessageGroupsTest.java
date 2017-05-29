@@ -82,8 +82,7 @@ public class JMSMessageGroupsTest extends JMSClientTestSupport {
         byte[] buffer = new byte[MESSAGE_SIZE];
         for (count = 0; count < MESSAGE_SIZE; count++) {
             String s = String.valueOf(count % 10);
-            Character c = s.charAt(0);
-            int value = c.charValue();
+            int value = s.charAt(0);
             buffer[count] = (byte) value;
         }
 

@@ -63,7 +63,7 @@ public class JAXPXPathEvaluator implements XPathExpression.XPathEvaluator {
         try {
             InputSource inputSource = new InputSource(new ByteArrayInputStream(data));
             Document inputDocument = builder.parse(inputSource);
-            return ((Boolean)xpath.evaluate(xpathExpression, inputDocument, XPathConstants.BOOLEAN)).booleanValue();
+            return (Boolean) xpath.evaluate(xpathExpression, inputDocument, XPathConstants.BOOLEAN);
         } catch (Exception e) {
             return false;
         }
@@ -73,7 +73,7 @@ public class JAXPXPathEvaluator implements XPathExpression.XPathEvaluator {
         try {
             InputSource inputSource = new InputSource(new StringReader(text));
             Document inputDocument = builder.parse(inputSource);
-            return ((Boolean)xpath.evaluate(xpathExpression, inputDocument, XPathConstants.BOOLEAN)).booleanValue();
+            return (Boolean) xpath.evaluate(xpathExpression, inputDocument, XPathConstants.BOOLEAN);
         } catch (Exception e) {
             return false;
         }

@@ -91,7 +91,7 @@ public class VirtualDestPerfTest {
             executor.awaitTermination(5, TimeUnit.MINUTES);
             long endTime = System.currentTimeMillis();
             long seconds = (endTime - startTime) / 1000;
-            LOG.info("For numThreads {} duration {}", numThreads.intValue(), seconds);
+            LOG.info("For numThreads {} duration {}", numThreads, seconds);
             results.put(numThreads, seconds);
             LOG.info("Broker got {} messages", brokerService.getAdminView().getTotalEnqueueCount());
         }

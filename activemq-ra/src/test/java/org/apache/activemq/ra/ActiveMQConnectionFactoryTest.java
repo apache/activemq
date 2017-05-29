@@ -54,7 +54,7 @@ public class ActiveMQConnectionFactoryTest {
         info.setServerUrl(url);
         info.setUserName(user);
         info.setPassword(pwd);
-        info.setAllPrefetchValues(new Integer(100));
+        info.setAllPrefetchValues(100);
     }
 
     @Test(timeout = 60000)

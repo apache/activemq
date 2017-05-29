@@ -636,7 +636,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
     public void onActiveMQCommand(Command command) throws Exception {
         if (command.isResponse()) {
             Response response = (Response) command;
-            ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
+            ResponseHandler rh = resposeHandlers.remove(response.getCorrelationId());
             if (rh != null) {
                 rh.onResponse(this, response);
             } else {
@@ -799,7 +799,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         command.setCommandId(lastCommandId.incrementAndGet());
         if (handler != null) {
             command.setResponseRequired(true);
-            resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
+            resposeHandlers.put(command.getCommandId(), handler);
         }
         amqpTransport.sendToActiveMQ(command);
     }

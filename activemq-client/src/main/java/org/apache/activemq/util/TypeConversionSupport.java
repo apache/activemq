@@ -146,7 +146,7 @@ public final class TypeConversionSupport {
         Converter longConverter = new Converter() {
             @Override
             public Object convert(Object value) {
-                return Long.valueOf(((Number)value).longValue());
+                return ((Number) value).longValue();
             }
         };
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Long.class), longConverter);
@@ -155,14 +155,14 @@ public final class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Date.class, Long.class), new Converter() {
             @Override
             public Object convert(Object value) {
-                return Long.valueOf(((Date)value).getTime());
+                return ((Date) value).getTime();
             }
         });
 
         Converter intConverter = new Converter() {
             @Override
             public Object convert(Object value) {
-                return Integer.valueOf(((Number)value).intValue());
+                return ((Number) value).intValue();
             }
         };
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Integer.class), intConverter);
@@ -171,14 +171,14 @@ public final class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Short.class), new Converter() {
             @Override
             public Object convert(Object value) {
-                return Short.valueOf(((Number)value).shortValue());
+                return ((Number) value).shortValue();
             }
         });
 
         CONVERSION_MAP.put(new ConversionKey(Float.class, Double.class), new Converter() {
             @Override
             public Object convert(Object value) {
-                return Double.valueOf(((Number)value).doubleValue());
+                return ((Number) value).doubleValue();
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, ActiveMQDestination.class), new Converter() {

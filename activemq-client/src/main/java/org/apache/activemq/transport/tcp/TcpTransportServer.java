@@ -596,17 +596,17 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             countIncremented = true;
 
             HashMap<String, Object> options = new HashMap<String, Object>();
-            options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
-            options.put("maxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
-            options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
-            options.put("trace", Boolean.valueOf(trace));
-            options.put("soTimeout", Integer.valueOf(soTimeout));
-            options.put("socketBufferSize", Integer.valueOf(socketBufferSize));
-            options.put("connectionTimeout", Integer.valueOf(connectionTimeout));
+            options.put("maxInactivityDuration", maxInactivityDuration);
+            options.put("maxInactivityDurationInitalDelay", maxInactivityDurationInitalDelay);
+            options.put("minmumWireFormatVersion", minmumWireFormatVersion);
+            options.put("trace", trace);
+            options.put("soTimeout", soTimeout);
+            options.put("socketBufferSize", socketBufferSize);
+            options.put("connectionTimeout", connectionTimeout);
             options.put("logWriterName", logWriterName);
-            options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
-            options.put("startLogging", Boolean.valueOf(startLogging));
-            options.put("jmxPort", Integer.valueOf(jmxPort));
+            options.put("dynamicManagement", dynamicManagement);
+            options.put("startLogging", startLogging);
+            options.put("jmxPort", jmxPort);
             options.putAll(transportOptions);
 
             TransportInfo transportInfo = configureTransport(this, socket);

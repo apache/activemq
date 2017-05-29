@@ -240,12 +240,12 @@ public class JournalCorruptionEofIndexRecoveryTest {
         final var appender = new AbstractAppender("testAppender", new AbstractFilter() {}, new MessageLayout(), false, new Property[0]) {
             @Override
             public void append(LogEvent event) {
-                /** 
+                /**
                  * NOTE: As of JDK v11.0.19 RandomAccessFile throws a messageless EOFException when read fails
-                 * 
+                 *
                  *                 throw new EOFException();
                  */
-                if (event != null 
+                if (event != null
                         && event.getLevel() == Level.WARN
                         && event.getMessage() != null
                         && event.getMessage().getFormattedMessage() != null
@@ -369,7 +369,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     private void corruptLocation(Location toCorrupt) throws IOException {
 
-        DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(Integer.valueOf(toCorrupt.getDataFileId()));
+        DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(toCorrupt.getDataFileId());
 
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
 

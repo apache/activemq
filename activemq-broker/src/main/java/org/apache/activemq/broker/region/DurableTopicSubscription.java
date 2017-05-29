@@ -227,9 +227,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                             (lastDeliveredSequenceId > 0 && node.getMessageId().getBrokerSequenceId() <= lastDeliveredSequenceId)) {
                         Integer count = redeliveredMessages.get(node.getMessageId());
                         if (count != null) {
-                            redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
+                            redeliveredMessages.put(node.getMessageId(), count + 1);
                         } else {
-                            redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
+                            redeliveredMessages.put(node.getMessageId(), 1);
                         }
                     }
                     if (keepDurableSubsActive && pending.isTransient()) {
@@ -272,7 +272,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             node.incrementReferenceCount();
             Integer count = redeliveredMessages.get(node.getMessageId());
             if (count != null) {
-                md.setRedeliveryCounter(count.intValue());
+                md.setRedeliveryCounter(count);
             }
         }
         return md;

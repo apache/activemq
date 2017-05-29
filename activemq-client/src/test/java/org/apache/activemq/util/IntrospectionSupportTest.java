@@ -42,7 +42,7 @@ public class IntrospectionSupportTest {
     @Test
     public void testSetPropertyPrimitiveWithWrapperValue() {
         // Wrapper value
-        Boolean value = Boolean.valueOf(true);
+        Boolean value = Boolean.TRUE;
 
         DummyClass dummyClass = new DummyClass(false);
         dummyClass.setTrace(false);

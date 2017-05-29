@@ -47,8 +47,8 @@ public class DestinationRemoveRestartTest extends CombinationTestSupport {
     }
 
     public void initCombosForTestCheckDestinationRemoveActionAfterRestart() {
-        addCombinationValues("destinationType", new Object[]{Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
-                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
+        addCombinationValues("destinationType", new Object[]{ActiveMQDestination.QUEUE_TYPE,
+                ActiveMQDestination.TOPIC_TYPE});
     }
     
     public void testCheckDestinationRemoveActionAfterRestart() throws Exception {

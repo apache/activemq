@@ -174,10 +174,10 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         if (wireFormat.isCacheEnabled()) {
             Short index = wireFormat.getMarshallCacheIndex(o);
             if (bs.readBoolean()) {
-                dataOut.writeShort(index.shortValue());
+                dataOut.writeShort(index);
                 wireFormat.tightMarshalNestedObject2(o, dataOut, bs);
             } else {
-                dataOut.writeShort(index.shortValue());
+                dataOut.writeShort(index);
             }
         } else {
             wireFormat.tightMarshalNestedObject2(o, dataOut, bs);
@@ -199,7 +199,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
                                 .newInstance(new Object[] {tightUnmarshalString(dataIn, bs),
                                                            tightUnmarshalString(dataIn, bs),
                                                            tightUnmarshalString(dataIn, bs),
-                                                           Integer.valueOf(dataIn.readInt())});
+                                                           dataIn.readInt()});
                         } catch (IOException e) {
                             throw e;
                         } catch (Throwable e) {
@@ -495,10 +495,10 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             dataOut.writeBoolean(index == null);
             if (index == null) {
                 index = wireFormat.addToMarshallCache(o);
-                dataOut.writeShort(index.shortValue());
+                dataOut.writeShort(index);
                 wireFormat.looseMarshalNestedObject(o, dataOut);
             } else {
-                dataOut.writeShort(index.shortValue());
+                dataOut.writeShort(index);
             }
         } else {
             wireFormat.looseMarshalNestedObject(o, dataOut);
@@ -520,7 +520,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
                                 .newInstance(new Object[] {looseUnmarshalString(dataIn),
                                                            looseUnmarshalString(dataIn),
                                                            looseUnmarshalString(dataIn),
-                                                           Integer.valueOf(dataIn.readInt())});
+                                                           dataIn.readInt()});
                         } catch (IOException e) {
                             throw e;
                         } catch (Throwable e) {
