@@ -1433,8 +1433,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             + (this.store.canceledTasks / this.store.doneTasks) * 100);
                     this.store.canceledTasks = this.store.doneTasks = 0;
                 }
-            } catch (Exception e) {
-                this.future.setException(e);
+            } catch (Throwable t) {
+                this.future.setException(t);
+                removeQueueTask(this.store, this.message.getMessageId());
             }
         }
 
@@ -1450,7 +1451,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 super(runnable, null);
             }
 
-            public void setException(final Exception e) {
+            public void setException(final Throwable e) {
                 super.setException(e);
             }
 
@@ -1551,8 +1552,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             + (this.store.canceledTasks / this.store.doneTasks) * 100);
                     this.store.canceledTasks = this.store.doneTasks = 0;
                 }
-            } catch (Exception e) {
-                this.future.setException(e);
+            } catch (Throwable t) {
+                this.future.setException(t);
+                removeTopicTask(this.topicStore, this.message.getMessageId());
             }
         }
     }
