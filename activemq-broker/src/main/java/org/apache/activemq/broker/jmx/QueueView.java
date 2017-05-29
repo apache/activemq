@@ -56,7 +56,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return result;
     }
 
-    public void purge() throws Exception {
+    public synchronized void purge() throws Exception {
         final long originalMessageCount = destination.getDestinationStatistics().getMessages().getCount();
 
         ((Queue)destination).purge();
