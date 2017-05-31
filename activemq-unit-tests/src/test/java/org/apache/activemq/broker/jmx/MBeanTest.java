@@ -225,6 +225,33 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("no change", initialQueueSize, actualCount);
     }
 
+    public void testMoveCopyToSameDestFails() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        CompositeData cdata = compdatalist[0];
+        String messageID = (String) cdata.get("JMSMessageID");
+
+        assertFalse("fail to copy to self", queue.copyMessageTo(messageID, getDestinationString()));
+        assertEquals("fail to copy to self", 0, queue.copyMatchingMessagesTo("", getDestinationString()));
+        assertEquals("fail to copy x to self", 0, queue.copyMatchingMessagesTo("", getDestinationString(), initialQueueSize));
+
+        assertFalse("fail to move to self", queue.moveMessageTo(messageID, getDestinationString()));
+        assertEquals("fail to move to self", 0, queue.moveMatchingMessagesTo("", getDestinationString()));
+        assertEquals("fail to move x to self", 0, queue.moveMatchingMessagesTo("", getDestinationString(), initialQueueSize));
+
+        compdatalist = queue.browse();
+        int actualCount = compdatalist.length;
+        echo("Current queue size: " + actualCount);
+        assertEquals("no change", initialQueueSize, actualCount);
+    }
+
     public void testRemoveMessages() throws Exception {
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);

@@ -1402,6 +1402,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      */
     public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest,
             int maximumMessages) throws Exception {
+
+        if (destination.equals(dest)) {
+            return 0;
+        }
+
         int movedCounter = 0;
         int count = 0;
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
@@ -1498,6 +1503,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      */
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter,
             ActiveMQDestination dest, int maximumMessages) throws Exception {
+
+        if (destination.equals(dest)) {
+            return 0;
+        }
+
         int movedCounter = 0;
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         do {
