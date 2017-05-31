@@ -409,6 +409,12 @@ public interface DestinationViewMBean {
     @MBeanInfo("Dead Letter Queue")
     boolean isDLQ();
 
+    /**
+     * @param value
+     * enable/disable the DLQ flag
+     */
+    void setDLQ(boolean value);
+
     @MBeanInfo("Number of messages blocked for flow control")
     long getBlockedSends();
 

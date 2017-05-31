@@ -536,6 +536,11 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     @Override
+    public void setDLQ(boolean val) {
+         destination.getActiveMQDestination().setDLQ(val);
+    }
+
+    @Override
     public long getBlockedSends() {
         return destination.getDestinationStatistics().getBlockedSends().getCount();
     }
