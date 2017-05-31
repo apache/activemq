@@ -70,7 +70,7 @@ public class AmqpConfiguredMaxConnectionsTest extends AmqpClientTestSupport {
         assertEquals(MAX_CONNECTIONS, getProxyToBroker().getCurrentConnectionsCount());
 
         try {
-            AmqpConnection connection = client.createConnection();
+            AmqpConnection connection = trackConnection(client.createConnection());
             connection.setConnectTimeout(3000);
             connection.connect();
             fail("Should not be able to create one more connection");

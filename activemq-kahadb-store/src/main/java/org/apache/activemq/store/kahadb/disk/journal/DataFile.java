@@ -72,6 +72,10 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         length += size;
     }
 
+    public synchronized void decrementLength(int size) {
+        length -= size;
+    }
+
     @Override
     public synchronized String toString() {
         return file.getName() + " number = " + dataFileId + " , length = " + length;

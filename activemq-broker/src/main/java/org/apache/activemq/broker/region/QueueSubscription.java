@@ -69,7 +69,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     @Override
     public synchronized String toString() {
         return "QueueSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + dispatched.size() + ", delivered="
-               + this.prefetchExtension + ", pending=" + getPendingQueueSize();
+               + this.prefetchExtension + ", pending=" + getPendingQueueSize() + ", prefetch=" + getPrefetchSize() + ", prefetchExtension=" + prefetchExtension.get();
     }
 
     @Override

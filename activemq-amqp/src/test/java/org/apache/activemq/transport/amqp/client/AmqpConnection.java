@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,8 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,7 +39,7 @@ import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.IdGenerator;
 import org.apache.activemq.transport.amqp.client.util.NoOpAsyncResult;
-import org.apache.activemq.transport.amqp.client.util.UnmodifiableConnection;
+import org.apache.activemq.transport.amqp.client.util.UnmodifiableProxy;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
@@ -49,6 +49,7 @@ import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.impl.CollectorImpl;
+import org.apache.qpid.proton.engine.impl.TransportImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     public static final long DEFAULT_CLOSE_TIMEOUT = 30000;
     public static final long DEFAULT_DRAIN_TIMEOUT = 60000;
 
-    private final ScheduledExecutorService serializer;
+    private ScheduledThreadPoolExecutor serializer;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final AtomicBoolean connected = new AtomicBoolean();
     private final AtomicLong sessionIdGenerator = new AtomicLong();
@@ -88,6 +89,8 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private List<Symbol> offeredCapabilities = Collections.emptyList();
     private Map<Symbol, Object> offeredProperties = Collections.emptyMap();
 
+    private volatile AmqpFrameValidator sentFrameInspector;
+    private volatile AmqpFrameValidator receivedFrameInspector;
     private AmqpConnectionListener listener;
     private SaslAuthenticator authenticator;
     private String mechanismRestriction;
@@ -101,6 +104,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private long connectTimeout = DEFAULT_CONNECT_TIMEOUT;
     private long closeTimeout = DEFAULT_CLOSE_TIMEOUT;
     private long drainTimeout = DEFAULT_DRAIN_TIMEOUT;
+    private boolean trace;
 
     public AmqpConnection(org.apache.activemq.transport.amqp.client.transport.NettyTransport transport, String username, String password) {
         setEndpoint(Connection.Factory.create());
@@ -112,7 +116,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         this.connectionId = CONNECTION_ID_GENERATOR.generateId();
         this.remoteURI = transport.getRemoteLocation();
 
-        this.serializer = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        this.serializer = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
 
             @Override
             public Thread newThread(Runnable runner) {
@@ -123,7 +127,12 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
             }
         });
 
+        // Ensure timely shutdown
+        this.serializer.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        this.serializer.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+
         this.transport.setTransportListener(this);
+        this.transport.setMaxFrameSize(getMaxFrameSize());
     }
 
     public void connect() throws Exception {
@@ -154,19 +163,28 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                         sasl.client();
                     }
                     authenticator = new SaslAuthenticator(sasl, username, password, authzid, mechanismRestriction);
+                    ((TransportImpl) protonTransport).setProtocolTracer(new AmqpProtocolTracer(AmqpConnection.this));
                     open(future);
 
                     pumpToProtonTransport(future);
                 }
             });
 
-            if (connectTimeout <= 0) {
-                future.sync();
-            } else {
-                future.sync(connectTimeout, TimeUnit.MILLISECONDS);
-                if (getEndpoint().getRemoteState() != EndpointState.ACTIVE) {
-                    throw new IOException("Failed to connect after configured timeout.");
+            try {
+                if (connectTimeout <= 0) {
+                    future.sync();
+                } else {
+                    future.sync(connectTimeout, TimeUnit.MILLISECONDS);
+                    if (getEndpoint().getRemoteState() != EndpointState.ACTIVE) {
+                        throw new IOException("Failed to connect after configured timeout.");
+                    }
                 }
+            } catch (Throwable error) {
+                try {
+                    close();
+                } catch (Throwable ignore) {}
+
+                throw error;
             }
         }
     }
@@ -220,7 +238,13 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                     }
                 }
 
-                serializer.shutdown();
+                serializer.shutdownNow();
+                try {
+                    if (!serializer.awaitTermination(10, TimeUnit.SECONDS)) {
+                        LOG.warn("Serializer didn't shutdown cleanly");
+                    }
+                } catch (InterruptedException e) {
+                }
             }
         }
     }
@@ -394,7 +418,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     public Connection getConnection() {
-        return new UnmodifiableConnection(getEndpoint());
+        return UnmodifiableProxy.connectionProxy(getEndpoint());
     }
 
     public AmqpConnectionListener getListener() {
@@ -432,6 +456,30 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
 
     public String getMechanismRestriction() {
         return mechanismRestriction;
+    }
+
+    public boolean isTraceFrames() {
+        return trace;
+    }
+
+    public void setTraceFrames(boolean trace) {
+        this.trace = trace;
+    }
+
+    public AmqpFrameValidator getSentFrameInspector() {
+        return sentFrameInspector;
+    }
+
+    public void setSentFrameInspector(AmqpFrameValidator amqpFrameInspector) {
+        this.sentFrameInspector = amqpFrameInspector;
+    }
+
+    public AmqpFrameValidator getReceivedFrameInspector() {
+        return receivedFrameInspector;
+    }
+
+    public void setReceivedFrameInspector(AmqpFrameValidator amqpFrameInspector) {
+        this.receivedFrameInspector = amqpFrameInspector;
     }
 
     //----- Internal getters used from the child AmqpResource classes --------//

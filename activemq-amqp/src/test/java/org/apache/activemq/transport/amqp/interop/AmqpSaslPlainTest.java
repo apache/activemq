@@ -82,7 +82,7 @@ public class AmqpSaslPlainTest extends AmqpClientTestSupport {
         client.setMechanismRestriction(PlainMechanism.MECH_NAME);
 
         // Expect connection to succeed
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
 
         // Exercise it for verification
         exerciseConnection(connection);

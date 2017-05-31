@@ -38,6 +38,8 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.transport.vm.VMTransportFactory;
+import org.apache.activemq.transport.vm.VMTransportServer;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -246,7 +248,9 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertNotNull(m);
         assertEquals("1st", m.getText());
         String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
-        assertTrue("cause exception has policy ref", cause.contains("RedeliveryPolicy"));
+        assertTrue("cause exception has policy ref: " + cause, cause.contains("RedeliveryPolicy"));
+        assertTrue("cause exception has redelivered count ref: " + cause, cause.contains("[3]"));
+
         session.commit();
 
     }
@@ -451,9 +455,148 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertNotNull("Got message from DLQ", m);
         assertEquals("1st", m.getText());
         String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
-        assertTrue("cause exception has policy ref", cause.contains("RedeliveryPolicy"));
+        assertTrue("cause exception has policy ref: " + cause, cause.contains("RedeliveryPolicy"));
+        assertTrue("cause exception has pre dispatch and count:" + cause, cause.contains("Delivery[5]"));
+
         dlqSession.commit();
 
+
+    }
+
+
+    public void testRepeatedRedeliveryBrokerCloseReceiveNoCommit() throws Exception {
+
+        connection.start();
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+
+        MessageProducer producer = session.createProducer(destination);
+
+        // Send the messages
+        producer.send(session.createTextMessage("1st"));
+
+        session.commit();
+
+        final int maxRedeliveries = 4;
+        for (int i=0;i<=maxRedeliveries +1;i++) {
+
+            final ActiveMQConnection consumerConnection = (ActiveMQConnection)factory.createConnection(userName, password);
+            connections.add(consumerConnection);
+            // Receive a message with the JMS API
+            RedeliveryPolicy policy = consumerConnection.getRedeliveryPolicy();
+            policy.setInitialRedeliveryDelay(0);
+            policy.setUseExponentialBackOff(false);
+            policy.setMaximumRedeliveries(maxRedeliveries);
+
+            consumerConnection.start();
+            session = consumerConnection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer = session.createConsumer(destination);
+
+            ActiveMQTextMessage m = ((ActiveMQTextMessage)consumer.receive(4000));
+            if (i<=maxRedeliveries) {
+                assertEquals("1st", m.getText());
+                assertEquals(i, m.getRedeliveryCounter());
+            } else {
+                assertNull("null on exceeding redelivery count", m);
+
+                assertTrue("message in dlq", Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        LOG.info("total dequeue count: " + broker.getAdminView().getTotalDequeueCount());
+                        return broker.getAdminView().getTotalDequeueCount() == 1;
+                    }
+                }));
+            }
+
+            // abortive close via broker
+            for (VMTransportServer transportServer : VMTransportFactory.SERVERS.values()) {
+                transportServer.stop();
+            }
+
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return consumerConnection.isTransportFailed();
+                }
+            });
+
+            try {
+                consumerConnection.close();
+            } catch (Exception expected) {
+            } finally {
+                connections.remove(consumerConnection);
+            }
+        }
+
+        connection = (ActiveMQConnection)factory.createConnection(userName, password);
+        connection.start();
+        connections.add(connection);
+        Session dlqSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer dlqConsumer = dlqSession.createConsumer(new ActiveMQQueue("ActiveMQ.DLQ"));
+
+        // We should be able to get the message off the DLQ now.
+        TextMessage m = (TextMessage)dlqConsumer.receive(1000);
+        assertNotNull("Got message from DLQ", m);
+        assertEquals("1st", m.getText());
+        String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+        assertTrue("cause exception has policy ref: " + cause, cause.contains("RedeliveryPolicy"));
+        assertTrue("cause exception has pre dispatch and count:" + cause, cause.contains("Dispatch[5]"));
+
+        dlqSession.commit();
+
+    }
+
+    public void testRepeatedRedeliveryReceiveBrokerCloseNoPreDispatchCheck() throws Exception {
+
+        connection.start();
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        MessageProducer producer = session.createProducer(destination);
+
+        // Send the messages
+        producer.send(session.createTextMessage("1st"));
+        session.commit();
+
+        final int maxRedeliveries = 4;
+        for (int i=0;i<=maxRedeliveries + 1;i++) {
+
+            final ActiveMQConnection consumerConnection = (ActiveMQConnection)factory.createConnection(userName, password);
+            connections.add(consumerConnection);
+            // Receive a message with the JMS API
+            RedeliveryPolicy policy = consumerConnection.getRedeliveryPolicy();
+            policy.setInitialRedeliveryDelay(0);
+            policy.setUseExponentialBackOff(false);
+            policy.setMaximumRedeliveries(maxRedeliveries);
+            policy.setPreDispatchCheck(false);
+
+            consumerConnection.start();
+            session = consumerConnection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer = session.createConsumer(destination);
+
+            ActiveMQTextMessage m = ((ActiveMQTextMessage)consumer.receive(4000));
+            assertNotNull("got message on i=" + i, m);
+            assertEquals("1st", m.getText());
+            assertEquals(i, m.getRedeliveryCounter());
+
+            // abortive close via broker
+            for (VMTransportServer transportServer : VMTransportFactory.SERVERS.values()) {
+                transportServer.stop();
+            }
+
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return consumerConnection.isTransportFailed();
+                }
+            });
+
+            try {
+                consumerConnection.close();
+            } catch (Exception expected) {
+            } finally {
+                connections.remove(consumerConnection);
+            }
+        }
     }
 
 
@@ -518,7 +661,10 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertNotNull("Got message from DLQ", m);
         assertEquals("1st", m.getText());
         String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+        LOG.info("cause: " + cause);
         assertTrue("cause exception has policy ref", cause.contains("RedeliveryPolicy"));
+        assertTrue("cause exception has redelivered count ref: " + cause, cause.contains("[5]"));
+
         dlqSession.commit();
 
     }

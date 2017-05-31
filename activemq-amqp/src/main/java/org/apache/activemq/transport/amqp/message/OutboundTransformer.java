@@ -16,54 +16,10 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import javax.jms.Message;
+import org.apache.activemq.command.ActiveMQMessage;
 
-public abstract class OutboundTransformer {
+public interface OutboundTransformer {
 
-    protected final ActiveMQJMSVendor vendor;
+    public abstract EncodedMessage transform(ActiveMQMessage message) throws Exception;
 
-    protected String prefixVendor;
-
-    protected String prefixDeliveryAnnotations = "DA_";
-    protected String prefixMessageAnnotations= "MA_";
-    protected String prefixFooter = "FT_";
-
-    protected String messageFormatKey;
-    protected String nativeKey;
-    protected String firstAcquirerKey;
-    protected String prefixDeliveryAnnotationsKey;
-    protected String prefixMessageAnnotationsKey;
-    protected String contentTypeKey;
-    protected String contentEncodingKey;
-    protected String replyToGroupIDKey;
-    protected String prefixFooterKey;
-
-    public OutboundTransformer(ActiveMQJMSVendor vendor) {
-        this.vendor = vendor;
-        this.setPrefixVendor("JMS_AMQP_");
-    }
-
-    public abstract EncodedMessage transform(Message jms) throws Exception;
-
-    public String getPrefixVendor() {
-        return prefixVendor;
-    }
-
-    public void setPrefixVendor(String prefixVendor) {
-        this.prefixVendor = prefixVendor;
-
-        messageFormatKey = prefixVendor + "MESSAGE_FORMAT";
-        nativeKey = prefixVendor + "NATIVE";
-        firstAcquirerKey = prefixVendor + "FirstAcquirer";
-        prefixDeliveryAnnotationsKey = prefixVendor + prefixDeliveryAnnotations;
-        prefixMessageAnnotationsKey = prefixVendor + prefixMessageAnnotations;
-        contentTypeKey = prefixVendor + "ContentType";
-        contentEncodingKey = prefixVendor + "ContentEncoding";
-        replyToGroupIDKey = prefixVendor + "ReplyToGroupID";
-        prefixFooterKey = prefixVendor + prefixFooter;
-    }
-
-    public ActiveMQJMSVendor getVendor() {
-        return vendor;
-    }
 }

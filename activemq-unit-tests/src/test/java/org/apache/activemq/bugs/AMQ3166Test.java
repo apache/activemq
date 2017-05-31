@@ -133,6 +133,8 @@ public class AMQ3166Test {
             fail("Expect TransactionRolledBackException");
         } catch (JMSException expected) {
             assertTrue(expected.getCause() instanceof XAException);
+            assertTrue(expected.getCause().getCause() instanceof TransactionRolledBackException);
+            assertTrue(expected.getCause().getCause().getCause() instanceof RuntimeException);
         }
 
         assertTrue("one message still there!", Wait.waitFor(new Wait.Condition() {

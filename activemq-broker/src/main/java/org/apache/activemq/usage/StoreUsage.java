@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.usage;
 
-import java.io.File;
-
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.util.StoreUtil;
 
 /**
  * Used to keep track of how much of something is being used so that a
@@ -81,31 +78,24 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
         }
     }
 
-    @Override
-    public boolean waitForSpace(long timeout, int highWaterMark) throws InterruptedException {
-        if (parent != null) {
-            if (parent.waitForSpace(timeout, highWaterMark)) {
-                return true;
-            }
-        }
-
-        return super.waitForSpace(timeout, highWaterMark);
-    }
 
     @Override
     protected void updateLimitBasedOnPercent() {
         usageLock.writeLock().lock();
         try {
-
-            if (percentLimit > 0 && store != null) {
-                File dir = StoreUtil.findParentDirectory(store.getDirectory());
-
-                if (dir != null) {
-                    this.setLimit(dir.getTotalSpace() * percentLimit / 100);
-                }
-            }
+            percentLimitFromFile(store != null ? store.getDirectory() : null);
         } finally {
             usageLock.writeLock().unlock();
         }
+    }
+
+    public StoreUsage copy() {
+        StoreUsage storeUsage = new StoreUsage();
+        storeUsage.name = name;
+        storeUsage.parent = parent;
+        storeUsage.total = total;
+        storeUsage.percentLimit = percentLimit;
+        storeUsage.getLimiter().setLimit(getLimiter().getLimit());
+        return storeUsage;
     }
 }

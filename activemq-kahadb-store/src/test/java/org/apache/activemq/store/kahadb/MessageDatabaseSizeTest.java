@@ -17,9 +17,12 @@
 package org.apache.activemq.store.kahadb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -36,12 +39,26 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@RunWith(Parameterized.class)
 public class MessageDatabaseSizeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(MessageDatabaseSizeTest.class);
+
+    @Parameters(name = "subStatsEnabled={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                // Subscription stats on
+                {true},
+                // Subscription stats off
+                {false}
+        });
+    }
 
     @Rule
     public TemporaryFolder dataDir = new TemporaryFolder(new File("target"));
@@ -50,6 +67,13 @@ public class MessageDatabaseSizeTest {
     private BrokerService broker = null;
     private final ActiveMQQueue destination = new ActiveMQQueue("Test");
     private KahaDBPersistenceAdapter adapter;
+    private boolean subStatsEnabled;
+
+    public MessageDatabaseSizeTest(boolean subStatsEnabled) {
+        super();
+        this.subStatsEnabled = subStatsEnabled;
+    }
+
 
     protected void startBroker() throws Exception {
         broker = new BrokerService();
@@ -58,6 +82,7 @@ public class MessageDatabaseSizeTest {
         broker.setUseJmx(true);
         broker.setDataDirectory(dataDir.getRoot().getAbsolutePath());
         adapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+        adapter.setEnableSubscriptionStatistics(subStatsEnabled);
         broker.start();
         LOG.info("Starting broker..");
     }
@@ -99,6 +124,22 @@ public class MessageDatabaseSizeTest {
         KahaUpdateMessageCommand updateMessageCommand = (KahaUpdateMessageCommand) store.load(location);
         store.process(updateMessageCommand, location);
         assertEquals(existingSize, messageStore.getMessageSize());
+    }
+
+    @Test
+    public void testUpdateMessageSameLocationDifferentSize() throws Exception {
+        final KahaDBStore store = adapter.getStore();
+        MessageId messageId = new MessageId("111:222:333");
+        ActiveMQTextMessage textMessage = getMessage(new MessageId("111:222:333"));
+
+        //Add a single message and update once so we can compare the size consistently
+        MessageStore messageStore = store.createQueueMessageStore(destination);
+        messageStore.addMessage(broker.getAdminConnectionContext(), textMessage);
+        textMessage.setText("new size of message");
+        messageStore.updateMessage(textMessage);
+
+        assertNotNull(findMessageLocation(messageId.toString(), store.convert(destination)));
+
     }
 
     /**

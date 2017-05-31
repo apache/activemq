@@ -265,10 +265,15 @@ public class CompressionOverNetworkTest {
     }
 
     protected void doTearDown() throws Exception {
-        localConnection.close();
-        remoteConnection.close();
-        localBroker.stop();
-        remoteBroker.stop();
+        try {
+            localConnection.close();
+            remoteConnection.close();
+        } catch (Exception ignored) {}
+        try {
+            localBroker.stop();
+        } finally {
+            remoteBroker.stop();
+        }
     }
 
     protected void doSetUp(boolean deleteAllMessages) throws Exception {

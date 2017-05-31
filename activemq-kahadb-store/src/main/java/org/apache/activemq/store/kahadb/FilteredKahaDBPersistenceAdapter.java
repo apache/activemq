@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadb;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.usage.StoreUsage;
 
 /**
  * @org.apache.xbean.XBean element="filteredKahaDB"
@@ -27,14 +28,18 @@ import org.apache.activemq.store.PersistenceAdapter;
 public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
     private PersistenceAdapter persistenceAdapter;
     private boolean perDestination;
+    private StoreUsage usage;
 
     public FilteredKahaDBPersistenceAdapter() {
         super();
     }
 
-    public FilteredKahaDBPersistenceAdapter(ActiveMQDestination destination, PersistenceAdapter adapter) {
+    public FilteredKahaDBPersistenceAdapter(FilteredKahaDBPersistenceAdapter template, ActiveMQDestination destination, PersistenceAdapter adapter) {
         setDestination(destination);
         persistenceAdapter  = adapter;
+        if (template.getUsage() != null) {
+            usage = template.getUsage().copy();
+        }
     }
 
     public PersistenceAdapter getPersistenceAdapter() {
@@ -64,5 +69,13 @@ public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
             return this.destination.compareTo(((FilteredKahaDBPersistenceAdapter) that).destination);
         }
         return super.compareTo(that);
+    }
+
+    public void setUsage(StoreUsage usage) {
+        this.usage = usage;
+    }
+
+    public StoreUsage getUsage() {
+        return usage;
     }
 }

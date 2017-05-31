@@ -92,6 +92,12 @@
       <artifactId>org.linkedin.zookeeper-impl</artifactId>
       <version>${linkedin-zookeeper-version}</version>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.linkedin</groupId>
@@ -108,7 +114,6 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>${org.osgi.core-version}</version>
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>

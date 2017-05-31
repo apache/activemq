@@ -17,9 +17,14 @@
 package org.apache.activemq.usage;
 
 
+import org.apache.activemq.util.StoreUtil;
+
+import java.io.File;
+
 public abstract class PercentLimitUsage <T extends Usage> extends Usage<T> {
 
     protected int percentLimit = 0;
+    protected long total = 0;
 
     /**
      * @param parent
@@ -46,6 +51,34 @@ public abstract class PercentLimitUsage <T extends Usage> extends Usage<T> {
             return percentLimit;
         } finally {
             usageLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Sets the total available space in bytes. When non zero, the filesystem totalAvailableSpace is ignored.
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     *
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
+    public void setTotal(long max) {
+        this.total = max;
+    }
+
+    public long getTotal() {
+        return total;
+    }
+
+
+    protected void percentLimitFromFile(File directory) {
+        if (percentLimit > 0) {
+            if (total > 0) {
+                this.setLimit(total * percentLimit / 100);
+            } else if (directory != null) {
+                File dir = StoreUtil.findParentDirectory(directory);
+                if (dir != null) {
+                    this.setLimit(dir.getTotalSpace() * percentLimit / 100);
+                }
+            }
         }
     }
 

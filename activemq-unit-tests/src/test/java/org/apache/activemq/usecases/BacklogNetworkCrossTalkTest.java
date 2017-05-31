@@ -52,7 +52,7 @@ public class BacklogNetworkCrossTalkTest extends JmsMultipleBrokersTestSupport {
 
         waitForBridgeFormation();
 
-        final int numMessages = 2000;
+        final int numMessages = 1000;
         // Create queue
         ActiveMQDestination destA = createDestination("AAA", false);
         sendMessages("A", destA, numMessages);
@@ -88,7 +88,7 @@ public class BacklogNetworkCrossTalkTest extends JmsMultipleBrokersTestSupport {
 
     @Override
     public void setUp() throws Exception {
-        messageSize = 500;
+        messageSize = 5000;
         super.setMaxTestTime(10*60*1000);
         super.setAutoFail(true);
         super.setUp();

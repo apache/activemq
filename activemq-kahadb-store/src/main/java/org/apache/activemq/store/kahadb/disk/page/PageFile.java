@@ -401,6 +401,8 @@ public class PageFile {
                 recoveryFile = new RecoverableRandomAccessFile(getRecoveryFile(), "rw");
             }
 
+            boolean needsFreePageRecovery = false;
+
             if (metaData.isCleanShutdown()) {
                 nextTxid.set(metaData.getLastTxId() + 1);
                 if (metaData.getFreePages() > 0) {
@@ -409,8 +411,16 @@ public class PageFile {
             } else {
                 LOG.debug(toString() + ", Recovering page file...");
                 nextTxid.set(redoRecoveryUpdates());
+                needsFreePageRecovery = true;
+            }
 
-                // Scan all to find the free pages.
+            if (writeFile.length() < PAGE_FILE_HEADER_SIZE) {
+                writeFile.setLength(PAGE_FILE_HEADER_SIZE);
+            }
+            nextFreePageId.set((writeFile.length() - PAGE_FILE_HEADER_SIZE) / pageSize);
+
+            if (needsFreePageRecovery) {
+                // Scan all to find the free pages after nextFreePageId is set
                 freeList = new SequenceSet();
                 for (Iterator<Page> i = tx().iterator(true); i.hasNext(); ) {
                     Page page = i.next();
@@ -423,13 +433,7 @@ public class PageFile {
             metaData.setCleanShutdown(false);
             storeMetaData();
             getFreeFile().delete();
-
-            if (writeFile.length() < PAGE_FILE_HEADER_SIZE) {
-                writeFile.setLength(PAGE_FILE_HEADER_SIZE);
-            }
-            nextFreePageId.set((writeFile.length() - PAGE_FILE_HEADER_SIZE) / pageSize);
             startWriter();
-
         } else {
             throw new IllegalStateException("Cannot load the page file when it is already loaded.");
         }
@@ -487,6 +491,10 @@ public class PageFile {
 
     public boolean isLoaded() {
         return loaded.get();
+    }
+
+    public void allowIOResumption() {
+        loaded.set(true);
     }
 
     /**
@@ -1097,6 +1105,13 @@ public class PageFile {
             if (enableDiskSyncs) {
                 writeFile.sync();
             }
+
+        } catch (IOException ioError) {
+            LOG.info("Unexpected io error on pagefile write of " + batch.size() + " pages.", ioError);
+            // any subsequent write needs to be prefaced with a considered call to redoRecoveryUpdates
+            // to ensure disk image is self consistent
+            loaded.set(false);
+            throw  ioError;
         } finally {
             synchronized (writes) {
                 for (PageWrite w : batch) {

@@ -18,7 +18,6 @@ package org.apache.activemq.transport.mqtt;
 
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.Before;
@@ -72,14 +71,8 @@ public class PahoVirtualTopicMQTTTest extends PahoMQTTTest {
 
         RegionBroker regionBroker = (RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class);
 
-        String[] queues = new String[]{"Consumer.client-10:AT_LEAST_ONCE.VirtualTopic.user10.>",
-                "Consumer.client-10:AT_LEAST_ONCE.VirtualTopic.user10.client-10.>",
-                "Consumer.client-1:AT_LEAST_ONCE.VirtualTopic.user1.>",
-                "Consumer.client-1:AT_LEAST_ONCE.VirtualTopic.user1.client-1.>"};
-
-        for (String queueName : queues) {
-            Destination queue = regionBroker.getQueueRegion().getDestinations(new ActiveMQQueue(queueName)).iterator().next();
-            assertEquals("Queue " + queueName + " have more than one consumer", 1, queue.getConsumers().size());
+        for (Destination queue : regionBroker.getQueueRegion().getDestinationMap().values()) {
+            assertEquals("Queue " + queue.getActiveMQDestination() + " have more than one consumer", 1, queue.getConsumers().size());
         }
     }
 

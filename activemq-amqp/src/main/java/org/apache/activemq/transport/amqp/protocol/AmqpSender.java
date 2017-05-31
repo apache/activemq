@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,10 +17,13 @@
 package org.apache.activemq.transport.amqp.protocol;
 
 import static org.apache.activemq.transport.amqp.AmqpSupport.toLong;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_MESSAGE_FORMAT;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.activemq.broker.region.AbstractSubscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerControl;
@@ -37,7 +40,6 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.ResponseHandler;
-import org.apache.activemq.transport.amqp.message.ActiveMQJMSVendor;
 import org.apache.activemq.transport.amqp.message.AutoOutboundTransformer;
 import org.apache.activemq.transport.amqp.message.EncodedMessage;
 import org.apache.activemq.transport.amqp.message.OutboundTransformer;
@@ -50,8 +52,10 @@ import org.apache.qpid.proton.amqp.transaction.TransactionalState;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
+import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Sender;
 import org.fusesource.hawtbuf.Buffer;
 import org.slf4j.Logger;
@@ -72,13 +76,16 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
 
-    private final OutboundTransformer outboundTransformer = new AutoOutboundTransformer(ActiveMQJMSVendor.INSTANCE);
+    private final OutboundTransformer outboundTransformer = new AutoOutboundTransformer();
     private final AmqpTransferTagGenerator tagCache = new AmqpTransferTagGenerator();
-    private final LinkedList<MessageDispatch> outbound = new LinkedList<MessageDispatch>();
-    private final LinkedList<MessageDispatch> dispatchedInTx = new LinkedList<MessageDispatch>();
-    private final String MESSAGE_FORMAT_KEY = outboundTransformer.getPrefixVendor() + "MESSAGE_FORMAT";
+    private final LinkedList<MessageDispatch> outbound = new LinkedList<>();
+    private final LinkedList<Delivery> dispatchedInTx = new LinkedList<>();
 
     private final ConsumerInfo consumerInfo;
+    private AbstractSubscription subscription;
+    private AtomicInteger prefetchExtension;
+    private int currentCreditRequest;
+    private int logicalDeliveryCount; // echoes prefetch extension but from protons perspective
     private final boolean presettle;
 
     private boolean draining;
@@ -100,14 +107,22 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     public AmqpSender(AmqpSession session, Sender endpoint, ConsumerInfo consumerInfo) {
         super(session, endpoint);
 
+        // We don't support second so enforce it as First and let remote decide what to do
+        this.endpoint.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+
+        // Match what the sender mode is
+        this.endpoint.setSenderSettleMode(endpoint.getRemoteSenderSettleMode());
+
         this.consumerInfo = consumerInfo;
-        this.presettle = getEndpoint().getRemoteSenderSettleMode() == SenderSettleMode.SETTLED;
+        this.presettle = getEndpoint().getSenderSettleMode() == SenderSettleMode.SETTLED;
     }
 
     @Override
     public void open() {
         if (!isClosed()) {
             session.registerSender(getConsumerId(), this);
+            subscription = (AbstractSubscription)session.getConnection().lookupPrefetchSubscription(consumerInfo);
+            prefetchExtension = subscription.getPrefetchExtension();
         }
 
         super.open();
@@ -162,25 +177,17 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
     @Override
     public void flow() throws Exception {
+        Link endpoint = getEndpoint();
         if (LOG.isTraceEnabled()) {
-            LOG.trace("Flow: draining={}, drain={} credit={}, remoteCredit={}, queued={}",
-                      draining, getEndpoint().getDrain(),
-                      getEndpoint().getCredit(), getEndpoint().getRemoteCredit(), getEndpoint().getQueued());
+            LOG.trace("Flow: draining={}, drain={} credit={}, currentCredit={}, senderDeliveryCount={} - Sub={}",
+                    draining, endpoint.getDrain(),
+                    endpoint.getCredit(), currentCreditRequest, logicalDeliveryCount, subscription);
         }
 
-        if (getEndpoint().getDrain() && !draining) {
+        final int endpointCredit = endpoint.getCredit();
+        if (endpoint.getDrain() && !draining) {
 
-            // Revert to a pull consumer.
-            ConsumerControl control = new ConsumerControl();
-            control.setConsumerId(getConsumerId());
-            control.setDestination(getDestination());
-            control.setPrefetch(0);
-
-            LOG.trace("Flow: Pull case -> consumer control with prefetch (0) to control output");
-
-            sendToActiveMQ(control);
-
-            if (endpoint.getCredit() > 0) {
+            if (endpointCredit > 0) {
                 draining = true;
 
                 // Now request dispatch of the drain amount, we request immediate
@@ -191,9 +198,9 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 pullRequest.setDestination(getDestination());
                 pullRequest.setTimeout(-1);
                 pullRequest.setAlwaysSignalDone(true);
-                pullRequest.setQuantity(endpoint.getCredit());
+                pullRequest.setQuantity(endpointCredit);
 
-                LOG.trace("Pull case -> consumer pull request quantity = {}", endpoint.getCredit());
+                LOG.trace("Pull case -> consumer pull request quantity = {}", endpointCredit);
 
                 sendToActiveMQ(pullRequest);
             } else {
@@ -202,16 +209,36 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 pumpOutbound();
                 getEndpoint().drained();
                 session.pumpProtonToSocket();
+                currentCreditRequest = 0;
+                logicalDeliveryCount = 0;
             }
-        } else {
-            ConsumerControl control = new ConsumerControl();
-            control.setConsumerId(getConsumerId());
-            control.setDestination(getDestination());
-            control.setPrefetch(getEndpoint().getCredit());
+        } else if (endpointCredit >= 0) {
 
-            LOG.trace("Flow: update -> consumer control with prefetch {}", control.getPrefetch());
+            if (endpointCredit == 0 && currentCreditRequest != 0) {
+                prefetchExtension.set(0);
+                currentCreditRequest = 0;
+                logicalDeliveryCount = 0;
+                LOG.trace("Flow: credit 0 for sub:" + subscription);
+            } else {
+                int deltaToAdd = endpointCredit;
+                int logicalCredit = currentCreditRequest - logicalDeliveryCount;
+                if (logicalCredit > 0) {
+                    deltaToAdd -= logicalCredit;
+                } else {
+                    // reset delivery counter - dispatch from broker concurrent with credit=0
+                    // flow can go negative
+                    logicalDeliveryCount = 0;
+                }
 
-            sendToActiveMQ(control);
+                if (deltaToAdd > 0) {
+                    currentCreditRequest = prefetchExtension.addAndGet(deltaToAdd);
+                    subscription.wakeupDestinationsForDispatch();
+                    // force dispatch of matched/pending for topics (pending messages accumulate
+                    // in the sub and are dispatched on update of prefetch)
+                    subscription.setPrefetchSize(0);
+                    LOG.trace("Flow: credit addition of {} for sub {}", deltaToAdd, subscription);
+                }
+            }
         }
     }
 
@@ -226,14 +253,20 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             if (txState.getOutcome() != null) {
                 Outcome outcome = txState.getOutcome();
                 if (outcome instanceof Accepted) {
+                    TransactionId txId = new LocalTransactionId(session.getConnection().getConnectionId(), toLong(txState.getTxnId()));
+
+                    // Store the message sent in this TX we might need to re-send on rollback
+                    // and we need to ACK it on commit.
+                    session.enlist(txId);
+                    dispatchedInTx.addFirst(delivery);
+
                     if (!delivery.remotelySettled()) {
                         TransactionalState txAccepted = new TransactionalState();
                         txAccepted.setOutcome(Accepted.getInstance());
-                        txAccepted.setTxnId(((TransactionalState) state).getTxnId());
+                        txAccepted.setTxnId(txState.getTxnId());
 
                         delivery.disposition(txAccepted);
                     }
-                    settle(delivery, MessageAck.DELIVERED_ACK_TYPE);
                 }
             }
         } else {
@@ -244,10 +277,11 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 }
                 settle(delivery, MessageAck.INDIVIDUAL_ACK_TYPE);
             } else if (state instanceof Rejected) {
-                // re-deliver /w incremented delivery counter.
-                md.setRedeliveryCounter(md.getRedeliveryCounter() + 1);
-                LOG.trace("onDelivery: Rejected state = {}, delivery count now {}", state, md.getRedeliveryCounter());
-                settle(delivery, -1);
+                // Rejection is a terminal outcome, we poison the message for dispatch to
+                // the DLQ.  If a custom redelivery policy is used on the broker the message
+                // can still be redelivered based on the configation of that policy.
+                LOG.trace("onDelivery: Rejected state = {}, message poisoned.", state, md.getRedeliveryCounter());
+                settle(delivery, MessageAck.POSION_ACK_TYPE);
             } else if (state instanceof Released) {
                 LOG.trace("onDelivery: Released state = {}", state);
                 // re-deliver && don't increment the counter.
@@ -274,12 +308,14 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     }
 
     @Override
-    public void commit() throws Exception {
+    public void commit(LocalTransactionId txnId) throws Exception {
         if (!dispatchedInTx.isEmpty()) {
-            for (MessageDispatch md : dispatchedInTx) {
-                MessageAck pendingTxAck = new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
-                pendingTxAck.setFirstMessageId(md.getMessage().getMessageId());
-                pendingTxAck.setTransactionId(md.getMessage().getTransactionId());
+            for (final Delivery delivery : dispatchedInTx) {
+                MessageDispatch dispatch = (MessageDispatch) delivery.getContext();
+
+                MessageAck pendingTxAck = new MessageAck(dispatch, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
+                pendingTxAck.setFirstMessageId(dispatch.getMessage().getMessageId());
+                pendingTxAck.setTransactionId(txnId);
 
                 LOG.trace("Sending commit Ack to ActiveMQ: {}", pendingTxAck);
 
@@ -290,6 +326,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                             Throwable exception = ((ExceptionResponse) response).getException();
                             exception.printStackTrace();
                             getEndpoint().close();
+                        } else {
+                            delivery.settle();
                         }
                         session.pumpProtonToSocket();
                     }
@@ -301,15 +339,22 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     }
 
     @Override
-    public void rollback() throws Exception {
+    public void rollback(LocalTransactionId txnId) throws Exception {
         synchronized (outbound) {
 
             LOG.trace("Rolling back {} messages for redelivery. ", dispatchedInTx.size());
 
-            for (MessageDispatch dispatch : dispatchedInTx) {
-                dispatch.setRedeliveryCounter(dispatch.getRedeliveryCounter() + 1);
+            for (Delivery delivery : dispatchedInTx) {
+                // Only settled deliveries should be re-dispatched, unsettled deliveries
+                // remain acquired on the remote end and can be accepted again in a new
+                // TX or released or rejected etc.
+                MessageDispatch dispatch = (MessageDispatch) delivery.getContext();
                 dispatch.getMessage().setTransactionId(null);
-                outbound.addFirst(dispatch);
+
+                if (delivery.remotelySettled()) {
+                    dispatch.setRedeliveryCounter(dispatch.getRedeliveryCounter() + 1);
+                    outbound.addFirst(dispatch);
+                }
             }
 
             dispatchedInTx.clear();
@@ -388,6 +433,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         }
                         currentBuffer = null;
                         currentDelivery = null;
+                        logicalDeliveryCount++;
                     }
                 } else {
                     return;
@@ -415,8 +461,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         temp = (ActiveMQMessage) md.getMessage();
                     }
 
-                    if (!temp.getProperties().containsKey(MESSAGE_FORMAT_KEY)) {
-                        temp.setProperty(MESSAGE_FORMAT_KEY, 0);
+                    if (!temp.getProperties().containsKey(JMS_AMQP_MESSAGE_FORMAT)) {
+                        temp.setProperty(JMS_AMQP_MESSAGE_FORMAT, 0);
                     }
                 }
 
@@ -426,6 +472,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     // It's the end of browse signal in response to a MessagePull
                     getEndpoint().drained();
                     draining = false;
+                    currentCreditRequest = 0;
+                    logicalDeliveryCount = 0;
                 } else {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Sender:[{}] msgId={} draining={}, drain={}, credit={}, remoteCredit={}, queued={}",
@@ -437,6 +485,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                         LOG.trace("Sender:[{}] browse complete.", getEndpoint().getName());
                         getEndpoint().drained();
                         draining = false;
+                        currentCreditRequest = 0;
+                        logicalDeliveryCount = 0;
                     }
 
                     jms.setRedeliveryCounter(md.getRedeliveryCounter());
@@ -451,6 +501,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                             currentDelivery = getEndpoint().delivery(tag, 0, tag.length);
                         }
                         currentDelivery.setContext(md);
+                        currentDelivery.setMessageFormat((int) amqp.getMessageFormat());
                     } else {
                         // TODO: message could not be generated what now?
                     }
@@ -467,17 +518,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             tagCache.returnTag(tag);
         }
 
-        int newCredit = Math.max(0, getEndpoint().getCredit() - 1);
-        LOG.trace("Sender:[{}] updating conumser prefetch:{} after delivery settled.",
-                  getEndpoint().getName(), newCredit);
-
-        ConsumerControl control = new ConsumerControl();
-        control.setConsumerId(getConsumerId());
-        control.setDestination(getDestination());
-        control.setPrefetch(newCredit);
-
-        sendToActiveMQ(control);
-
         if (ackType == -1) {
             // we are going to settle, but redeliver.. we we won't yet ack to ActiveMQ
             delivery.settle();
@@ -492,19 +532,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             ack.setMessageCount(1);
             ack.setAckType((byte) ackType);
             ack.setDestination(md.getDestination());
-
-            DeliveryState remoteState = delivery.getRemoteState();
-            if (remoteState != null && remoteState instanceof TransactionalState) {
-                TransactionalState txState = (TransactionalState) remoteState;
-                TransactionId txId = new LocalTransactionId(session.getConnection().getConnectionId(), toLong(txState.getTxnId()));
-                ack.setTransactionId(txId);
-
-                // Store the message sent in this TX we might need to re-send on rollback
-                session.enlist(txId);
-                md.getMessage().setTransactionId(txId);
-                dispatchedInTx.addFirst(md);
-            }
-
             LOG.trace("Sending Ack to ActiveMQ: {}", ack);
 
             sendToActiveMQ(ack, new ResponseHandler() {

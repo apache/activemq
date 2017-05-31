@@ -63,7 +63,7 @@ public class NetworkRouteTest {
 
     @Test
     public void verifyNoRemoveOnOneConduitRemove() throws Exception {
-        EasyMock.expect(localBroker.request(EasyMock.isA(ConsumerInfo.class))).andReturn(null);
+        localBroker.oneway(EasyMock.isA(ConsumerInfo.class));
         control.replay();
 
         remoteListener.onCommand(path2Msg);
@@ -76,7 +76,7 @@ public class NetworkRouteTest {
     @Test
     public void addAndRemoveOppositeOrder() throws Exception {
         // from (1)
-        localBroker.request(EasyMock.isA(ConsumerInfo.class));
+        localBroker.oneway(EasyMock.isA(ConsumerInfo.class));
         ArgHolder localConsumer = ArgHolder.holdArgsForLastObjectCall();
         // from (2a)
         remoteBroker.asyncRequest(EasyMock.isA(ActiveMQMessage.class), EasyMock.isA(ResponseCallback.class));
@@ -123,7 +123,7 @@ public class NetworkRouteTest {
     @Test
     public void addAndRemoveSameOrder() throws Exception {
         // from (1)
-        localBroker.request(EasyMock.isA(ConsumerInfo.class));
+        localBroker.oneway(EasyMock.isA(ConsumerInfo.class));
         ArgHolder localConsumer = ArgHolder.holdArgsForLastObjectCall();
 
         // from (2a)

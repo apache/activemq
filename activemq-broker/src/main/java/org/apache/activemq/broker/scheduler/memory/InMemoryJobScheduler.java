@@ -54,10 +54,10 @@ public class InMemoryJobScheduler implements JobScheduler {
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final String name;
-    private final TreeMap<Long, ScheduledTask> jobs = new TreeMap<Long, ScheduledTask>();
+    private final TreeMap<Long, ScheduledTask> jobs = new TreeMap<>();
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean dispatchEnabled = new AtomicBoolean(false);
-    private final List<JobListener> jobListeners = new CopyOnWriteArrayList<JobListener>();
+    private final List<JobListener> jobListeners = new CopyOnWriteArrayList<>();
     private final Timer timer = new Timer();
 
     public InMemoryJobScheduler(String name) {
@@ -165,7 +165,7 @@ public class InMemoryJobScheduler implements JobScheduler {
 
     @Override
     public List<Job> getNextScheduleJobs() throws Exception {
-        List<Job> result = new ArrayList<Job>();
+        List<Job> result = new ArrayList<>();
         lock.readLock().lock();
         try {
             if (!jobs.isEmpty()) {
@@ -179,7 +179,7 @@ public class InMemoryJobScheduler implements JobScheduler {
 
     @Override
     public List<Job> getAllJobs() throws Exception {
-        final List<Job> result = new ArrayList<Job>();
+        final List<Job> result = new ArrayList<>();
         this.lock.readLock().lock();
         try {
             for (Map.Entry<Long, ScheduledTask> entry : jobs.entrySet()) {
@@ -194,7 +194,7 @@ public class InMemoryJobScheduler implements JobScheduler {
 
     @Override
     public List<Job> getAllJobs(long start, long finish) throws Exception {
-        final List<Job> result = new ArrayList<Job>();
+        final List<Job> result = new ArrayList<>();
         this.lock.readLock().lock();
         try {
             for (Map.Entry<Long, ScheduledTask> entry : jobs.entrySet()) {
@@ -223,7 +223,8 @@ public class InMemoryJobScheduler implements JobScheduler {
         long startTime = System.currentTimeMillis();
         long executionTime = 0;
         // round startTime - so we can schedule more jobs at the same time
-        startTime = (startTime / 1000) * 1000;
+        startTime = ((startTime + 500) / 500) * 500;
+
         if (cronEntry != null && cronEntry.length() > 0) {
             try {
                 executionTime = CronParser.getNextScheduledTime(cronEntry, startTime);
@@ -369,7 +370,7 @@ public class InMemoryJobScheduler implements JobScheduler {
      */
     private class ScheduledTask extends TimerTask {
 
-        private final Map<String, InMemoryJob> jobs = new TreeMap<String, InMemoryJob>();
+        private final Map<String, InMemoryJob> jobs = new TreeMap<>();
         private final long executionTime;
 
         public ScheduledTask(long executionTime) {
@@ -384,7 +385,7 @@ public class InMemoryJobScheduler implements JobScheduler {
          * @return a Collection containing all the managed jobs for this task.
          */
         public Collection<InMemoryJob> getAllJobs() {
-            return new ArrayList<InMemoryJob>(jobs.values());
+            return new ArrayList<>(jobs.values());
         }
 
         /**

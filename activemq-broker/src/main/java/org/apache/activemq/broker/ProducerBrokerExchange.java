@@ -43,7 +43,7 @@ public class ProducerBrokerExchange {
     private boolean auditProducerSequenceIds;
     private boolean isNetworkProducer;
     private BrokerService brokerService;
-    private final FlowControlInfo flowControlInfo = new FlowControlInfo();
+    private FlowControlInfo flowControlInfo = new FlowControlInfo();
 
     public ProducerBrokerExchange() {
     }
@@ -55,6 +55,7 @@ public class ProducerBrokerExchange {
         rc.region = region;
         rc.producerState = producerState;
         rc.mutable = mutable;
+        rc.flowControlInfo = flowControlInfo;
         return rc;
     }
 

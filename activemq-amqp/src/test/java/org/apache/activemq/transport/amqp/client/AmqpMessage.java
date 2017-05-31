@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.activemq.transport.amqp.client.util.UnmodifiableDelivery;
+import org.apache.activemq.transport.amqp.client.util.UnmodifiableProxy;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
@@ -104,7 +104,7 @@ public class AmqpMessage {
      */
     public Delivery getWrappedDelivery() {
         if (delivery != null) {
-            return new UnmodifiableDelivery(delivery);
+            return UnmodifiableProxy.deliveryProxy(delivery);
         }
 
         return null;
@@ -132,11 +132,52 @@ public class AmqpMessage {
      * @throws Exception if an error occurs during the accept.
      */
     public void accept() throws Exception {
+        accept(true);
+    }
+
+    /**
+     * Accepts the message marking it as consumed on the remote peer.
+     *
+     * @param settle
+     *      true if the client should also settle the delivery when sending the accept.
+     *
+     * @throws Exception if an error occurs during the accept.
+     */
+    public void accept(boolean settle) throws Exception {
         if (receiver == null) {
             throw new IllegalStateException("Can't accept non-received message.");
         }
 
-        receiver.accept(delivery);
+        receiver.accept(delivery, settle);
+    }
+
+    /**
+     * Accepts the message marking it as consumed on the remote peer.  This method
+     * will automatically settle the accepted delivery.
+     *
+     * @param session
+     *      The session that is used to manage acceptance of the message.
+     *
+     * @throws Exception if an error occurs during the accept.
+     */
+    public void accept(AmqpSession txnSession) throws Exception {
+        accept(txnSession, true);
+    }
+
+    /**
+     * Accepts the message marking it as consumed on the remote peer.
+     *
+     * @param session
+     *      The session that is used to manage acceptance of the message.
+     *
+     * @throws Exception if an error occurs during the accept.
+     */
+    public void accept(AmqpSession txnSession, boolean settle) throws Exception {
+        if (receiver == null) {
+            throw new IllegalStateException("Can't accept non-received message.");
+        }
+
+        receiver.accept(delivery, txnSession, settle);
     }
 
     /**
@@ -160,7 +201,7 @@ public class AmqpMessage {
     /**
      * Release the message, remote can redeliver it elsewhere.
      *
-     * @throws Exception if an error occurs during the reject.
+     * @throws Exception if an error occurs during the release.
      */
     public void release() throws Exception {
         if (receiver == null) {
@@ -170,7 +211,70 @@ public class AmqpMessage {
         receiver.release(delivery);
     }
 
+    /**
+     * Reject the message, remote can redeliver it elsewhere.
+     *
+     * @throws Exception if an error occurs during the reject.
+     */
+    public void reject() throws Exception {
+        if (receiver == null) {
+            throw new IllegalStateException("Can't release non-received message.");
+        }
+
+        receiver.reject(delivery);
+    }
+
     //----- Convenience methods for constructing outbound messages -----------//
+
+    /**
+     * Sets the address which is applied to the AMQP message To field in the message properties
+     *
+     * @param address
+     *      The address that should be applied in the Message To field.
+     */
+    public void setAddress(String address) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setAddress(address);
+    }
+
+    /**
+     * Return the set address that was set in the Message To field.
+     *
+     * @return the set address String form or null if not set.
+     */
+    public String getAddress() {
+        if (message.getProperties() == null) {
+            return null;
+        }
+
+        return message.getProperties().getTo();
+    }
+
+    /**
+     * Sets the address which is applied to the AMQP message ReplyTo field in the message properties
+     *
+     * @param replyTo
+     *      The address that should be applied in the Message ReplyTo field.
+     */
+    public void setReplyTo(String replyTo) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setReplyTo(replyTo);
+    }
+
+    /**
+     * Return the set address that was set in the Message ReplyTo field.
+     *
+     * @return the set address String form or null if not set.
+     */
+    public String getReplyTo() {
+        if (message.getProperties() == null) {
+            return null;
+        }
+
+        return message.getProperties().getReplyTo();
+    }
 
     /**
      * Sets the MessageId property on an outbound message using the provided String
@@ -191,7 +295,7 @@ public class AmqpMessage {
      * @return the set message ID in String form or null if not set.
      */
     public String getMessageId() {
-        if (message.getProperties() == null) {
+        if (message.getProperties() == null || message.getProperties().getMessageId() == null) {
             return null;
         }
 
@@ -243,7 +347,7 @@ public class AmqpMessage {
      * @return the set correlation ID in String form or null if not set.
      */
     public String getCorrelationId() {
-        if (message.getProperties() == null) {
+        if (message.getProperties() == null || message.getProperties().getCorrelationId() == null) {
             return null;
         }
 
@@ -321,11 +425,83 @@ public class AmqpMessage {
      * @return true if the message is marked as being durable.
      */
     public boolean isDurable() {
-        if (message.getHeader() == null) {
+        if (message.getHeader() == null || message.getHeader().getDurable() == null) {
             return false;
         }
 
         return message.getHeader().getDurable();
+    }
+
+    /**
+     * Sets the priority header on the outgoing message.
+     *
+     * @param priority the priority value to set.
+     */
+    public void setPriority(short priority) {
+       checkReadOnly();
+       lazyCreateHeader();
+       getWrappedMessage().setPriority(priority);
+    }
+
+    /**
+     * Gets the priority header on the message.
+     */
+    public short getPriority() {
+       return getWrappedMessage().getPriority();
+    }
+
+    /**
+     * Sets the ttl header on the outgoing message.
+     *
+     * @param timeToLive the ttl value to set.
+     */
+    public void setTimeToLive(long timeToLive) {
+       checkReadOnly();
+       lazyCreateHeader();
+       getWrappedMessage().setTtl(timeToLive);
+    }
+
+    /**
+     * Sets the ttl header on the outgoing message.
+     */
+    public long getTimeToLive() {
+       return getWrappedMessage().getTtl();
+    }
+
+    /**
+     * Sets the absolute expiration time property on the message.
+     *
+     * @param absoluteExpiryTime the expiration time value to set.
+     */
+    public void setAbsoluteExpiryTime(long absoluteExpiryTime) {
+       checkReadOnly();
+       lazyCreateProperties();
+       getWrappedMessage().setExpiryTime(absoluteExpiryTime);
+    }
+
+    /**
+     * Gets the absolute expiration time property on the message.
+     */
+    public long getAbsoluteExpiryTime() {
+       return getWrappedMessage().getExpiryTime();
+    }
+
+    /**
+     * Sets the creation time property on the message.
+     *
+     * @param creationTime the time value to set.
+     */
+    public void setCreationTime(long creationTime) {
+       checkReadOnly();
+       lazyCreateProperties();
+       getWrappedMessage().setCreationTime(creationTime);
+    }
+
+    /**
+     * Gets the absolute expiration time property on the message.
+     */
+    public long getCreationTime() {
+       return getWrappedMessage().getCreationTime();
     }
 
     /**
@@ -349,7 +525,7 @@ public class AmqpMessage {
      * @param key
      *        the name used to lookup the property in the application properties.
      *
-     * @return the propety value or null if not set.
+     * @return the property value or null if not set.
      */
     public Object getApplicationProperty(String key) {
         if (applicationPropertiesMap == null) {
@@ -511,21 +687,21 @@ public class AmqpMessage {
 
     private void lazyCreateMessageAnnotations() {
         if (messageAnnotationsMap == null) {
-            messageAnnotationsMap = new HashMap<Symbol,Object>();
+            messageAnnotationsMap = new HashMap<>();
             message.setMessageAnnotations(new MessageAnnotations(messageAnnotationsMap));
         }
     }
 
     private void lazyCreateDeliveryAnnotations() {
         if (deliveryAnnotationsMap == null) {
-            deliveryAnnotationsMap = new HashMap<Symbol,Object>();
+            deliveryAnnotationsMap = new HashMap<>();
             message.setDeliveryAnnotations(new DeliveryAnnotations(deliveryAnnotationsMap));
         }
     }
 
     private void lazyCreateApplicationProperties() {
         if (applicationPropertiesMap == null) {
-            applicationPropertiesMap = new HashMap<String, Object>();
+            applicationPropertiesMap = new HashMap<>();
             message.setApplicationProperties(new ApplicationProperties(applicationPropertiesMap));
         }
     }
@@ -535,6 +711,7 @@ public class AmqpMessage {
             message.setHeader(new Header());
         }
     }
+
     private void lazyCreateProperties() {
         if (message.getProperties() == null) {
             message.setProperties(new Properties());

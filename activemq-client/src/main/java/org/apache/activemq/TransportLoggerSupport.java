@@ -27,6 +27,12 @@ public class TransportLoggerSupport {
 
     public static String defaultLogWriterName = "default";
 
+    /**
+     * Default port to control the transport loggers through JMX
+     */
+    public static int defaultJmxPort = 1099;
+
+
     public static interface SPI {
         public Transport createTransportLogger(Transport transport) throws IOException;
         public Transport createTransportLogger(Transport transport, String logWriterName, boolean dynamicManagement, boolean startLogging, int jmxPort) throws IOException;

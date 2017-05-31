@@ -98,7 +98,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
             TransactionInfo txInfo = new TransactionInfo(connectionId, txId, TransactionInfo.BEGIN);
             session.getConnection().registerTransaction(txId, this);
             sendToActiveMQ(txInfo, null);
-            LOG.trace("started transaction {}", txId.getValue());
+            LOG.trace("started transaction {}", txId);
 
             Declared declared = new Declared();
             declared.setTxnId(new Binary(toBytes(txId.getValue())));
@@ -110,18 +110,18 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
             final byte operation;
 
             if (discharge.getFail()) {
-                LOG.trace("rollback transaction {}", txId.getValue());
+                LOG.trace("rollback transaction {}", txId);
                 operation = TransactionInfo.ROLLBACK;
             } else {
-                LOG.trace("commit transaction {}", txId.getValue());
+                LOG.trace("commit transaction {}", txId);
                 operation = TransactionInfo.COMMIT_ONE_PHASE;
             }
 
             for (AmqpSession txSession : txSessions) {
                 if (operation == TransactionInfo.ROLLBACK) {
-                    txSession.rollback();
+                    txSession.rollback(txId);
                 } else {
-                    txSession.commit();
+                    txSession.commit(txId);
                 }
             }
 

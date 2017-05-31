@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -37,7 +37,6 @@ import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.ResponseHandler;
 import org.apache.activemq.transport.amqp.message.AMQPNativeInboundTransformer;
 import org.apache.activemq.transport.amqp.message.AMQPRawInboundTransformer;
-import org.apache.activemq.transport.amqp.message.ActiveMQJMSVendor;
 import org.apache.activemq.transport.amqp.message.EncodedMessage;
 import org.apache.activemq.transport.amqp.message.InboundTransformer;
 import org.apache.activemq.transport.amqp.message.JMSMappingInboundTransformer;
@@ -70,6 +69,8 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
 
     private InboundTransformer inboundTransformer;
+
+    private int sendsInFlight;
 
     /**
      * Create a new instance of an AmqpReceiver
@@ -138,14 +139,14 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
         if (inboundTransformer == null) {
             String transformer = session.getConnection().getConfiguredTransformer();
             if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_JMS)) {
-                inboundTransformer = new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                inboundTransformer = new JMSMappingInboundTransformer();
             } else if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_NATIVE)) {
-                inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                inboundTransformer = new AMQPNativeInboundTransformer();
             } else if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_RAW)) {
-                inboundTransformer = new AMQPRawInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                inboundTransformer = new AMQPRawInboundTransformer();
             } else {
                 LOG.warn("Unknown transformer type {} using native one instead", transformer);
-                inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+                inboundTransformer = new AMQPNativeInboundTransformer();
             }
         }
         return inboundTransformer;
@@ -157,7 +158,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
             EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), deliveryBytes.data, deliveryBytes.offset, deliveryBytes.length);
 
             InboundTransformer transformer = getTransformer();
-            ActiveMQMessage message = (ActiveMQMessage) transformer.transform(em);
+            ActiveMQMessage message = transformer.transform(em);
 
             current = null;
 
@@ -205,58 +206,57 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
             }
 
             message.onSend();
-            if (!delivery.remotelySettled()) {
-                sendToActiveMQ(message, new ResponseHandler() {
 
-                    @Override
-                    public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
-                        if (response.isException()) {
-                            ExceptionResponse error = (ExceptionResponse) response;
-                            Rejected rejected = new Rejected();
-                            ErrorCondition condition = new ErrorCondition();
+            sendsInFlight++;
 
-                            if (error.getException() instanceof SecurityException) {
-                                condition.setCondition(AmqpError.UNAUTHORIZED_ACCESS);
-                            } else if (error.getException() instanceof ResourceAllocationException) {
-                                condition.setCondition(AmqpError.RESOURCE_LIMIT_EXCEEDED);
-                            } else {
-                                condition.setCondition(Symbol.valueOf("failed"));
-                            }
+            sendToActiveMQ(message, createResponseHandler(delivery));
+        }
+    }
 
-                            condition.setDescription(error.getException().getMessage());
-                            rejected.setError(condition);
-                            delivery.disposition(rejected);
+    private ResponseHandler createResponseHandler(final Delivery delivery) {
+        return new ResponseHandler() {
+
+            @Override
+            public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                if (!delivery.remotelySettled()) {
+                    if (response.isException()) {
+                        ExceptionResponse error = (ExceptionResponse) response;
+                        Rejected rejected = new Rejected();
+                        ErrorCondition condition = new ErrorCondition();
+
+                        if (error.getException() instanceof SecurityException) {
+                            condition.setCondition(AmqpError.UNAUTHORIZED_ACCESS);
+                        } else if (error.getException() instanceof ResourceAllocationException) {
+                            condition.setCondition(AmqpError.RESOURCE_LIMIT_EXCEEDED);
                         } else {
-                            if (getEndpoint().getCredit() <= (getConfiguredReceiverCredit() * .3)) {
-                                LOG.debug("Sending more credit ({}) to producer: {}", getConfiguredReceiverCredit() - getEndpoint().getCredit(), getProducerId());
-                                getEndpoint().flow(getConfiguredReceiverCredit() - getEndpoint().getCredit());
-                            }
-
-                            if (remoteState != null && remoteState instanceof TransactionalState) {
-                                TransactionalState txAccepted = new TransactionalState();
-                                txAccepted.setOutcome(Accepted.getInstance());
-                                txAccepted.setTxnId(((TransactionalState) remoteState).getTxnId());
-
-                                delivery.disposition(txAccepted);
-                            } else {
-                                delivery.disposition(Accepted.getInstance());
-                            }
+                            condition.setCondition(Symbol.valueOf("failed"));
                         }
 
-                        delivery.settle();
-                        session.pumpProtonToSocket();
+                        condition.setDescription(error.getException().getMessage());
+                        rejected.setError(condition);
+                        delivery.disposition(rejected);
+                    } else {
+                        final DeliveryState remoteState = delivery.getRemoteState();
+                        if (remoteState != null && remoteState instanceof TransactionalState) {
+                            TransactionalState txAccepted = new TransactionalState();
+                            txAccepted.setOutcome(Accepted.getInstance());
+                            txAccepted.setTxnId(((TransactionalState) remoteState).getTxnId());
+
+                            delivery.disposition(txAccepted);
+                        } else {
+                            delivery.disposition(Accepted.getInstance());
+                        }
                     }
-                });
-            } else {
-                if (getEndpoint().getCredit() <= (getConfiguredReceiverCredit() * .3)) {
-                    LOG.debug("Sending more credit ({}) to producer: {}", getConfiguredReceiverCredit() - getEndpoint().getCredit(), getProducerId());
-                    getEndpoint().flow(getConfiguredReceiverCredit() - getEndpoint().getCredit());
-                    session.pumpProtonToSocket();
+                }
+
+                if (getEndpoint().getCredit() + --sendsInFlight <= (getConfiguredReceiverCredit() * .3)) {
+                    LOG.trace("Sending more credit ({}) to producer: {}", getConfiguredReceiverCredit() * .7, getProducerId());
+                    getEndpoint().flow((int) (getConfiguredReceiverCredit() * .7));
                 }
 
                 delivery.settle();
-                sendToActiveMQ(message);
+                session.pumpProtonToSocket();
             }
-        }
+        };
     }
 }

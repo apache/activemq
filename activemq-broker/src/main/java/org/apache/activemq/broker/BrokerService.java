@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -111,9 +112,9 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
+import org.apache.activemq.usage.PercentLimitUsage;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.apache.activemq.util.IOExceptionHandler;
@@ -180,11 +181,11 @@ public class BrokerService implements Service {
     private PersistenceAdapterFactory persistenceFactory;
     protected DestinationFactory destinationFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
-    private final List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
-    private final List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<NetworkConnector>();
-    private final List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<ProxyConnector>();
-    private final List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<JmsConnector>();
-    private final List<Service> services = new ArrayList<Service>();
+    private final List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<>();
+    private final List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<>();
+    private final List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<>();
+    private final List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<>();
+    private final List<Service> services = new ArrayList<>();
     private transient Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
@@ -229,7 +230,7 @@ public class BrokerService implements Service {
     private boolean dedicatedTaskRunner;
     private boolean cacheTempDestinations = false;// useful for failover
     private int timeBeforePurgeTempDestinations = 5000;
-    private final List<Runnable> shutdownHooks = new ArrayList<Runnable>();
+    private final List<Runnable> shutdownHooks = new ArrayList<>();
     private boolean systemExitOnShutdown;
     private int systemExitOnShutdownExitCode;
     private SslContext sslContext;
@@ -623,7 +624,7 @@ public class BrokerService implements Service {
             startBroker(startAsync);
             brokerRegistry.bind(getBrokerName(), BrokerService.this);
         } catch (Exception e) {
-            LOG.error("Failed to start Apache ActiveMQ ({}, {})", new Object[]{ getBrokerName(), brokerId }, e);
+            LOG.error("Failed to start Apache ActiveMQ ({}, {})", getBrokerName(), brokerId, e);
             try {
                 if (!stopped.get()) {
                     stop();
@@ -1374,7 +1375,7 @@ public class BrokerService implements Service {
     }
 
     public Map<String, String> getTransportConnectorURIsAsMap() {
-        Map<String, String> answer = new HashMap<String, String>();
+        Map<String, String> answer = new HashMap<>();
         for (TransportConnector connector : transportConnectors) {
             try {
                 URI uri = connector.getConnectUri();
@@ -1495,7 +1496,7 @@ public class BrokerService implements Service {
     }
 
     public List<TransportConnector> getTransportConnectors() {
-        return new ArrayList<TransportConnector>(transportConnectors);
+        return new ArrayList<>(transportConnectors);
     }
 
     /**
@@ -1530,11 +1531,11 @@ public class BrokerService implements Service {
     }
 
     public List<NetworkConnector> getNetworkConnectors() {
-        return new ArrayList<NetworkConnector>(networkConnectors);
+        return new ArrayList<>(networkConnectors);
     }
 
     public List<ProxyConnector> getProxyConnectors() {
-        return new ArrayList<ProxyConnector>(proxyConnectors);
+        return new ArrayList<>(proxyConnectors);
     }
 
     /**
@@ -1772,6 +1773,13 @@ public class BrokerService implements Service {
      */
     public void setTempDataStore(PListStore tempDataStore) {
         this.tempDataStore = tempDataStore;
+        if (tempDataStore != null) {
+            if (tmpDataDirectory == null) {
+                tmpDataDirectory = tempDataStore.getDirectory();
+            } else if (tempDataStore.getDirectory() == null) {
+                tempDataStore.setDirectory(tmpDataDirectory);
+            }
+        }
         configureService(tempDataStore);
     }
 
@@ -2041,14 +2049,19 @@ public class BrokerService implements Service {
         }
     }
 
-    protected void checkUsageLimit(File dir, Usage<?> storeUsage, int percentLimit) throws ConfigurationException {
+    protected void checkUsageLimit(File dir, PercentLimitUsage<?> storeUsage, int percentLimit) throws ConfigurationException {
         if (dir != null) {
             dir = StoreUtil.findParentDirectory(dir);
             String storeName = storeUsage instanceof StoreUsage ? "Store" : "Temporary Store";
             long storeLimit = storeUsage.getLimit();
             long storeCurrent = storeUsage.getUsage();
-            long totalSpace = dir.getTotalSpace();
-            long totalUsableSpace = dir.getUsableSpace() + storeCurrent;
+            long totalSpace = storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getTotalSpace();
+            long totalUsableSpace = (storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getUsableSpace()) + storeCurrent;
+            if (totalUsableSpace < 0 || totalSpace < 0) {
+                final String message = "File system space reported by: " + dir + " was negative, possibly a huge file system, set a sane usage.total to provide some guidance";
+                LOG.error(message);
+                throw new ConfigurationException(message);
+            }
             //compute byte value of the percent limit
             long bytePercentLimit = totalSpace * percentLimit / 100;
             int oneMeg = 1024 * 1024;
@@ -2058,6 +2071,7 @@ public class BrokerService implements Service {
             //Changes in partition size (total space) as well as changes in usable space should
             //be detected here
             if (diskUsageCheckRegrowThreshold > -1 && percentLimit > 0
+                    && storeUsage.getTotal() == 0
                     && storeLimit < bytePercentLimit && storeLimit < totalUsableSpace){
 
                 // set the limit to be bytePercentLimit or usableSpace if
@@ -2257,7 +2271,7 @@ public class BrokerService implements Service {
         }
     }
 
-    protected ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
+    public ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
         return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "networkConnectors", connector.getName());
     }
 
@@ -2377,7 +2391,7 @@ public class BrokerService implements Service {
      * Create the default destination interceptor
      */
     protected DestinationInterceptor[] createDefaultDestinationInterceptor() {
-        List<DestinationInterceptor> answer = new ArrayList<DestinationInterceptor>();
+        List<DestinationInterceptor> answer = new ArrayList<>();
         if (isUseVirtualTopics()) {
             VirtualDestinationInterceptor interceptor = new VirtualDestinationInterceptor();
             VirtualTopic virtualTopic = new VirtualTopic();
@@ -2590,8 +2604,8 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public void startAllConnectors() throws Exception {
-        Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
-        List<TransportConnector> al = new ArrayList<TransportConnector>();
+        final Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
+        List<TransportConnector> al = new ArrayList<>();
         for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
             TransportConnector connector = iter.next();
             al.add(startTransportConnector(connector));
@@ -2603,12 +2617,6 @@ public class BrokerService implements Service {
             setTransportConnectors(al);
         }
         this.slave = false;
-        URI uri = getVmConnectorURI();
-        Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-        map.put("async", "false");
-        map.put("create","false");
-        uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
-
         if (!stopped.get()) {
             ThreadPoolExecutor networkConnectorStartExecutor = null;
             if (isNetworkConnectorStartAsync()) {
@@ -2628,27 +2636,8 @@ public class BrokerService implements Service {
 
             for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 final NetworkConnector connector = iter.next();
-                connector.setLocalUri(uri);
-                connector.setBrokerName(getBrokerName());
-                connector.setDurableDestinations(durableDestinations);
-                if (getDefaultSocketURIString() != null) {
-                    connector.setBrokerURL(getDefaultSocketURIString());
-                }
-                if (networkConnectorStartExecutor != null) {
-                    networkConnectorStartExecutor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                LOG.info("Async start of {}", connector);
-                                connector.start();
-                            } catch(Exception e) {
-                                LOG.error("Async start of network connector: {} failed", connector, e);
-                            }
-                        }
-                    });
-                } else {
-                    connector.start();
-                }
+                connector.setLocalUri(getVmConnectorURI());
+                startNetworkConnector(connector, durableDestinations, networkConnectorStartExecutor);
             }
             if (networkConnectorStartExecutor != null) {
                 // executor done when enqueued tasks are complete
@@ -2667,6 +2656,51 @@ public class BrokerService implements Service {
                 configureService(service);
                 service.start();
             }
+        }
+    }
+
+    public void startNetworkConnector(final NetworkConnector connector,
+            final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
+        startNetworkConnector(connector, getBroker().getDurableDestinations(), networkConnectorStartExecutor);
+    }
+
+    public void startNetworkConnector(final NetworkConnector connector,
+            final Set<ActiveMQDestination> durableDestinations,
+            final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
+        connector.setBrokerName(getBrokerName());
+        //set the durable destinations to match the broker if not set on the connector
+        if (connector.getDurableDestinations() == null) {
+            connector.setDurableDestinations(durableDestinations);
+        }
+        String defaultSocketURI = getDefaultSocketURIString();
+        if (defaultSocketURI != null) {
+            connector.setBrokerURL(defaultSocketURI);
+        }
+        //If using the runtime plugin to start a network connector then the mbean needs
+        //to be added, under normal start it will already exist so check for InstanceNotFoundException
+        if (isUseJmx()) {
+            ObjectName networkMbean = createNetworkConnectorObjectName(connector);
+            try {
+                getManagementContext().getObjectInstance(networkMbean);
+            } catch (InstanceNotFoundException e) {
+                LOG.debug("Network connector MBean {} not found, registering", networkMbean);
+                registerNetworkConnectorMBean(connector);
+            }
+        }
+        if (networkConnectorStartExecutor != null) {
+            networkConnectorStartExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        LOG.info("Async start of {}", connector);
+                        connector.start();
+                    } catch(Exception e) {
+                        LOG.error("Async start of network connector: {} failed", connector, e);
+                    }
+                }
+            });
+        } else {
+            connector.start();
         }
     }
 
@@ -2729,7 +2763,7 @@ public class BrokerService implements Service {
     private DestinationFilter getVirtualTopicConsumerDestinationFilter() {
         // created at startup, so no sync needed
         if (virtualConsumerDestinationFilter == null) {
-            Set <ActiveMQQueue> consumerDestinations = new HashSet<ActiveMQQueue>();
+            Set <ActiveMQQueue> consumerDestinations = new HashSet<>();
             if (destinationInterceptors != null) {
                 for (DestinationInterceptor interceptor : destinationInterceptors) {
                     if (interceptor instanceof VirtualDestinationInterceptor) {

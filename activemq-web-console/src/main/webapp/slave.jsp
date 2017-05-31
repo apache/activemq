@@ -14,11 +14,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-
-
-
-
+<%-- Workaround for https://ops4j1.jira.com/browse/PAXWEB-1070 --%>
+<%@include file="WEB-INF/jspf/headertags.jspf" %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 

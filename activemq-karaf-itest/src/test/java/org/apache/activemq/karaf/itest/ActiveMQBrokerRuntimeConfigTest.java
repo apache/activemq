@@ -16,53 +16,38 @@
  */
 package org.apache.activemq.karaf.itest;
 
-import java.io.File;
-import java.util.Date;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.MavenUtils;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.junit.PaxExam;
-
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
-@RunWith(PaxExam.class)
-public class ActiveMQBrokerRuntimeConfigTest extends AbstractJmsFeatureTest {
+import java.io.File;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
-    @Configuration
-    public static Option[] configure() {
-        return append(editConfigurationFilePut("etc/org.apache.activemq.server-default.cfg", "config.check", "false"),
-                configureBrokerStart(
-                        append(replaceConfigurationFile("data/tmp/modified-config.xml",
-                                new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/activemq-runtime-config-mod.xml")),
-                                configure("activemq")), "activemq-runtime-config"));
-    }
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.PaxExam;
+
+@RunWith(PaxExam.class)
+public class ActiveMQBrokerRuntimeConfigTest extends AbstractFeatureTest {
+
+	@Configuration
+	public static Option[] configure() {
+		return new Option[] //
+		{ //
+				configure("activemq"), //
+				editConfigurationFilePut("etc/org.apache.activemq.server-default.cfg", "config.check", "false"),
+				replaceConfigurationFile("data/tmp/modified-config.xml",
+						new File(RESOURCE_BASE + "activemq-runtime-config-mod.xml")),
+				configureBrokerStart("activemq-runtime-config") };
+	}
 
     @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
-
-        withinReason(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
-                return true;
-            }
-        });
-
-        withinReason(new Callable<Boolean>(){
-            @Override
-            public Boolean call() throws Exception {
-                assertTrue("3MB limit", executeCommand("activemq:query").trim().contains("MemoryLimit = 3145728"));
-                return true;
-            }
-        });
+    	assertBrokerStarted();
+        assertMemoryLimit("3145728");
 
         // ensure update will be reflected in OS fs modified window
         TimeUnit.SECONDS.sleep(4);
@@ -74,13 +59,14 @@ public class ActiveMQBrokerRuntimeConfigTest extends AbstractJmsFeatureTest {
         copyFile(new File(karafDir + "/data/tmp/modified-config.xml"), target);
         System.err.println("new mod at: " + new Date(target.lastModified()));
 
-        withinReason(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                assertTrue("4MB limit", executeCommand("activemq:query").trim().contains("MemoryLimit = 4194304"));
-                return true;
+        assertMemoryLimit("4194304");
+    }
+
+	private void assertMemoryLimit(String limit) throws Exception {
+		withinReason(new Runnable() {
+            public void run() {
+                assertTrue("3MB limit", executeCommand("activemq:query").trim().contains("MemoryLimit = "+ limit));
             }
         });
-
-    }
+	}
 }

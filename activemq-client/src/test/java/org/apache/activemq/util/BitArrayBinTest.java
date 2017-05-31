@@ -171,4 +171,14 @@ public class BitArrayBinTest {
         toTest.setBit(largeNum, true);
         assertTrue("set", toTest.getBit(largeNum));
     }
+
+    //This test is slightly different in that it doesn't set bit 1 to
+    //true as above which was causing a different result before AMQ-6431
+    @Test
+    public void testLargeNumber2() {
+        BitArrayBin toTest = new BitArrayBin(1024);
+        long largeNum = Integer.MAX_VALUE * 2L + 100L;
+        toTest.setBit(largeNum, true);
+        assertTrue(toTest.getBit(largeNum));
+    }
 }

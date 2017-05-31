@@ -46,7 +46,7 @@ public class ConsumerCommand extends AbstractCommand {
 
     @Override
     protected void runTask(List<String> tokens) throws Exception {
-        LOG.info("Connecting to URL: " + brokerUrl + " (" + user + ":" + password + ")");
+        LOG.info("Connecting to URL: " + brokerUrl + " as user: " + user);
         LOG.info("Consuming " + destination);
         LOG.info("Sleeping between receives " + sleep + " ms");
         LOG.info("Running " + parallelThreads + " parallel threads");

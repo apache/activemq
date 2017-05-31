@@ -26,7 +26,7 @@ import org.apache.activemq.wireformat.WireFormatFactory;
 public class AmqpWireFormatFactory implements WireFormatFactory {
 
     private long maxFrameSize = AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE;
-    private int maxAmqpFrameSize = AmqpWireFormat.NO_AMQP_MAX_FRAME_SIZE;
+    private int maxAmqpFrameSize = AmqpWireFormat.DEFAULT_ANQP_FRAME_SIZE;
     private int idelTimeout = AmqpWireFormat.DEFAULT_IDLE_TIMEOUT;
     private int producerCredit = AmqpWireFormat.DEFAULT_PRODUCER_CREDIT;
     private String transformer = InboundTransformer.TRANSFORMER_NATIVE;

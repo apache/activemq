@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -31,12 +33,18 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -247,6 +255,44 @@ public class ProducerFlowControlTest extends JmsTestSupport {
         assertFalse(pubishDoneToQeueuB.await(2, TimeUnit.SECONDS));
     }
 
+    public void testDisableWarning() throws Exception {
+        final AtomicInteger warnings = new AtomicInteger();
+        Appender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Usage Manager Memory Limit")) {
+                    LOG.info("received  log message: " + event.getMessage());
+                    warnings.incrementAndGet();
+                }
+            }
+        };
+        org.apache.log4j.Logger log4jLogger =
+                org.apache.log4j.Logger.getLogger(Queue.class);
+        log4jLogger.addAppender(appender);
+        try {
+            ConnectionFactory factory = createConnectionFactory();
+            connection = (ActiveMQConnection)factory.createConnection();
+            connections.add(connection);
+            connection.start();
+
+            fillQueue(queueB);
+            assertEquals(1, warnings.get());
+
+            broker.getDestinationPolicy().getDefaultEntry().setBlockedProducerWarningInterval(0);
+            warnings.set(0);
+
+            // new connection b/c other is blocked
+            connection = (ActiveMQConnection)factory.createConnection();
+            connections.add(connection);
+            connection.start();
+            fillQueue(new ActiveMQQueue("SomeOtherQueueToPickUpNewPolicy"));
+            assertEquals(0, warnings.get());
+
+        } finally {
+            log4jLogger.removeAppender(appender);
+        }
+    }
+
     private void fillQueue(final ActiveMQQueue queue) throws JMSException, InterruptedException {
         final AtomicBoolean done = new AtomicBoolean(true);
         final AtomicBoolean keepGoing = new AtomicBoolean(true);
@@ -334,7 +380,9 @@ public class ProducerFlowControlTest extends JmsTestSupport {
     }
     
     protected void tearDown() throws Exception {
-        if (connection != null) {
+        for (Connection c : connections) {
+            // force error on blocked connections
+            ActiveMQConnection connection = (ActiveMQConnection) c;
             TcpTransport t = (TcpTransport)connection.getTransport().narrow(TcpTransport.class);
             t.getTransportListener().onException(new IOException("Disposed."));
             connection.getTransport().stop();

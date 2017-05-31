@@ -16,19 +16,21 @@
  */
 package org.apache.activemq.transport.amqp.client;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
 /**
- * Abstract base for a validation hook that is used in tests to check
- * the state of a remote resource after a variety of lifecycle events.
+ * Abstract base for a validation hook that is used in tests to check the state
+ * of a remote resource after a variety of lifecycle events.
  */
 public class AmqpValidator {
 
-    private boolean valid = true;
-    private String errorMessage;
+    private AtomicReference<String> errorMessage = new AtomicReference<String>();
 
     public void inspectOpenedResource(Connection connection) {
 
@@ -70,32 +72,38 @@ public class AmqpValidator {
 
     }
 
+    public void inspectDelivery(Receiver receiver, Delivery delivery) {
+
+    }
+
+    public void inspectDeliveryUpdate(Sender sender, Delivery delivery) {
+
+    }
+
     public boolean isValid() {
-        return valid;
+        return errorMessage.get() != null;
     }
 
-    protected void setValid(boolean valid) {
-        this.valid = valid;
+    public final void clearErrorMessage() {
+        errorMessage.set(null);
     }
 
-    public String getErrorMessage() {
-        return errorMessage;
+    public final String getErrorMessage() {
+        return errorMessage.get();
     }
 
-    protected void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
-    protected void markAsInvalid(String errorMessage) {
-        if (valid) {
-            setValid(false);
-            setErrorMessage(errorMessage);
+    protected final boolean markAsInvalid(String message) {
+        if (message == null) {
+            throw new NullPointerException("Provided error message cannot be null!");
         }
+
+        return errorMessage.compareAndSet(null, message);
     }
 
-    public void assertValid() {
-        if (!isValid()) {
-            throw new AssertionError(errorMessage);
+    public final void assertValid() {
+        final String assertionErrorMessage = errorMessage.get();
+        if (assertionErrorMessage != null) {
+            throw new AssertionError(assertionErrorMessage);
         }
     }
 }

@@ -506,7 +506,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     sendPullCommand(timeout);
                 } else if (redeliveryExceeded(md)) {
                     LOG.debug("{} received with excessive redelivered: {}", getConsumerId(), md);
-                    posionAck(md, "dispatch to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
+                    posionAck(md, "Dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
                     if (timeout > 0) {
                         timeout = Math.max(deadline - System.currentTimeMillis(), 0);
                     }
@@ -539,6 +539,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         try {
             return session.getTransacted()
                     && redeliveryPolicy != null
+                    && redeliveryPolicy.isPreDispatchCheck()
                     && redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
                     && md.getRedeliveryCounter() > redeliveryPolicy.getMaximumRedeliveries()
                     // redeliveryCounter > x expected after resend via brokerRedeliveryPlugin
@@ -602,6 +603,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             m.setAcknowledgeCallback(new Callback() {
                 @Override
                 public void execute() throws Exception {
+                    checkClosed();
                     session.checkClosed();
                     session.acknowledge();
                 }
@@ -610,6 +612,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             m.setAcknowledgeCallback(new Callback() {
                 @Override
                 public void execute() throws Exception {
+                    checkClosed();
                     session.checkClosed();
                     acknowledge(md);
                 }
@@ -1253,7 +1256,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
                     MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
                     ack.setFirstMessageId(firstMsgId);
-                    ack.setPoisonCause(new Throwable("Exceeded redelivery policy limit:" + redeliveryPolicy
+                    ack.setPoisonCause(new Throwable("Delivery[" + lastMd.getMessage().getRedeliveryCounter()  + "] exceeds redelivery policy limit:" + redeliveryPolicy
                             + ", cause:" + lastMd.getRollbackCause(), lastMd.getRollbackCause()));
                     session.sendAck(ack,true);
                     // Adjust the window size.
@@ -1390,7 +1393,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
                             if (redeliveryExceeded(md)) {
-                                posionAck(md, "dispatch to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
+                                posionAck(md, "listener dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
                                 return;
                             }
                             ActiveMQMessage message = createActiveMQMessage(md);

@@ -24,12 +24,14 @@ import static org.junit.Assert.assertTrue;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.jms.Destination;
+import javax.jms.MapMessage;
 import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
@@ -51,7 +53,6 @@ import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class JMSMappingInboundTransformerTest {
 
@@ -65,8 +66,7 @@ public class JMSMappingInboundTransformerTest {
      */
     @Test
     public void testCreateBytesMessageFromNoBodySectionAndContentType() throws Exception {
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         Message message = Message.Factory.create();
         message.setContentType(AmqpMessageSupport.OCTET_STREAM_CONTENT_TYPE);
@@ -86,8 +86,7 @@ public class JMSMappingInboundTransformerTest {
      */
     @Test
     public void testCreateBytesMessageFromNoBodySectionAndNoContentType() throws Exception {
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         Message message = Message.Factory.create();
 
@@ -107,8 +106,7 @@ public class JMSMappingInboundTransformerTest {
     */
     @Test
     public void testCreateObjectMessageFromNoBodySectionAndContentType() throws Exception {
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         Message message = Message.Factory.create();
         message.setContentType(AmqpMessageSupport.SERIALIZED_JAVA_OBJECT_CONTENT_TYPE);
@@ -122,8 +120,7 @@ public class JMSMappingInboundTransformerTest {
 
     @Test
     public void testCreateTextMessageFromNoBodySectionAndContentType() throws Exception {
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         Message message = Message.Factory.create();
         message.setContentType("text/plain");
@@ -143,8 +140,7 @@ public class JMSMappingInboundTransformerTest {
      * @throws Exception if an error occurs during the test.
      */
     public void testCreateGenericMessageFromNoBodySectionAndUnknownContentType() throws Exception {
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         Message message = Message.Factory.create();
         message.setContentType("unknown-content-type");
@@ -174,8 +170,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -197,8 +192,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -222,8 +216,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -246,8 +239,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -350,8 +342,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -377,8 +368,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -398,8 +388,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -415,8 +404,7 @@ public class JMSMappingInboundTransformerTest {
     */
     @Test
     public void testCreateObjectMessageFromAmqpValueWithBinaryAndContentType() throws Exception {
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         Message message = Message.Factory.create();
         message.setBody(new AmqpValue(new Binary(new byte[0])));
@@ -443,12 +431,44 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
         assertEquals("Unexpected message class type", ActiveMQMapMessage.class, jmsMessage.getClass());
+    }
+
+    /**
+     * Test that an amqp-value body containing a map that has an AMQP Binary as one of the
+     * entries encoded into the Map results in an MapMessage where a byte array can be read
+     * from the entry.
+     *
+     * @throws Exception if an error occurs during the test.
+     */
+    @Test
+    public void testCreateAmqpMapMessageFromAmqpValueWithMapContainingBinaryEntry() throws Exception {
+        final String ENTRY_NAME = "bytesEntry";
+
+        Message message = Proton.message();
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        byte[] inputBytes = new byte[] { 1, 2, 3, 4, 5 };
+        map.put(ENTRY_NAME, new Binary(inputBytes));
+
+        message.setBody(new AmqpValue(map));
+
+        EncodedMessage em = encodeMessage(message);
+
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
+        javax.jms.Message jmsMessage = transformer.transform(em);
+
+        assertNotNull("Message should not be null", jmsMessage);
+        assertEquals("Unexpected message class type", ActiveMQMapMessage.class, jmsMessage.getClass());
+
+        MapMessage mapMessage = (MapMessage) jmsMessage;
+        byte[] outputBytes = mapMessage.getBytes(ENTRY_NAME);
+        assertNotNull(outputBytes);
+        assertTrue(Arrays.equals(inputBytes, outputBytes));
     }
 
     /**
@@ -465,8 +485,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -487,8 +506,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -509,8 +527,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertNotNull("Message should not be null", jmsMessage);
@@ -531,8 +548,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         javax.jms.Message jmsMessage = transformer.transform(em);
 
@@ -548,8 +564,7 @@ public class JMSMappingInboundTransformerTest {
 
         EncodedMessage em = encodeMessage(message);
 
-        ActiveMQJMSVendor vendor = createVendor();
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(vendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
         javax.jms.Message jmsMessage = transformer.transform(em);
 
         assertTrue("Expected TextMessage", jmsMessage instanceof TextMessage);
@@ -589,9 +604,7 @@ public class JMSMappingInboundTransformerTest {
     }
 
     private void doTransformWithToTypeDestinationTypeAnnotationTestImpl(Object toTypeAnnotationValue, Class<? extends Destination> expectedClass) throws Exception {
-        ActiveMQTextMessage mockTextMessage = createMockTextMessage();
-        ActiveMQJMSVendor mockVendor = createMockVendor(mockTextMessage);
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(mockVendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         String toAddress = "toAddress";
         Message amqp = Message.Factory.create();
@@ -608,11 +621,6 @@ public class JMSMappingInboundTransformerTest {
 
         javax.jms.Message jmsMessage = transformer.transform(em);
         assertTrue("Expected TextMessage", jmsMessage instanceof TextMessage);
-
-        // Verify that createDestination was called with the provided 'to'
-        // address and 'Destination' class
-        // TODO - No need to really test this bit ?
-        // Mockito.verify(mockVendor).createDestination(toAddress, expectedClass);
     }
 
     //----- ReplyTo Conversions ----------------------------------------------//
@@ -643,9 +651,7 @@ public class JMSMappingInboundTransformerTest {
     }
 
     private void doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(Object replyToTypeAnnotationValue, Class<? extends Destination> expectedClass) throws Exception {
-        ActiveMQTextMessage mockTextMessage = createMockTextMessage();
-        ActiveMQJMSVendor mockVendor = createMockVendor(mockTextMessage);
-        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(mockVendor);
+        JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
         String replyToAddress = "replyToAddress";
         Message amqp = Message.Factory.create();
@@ -662,30 +668,9 @@ public class JMSMappingInboundTransformerTest {
 
         javax.jms.Message jmsMessage = transformer.transform(em);
         assertTrue("Expected TextMessage", jmsMessage instanceof TextMessage);
-
-        // Verify that createDestination was called with the provided 'replyTo'
-        // address and 'Destination' class
-        // TODO - No need to really test this bit ?
-        // Mockito.verify(mockVendor).createDestination(replyToAddress, expectedClass);
     }
 
     //----- Utility Methods --------------------------------------------------//
-
-    private ActiveMQTextMessage createMockTextMessage() {
-        return Mockito.mock(ActiveMQTextMessage.class);
-    }
-
-    private ActiveMQJMSVendor createMockVendor(ActiveMQTextMessage mockTextMessage) {
-        ActiveMQJMSVendor mockVendor = Mockito.mock(ActiveMQJMSVendor.class);
-        Mockito.when(mockVendor.createTextMessage()).thenReturn(mockTextMessage);
-        Mockito.when(mockVendor.createTextMessage(Mockito.any(String.class))).thenReturn(mockTextMessage);
-
-        return mockVendor;
-    }
-
-    private ActiveMQJMSVendor createVendor() {
-        return ActiveMQJMSVendor.INSTANCE;
-    }
 
     private EncodedMessage encodeMessage(Message message) {
         byte[] encodeBuffer = new byte[1024 * 8];

@@ -58,8 +58,9 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     private final MQTTWireFormat wireFormat = new MQTTWireFormat();
 
-    private final BlockingQueue<MQTTFrame> prefetch = new LinkedBlockingDeque<MQTTFrame>();
+    private final BlockingQueue<MQTTFrame> prefetch = new LinkedBlockingDeque<>();
 
+    private boolean writePartialFrames;
     private int closeCode = -1;
     private String closeMessage;
 
@@ -96,8 +97,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     public void connect(CONNECT command) throws Exception {
         checkConnected();
 
-        ByteSequence payload = wireFormat.marshal(command.encode());
-        connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
+        sendBytes(wireFormat.marshal(command.encode()));
 
         MQTTFrame incoming = receive(15, TimeUnit.SECONDS);
 
@@ -117,22 +117,19 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         }
 
         DISCONNECT command = new DISCONNECT();
-        ByteSequence payload = wireFormat.marshal(command.encode());
-        connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
+        sendBytes(wireFormat.marshal(command.encode()));
     }
 
     //---- Send methods ------------------------------------------------------//
 
     public void sendFrame(MQTTFrame frame) throws Exception {
         checkConnected();
-        ByteSequence payload = wireFormat.marshal(frame);
-        connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
+        sendBytes(wireFormat.marshal(frame));
     }
 
     public void keepAlive() throws Exception {
         checkConnected();
-        ByteSequence payload = wireFormat.marshal(new PINGREQ().encode());
-        connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data));
+        sendBytes(wireFormat.marshal(new PINGREQ().encode()));
     }
 
     //----- Receive methods --------------------------------------------------//
@@ -170,6 +167,15 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
 
     public String getCloseMessage() {
         return closeMessage;
+    }
+
+    public boolean isWritePartialFrames() {
+        return writePartialFrames;
+    }
+
+    public MQTTWSConnection setWritePartialFrames(boolean value) {
+        this.writePartialFrames = value;
+        return this;
     }
 
     //----- WebSocket callback handlers --------------------------------------//
@@ -245,6 +251,17 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
     }
 
     //----- Internal implementation ------------------------------------------//
+
+    private void sendBytes(ByteSequence payload) throws IOException {
+        if (!isWritePartialFrames()) {
+            connection.getRemote().sendBytes(ByteBuffer.wrap(payload.data, payload.offset, payload.length));
+        } else {
+            connection.getRemote().sendBytes(ByteBuffer.wrap(
+                payload.data, payload.offset, payload.length / 2));
+            connection.getRemote().sendBytes(ByteBuffer.wrap(
+                payload.data, payload.offset + payload.length / 2, payload.length / 2));
+        }
+    }
 
     private void checkConnected() throws IOException {
         if (!isConnected()) {

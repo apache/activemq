@@ -1043,6 +1043,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 } catch (Throwable e) {
                     LOG.error("error dispatching message: ", e);
 
+                    if (getTransactionContext().isInXATransaction()) {
+                        LOG.debug("Marking transaction: {} rollbackOnly", getTransactionContext());
+                        getTransactionContext().setRollbackOnly(true);
+                    }
+
                     // A problem while invoking the MessageListener does not
                     // in general indicate a problem with the connection to the broker, i.e.
                     // it will usually be sufficient to let the afterDelivery() method either

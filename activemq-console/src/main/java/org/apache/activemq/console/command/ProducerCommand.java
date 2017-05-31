@@ -48,7 +48,7 @@ public class ProducerCommand extends AbstractCommand {
 
     @Override
     protected void runTask(List<String> tokens) throws Exception {
-        LOG.info("Connecting to URL: " + brokerUrl + " (" + user + ":" + password + ")");
+        LOG.info("Connecting to URL: " + brokerUrl + " as user: " + user);
         LOG.info("Producing messages to " + destination);
         LOG.info("Using " + (persistent ? "persistent" : "non-persistent") + " messages");
         LOG.info("Sleeping between sends " + sleep + " ms");

@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * - ssl-domain-JaasDualAuthenticationNetworkBridgeTest.properties
  */
 public class JaasDualAuthenticationNetworkBridgeTest {
-    protected final static String CONFIG_FILE="org/apache/activemq/security/JaasDualAuthenticationNetworkBridge.xml";
+    protected String CONFIG_FILE="org/apache/activemq/security/JaasDualAuthenticationNetworkBridge.xml";
     protected static Logger LOG = LoggerFactory.getLogger(JaasDualAuthenticationNetworkBridgeTest.class);
     private BrokerService broker1 = null;
     private BrokerService broker2 = null;
@@ -78,6 +78,9 @@ public class JaasDualAuthenticationNetworkBridgeTest {
             LOG.error("Error: " + e.getMessage());
             throw e;
         }
+
+        broker2.start();
+        broker1.start();
     }
 
     /**
@@ -126,6 +129,9 @@ public class JaasDualAuthenticationNetworkBridgeTest {
             Collection<NetworkBridge> bridges = nc.activeBridges();
             Assert.assertFalse("Network bridge not established to broker 2", bridges.isEmpty());
             Assert.assertTrue("Network bridge not established to broker 2", bridges.size() == 1);
+            for (NetworkBridge nb : bridges) {
+                Assert.assertTrue(nb.getRemoteBrokerId() != null);
+            }
             LOG.info("Network bridge is correctly established.");
         } catch (java.lang.InterruptedException ex) {
             LOG.warn(ex.getMessage());

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.plugin;
 
+import java.util.TreeMap;
+
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.schema.core.DtoNetworkConnector;
 import org.apache.activemq.util.IntrospectionSupport;
-
-import java.util.TreeMap;
 
 public class NetworkConnectorProcessor extends DefaultConfigurationProcessor {
 
@@ -36,7 +36,7 @@ public class NetworkConnectorProcessor extends DefaultConfigurationProcessor {
             try {
                 DiscoveryNetworkConnector nc = fromDto(networkConnector, new DiscoveryNetworkConnector());
                 plugin.getBrokerService().addNetworkConnector(nc);
-                nc.start();
+                plugin.getBrokerService().startNetworkConnector(nc, null);
                 plugin.info("started new network connector: " + nc);
             } catch (Exception e) {
                 plugin.info("Failed to add new networkConnector " + networkConnector, e);

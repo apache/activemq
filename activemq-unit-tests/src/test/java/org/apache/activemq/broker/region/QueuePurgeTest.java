@@ -17,6 +17,8 @@
 package org.apache.activemq.broker.region;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
@@ -176,6 +178,54 @@ public class QueuePurgeTest extends CombinationTestSupport {
 
     public void testPurgeLargeQueueWithConsumerPrioritizedMessages() throws Exception {
         testPurgeLargeQueueWithConsumer(true);
+    }
+
+    public void testConcurrentPurgeAndSend() throws Exception {
+        testConcurrentPurgeAndSend(false);
+    }
+
+    public void testConcurrentPurgeAndSendPrioritizedMessages() throws Exception {
+        testConcurrentPurgeAndSend(true);
+    }
+
+    private void testConcurrentPurgeAndSend(boolean prioritizedMessages) throws Exception {
+        applyBrokerSpoolingPolicy(false);
+        createProducerAndSendMessages(NUM_TO_SEND / 2);
+        final QueueViewMBean proxy = getProxyToQueueViewMBean();
+        createConsumer();
+        final long start = System.currentTimeMillis();
+        ExecutorService service = Executors.newFixedThreadPool(1);
+        try {
+            LOG.info("purging..");
+            service.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        proxy.purge();
+                    } catch (Exception e) {
+                        fail(e.getMessage());
+                    }
+                    LOG.info("purge done: " + (System.currentTimeMillis() - start) + "ms");
+                }
+            });
+
+            //send should get blocked while purge is running
+            //which should ensure the metrics are correct
+            createProducerAndSendMessages(NUM_TO_SEND / 2);
+
+            Message msg;
+            do {
+                msg = consumer.receive(1000);
+                if (msg != null) {
+                    msg.acknowledge();
+                }
+            } while (msg != null);
+            assertEquals("Queue size not valid", 0, proxy.getQueueSize());
+            assertEquals("Found messages when browsing", 0, proxy.browseMessages().size());
+        } finally {
+            service.shutdownNow();
+        }
     }
 
     private void testPurgeLargeQueueWithConsumer(boolean prioritizedMessages) throws Exception {

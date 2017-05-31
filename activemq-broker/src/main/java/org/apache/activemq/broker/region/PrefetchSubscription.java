@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
 
@@ -57,8 +56,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     protected PendingMessageCursor pending;
     protected final List<MessageReference> dispatched = new ArrayList<MessageReference>();
-    protected final AtomicInteger prefetchExtension = new AtomicInteger();
-    protected boolean usePrefetchExtension = true;
     private int maxProducersToAudit=32;
     private int maxAuditDepth=2048;
     protected final SystemUsage usageManager;
@@ -265,7 +262,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             registerRemoveSync(context, node);
                         }
 
-                        if (usePrefetchExtension && getPrefetchSize() != 0 && ack.isInTransaction()) {
+                        if (isUsePrefetchExtension() && getPrefetchSize() != 0 && ack.isInTransaction()) {
                             // allow transaction batch to exceed prefetch
                             while (true) {
                                 int currentExtension = prefetchExtension.get();
@@ -290,7 +287,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     final MessageReference node = iter.next();
                     Destination nodeDest = (Destination) node.getRegionDestination();
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
-                        if (usePrefetchExtension && getPrefetchSize() != 0) {
+                        if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
                             // allow  batch to exceed prefetch
                             while (true) {
                                 int currentExtension = prefetchExtension.get();
@@ -330,7 +327,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         nodeDest.getDestinationStatistics().getInflight().decrement();
 
                         if (ack.getLastMessageId().equals(messageId)) {
-                            if (usePrefetchExtension && getPrefetchSize() != 0) {
+                            if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
                                 // allow  batch to exceed prefetch
                                 while (true) {
                                     int currentExtension = prefetchExtension.get();
@@ -431,9 +428,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             dispatchPending();
 
             if (pending.isEmpty()) {
-                for (Destination dest : destinations) {
-                    dest.wakeup();
-                }
+                wakeupDestinationsForDispatch();
             }
         } else {
             LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): {}", ack);
@@ -448,7 +443,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
                     @Override
                     public void beforeEnd() {
-                        if (usePrefetchExtension && getPrefetchSize() != 0) {
+                        if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
                             while (true) {
                                 int currentExtension = prefetchExtension.get();
                                 int newExtension = Math.max(0, currentExtension - 1);
@@ -688,7 +683,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     setPendingBatchSize(pending, numberToDispatch);
                     int count = 0;
                     pending.reset();
-                    while (pending.hasNext() && !isFull() && count < numberToDispatch) {
+                    while (count < numberToDispatch && !isFull() && pending.hasNext()) {
                         MessageReference node = pending.next();
                         if (node == null) {
                             break;
@@ -894,18 +889,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (this.pending != null) {
             this.pending.setMaxAuditDepth(maxAuditDepth);
         }
-    }
-
-    public boolean isUsePrefetchExtension() {
-        return usePrefetchExtension;
-    }
-
-    public void setUsePrefetchExtension(boolean usePrefetchExtension) {
-        this.usePrefetchExtension = usePrefetchExtension;
-    }
-
-    protected int getPrefetchExtension() {
-        return this.prefetchExtension.get();
     }
 
     @Override

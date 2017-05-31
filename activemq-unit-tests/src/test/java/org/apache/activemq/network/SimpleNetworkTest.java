@@ -43,9 +43,11 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.junit.After;
 import org.junit.Before;
@@ -172,6 +174,9 @@ public class SimpleNetworkTest {
         assertNull(consumer2.receive(1000));
 
         assertNetworkBridgeStatistics(MESSAGE_COUNT, 0);
+
+        assertNotNull(localBroker.getManagementContext().getObjectInstance(
+                localBroker.createNetworkConnectorObjectName(localBroker.getNetworkConnectors().get(0))));
     }
 
     private void waitForConsumerRegistration(final BrokerService brokerService, final int min, final ActiveMQDestination destination) throws Exception {
@@ -196,6 +201,101 @@ public class SimpleNetworkTest {
                 return false;
             }
         }));
+    }
+
+    //Added for AMQ-6465 to make sure memory usage decreased back to 0 after messages are forwarded
+    //to the other broker
+    @Test(timeout = 60 * 1000)
+    public void testDurableTopicSubForwardMemoryUsage() throws Exception {
+        // create a remote durable consumer to create demand
+        MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
+        Thread.sleep(1000);
+
+        MessageProducer producer = localSession.createProducer(included);
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            Message test = localSession.createTextMessage("test-" + i);
+            producer.send(test);
+        }
+        Thread.sleep(1000);
+
+        //Make sure stats are set
+        assertEquals(MESSAGE_COUNT,
+                localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount());
+
+        assertTrue(Wait.waitFor(new Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
+            }
+        }, 10000, 500));
+        remoteConsumer.close();
+    }
+
+    //Added for AMQ-6465 to make sure memory usage decreased back to 0 after messages are forwarded
+    //to the other broker
+    @Test(timeout = 60 * 1000)
+    public void testTopicSubForwardMemoryUsage() throws Exception {
+        // create a remote durable consumer to create demand
+        MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
+        Thread.sleep(1000);
+
+        MessageProducer producer = localSession.createProducer(included);
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            Message test = localSession.createTextMessage("test-" + i);
+            producer.send(test);
+        }
+        Thread.sleep(1000);
+
+        //Make sure stats are set
+        assertEquals(MESSAGE_COUNT,
+                localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount());
+
+        assertTrue(Wait.waitFor(new Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
+            }
+        }, 10000, 500));
+
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            assertNotNull("message count: " + i, remoteConsumer.receive(2500));
+        }
+        remoteConsumer.close();
+    }
+
+    //Added for AMQ-6465 to make sure memory usage decreased back to 0 after messages are forwarded
+    //to the other broker
+    @Test(timeout = 60 * 1000)
+    public void testQueueSubForwardMemoryUsage() throws Exception {
+        ActiveMQQueue queue = new ActiveMQQueue("include.test.foo");
+        MessageConsumer remoteConsumer = remoteSession.createConsumer(queue);
+        Thread.sleep(1000);
+
+        MessageProducer producer = localSession.createProducer(queue);
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            Message test = localSession.createTextMessage("test-" + i);
+            producer.send(test);
+        }
+        Thread.sleep(1000);
+
+        //Make sure stats are set
+        assertEquals(MESSAGE_COUNT,
+                localBroker.getDestination(queue).getDestinationStatistics().getForwards().getCount());
+
+        assertTrue(Wait.waitFor(new Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
+            }
+        }, 10000, 500));
+
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            assertNotNull("message count: " + i, remoteConsumer.receive(2500));
+        }
+        remoteConsumer.close();
     }
 
     @Test(timeout = 60 * 1000)

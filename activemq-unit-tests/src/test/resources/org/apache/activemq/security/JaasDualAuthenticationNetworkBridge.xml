@@ -25,7 +25,7 @@
 
   <!-- first broker instance -->
   <broker xmlns="http://activemq.apache.org/schema/core" brokerName="broker1" id="broker1"
-   dataDirectory="./target/activemq-data-broker1" persistent="false">
+   dataDirectory="./target/activemq-data-broker1" persistent="false" start="false">
   
     <destinationPolicy>
      <policyMap>
@@ -105,7 +105,7 @@
 
   <!-- second broker instance -->
   <broker xmlns="http://activemq.apache.org/schema/core" brokerName="broker2" id="broker2"
-   dataDirectory="./target/activemq-data-broker2" persistent="false">
+   dataDirectory="./target/activemq-data-broker2" persistent="false" start="false">
 
     <destinationPolicy>
      <policyMap>

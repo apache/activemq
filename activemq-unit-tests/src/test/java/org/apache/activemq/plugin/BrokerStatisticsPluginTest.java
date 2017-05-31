@@ -117,6 +117,8 @@ public class BrokerStatisticsPluginTest extends TestCase{
         assertTrue(reply.getMapNames().hasMoreElements());
         assertTrue(reply.getJMSTimestamp() > 0);
         assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
+        assertTrue(reply.getLong("averageMessageSize") > 0);
+
         /*
         for (Enumeration e = reply.getMapNames();e.hasMoreElements();) {
             String name = e.nextElement().toString();

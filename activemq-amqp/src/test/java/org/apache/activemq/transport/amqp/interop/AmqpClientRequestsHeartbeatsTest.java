@@ -44,7 +44,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
 
-    private final int TEST_IDLE_TIMEOUT = 3000;
+    private final int TEST_IDLE_TIMEOUT = 1000;
 
     @Parameters(name="connector={0}")
     public static Collection<Object[]> data() {
@@ -76,7 +76,7 @@ public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
         connection.getStateInspector().assertValid();
@@ -91,7 +91,7 @@ public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setIdleTimeout(TEST_IDLE_TIMEOUT);
         assertNotNull(connection);
 
@@ -106,7 +106,7 @@ public class AmqpClientRequestsHeartbeatsTest extends AmqpClientTestSupport {
         connection.connect();
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
-        assertFalse(disconnected.await(10, TimeUnit.SECONDS));
+        assertFalse(disconnected.await(5, TimeUnit.SECONDS));
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 
         connection.close();

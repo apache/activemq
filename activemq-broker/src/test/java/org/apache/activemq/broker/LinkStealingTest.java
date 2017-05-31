@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
@@ -34,6 +31,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+
 public class LinkStealingTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(LinkStealingTest.class);
@@ -44,7 +45,6 @@ public class LinkStealingTest {
     private String stealableConnectionURI;
     private String unstealableConnectionURI;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
         brokerService = new BrokerService();

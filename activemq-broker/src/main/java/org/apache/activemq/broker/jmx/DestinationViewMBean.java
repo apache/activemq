@@ -56,7 +56,7 @@ public interface DestinationViewMBean {
      * @return The number of messages that have been delivered (potentially not
      *         acknowledged) to consumers.
      */
-    @MBeanInfo("Number of messages that have been delivered (but potentially not acknowledged) to consumers.")
+    @MBeanInfo("Number of messages that has been delivered to consumers, including those not acknowledged")
     long getDispatchCount();
 
     /**
@@ -66,7 +66,7 @@ public interface DestinationViewMBean {
      * @return The number of messages that have been acknowledged from the
      *         destination.
      */
-    @MBeanInfo("Number of messages that have been acknowledged (and removed from) from the destination.")
+    @MBeanInfo("Number of messages that has been acknowledged (and removed) from the destination.")
     long getDequeueCount();
 
     /**
@@ -108,7 +108,7 @@ public interface DestinationViewMBean {
     /**
      * @return the number of producers publishing to the destination
      */
-    @MBeanInfo("Number of producers publishing to this destination")
+    @MBeanInfo("Number of producers attached to this destination")
     long getProducerCount();
 
     /**
@@ -118,7 +118,7 @@ public interface DestinationViewMBean {
      * @return Returns the number of messages in this destination which are yet
      *         to be consumed
      */
-    @MBeanInfo("Number of messages in the destination which are yet to be consumed.  Potentially dispatched but unacknowledged.")
+    @MBeanInfo("Number of messages on this destination, including any that have been dispatched but not acknowledged")
     long getQueueSize();
 
     /**
@@ -223,13 +223,13 @@ public interface DestinationViewMBean {
     /**
      * @return the amount of memory currently used by this destination
      */
-    @MBeanInfo("Memory usage, in bytes, used by undelivered messages")
+    @MBeanInfo("Memory used by undelivered messages in bytes")
     long getMemoryUsageByteCount();
 
     /**
      * @return the amount of memory allocated to this destination
      */
-    @MBeanInfo("Memory limit, in bytes, used for holding undelivered messages before paging to temporary storage.")
+    @MBeanInfo("Memory limit, in bytes, used by undelivered messages before paging to temporary storage.")
     long getMemoryLimit();
 
     /**
@@ -266,16 +266,16 @@ public interface DestinationViewMBean {
     /**
      * @return longest time a message is held by a destination
      */
-    @MBeanInfo("The longest time a message has been held this destination.")
+    @MBeanInfo("The longest time a message was held on this destination")
     long getMaxEnqueueTime();
 
     /**
      * @return shortest time a message is held by a destination
      */
-    @MBeanInfo("The shortest time a message has been held this destination.")
+    @MBeanInfo("The shortest time a message was held on this destination")
     long getMinEnqueueTime();
 
-    @MBeanInfo("Average time a message has been held this destination.")
+    @MBeanInfo("Average time a message was held on this destination.")
     double getAverageEnqueueTime();
 
     @MBeanInfo("Average message size on this destination")
@@ -290,7 +290,7 @@ public interface DestinationViewMBean {
     /**
      * @return the producerFlowControl
      */
-    @MBeanInfo("Producers are flow controlled")
+    @MBeanInfo("Flow control is enabled for producers")
     boolean isProducerFlowControl();
 
     /**
@@ -301,7 +301,7 @@ public interface DestinationViewMBean {
     /**
      * @return if we treat consumers as alwaysRetroactive
      */
-    @MBeanInfo("Always treat consumers as retroActive")
+    @MBeanInfo("Always treat consumers as retroactive")
     boolean isAlwaysRetroactive();
 
     /**
@@ -385,7 +385,7 @@ public interface DestinationViewMBean {
      *
      * @return the names of the subscriptions for this destination
      */
-    @MBeanInfo("returns all the current subscription MBeans matching this destination")
+    @MBeanInfo("Subscription MBeans matching this destination")
     ObjectName[] getSubscriptions() throws IOException, MalformedObjectNameException;
 
 
@@ -394,13 +394,13 @@ public interface DestinationViewMBean {
      *
      * @return the name of the slow consumer handler MBean for this destination
      */
-    @MBeanInfo("returns the optional slowConsumer handler MBeans for this destination")
+    @MBeanInfo("Optional slowConsumer handler MBean for this destination")
     ObjectName getSlowConsumerStrategy() throws IOException, MalformedObjectNameException;
 
     /**
      * @return A string of destination options, name value pairs as URL queryString.
      */
-    @MBeanInfo("returns the destination options, name value pairs as URL queryString")
+    @MBeanInfo("Destination options as name value pairs in a URL queryString")
     String getOptions();
 
     /**
@@ -409,13 +409,13 @@ public interface DestinationViewMBean {
     @MBeanInfo("Dead Letter Queue")
     boolean isDLQ();
 
-    @MBeanInfo("Get number of messages blocked for Flow Control")
+    @MBeanInfo("Number of messages blocked for flow control")
     long getBlockedSends();
 
-    @MBeanInfo("get the average time (ms) a message is blocked for Flow Control")
+    @MBeanInfo("Average time (ms) messages have been blocked by flow control")
     double getAverageBlockedTime();
 
-    @MBeanInfo("Get the total time (ms) messages are blocked for Flow Control")
+    @MBeanInfo("Total time (ms) messages have been blocked by flow control")
     long getTotalBlockedTime();
 
 }

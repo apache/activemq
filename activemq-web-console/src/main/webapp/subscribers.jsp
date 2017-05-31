@@ -14,6 +14,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%-- Workaround for https://ops4j1.jira.com/browse/PAXWEB-1070 --%>
+<%@include file="WEB-INF/jspf/headertags.jspf" %>
 <html>
 <head>
 <c:set var="pageTitle" value="Durable Topic Subscribers"/>
@@ -97,7 +99,7 @@
 <c:forEach items="${requestContext.brokerQuery.durableTopicSubscribers}" var="row">
 <tr>
 <td>
-<a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>">
+<a href="<c:out value="connection.jsp?connectionID=${row.clientId}"/>">
 <form:tooltip text="${row.clientId}" length="10"/>
 </a>
 </td>
@@ -145,7 +147,7 @@
 <c:forEach items="${requestContext.brokerQuery.inactiveDurableTopicSubscribers}" var="row">
 <tr>
 <td>
-<a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>">
+<a href="<c:out value="connection.jsp?connectionID=${row.clientId}"/>">
 <form:tooltip text="${row.clientId}" length="10"/>
 </a>
 </td>
@@ -194,7 +196,7 @@
 <c:forEach items="${requestContext.brokerQuery.nonDurableTopicSubscribers}" var="row">
 <tr>
 <td>
-<a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>">
+<a href="<c:out value="connection.jsp?connectionID=${row.clientId}"/>">
 <form:tooltip text="${row.clientId}" length="10"/>
 </a>
 </td>

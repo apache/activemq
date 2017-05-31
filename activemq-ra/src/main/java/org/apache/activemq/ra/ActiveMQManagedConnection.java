@@ -232,7 +232,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         proxyConnections.clear();
 
         try {
-            physicalConnection.doCleanup(true);
+            physicalConnection.doCleanup(physicalConnection.isUserSpecifiedClientID());
         } catch (JMSException e) {
             throw new ResourceException("Could not cleanup the ActiveMQ connection: " + e, e);
         } finally {

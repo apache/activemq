@@ -120,6 +120,12 @@
       <artifactId>org.linkedin.zookeeper-impl</artifactId>
       <version>${linkedin-zookeeper-version}</version>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.linkedin</groupId>
@@ -137,7 +143,6 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>${org.osgi.core-version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -464,6 +469,20 @@
                   <action>
                     <execute><runOnIncremental>true</runOnIncremental></execute>
                     <!--<ignore />-->
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <versionRange>[0.0.0,)</versionRange>
+                    <goals>
+                      <goal>compile</goal>
+                      <goal>testCompile</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>

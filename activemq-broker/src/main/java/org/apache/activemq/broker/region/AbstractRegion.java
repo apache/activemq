@@ -159,10 +159,10 @@ public abstract class AbstractRegion implements Region {
                         dest = destinationInterceptor.intercept(dest);
                     }
                     dest.start();
+                    addSubscriptionsForDestination(context, dest);
                     destinations.put(destination, dest);
                     updateRegionDestCounts(destination, 1);
                     destinationMap.put(destination, dest);
-                    addSubscriptionsForDestination(context, dest);
                 }
                 if (dest == null) {
                     throw new DestinationDoesNotExistException(destination.getQualifiedName());
@@ -266,7 +266,7 @@ public abstract class AbstractRegion implements Region {
         if (timeout == 0) {
             for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
                 Subscription sub = iter.next();
-                if (sub.matches(destination)) {
+                if (sub.matches(destination) ) {
                     throw new JMSException("Destination still has an active subscription: " + destination);
                 }
             }
@@ -390,6 +390,8 @@ public abstract class AbstractRegion implements Region {
                 for (Destination dest : (Set<Destination>) destinationMap.get(info.getDestination())) {
                     addList.add(dest);
                 }
+                // ensure sub visible to any new dest addSubscriptionsForDestination
+                subscriptions.put(info.getConsumerId(), sub);
             } finally {
                 destinationsLock.readLock().unlock();
             }
@@ -412,6 +414,8 @@ public abstract class AbstractRegion implements Region {
                                 LOG.error("Error unsubscribing " + sub + " from " + remove + ": " + ex.getMessage(), ex);
                             }
                         }
+                        subscriptions.remove(info.getConsumerId());
+                        removeList.clear();
                         throw e;
                     }
                 }
@@ -421,8 +425,6 @@ public abstract class AbstractRegion implements Region {
             if (info.isBrowser()) {
                 ((QueueBrowserSubscription) sub).destinationsAdded();
             }
-
-            subscriptions.put(info.getConsumerId(), sub);
 
             return sub;
         }
@@ -688,7 +690,7 @@ public abstract class AbstractRegion implements Region {
                     entry.configurePrefetch(sub);
                 }
             }
-            LOG.debug("setting prefetch: {}, on subscription: {}; resulting value: {}", new Object[]{ control.getPrefetch(), control.getConsumerId(), sub.getConsumerInfo().getCurrentPrefetchSize()});
+            LOG.debug("setting prefetch: {}, on subscription: {}; resulting value: {}", new Object[]{ control.getPrefetch(), control.getConsumerId(), sub.getConsumerInfo().getPrefetchSize()});
             try {
                 lookup(consumerExchange.getConnectionContext(), control.getDestination(),false).wakeup();
             } catch (Exception e) {

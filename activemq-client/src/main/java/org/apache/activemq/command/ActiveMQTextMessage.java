@@ -153,8 +153,8 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     // see https://issues.apache.org/activemq/browse/AMQ-2103
     // and https://issues.apache.org/activemq/browse/AMQ-2966
     @Override
-    public void clearMarshalledState() throws JMSException {
-        super.clearMarshalledState();
+    public void clearUnMarshalledState() throws JMSException {
+        super.clearUnMarshalledState();
         this.text = null;
     }
 

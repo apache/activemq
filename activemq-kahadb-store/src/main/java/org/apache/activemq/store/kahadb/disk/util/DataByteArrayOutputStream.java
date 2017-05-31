@@ -23,6 +23,7 @@ import java.io.UTFDataFormatException;
 
 import org.apache.activemq.store.kahadb.disk.page.PageFile;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.MarshallingSupport;
 
 /**
  * Optimized ByteArrayOutputStream
@@ -228,38 +229,17 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
     }
 
     @Override
-    public void writeUTF(String str) throws IOException {
-        int strlen = str.length();
-        int encodedsize = 0;
-        int c;
-        for (int i = 0; i < strlen; i++) {
-            c = str.charAt(i);
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                encodedsize++;
-            } else if (c > 0x07FF) {
-                encodedsize += 3;
-            } else {
-                encodedsize += 2;
-            }
-        }
+    public void writeUTF(String text) throws IOException {
+        long encodedsize = MarshallingSupport.countUTFBytes(text);
         if (encodedsize > 65535) {
             throw new UTFDataFormatException("encoded string too long: " + encodedsize + " bytes");
         }
-        ensureEnoughBuffer(pos + encodedsize + 2);
-        writeShort(encodedsize);
-        for (int i = 0; i < strlen; i++) {
-            int charValue = str.charAt(i);
-            if (charValue > 0 && charValue <= 127) {
-                buf[pos++] = (byte) charValue;
-            } else if (charValue <= 2047) {
-                buf[pos++] = (byte) (0xc0 | (0x1f & (charValue >> 6)));
-                buf[pos++] = (byte) (0x80 | (0x3f & charValue));
-            } else {
-                buf[pos++] = (byte) (0xe0 | (0x0f & (charValue >> 12)));
-                buf[pos++] = (byte) (0x80 | (0x3f & (charValue >> 6)));
-                buf[pos++] = (byte) (0x80 | (0x3f & charValue));
-             }
-        }
+        ensureEnoughBuffer((int)(pos + encodedsize + 2));
+        writeShort((int)encodedsize);
+
+        byte[] buffer = new byte[(int)encodedsize];
+        MarshallingSupport.writeUTFBytesToBuffer(text, (int) encodedsize, buf, pos);
+        pos += encodedsize;
         onWrite();
     }
 

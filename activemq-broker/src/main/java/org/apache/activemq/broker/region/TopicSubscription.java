@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.JMSException;
@@ -64,7 +63,6 @@ public class TopicSubscription extends AbstractSubscription {
     private MessageEvictionStrategy messageEvictionStrategy = new OldestMessageEvictionStrategy();
     private int discarded;
     private final Object matchedListMutex = new Object();
-    private final AtomicInteger prefetchExtension = new AtomicInteger(0);
     private int memoryUsageHighWaterMark = 95;
     // allow duplicate suppression in a ring network of brokers
     protected int maxProducersToAudit = 1024;
@@ -234,7 +232,6 @@ public class TopicSubscription extends AbstractSubscription {
                 node.decrementReferenceCount();
                 if (node.isExpired()) {
                     matched.remove();
-                    getSubscriptionStatistics().getDispatched().increment();
                     node.decrementReferenceCount();
                     if (broker.isExpired(node)) {
                         ((Destination) node.getRegionDestination()).getDestinationStatistics().getExpired().increment();
@@ -277,37 +274,61 @@ public class TopicSubscription extends AbstractSubscription {
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         super.acknowledge(context, ack);
 
-        // Handle the standard acknowledgment case.
-        if (ack.isStandardAck() || ack.isPoisonAck() || ack.isIndividualAck()) {
-            if (context.isInTransaction()) {
-                context.getTransaction().addSynchronization(new Synchronization() {
-                    @Override
-                    public void afterCommit() throws Exception {
-                        updateStatsOnAck(ack);
-                        dispatchMatched();
-                    }
-                });
-            } else {
-                updateStatsOnAck(ack);
+        if (ack.isStandardAck()) {
+            updateStatsOnAck(context, ack);
+        } else if (ack.isPoisonAck()) {
+            if (ack.isInTransaction()) {
+                throw new JMSException("Poison ack cannot be transacted: " + ack);
             }
-            updatePrefetch(ack);
-            dispatchMatched();
-            return;
-        } else if (ack.isDeliveredAck()) {
-            // Message was delivered but not acknowledged: update pre-fetch counters.
-            prefetchExtension.addAndGet(ack.getMessageCount());
-            dispatchMatched();
-            return;
+            updateStatsOnAck(context, ack);
+            if (getPrefetchSize() != 0) {
+                decrementPrefetchExtension(ack.getMessageCount());
+            }
+        } else if (ack.isIndividualAck()) {
+            updateStatsOnAck(context, ack);
+            if (getPrefetchSize() != 0 && ack.isInTransaction()) {
+                incrementPrefetchExtension(ack.getMessageCount());
+            }
         } else if (ack.isExpiredAck()) {
             updateStatsOnAck(ack);
-            updatePrefetch(ack);
-            dispatchMatched();
-            return;
+            if (getPrefetchSize() != 0) {
+                incrementPrefetchExtension(ack.getMessageCount());
+            }
+        } else if (ack.isDeliveredAck()) {
+            // Message was delivered but not acknowledged: update pre-fetch counters.
+            if (getPrefetchSize() != 0) {
+                incrementPrefetchExtension(ack.getMessageCount());
+            }
         } else if (ack.isRedeliveredAck()) {
-            // nothing to do atm
+            // No processing for redelivered needed
             return;
+        } else {
+            throw new JMSException("Invalid acknowledgment: " + ack);
         }
-        throw new JMSException("Invalid acknowledgment: " + ack);
+
+        dispatchMatched();
+    }
+
+    private void updateStatsOnAck(final ConnectionContext context, final MessageAck ack) {
+        if (context.isInTransaction()) {
+            context.getTransaction().addSynchronization(new Synchronization() {
+
+                @Override
+                public void beforeEnd() {
+                    if (getPrefetchSize() != 0) {
+                        decrementPrefetchExtension(ack.getMessageCount());
+                    }
+                }
+
+                @Override
+                public void afterCommit() throws Exception {
+                    updateStatsOnAck(ack);
+                    dispatchMatched();
+                }
+            });
+        } else {
+            updateStatsOnAck(ack);
+        }
     }
 
     @Override
@@ -400,10 +421,23 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
-    private void updatePrefetch(MessageAck ack) {
+    private void incrementPrefetchExtension(int amount) {
+        if (!isUsePrefetchExtension()) {
+            return;
+        }
         while (true) {
             int currentExtension = prefetchExtension.get();
-            int newExtension = Math.max(0, currentExtension - ack.getMessageCount());
+            int newExtension = Math.max(0, currentExtension + amount);
+            if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                break;
+            }
+        }
+    }
+
+    private void decrementPrefetchExtension(int amount) {
+        while (true) {
+            int currentExtension = prefetchExtension.get();
+            int newExtension = Math.max(0, currentExtension - amount);
             if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
                 break;
             }
@@ -430,7 +464,7 @@ public class TopicSubscription extends AbstractSubscription {
     @Override
     public int getDispatchedQueueSize() {
         return (int)(getSubscriptionStatistics().getDispatched().getCount() -
-                prefetchExtension.get() - getSubscriptionStatistics().getDequeues().getCount());
+                     getSubscriptionStatistics().getDequeues().getCount());
     }
 
     public int getMaximumPendingMessages() {
@@ -529,7 +563,7 @@ public class TopicSubscription extends AbstractSubscription {
     // -------------------------------------------------------------------------
     @Override
     public boolean isFull() {
-        return getDispatchedQueueSize() >= info.getPrefetchSize();
+        return getPrefetchSize() == 0 ? prefetchExtension.get() == 0 : getDispatchedQueueSize() - prefetchExtension.get() >= info.getPrefetchSize();
     }
 
     @Override
@@ -542,7 +576,7 @@ public class TopicSubscription extends AbstractSubscription {
      */
     @Override
     public boolean isLowWaterMark() {
-        return getDispatchedQueueSize() <= (info.getPrefetchSize() * .4);
+        return (getDispatchedQueueSize() - prefetchExtension.get()) <= (info.getPrefetchSize() * .4);
     }
 
     /**
@@ -550,7 +584,7 @@ public class TopicSubscription extends AbstractSubscription {
      */
     @Override
     public boolean isHighWaterMark() {
-        return getDispatchedQueueSize() >= (info.getPrefetchSize() * .9);
+        return (getDispatchedQueueSize() - prefetchExtension.get()) >= (info.getPrefetchSize() * .9);
     }
 
     /**
@@ -655,7 +689,12 @@ public class TopicSubscription extends AbstractSubscription {
                     }
                 }
             }
+
+            if (getPrefetchSize() == 0) {
+                decrementPrefetchExtension(1);
+            }
         }
+
         if (info.isDispatchAsync()) {
             if (node != null) {
                 md.setTransmitCallback(new TransmitCallback() {
@@ -712,7 +751,8 @@ public class TopicSubscription extends AbstractSubscription {
     @Override
     public String toString() {
         return "TopicSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + getDispatchedQueueSize() + ", delivered="
-                + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded();
+                + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded() + ", prefetchExtension=" + prefetchExtension.get()
+                + ", usePrefetchExtension=" + isUsePrefetchExtension();
     }
 
     @Override
@@ -745,4 +785,5 @@ public class TopicSubscription extends AbstractSubscription {
             LOG.trace("Caught exception on dispatch after prefetch size change.");
         }
     }
+
 }

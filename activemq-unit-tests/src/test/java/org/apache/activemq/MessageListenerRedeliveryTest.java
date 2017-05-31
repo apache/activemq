@@ -350,6 +350,7 @@ public class MessageListenerRedeliveryTest {
         assertTrue("is correct exception", cause.contains(getTestName()));
         assertTrue("cause exception is remembered", cause.contains("Throwable"));
         assertTrue("cause policy is remembered", cause.contains("RedeliveryPolicy"));
+        assertTrue("cause redelivered count is remembered", cause.contains("[" + (maxDeliveries+1) +"]"));
 
         session.close();
     }

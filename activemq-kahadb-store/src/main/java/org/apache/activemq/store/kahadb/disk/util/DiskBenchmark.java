@@ -300,11 +300,11 @@ public class DiskBenchmark {
         if (tmpFile.exists()) {
             tmpFile.delete();
         }
-        RandomAccessFile templateFile = new RandomAccessFile(tmpFile, "rw");
-        templateFile.setLength(size);
-        templateFile.getChannel().force(true);
-        templateFile.getChannel().transferTo(0, size, raf.getChannel());
-        templateFile.close();
+        try (RandomAccessFile templateFile = new RandomAccessFile(tmpFile, "rw");) {
+            templateFile.setLength(size);
+            templateFile.getChannel().force(true);
+            templateFile.getChannel().transferTo(0, size, raf.getChannel());
+        }
         tmpFile.delete();
     }
 

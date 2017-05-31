@@ -61,7 +61,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
     private static final int MESSAGE_PULL_SIZE = 400;
-    protected final ConcurrentMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>();
+    protected final ConcurrentMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<>();
 
     private boolean trackTransactions;
     private boolean restoreSessions = true;
@@ -104,6 +104,25 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             ConnectionState cs = connectionStates.get(connectionId);
             if (cs != null) {
                 cs.removeTransactionState(info.getTransactionId());
+            }
+        }
+    }
+
+    private final class ExceptionResponseCheckAction implements ResponseHandler {
+        private final Command tracked;
+
+        public ExceptionResponseCheckAction(Command tracked) {
+            this.tracked = tracked;
+        }
+
+        @Override
+        public void onResponse(Command response) {
+            if (ExceptionResponse.DATA_STRUCTURE_TYPE == response.getDataStructureType()) {
+                if (tracked.getDataStructureType() == ConsumerInfo.DATA_STRUCTURE_TYPE) {
+                    processRemoveConsumer(((ConsumerInfo) tracked).getConsumerId(), 0l);
+                } else if (tracked.getDataStructureType() == ProducerInfo.DATA_STRUCTURE_TYPE) {
+                    processRemoveProducer(((ProducerInfo) tracked).getProducerId());
+                }
             }
         }
     }
@@ -203,7 +222,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
 
     private void restoreTransactions(Transport transport, ConnectionState connectionState) throws IOException {
-        Vector<TransactionInfo> toRollback = new Vector<TransactionInfo>();
+        Vector<TransactionInfo> toRollback = new Vector<>();
         for (TransactionState transactionState : connectionState.getTransactionStates()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("tx: " + transactionState.getId());
@@ -375,6 +394,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                         SessionState ss = cs.getSessionState(sessionId);
                         if (ss != null) {
                             ss.addProducer(info);
+                            if (info.isResponseRequired()) {
+                                return new Tracked(new ExceptionResponseCheckAction(info));
+                            }
                         }
                     }
                 }
@@ -415,6 +437,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                         SessionState ss = cs.getSessionState(sessionId);
                         if (ss != null) {
                             ss.addConsumer(info);
+                            if (info.isResponseRequired()) {
+                                return new Tracked(new ExceptionResponseCheckAction(info));
+                            }
                         }
                     }
                 }

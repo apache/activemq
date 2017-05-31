@@ -30,11 +30,16 @@ public class ConsumerBean extends Assert implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(ConsumerBean.class);
     private final List<Message> messages = new ArrayList<Message>();
     private boolean verbose;
+    private String id = null;
 
     /**
      * Constructor.
      */
     public ConsumerBean() {
+    }
+
+    public ConsumerBean(String id) {
+        this.id = id;
     }
 
     /**
@@ -59,7 +64,7 @@ public class ConsumerBean extends Assert implements MessageListener {
         synchronized (messages) {
             messages.add(message);
             if (verbose) {
-                LOG.info("Received: " + message);
+                LOG.info("" + id + "Received: " + message);
             }
             messages.notifyAll();
         }

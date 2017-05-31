@@ -18,9 +18,11 @@ package org.apache.activemq.transport.amqp.interop;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
@@ -60,7 +62,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendWithDeliveryTimeIsScheduled() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -88,7 +90,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendRecvWithDeliveryTime() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -130,7 +132,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testSendScheduledReceiveOverOpenWire() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -164,39 +166,58 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
 
     @Test
     public void testScheduleWithDelay() throws Exception {
+        final long DELAY = 5000;
+
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
 
         // Get the Queue View early to avoid racing the delivery.
         assertEquals(1, brokerService.getAdminView().getQueues().length);
         final QueueViewMBean queueView = getProxyToQueue(getTestName());
         assertNotNull(queueView);
 
+        long sendTime = System.currentTimeMillis();
+
         AmqpMessage message = new AmqpMessage();
-        long delay = 5000;
-        message.setMessageAnnotation("x-opt-delivery-delay", delay);
+        message.setMessageAnnotation("x-opt-delivery-delay", DELAY);
         message.setText("Test-Message");
         sender.send(message);
         sender.close();
 
+        receiver.flow(1);
+
         // Read the message with short timeout, shouldn't get it.
         try {
-            readMessages(getTestName(), 1, false, 1000);
+            assertNull(receiver.receive(1, TimeUnit.SECONDS));
             fail("Should not read the message");
         } catch (Throwable ex) {
         }
 
         // Read the message with long timeout, should get it.
+        AmqpMessage delivered = null;
         try {
-            readMessages(getTestName(), 1, false, 10000);
+            delivered = receiver.receive(10, TimeUnit.SECONDS);
         } catch (Throwable ex) {
             fail("Should read the message");
         }
+
+        long receivedTime = System.currentTimeMillis();
+
+        assertNotNull(delivered);
+        Long msgDeliveryTime = (Long) delivered.getMessageAnnotation("x-opt-delivery-delay");
+        assertNotNull(msgDeliveryTime);
+        assertEquals(DELAY, msgDeliveryTime.longValue());
+
+        long totalDelay = receivedTime - sendTime;
+        LOG.debug("Sent at: {}, received at: {} ", new Date(sendTime), new Date(receivedTime), totalDelay);
+
+        assertTrue("Delay not as expected: " + totalDelay, receivedTime - sendTime >= DELAY);
 
         connection.close();
     }
@@ -206,7 +227,7 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
         final int NUMBER = 10;
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -276,5 +297,4 @@ public class AmqpScheduledMessageTest extends AmqpClientTestSupport {
 
         return scheduler;
     }
-
 }

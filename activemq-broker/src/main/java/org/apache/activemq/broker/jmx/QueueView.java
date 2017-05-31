@@ -56,7 +56,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return result;
     }
 
-    public void purge() throws Exception {
+    public synchronized void purge() throws Exception {
         final long originalMessageCount = destination.getDestinationStatistics().getMessages().getCount();
 
         ((Queue)destination).purge();
@@ -68,11 +68,11 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return ((Queue)destination).removeMessage(messageId);
     }
 
-    public int removeMatchingMessages(String selector) throws Exception {
+    public synchronized int removeMatchingMessages(String selector) throws Exception {
         return ((Queue)destination).removeMatchingMessages(selector);
     }
 
-    public int removeMatchingMessages(String selector, int maximumMessages) throws Exception {
+    public synchronized int removeMatchingMessages(String selector, int maximumMessages) throws Exception {
         return ((Queue)destination).removeMatchingMessages(selector, maximumMessages);
     }
 
@@ -100,19 +100,19 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return ((Queue)destination).moveMessageTo(context, messageId, toDestination);
     }
 
-    public int moveMatchingMessagesTo(String selector, String destinationName) throws Exception {
+    public synchronized int moveMatchingMessagesTo(String selector, String destinationName) throws Exception {
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).moveMatchingMessagesTo(context, selector, toDestination);
     }
 
-    public int moveMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception {
+    public synchronized int moveMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception {
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).moveMatchingMessagesTo(context, selector, toDestination, maximumMessages);
     }
 
-    public int retryMessages() throws Exception {
+    public synchronized int retryMessages() throws Exception {
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         return ((Queue)destination).retryMessages(context, Integer.MAX_VALUE);
     }

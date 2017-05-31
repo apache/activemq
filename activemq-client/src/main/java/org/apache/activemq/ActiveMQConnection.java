@@ -1555,6 +1555,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         doCleanup(false);
     }
 
+    public boolean isUserSpecifiedClientID() {
+        return userSpecifiedClientID;
+    }
+
     public void doCleanup(boolean removeConnection) throws JMSException {
         if (advisoryConsumer != null && !isTransportFailed()) {
             advisoryConsumer.dispose();
@@ -1873,7 +1877,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
                     @Override
                     public Response processControlCommand(ControlCommand command) throws Exception {
-                        onControlCommand(command);
                         return null;
                     }
 
@@ -1966,7 +1969,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     @Override
     public void onException(final IOException error) {
         onAsyncException(error);
-        if (!closing.get() && !closed.get()) {
+        if (!closed.get() && !closing.get()) {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -2218,25 +2221,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             asyncSendPacket(msg);
         } else {
             syncSendPacket(msg);
-        }
-    }
-
-    protected void onControlCommand(ControlCommand command) {
-        String text = command.getCommand();
-        if (text != null) {
-            if ("shutdown".equals(text)) {
-                LOG.info("JVM told to shutdown");
-                System.exit(0);
-            }
-
-            // TODO Should we handle the "close" case?
-            // if (false && "close".equals(text)){
-            //     LOG.error("Broker " + getBrokerInfo() + "shutdown connection");
-            //     try {
-            //         close();
-            //     } catch (JMSException e) {
-            //     }
-            // }
         }
     }
 

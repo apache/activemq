@@ -52,7 +52,7 @@ public class AmqpDisabledInactivityMonitorTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         assertNotNull(connection);
 
         connection.getStateInspector().assertValid();
@@ -64,7 +64,7 @@ public class AmqpDisabledInactivityMonitorTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        AmqpConnection connection = client.createConnection();
+        AmqpConnection connection = trackConnection(client.createConnection());
         connection.setIdleTimeout(TEST_IDLE_TIMEOUT);
         assertNotNull(connection);
 

@@ -34,6 +34,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.TestUtils;
 import org.apache.activemq.web.config.SystemPropertiesConfiguration;
 import org.junit.After;
 import org.junit.Before;
@@ -56,6 +57,7 @@ public class RemoteJMXBrokerTest {
     @Before
     public void startUp() throws Exception {
         brokerService = BrokerFactory.createBroker("broker:()/remoteBroker?useJmx=true");
+        brokerService.getManagementContext().setConnectorPort(TestUtils.findOpenPort());
         brokerService.start();
         brokerService.waitUntilStarted();
 

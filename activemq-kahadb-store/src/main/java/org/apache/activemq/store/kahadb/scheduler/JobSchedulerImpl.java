@@ -57,7 +57,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
     private BTreeIndex<Long, List<JobLocation>> index;
     private Thread thread;
     private final AtomicBoolean started = new AtomicBoolean(false);
-    private final List<JobListener> jobListeners = new CopyOnWriteArrayList<JobListener>();
+    private final List<JobListener> jobListeners = new CopyOnWriteArrayList<>();
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private final ScheduleTime scheduleTime = new ScheduleTime();
 
@@ -132,7 +132,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     @Override
     public List<Job> getNextScheduleJobs() throws IOException {
-        final List<Job> result = new ArrayList<Job>();
+        final List<Job> result = new ArrayList<>();
         this.store.readLockIndex();
         try {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
@@ -169,7 +169,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     @Override
     public List<Job> getAllJobs() throws IOException {
-        final List<Job> result = new ArrayList<Job>();
+        final List<Job> result = new ArrayList<>();
         this.store.readLockIndex();
         try {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
@@ -198,7 +198,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     @Override
     public List<Job> getAllJobs(final long start, final long finish) throws IOException {
-        final List<Job> result = new ArrayList<Job>();
+        final List<Job> result = new ArrayList<>();
         this.store.readLockIndex();
         try {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
@@ -227,9 +227,9 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     private void doSchedule(final String jobId, final ByteSequence payload, final String cronEntry, long delay, long period, int repeat) throws IOException {
         long startTime = System.currentTimeMillis();
-        // round startTime - so we can schedule more jobs
-        // at the same time
-        startTime = (startTime / 1000) * 1000;
+        // round startTime - so we can schedule more jobs at the same time
+        startTime = ((startTime + 500) / 500) * 500;
+
         long time = 0;
         if (cronEntry != null && cronEntry.length() > 0) {
             try {
@@ -329,7 +329,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
             values = this.index.remove(tx, nextExecutionTime);
         }
         if (values == null) {
-            values = new ArrayList<JobLocation>();
+            values = new ArrayList<>();
         }
 
         // There can never be more than one instance of the same JobId scheduled at any
@@ -407,7 +407,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 target = this.index.remove(tx, command.getNextExecutionTime());
             }
             if (target == null) {
-                target = new ArrayList<JobLocation>();
+                target = new ArrayList<>();
             }
             target.add(result);
 
@@ -568,7 +568,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
      * @throws IOException if an error occurs during the remove operation.
      */
     protected void removeInRange(Transaction tx, long start, long finish, Location location) throws IOException {
-        List<Long> keys = new ArrayList<Long>();
+        List<Long> keys = new ArrayList<>();
         for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx, start); i.hasNext();) {
             Map.Entry<Long, List<JobLocation>> entry = i.next();
             if (entry.getKey().longValue() <= finish) {
@@ -662,7 +662,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
      * @throws IOException if an error occurs walking the scheduler tree.
      */
     protected List<JobLocation> getAllScheduledJobs(Transaction tx) throws IOException {
-        List<JobLocation> references = new ArrayList<JobLocation>();
+        List<JobLocation> references = new ArrayList<>();
 
         for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx); i.hasNext();) {
             Map.Entry<Long, List<JobLocation>> entry = i.next();
@@ -709,8 +709,8 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                 // needed before firing the job event.
                 Map.Entry<Long, List<JobLocation>> first = getNextToSchedule();
                 if (first != null) {
-                    List<JobLocation> list = new ArrayList<JobLocation>(first.getValue());
-                    List<JobLocation> toRemove = new ArrayList<JobLocation>(list.size());
+                    List<JobLocation> list = new ArrayList<>(first.getValue());
+                    List<JobLocation> toRemove = new ArrayList<>(list.size());
                     final long executionTime = first.getKey();
                     long nextExecutionTime = 0;
                     if (executionTime <= currentTime) {
@@ -852,7 +852,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
     }
 
     void createIndexes(Transaction tx) throws IOException {
-        this.index = new BTreeIndex<Long, List<JobLocation>>(this.store.getPageFile(), tx.allocate().getPageId());
+        this.index = new BTreeIndex<>(this.store.getPageFile(), tx.allocate().getPageId());
     }
 
     void load(Transaction tx) throws IOException {
@@ -863,7 +863,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
     void read(DataInput in) throws IOException {
         this.name = in.readUTF();
-        this.index = new BTreeIndex<Long, List<JobLocation>>(this.store.getPageFile(), in.readLong());
+        this.index = new BTreeIndex<>(this.store.getPageFile(), in.readLong());
         this.index.setKeyMarshaller(LongMarshaller.INSTANCE);
         this.index.setValueMarshaller(JobLocationsMarshaller.INSTANCE);
     }

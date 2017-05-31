@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,6 +41,8 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
@@ -162,6 +165,12 @@ public class TopicRegion extends AbstractRegion {
                         sub.context = context;
                         sub.deactivate(keepDurableSubsActive, info.getLastDeliveredSequenceId());
                     }
+                    //If NoLocal we need to update the NoLocal selector with the new connectionId
+                    //Simply setting the selector with the current one will trigger a
+                    //refresh of of the connectionId for the NoLocal expression
+                    if (info.isNoLocal()) {
+                        sub.setSelector(sub.getSelector());
+                    }
                     subscriptions.put(info.getConsumerId(), sub);
                 }
             } else {
@@ -189,8 +198,9 @@ public class TopicRegion extends AbstractRegion {
                 // deactivate only if given context is same
                 // as what is in the sub. otherwise, during linksteal
                 // sub will get new context, but will be removed here
-                if (sub.getContext() == context)
+                if (sub.getContext() == context) {
                     sub.deactivate(keepDurableSubsActive, info.getLastDeliveredSequenceId());
+                }
             }
         } else {
             super.removeConsumer(context, info);
@@ -366,12 +376,19 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
-    private boolean hasDurableSubChanged(ConsumerInfo info1, ConsumerInfo info2) {
+    private boolean hasDurableSubChanged(ConsumerInfo info1, ConsumerInfo info2) throws IOException {
         if (info1.getSelector() != null ^ info2.getSelector() != null) {
             return true;
         }
         if (info1.getSelector() != null && !info1.getSelector().equals(info2.getSelector())) {
             return true;
+        }
+        //Not all persistence adapters store the noLocal value for a subscription
+        PersistenceAdapter adapter = broker.getBrokerService().getPersistenceAdapter();
+        if (adapter instanceof NoLocalSubscriptionAware) {
+            if (info1.isNoLocal() ^ info2.isNoLocal()) {
+                return true;
+            }
         }
         return !info1.getDestination().equals(info2.getDestination());
     }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -27,7 +27,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.junit.ActiveMQTestRunner;
 import org.apache.activemq.junit.Repeat;
@@ -45,7 +47,10 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
+import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,9 +67,50 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testReceiverCloseSendsRemoteClose() throws Exception {
+        AmqpClient client = createAmqpClient();
+        assertNotNull(client);
+
+        final AtomicBoolean closed = new AtomicBoolean();
+
+        client.setValidator(new AmqpValidator() {
+
+            @Override
+            public void inspectClosedResource(Session session) {
+                LOG.info("Session closed: {}", session.getContext());
+            }
+
+            @Override
+            public void inspectDetachedResource(Receiver receiver) {
+                markAsInvalid("Broker should not detach receiver linked to closed session.");
+            }
+
+            @Override
+            public void inspectClosedResource(Receiver receiver) {
+                LOG.info("Receiver closed: {}", receiver.getContext());
+                closed.set(true);
+            }
+        });
+
+        AmqpConnection connection = trackConnection(client.connect());
+        assertNotNull(connection);
+        AmqpSession session = connection.createSession();
+        assertNotNull(session);
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        assertNotNull(receiver);
+
+        receiver.close();
+
+        assertTrue("Did not process remote close as expected", closed.get());
+        connection.getStateInspector().assertValid();
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
     public void testCreateQueueReceiver() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -74,6 +120,79 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         assertEquals(1, brokerService.getAdminView().getQueues().length);
         assertNotNull(getProxyToQueue(getTestName()));
         assertEquals(1, brokerService.getAdminView().getQueueSubscribers().length);
+        receiver.close();
+        assertEquals(0, brokerService.getAdminView().getQueueSubscribers().length);
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testSenderSettlementModeSettledIsHonored() throws Exception {
+        doTestSenderSettlementModeIsHonored(SenderSettleMode.SETTLED);
+    }
+
+    @Test(timeout = 60000)
+    public void testSenderSettlementModeUnsettledIsHonored() throws Exception {
+        doTestSenderSettlementModeIsHonored(SenderSettleMode.UNSETTLED);
+    }
+
+    @Test(timeout = 60000)
+    public void testSenderSettlementModeMixedIsHonored() throws Exception {
+        doTestSenderSettlementModeIsHonored(SenderSettleMode.MIXED);
+    }
+
+    public void doTestSenderSettlementModeIsHonored(SenderSettleMode settleMode) throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerService.getAdminView().getQueues().length);
+
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), settleMode, ReceiverSettleMode.FIRST);
+
+        assertEquals(1, brokerService.getAdminView().getQueues().length);
+        assertNotNull(getProxyToQueue(getTestName()));
+        assertEquals(1, brokerService.getAdminView().getQueueSubscribers().length);
+
+        assertEquals(settleMode, receiver.getEndpoint().getRemoteSenderSettleMode());
+
+        receiver.close();
+        assertEquals(0, brokerService.getAdminView().getQueueSubscribers().length);
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testReceiverSettlementModeSetToFirst() throws Exception {
+        doTestReceiverSettlementModeForcedToFirst(ReceiverSettleMode.FIRST);
+    }
+
+    @Test(timeout = 60000)
+    public void testReceiverSettlementModeSetToSecond() throws Exception {
+        doTestReceiverSettlementModeForcedToFirst(ReceiverSettleMode.SECOND);
+    }
+
+    /*
+     * The Broker does not currently support ReceiverSettleMode of SECOND so we ensure that
+     * it always drops that back to FIRST to let the client know.  The client will need to
+     * check and react accordingly.
+     */
+    private void doTestReceiverSettlementModeForcedToFirst(ReceiverSettleMode modeToUse) throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerService.getAdminView().getQueues().length);
+
+        AmqpReceiver receiver = session.createReceiver(
+            "queue://" + getTestName(), SenderSettleMode.MIXED, modeToUse);
+
+        assertEquals(1, brokerService.getAdminView().getQueues().length);
+        assertNotNull(getProxyToQueue(getTestName()));
+        assertEquals(1, brokerService.getAdminView().getQueueSubscribers().length);
+
+        assertEquals(ReceiverSettleMode.FIRST, receiver.getEndpoint().getRemoteReceiverSettleMode());
+
         receiver.close();
         assertEquals(0, brokerService.getAdminView().getQueueSubscribers().length);
 
@@ -104,7 +223,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -141,7 +260,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
             }
         });
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -157,7 +276,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     @Test(timeout = 60000)
     public void testCreateTopicReceiver() throws Exception {
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getTopics().length);
@@ -178,7 +297,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), 1, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
@@ -203,7 +322,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), null, false, true);
@@ -225,12 +344,77 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     @Repeat(repetitions = 1)
+    public void testPresettledReceiverReadsAllMessagesInNonFlowBatchQueue() throws Exception {
+        doTestPresettledReceiverReadsAllMessagesInNonFlowBatch(false);
+    }
+
+    @Test(timeout = 60000)
+    @Repeat(repetitions = 1)
+    public void testPresettledReceiverReadsAllMessagesInNonFlowBatchTopic() throws Exception {
+        doTestPresettledReceiverReadsAllMessagesInNonFlowBatch(true);
+    }
+
+    private void doTestPresettledReceiverReadsAllMessagesInNonFlowBatch(boolean topic) throws Exception {
+
+        final String destinationName;
+        if (topic) {
+            destinationName = "topic://" + getTestName();
+        } else {
+            destinationName = "queue://" + getTestName();
+        }
+
+        final int MSG_COUNT = 100;
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver(destinationName, null, false, true);
+
+        sendMessages(getTestName(), MSG_COUNT, topic);
+
+        final DestinationViewMBean destinationView;
+        if (topic) {
+            destinationView = getProxyToTopic(getTestName());
+        } else {
+            destinationView = getProxyToQueue(getTestName());
+        }
+        assertEquals(MSG_COUNT, destinationView.getEnqueueCount());
+        assertEquals(0, destinationView.getDispatchCount());
+
+        receiver.flow(20);
+        // consume less that flow
+        for (int j=0;j<10;j++) {
+            assertNotNull(receiver.receive(5, TimeUnit.SECONDS));
+        }
+
+        // flow more and consume all
+        receiver.flow(10);
+        for (int j=0;j<20;j++) {
+            assertNotNull(receiver.receive(5, TimeUnit.SECONDS));
+        }
+
+        // remainder
+        receiver.flow(70);
+        for (int j=0;j<70;j++) {
+            assertNotNull(receiver.receive(5, TimeUnit.SECONDS));
+        }
+
+        receiver.close();
+
+        assertEquals(0, destinationView.getEnqueueCount() - destinationView.getDequeueCount());
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    @Repeat(repetitions = 1)
     public void testTwoQueueReceiversOnSameConnectionReadMessagesNoDispositions() throws Exception {
         int MSG_COUNT = 4;
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
@@ -267,7 +451,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
@@ -326,7 +510,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
@@ -397,7 +581,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
             }
         });
 
-        Map<Symbol, DescribedType> filters = new HashMap<Symbol, DescribedType>();
+        Map<Symbol, DescribedType> filters = new HashMap<>();
         filters.put(AmqpUnknownFilterType.UNKNOWN_FILTER_NAME, AmqpUnknownFilterType.UNKOWN_FILTER);
 
         Source source = new Source();
@@ -406,7 +590,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         source.setDurable(TerminusDurability.NONE);
         source.setExpiryPolicy(TerminusExpiryPolicy.LINK_DETACH);
 
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         assertEquals(0, brokerService.getAdminView().getQueues().length);
@@ -416,6 +600,67 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         assertEquals(1, brokerService.getAdminView().getQueueSubscribers().length);
 
         connection.getStateInspector().assertValid();
+        connection.close();
+    }
+
+    @Test(timeout = 30000)
+    public void testReleasedDisposition() throws Exception {
+        sendMessages(getTestName(), 1, false);
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver(getTestName());
+        receiver.flow(2);
+
+        AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull("did not receive message first time", message);
+
+        Message protonMessage = message.getWrappedMessage();
+        assertNotNull(protonMessage);
+        assertEquals("Unexpected initial value for AMQP delivery-count", 0, protonMessage.getDeliveryCount());
+
+        message.release();
+
+        // Read the message again and validate its state
+
+        message = receiver.receive(10, TimeUnit.SECONDS);
+        assertNotNull("did not receive message again", message);
+
+        message.accept();
+
+        protonMessage = message.getWrappedMessage();
+        assertNotNull(protonMessage);
+        assertEquals("Unexpected updated value for AMQP delivery-count", 0, protonMessage.getDeliveryCount());
+
+        connection.close();
+    }
+
+    @Test(timeout = 30000)
+    public void testRejectedDisposition() throws Exception {
+        sendMessages(getTestName(), 1, false);
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = trackConnection(client.connect());
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver(getTestName());
+        receiver.flow(2);
+
+        AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull("did not receive message first time", message);
+
+        Message protonMessage = message.getWrappedMessage();
+        assertNotNull(protonMessage);
+        assertEquals("Unexpected initial value for AMQP delivery-count", 0, protonMessage.getDeliveryCount());
+
+        message.reject();
+
+        // Attempt to read the message again but should not get it.
+        message = receiver.receive(2, TimeUnit.SECONDS);
+        assertNull("shoudl not receive message again", message);
+
         connection.close();
     }
 
@@ -444,7 +689,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         sendMessages(getTestName(), msgCount, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());

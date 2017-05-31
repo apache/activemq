@@ -147,6 +147,8 @@
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/camel</outputDirectory>
@@ -158,6 +160,8 @@
         <include>org.apache.camel:camel-jms</include>
         <include>org.apache.activemq:activemq-camel</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/optional</outputDirectory>
@@ -205,7 +209,6 @@
         <include>org.jasypt:jasypt</include>
         <include>org.jasypt:jasypt-spring31</include>
         <include>javax.jmdns:jmdns</include>
-        <include>org.apache.qpid:proton-jms</include>
         <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
         <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>
@@ -234,6 +237,8 @@
         <include>io.fabric8.insight:insight-log4j</include>
 
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/extra</outputDirectory>
@@ -247,6 +252,8 @@
         <!-- junit integration -->
         <include>org.apache.activemq.tooling:activemq-junit</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/web</outputDirectory>
@@ -283,6 +290,8 @@
         <include>org.jolokia:jolokia-core</include>
         <include>com.googlecode.json-simple:json-simple</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
   </dependencySets>
 </component>

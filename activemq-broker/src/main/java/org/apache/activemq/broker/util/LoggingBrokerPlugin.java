@@ -515,7 +515,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void isFull(ConnectionContext context, Destination destination, Usage usage) {
+    public void isFull(ConnectionContext context, Destination destination, Usage<?> usage) {
         if (isLogAll() || isLogProducerEvents() || isLogInternalEvents()) {
             LOG.info("Destination is full: {}", destination.getName());
         }

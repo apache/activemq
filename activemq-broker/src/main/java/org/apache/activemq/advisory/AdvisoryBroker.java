@@ -683,7 +683,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void isFull(ConnectionContext context, Destination destination, Usage usage) {
+    public void isFull(ConnectionContext context, Destination destination, Usage<?> usage) {
         super.isFull(context, destination, usage);
         if (AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination()) == false) {
             try {
@@ -891,6 +891,10 @@ public class AdvisoryBroker extends BrokerFilter {
 
     public Map<ActiveMQDestination, DestinationInfo> getAdvisoryDestinations() {
         return destinations;
+    }
+
+    public ConcurrentMap<ConsumerInfo, VirtualDestination> getVirtualDestinationConsumers() {
+        return virtualDestinationConsumers;
     }
 
     private class VirtualConsumerPair {

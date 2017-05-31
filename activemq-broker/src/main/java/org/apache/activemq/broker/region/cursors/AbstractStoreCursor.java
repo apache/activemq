@@ -110,8 +110,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             recovered = true;
         } else if (!cached) {
             // a duplicate from the store (!cached) - needs to be removed/acked - otherwise it will get re dispatched on restart
-            if (message.isRecievedByDFBridge()) {
-                // expected for messages pending acks with kahadb.concurrentStoreAndDispatchQueues=true
+            if (duplicateFromStoreExcepted(message)) {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("{} store replayed pending message due to concurrentStoreAndDispatchQueues {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
                 }
@@ -126,6 +125,12 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
         }
         return recovered;
+    }
+
+    protected boolean duplicateFromStoreExcepted(Message message) {
+        // expected for messages pending acks with kahadb.concurrentStoreAndDispatchQueues=true for
+        // which this existing unused flag has been repurposed
+        return message.isRecievedByDFBridge();
     }
 
     public static boolean gotToTheStore(Message message) throws Exception {
@@ -227,12 +232,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     public synchronized boolean tryAddMessageLast(MessageReference node, long wait) throws Exception {
         boolean disableCache = false;
         if (hasSpace()) {
-            if (!isCacheEnabled() && size==0 && isStarted() && useCache) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("{} - enabling cache for empty store {} {}", this, node.getMessageId(), node.getMessageId().getFutureOrSequenceLong());
-                }
-                setCacheEnabled(true);
-            }
             if (isCacheEnabled()) {
                 if (recoverMessage(node.getMessage(),true)) {
                     trackLastCached(node);
@@ -256,41 +255,68 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return true;
     }
 
+    @Override
+    public synchronized boolean isCacheEnabled() {
+        return super.isCacheEnabled() || enableCacheNow();
+    }
+
+    protected boolean enableCacheNow() {
+        boolean result = false;
+        if (canEnableCash()) {
+            setCacheEnabled(true);
+            result = true;
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("{} enabling cache on empty store", this);
+            }
+        }
+        return result;
+    }
+
+    protected boolean canEnableCash() {
+        return useCache && size==0 && hasSpace() && isStarted();
+    }
+
     private void syncWithStore(Message currentAdd) throws Exception {
         pruneLastCached();
-        if (lastCachedIds[SYNC_ADD] == null) {
-            // possibly only async adds, lets wait on the potential last add and reset from there
-            for (ListIterator<MessageId> it = pendingCachedIds.listIterator(pendingCachedIds.size()); it.hasPrevious(); ) {
-                MessageId lastPending = it.previous();
-                Object futureOrLong = lastPending.getFutureOrSequenceLong();
-                if (futureOrLong instanceof Future) {
-                    Future future = (Future) futureOrLong;
-                    if (future.isCancelled()) {
-                        continue;
-                    }
-                    try {
-                        future.get(5, TimeUnit.SECONDS);
-                        setLastCachedId(ASYNC_ADD, lastPending);
-                    } catch (CancellationException ok) {
-                        continue;
-                    } catch (TimeoutException potentialDeadlock) {
-                        LOG.debug("{} timed out waiting for async add", this, potentialDeadlock);
-                    } catch (Exception worstCaseWeReplay) {
-                        LOG.debug("{} exception waiting for async add", this, worstCaseWeReplay);
-                    }
-                } else {
+        for (ListIterator<MessageId> it = pendingCachedIds.listIterator(pendingCachedIds.size()); it.hasPrevious(); ) {
+            MessageId lastPending = it.previous();
+            Object futureOrLong = lastPending.getFutureOrSequenceLong();
+            if (futureOrLong instanceof Future) {
+                Future future = (Future) futureOrLong;
+                if (future.isCancelled()) {
+                    continue;
+                }
+                try {
+                    future.get(5, TimeUnit.SECONDS);
                     setLastCachedId(ASYNC_ADD, lastPending);
+                } catch (CancellationException ok) {
+                    continue;
+                } catch (TimeoutException potentialDeadlock) {
+                    LOG.debug("{} timed out waiting for async add", this, potentialDeadlock);
+                } catch (Exception worstCaseWeReplay) {
+                    LOG.debug("{} exception waiting for async add", this, worstCaseWeReplay);
                 }
-                break;
+            } else {
+                setLastCachedId(ASYNC_ADD, lastPending);
             }
-            if (lastCachedIds[ASYNC_ADD] != null) {
-                // ensure we don't skip current possibly sync add b/c we waited on the future
-                if (isAsync(currentAdd) || Long.compare(((Long) currentAdd.getMessageId().getFutureOrSequenceLong()), ((Long) lastCachedIds[ASYNC_ADD].getFutureOrSequenceLong())) > 0) {
-                    setBatch(lastCachedIds[ASYNC_ADD]);
+            break;
+        }
+
+        MessageId candidate = lastCachedIds[ASYNC_ADD];
+        if (candidate != null) {
+            // ensure we don't skip current possibly sync add b/c we waited on the future
+            if (!isAsync(currentAdd) && Long.compare(((Long) currentAdd.getMessageId().getFutureOrSequenceLong()), ((Long) lastCachedIds[ASYNC_ADD].getFutureOrSequenceLong())) < 0) {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("no set batch from async:" + candidate.getFutureOrSequenceLong() + " >= than current: " + currentAdd.getMessageId().getFutureOrSequenceLong() + ", " + this);
                 }
+                candidate = null;
             }
-        } else {
-            setBatch(lastCachedIds[SYNC_ADD]);
+        }
+        if (candidate == null) {
+            candidate = lastCachedIds[SYNC_ADD];
+        }
+        if (candidate != null) {
+            setBatch(candidate);
         }
         // cleanup
         lastCachedIds[SYNC_ADD] = lastCachedIds[ASYNC_ADD] = null;
@@ -350,6 +376,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             } else if (candidateOrSequenceLong != null &&
                     Long.compare(((Long) candidateOrSequenceLong), ((Long) lastCacheFutureOrSequenceLong)) > 0) {
                 lastCachedIds[index] = candidate;
+            } if (LOG.isTraceEnabled()) {
+                LOG.trace("no set last cached[" + index + "] current:" + lastCacheFutureOrSequenceLong + " <= than candidate: " + candidateOrSequenceLong+ ", " + this);
             }
         }
     }

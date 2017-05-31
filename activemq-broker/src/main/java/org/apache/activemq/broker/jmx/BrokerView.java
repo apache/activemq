@@ -19,23 +19,20 @@ package org.apache.activemq.broker.jmx;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.OpenDataException;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.BrokerSupport;
 import org.slf4j.Logger;
@@ -286,6 +283,24 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public ObjectName[] getQueues() {
         return safeGetBroker().getQueuesNonSuppressed();
+    }
+
+    @Override
+    public String queryQueues(String filter, int page, int pageSize) throws IOException {
+        return DestinationsViewFilter.create(filter)
+                .setDestinations(safeGetBroker().getQueueViews())
+                .filter(page, pageSize);
+    }
+
+    @Override
+    public String queryTopics(String filter, int page, int pageSize) throws IOException {
+        return DestinationsViewFilter.create(filter)
+                .setDestinations(safeGetBroker().getTopicViews())
+                .filter(page, pageSize);
+    }
+
+    public CompositeData[] browseQueue(String queueName) throws OpenDataException, MalformedObjectNameException {
+       return safeGetBroker().getQueueView(queueName).browse();
     }
 
     @Override

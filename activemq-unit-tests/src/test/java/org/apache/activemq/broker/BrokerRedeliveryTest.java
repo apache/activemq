@@ -74,7 +74,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
         for (int i = 0; i < maxBrokerRedeliveriesToValidate; i++) {
             Message shouldBeNull = consumer.receive(500);
-            assertNull("did not get message after redelivery count exceeded: " + shouldBeNull, shouldBeNull);
+            assertNull("did not get message early: " + shouldBeNull, shouldBeNull);
 
             TimeUnit.SECONDS.sleep(4);
 

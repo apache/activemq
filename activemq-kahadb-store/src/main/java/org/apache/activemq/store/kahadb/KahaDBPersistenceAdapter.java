@@ -42,6 +42,7 @@ import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.JournaledStore;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.SharedFileLocker;
 import org.apache.activemq.store.TopicMessageStore;
@@ -51,6 +52,7 @@ import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
 
@@ -61,7 +63,9 @@ import org.apache.activemq.util.ServiceStopper;
  * @org.apache.xbean.XBean element="kahaDB"
  *
  */
-public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, JournaledStore, TransactionIdTransformerAware {
+public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter,
+    JournaledStore, TransactionIdTransformerAware, NoLocalSubscriptionAware {
+
     private final KahaDBStore letter = new KahaDBStore();
 
     /**
@@ -211,7 +215,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     @Override
     public long size() {
-        return this.letter.size();
+        return this.letter.isStarted() ? this.letter.size() : 0l;
     }
 
     /**
@@ -456,6 +460,10 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     public String getJournalDiskSyncStrategy() {
         return letter.getJournalDiskSyncStrategy();
+    }
+
+    public JournalDiskSyncStrategy getJournalDiskSyncStrategyEnum() {
+        return letter.getJournalDiskSyncStrategyEnum();
     }
 
     /**
@@ -776,7 +784,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
-        return "KahaDBPersistenceAdapter[" + path + "]";
+        return "KahaDBPersistenceAdapter[" + path + (getIndexDirectory() != null ? ",Index:" + getIndexDirectory().getAbsolutePath() : "") +  "]";
     }
 
     @Override
@@ -787,5 +795,13 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         return this.letter.createJobSchedulerStore();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.NoLocalSubscriptionAware#isPersistNoLocal()
+     */
+    @Override
+    public boolean isPersistNoLocal() {
+        return this.letter.isPersistNoLocal();
     }
 }

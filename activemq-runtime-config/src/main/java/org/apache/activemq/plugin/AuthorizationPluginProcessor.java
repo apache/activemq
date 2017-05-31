@@ -57,6 +57,7 @@ public class AuthorizationPluginProcessor extends DefaultConfigurationProcessor 
                     }
                 }
                 xBeanAuthorizationMap.setAuthorizationEntries(entries);
+                xBeanAuthorizationMap.setGroupClass(dtoMap.getAuthorizationMap().getGroupClass());
                 try {
                     xBeanAuthorizationMap.afterPropertiesSet();
                 } catch (Exception e) {

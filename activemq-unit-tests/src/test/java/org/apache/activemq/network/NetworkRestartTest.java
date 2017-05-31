@@ -135,9 +135,11 @@ public class NetworkRestartTest extends TestSupport {
     protected void doSetUp() throws Exception {
 
         remoteBroker = createRemoteBroker();
+        remoteBroker.setDeleteAllMessagesOnStartup(true);
         remoteBroker.start();
         remoteBroker.waitUntilStarted();
         localBroker = createLocalBroker();
+        localBroker.setDeleteAllMessagesOnStartup(true);
         localBroker.start();
         localBroker.waitUntilStarted();
 

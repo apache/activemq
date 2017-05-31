@@ -34,6 +34,9 @@
   </bean>
 
   <broker xmlns="http://activemq.apache.org/schema/core" start="false" persistent="false" brokerName="${custom}">
+    <managementContext>
+      <managementContext createConnector="false"/>
+    </managementContext>
     <plugins>
       <runtimeConfigurationPlugin checkPeriod="1000" />
     </plugins>

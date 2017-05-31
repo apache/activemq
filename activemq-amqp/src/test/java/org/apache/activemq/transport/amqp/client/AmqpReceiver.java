@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -35,7 +35,7 @@ import javax.jms.InvalidDestinationException;
 import org.apache.activemq.transport.amqp.client.util.AsyncResult;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.IOExceptionSupport;
-import org.apache.activemq.transport.amqp.client.util.UnmodifiableReceiver;
+import org.apache.activemq.transport.amqp.client.util.UnmodifiableProxy;
 import org.apache.qpid.jms.JmsOperationTimedOutException;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
@@ -65,12 +65,15 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpReceiver.class);
 
     private final AtomicBoolean closed = new AtomicBoolean();
-    private final BlockingQueue<AmqpMessage> prefetch = new LinkedBlockingDeque<AmqpMessage>();
+    private final BlockingQueue<AmqpMessage> prefetch = new LinkedBlockingDeque<>();
 
     private final AmqpSession session;
     private final String address;
     private final String receiverId;
+
     private final Source userSpecifiedSource;
+    private final SenderSettleMode userSpecifiedSenderSettlementMode;
+    private final ReceiverSettleMode userSpecifiedReceiverSettlementMode;
 
     private String subscriptionName;
     private String selector;
@@ -84,13 +87,31 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * Create a new receiver instance.
      *
      * @param session
-     * 		  The parent session that created the receiver.
+     *        The parent session that created the receiver.
      * @param address
      *        The address that this receiver should listen on.
      * @param receiverId
      *        The unique ID assigned to this receiver.
      */
     public AmqpReceiver(AmqpSession session, String address, String receiverId) {
+        this(session, address, receiverId, null, null);
+    }
+
+    /**
+     * Create a new receiver instance.
+     *
+     * @param session
+     * 		  The parent session that created the receiver.
+     * @param address
+     *        The address that this receiver should listen on.
+     * @param receiverId
+     *        The unique ID assigned to this receiver.
+     * @param senderMode
+     *        The {@link SenderSettleMode} to use on open.
+     * @param receiverMode
+     *        The {@link ReceiverSettleMode} to use on open.
+     */
+    public AmqpReceiver(AmqpSession session, String address, String receiverId, SenderSettleMode senderMode, ReceiverSettleMode receiverMode) {
 
         if (address != null && address.isEmpty()) {
             throw new IllegalArgumentException("Address cannot be empty.");
@@ -100,6 +121,8 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         this.session = session;
         this.address = address;
         this.receiverId = receiverId;
+        this.userSpecifiedSenderSettlementMode = senderMode;
+        this.userSpecifiedReceiverSettlementMode = receiverMode;
     }
 
     /**
@@ -122,6 +145,8 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         this.userSpecifiedSource = source;
         this.address = source.getAddress();
         this.receiverId = receiverId;
+        this.userSpecifiedSenderSettlementMode = null;
+        this.userSpecifiedReceiverSettlementMode = null;
     }
 
     /**
@@ -414,18 +439,78 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     /**
-     * Accepts a message that was dispatched under the given Delivery instance.
+     * Accepts a message that was dispatched under the given Delivery instance and settles the delivery.
      *
      * @param delivery
      *        the Delivery instance to accept.
      *
      * @throws IOException if an error occurs while sending the accept.
      */
-    public void accept(final Delivery delivery) throws IOException {
+    public void accept(Delivery delivery) throws IOException {
+        accept(delivery, this.session, true);
+    }
+
+    /**
+     * Accepts a message that was dispatched under the given Delivery instance.
+     *
+     * @param delivery
+     *        the Delivery instance to accept.
+     * @param settle
+     *        true if the receiver should settle the delivery or just send the disposition.
+     *
+     * @throws IOException if an error occurs while sending the accept.
+     */
+    public void accept(Delivery delivery, boolean settle) throws IOException {
+        accept(delivery, this.session, settle);
+    }
+
+    /**
+     * Accepts a message that was dispatched under the given Delivery instance and settles the delivery.
+     *
+     * This method allows for the session that is used in the accept to be specified by the
+     * caller.  This allows for an accepted message to be involved in a transaction that is
+     * being managed by some other session other than the one that created this receiver.
+     *
+     * @param delivery
+     *        the Delivery instance to accept.
+     * @param session
+     *        the session under which the message is being accepted.
+     *
+     * @throws IOException if an error occurs while sending the accept.
+     */
+    public void accept(final Delivery delivery, final AmqpSession session) throws IOException {
+        accept(delivery, session, true);
+    }
+
+    /**
+     * Accepts a message that was dispatched under the given Delivery instance.
+     *
+     * This method allows for the session that is used in the accept to be specified by the
+     * caller.  This allows for an accepted message to be involved in a transaction that is
+     * being managed by some other session other than the one that created this receiver.
+     *
+     * @param delivery
+     *        the Delivery instance to accept.
+     * @param session
+     *        the session under which the message is being accepted.
+     * @param settle
+     *        true if the receiver should settle the delivery or just send the disposition.
+     *
+     * @throws IOException if an error occurs while sending the accept.
+     */
+    public void accept(final Delivery delivery, final AmqpSession session, final boolean settle) throws IOException {
         checkClosed();
 
         if (delivery == null) {
             throw new IllegalArgumentException("Delivery to accept cannot be null");
+        }
+
+        if (session == null) {
+            throw new IllegalArgumentException("Session given cannot be null");
+        }
+
+        if (session.getConnection() != this.session.getConnection()) {
+            throw new IllegalArgumentException("The session used for accept must originate from the connection that created this receiver.");
         }
 
         final ClientFuture request = new ClientFuture();
@@ -443,11 +528,13 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                                 txState.setOutcome(Accepted.getInstance());
                                 txState.setTxnId(txnId);
                                 delivery.disposition(txState);
-                                delivery.settle();
                                 session.getTransactionContext().registerTxConsumer(AmqpReceiver.this);
                             }
                         } else {
                             delivery.disposition(Accepted.getInstance());
+                        }
+
+                        if (settle) {
                             delivery.settle();
                         }
                     }
@@ -543,10 +630,47 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     /**
+     * Reject a message that was dispatched under the given Delivery instance.
+     *
+     * @param delivery
+     *        the Delivery instance to reject.
+     *
+     * @throws IOException if an error occurs while sending the release.
+     */
+    public void reject(final Delivery delivery) throws IOException {
+        checkClosed();
+
+        if (delivery == null) {
+            throw new IllegalArgumentException("Delivery to release cannot be null");
+        }
+
+        final ClientFuture request = new ClientFuture();
+        session.getScheduler().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+                try {
+                    if (!delivery.isSettled()) {
+                        delivery.disposition(new Rejected());
+                        delivery.settle();
+                        session.pumpToProtonTransport(request);
+                    }
+                    request.onSuccess();
+                } catch (Exception e) {
+                    request.onFailure(e);
+                }
+            }
+        });
+
+        request.sync();
+    }
+
+    /**
      * @return an unmodifiable view of the underlying Receiver instance.
      */
     public Receiver getReceiver() {
-        return new UnmodifiableReceiver(getEndpoint());
+        return UnmodifiableProxy.receiverProxy(getEndpoint());
     }
 
     //----- Receiver configuration properties --------------------------------//
@@ -616,12 +740,25 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         Receiver receiver = session.getEndpoint().receiver(receiverName);
         receiver.setSource(source);
         receiver.setTarget(target);
-        if (isPresettle()) {
-            receiver.setSenderSettleMode(SenderSettleMode.SETTLED);
+
+        if (userSpecifiedSenderSettlementMode != null) {
+            receiver.setSenderSettleMode(userSpecifiedSenderSettlementMode);
+            if (SenderSettleMode.SETTLED.equals(userSpecifiedSenderSettlementMode)) {
+                setPresettle(true);
+            }
         } else {
-            receiver.setSenderSettleMode(SenderSettleMode.UNSETTLED);
+            if (isPresettle()) {
+                receiver.setSenderSettleMode(SenderSettleMode.SETTLED);
+            } else {
+                receiver.setSenderSettleMode(SenderSettleMode.UNSETTLED);
+            }
         }
-        receiver.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+
+        if (userSpecifiedReceiverSettlementMode != null) {
+            receiver.setReceiverSettleMode(userSpecifiedReceiverSettlementMode);
+        } else {
+            receiver.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+        }
 
         setEndpoint(receiver);
 
@@ -689,7 +826,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     protected void configureSource(Source source) {
-        Map<Symbol, DescribedType> filters = new HashMap<Symbol, DescribedType>();
+        Map<Symbol, DescribedType> filters = new HashMap<>();
         Symbol[] outcomes = new Symbol[]{Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL,
                                          Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
 
@@ -757,6 +894,8 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     private void processDelivery(Delivery incoming) throws Exception {
+        doDeliveryInspection(incoming);
+
         Message message = null;
         try {
             message = decodeIncomingMessage(incoming);
@@ -776,6 +915,14 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         if (pullRequest != null) {
             pullRequest.onSuccess();
             pullRequest = null;
+        }
+    }
+
+    private void doDeliveryInspection(Delivery delivery) {
+        try {
+            getStateInspector().inspectDelivery(getReceiver(), delivery);
+        } catch (Throwable error) {
+            getStateInspector().markAsInvalid(error.getMessage());
         }
     }
 

@@ -109,6 +109,30 @@ public class AMQ4407Test {
         assertEquals(1, destination2.getMessageStore().getMessageCount());
     }
 
+
+    @Test
+    public void testRemoveOfOneDestFromSharedPa() throws Exception {
+        // Ensure we have an Admin View.
+        assertTrue("Broker doesn't have an Admin View.", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return (broker.getAdminView()) != null;
+            }
+        }));
+
+        // will both use first persistence adapter
+        sendMessage("queue.A", "test 1");
+        sendMessage("queue.B", "test 1");
+
+        broker.getAdminView().removeQueue("queue.A");
+
+        sendMessage("queue.B", "test 1");
+
+        Destination destination2 = broker.getDestination(new ActiveMQQueue("queue.B"));
+        assertNotNull(destination2);
+        assertEquals(2, destination2.getMessageStore().getMessageCount());
+    }
+
     protected KahaDBPersistenceAdapter createStore(boolean delete) throws IOException {
         KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         kaha.setJournalMaxFileLength(maxFileLength);

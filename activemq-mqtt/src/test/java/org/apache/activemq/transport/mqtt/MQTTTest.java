@@ -1671,24 +1671,29 @@ public class MQTTTest extends MQTTTestSupport {
         }
         connectionSub.disconnect();
 
-        for (int j = 0; j < numberOfRuns; j++) {
+        try {
+            for (int j = 0; j < numberOfRuns; j++) {
 
-            for (int i = 0; i < messagesPerRun; ++i) {
-                connectionPub.publish(topics[0].name().toString(), payload, QoS.AT_LEAST_ONCE, false);
+                for (int i = 0; i < messagesPerRun; ++i) {
+                    connectionPub.publish(topics[0].name().toString(), payload, QoS.AT_LEAST_ONCE, false);
+                }
+
+                connectionSub = mqttSub.blockingConnection();
+                connectionSub.connect();
+                connectionSub.subscribe(topics);
+
+                for (int i = 0; i < messagesPerRun; ++i) {
+                    Message message = connectionSub.receive(5, TimeUnit.SECONDS);
+                    assertNotNull(message);
+                    received++;
+                    assertTrue(Arrays.equals(payload, message.getPayload()));
+                    message.ack();
+                }
+                connectionSub.disconnect();
             }
-
-            connectionSub = mqttSub.blockingConnection();
-            connectionSub.connect();
-            connectionSub.subscribe(topics);
-
-            for (int i = 0; i < messagesPerRun; ++i) {
-                Message message = connectionSub.receive(5, TimeUnit.SECONDS);
-                assertNotNull(message);
-                received++;
-                assertTrue(Arrays.equals(payload, message.getPayload()));
-                message.ack();
-            }
-            connectionSub.disconnect();
+        } catch (Exception exception) {
+            LOG.error("unexpected exception", exception);
+            exception.printStackTrace();
         }
         assertEquals("Should have received " + (messagesPerRun * (numberOfRuns + 1)) + " messages", (messagesPerRun * (numberOfRuns + 1)), received);
     }
@@ -1960,5 +1965,32 @@ public class MQTTTest extends MQTTTestSupport {
         }));
 
         connection.disconnect();
+    }
+
+    @Test
+    public void testConnectWithLargePassword() throws Exception {
+       for (String version : Arrays.asList("3.1", "3.1.1")) {
+          String longString = new String(new char[65535]);
+
+          BlockingConnection connection = null;
+          try {
+             MQTT mqtt = createMQTTConnection("test-" + version, true);
+             mqtt.setUserName(longString);
+             mqtt.setPassword(longString);
+             mqtt.setConnectAttemptsMax(1);
+             mqtt.setVersion(version);
+             connection = mqtt.blockingConnection();
+             connection.connect();
+             final BlockingConnection con = connection;
+             assertTrue(Wait.waitFor(new Wait.Condition() {
+                 @Override
+                 public boolean isSatisified() throws Exception {
+                     return con.isConnected();
+                 }
+             }));
+          } finally {
+             if (connection != null && connection.isConnected()) connection.disconnect();
+          }
+       }
     }
 }

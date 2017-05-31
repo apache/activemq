@@ -224,8 +224,8 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     }
 
     @Override
-    public void clearMarshalledState() throws JMSException {
-        super.clearMarshalledState();
+    public void clearUnMarshalledState() throws JMSException {
+        super.clearUnMarshalledState();
         this.object = null;
     }
 

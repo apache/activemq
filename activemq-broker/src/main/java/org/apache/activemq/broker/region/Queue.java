@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.broker.region;
 
+import static org.apache.activemq.broker.region.cursors.AbstractStoreCursor.gotToTheStore;
+import static org.apache.activemq.transaction.Transaction.IN_USE_STATE;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +39,7 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -96,8 +99,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import static org.apache.activemq.broker.region.cursors.AbstractStoreCursor.gotToTheStore;
-
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
  * subscriptions.
@@ -115,6 +116,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     // Messages that are paged in but have not yet been targeted at a subscription
     private final ReentrantReadWriteLock pagedInPendingDispatchLock = new ReentrantReadWriteLock();
     protected QueueDispatchPendingList dispatchPendingList = new QueueDispatchPendingList();
+    private AtomicInteger pendingSends = new AtomicInteger(0);
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new CachedMessageGroupMapFactory();
@@ -132,7 +134,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private CountDownLatch consumersBeforeStartsLatch;
     private final AtomicLong pendingWakeups = new AtomicLong();
     private boolean allConsumersExclusiveByDefault = false;
-    private final AtomicBoolean started = new AtomicBoolean();
 
     private volatile boolean resetNeeded;
 
@@ -151,7 +152,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     private final Object iteratingMutex = new Object();
 
-
+    // gate on enabling cursor cache to ensure no outstanding sync
+    // send before async sends resume
+    public boolean singlePendingSend() {
+        return pendingSends.get() <= 1;
+    }
 
     class TimeoutMessage implements Delayed {
 
@@ -217,7 +222,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 LOG.debug(getName() + "Producer Flow Control Timeout Task is stopping");
             }
         }
-    };
+    }
 
     private final FlowControlTimeoutTask flowControlTimeoutTask = new FlowControlTimeoutTask();
 
@@ -630,12 +635,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             isFull(context, memoryUsage);
             fastProducer(context, producerInfo);
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
-                if (warnOnProducerFlowControl) {
-                    warnOnProducerFlowControl = false;
+                if (isFlowControlLogRequired()) {
                     LOG.info("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
-                                    memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
-                }
+                                memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
 
+                }
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
                     throw new ResourceAllocationException("Usage Manager Memory Limit reached. Stopping producer ("
                             + message.getProducerId() + ") to prevent flooding "
@@ -664,9 +668,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                                 try {
                                     // While waiting for space to free up... the
-                                    // message may have expired.
+                                    // transaction may be done
+                                    if (message.isInTransaction()) {
+                                        if (context.getTransaction().getState() > IN_USE_STATE) {
+                                            throw new JMSException("Send transaction completed while waiting for space");
+                                        }
+                                    }
+
+                                    // the message may have expired.
                                     if (message.isExpired()) {
-                                        LOG.error("expired waiting for space..");
+                                        LOG.error("message expired waiting for space");
                                         broker.messageExpired(context, message, null);
                                         destinationStatistics.getExpired().increment();
                                     } else {
@@ -691,10 +702,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                                     } else {
                                         LOG.debug("unexpected exception on deferred send of: {}", message, e);
                                     }
+                                } finally {
+                                    getDestinationStatistics().getBlockedSends().decrement();
+                                    producerExchangeCopy.blockingOnFlowControl(false);
                                 }
                             }
                         });
 
+                        getDestinationStatistics().getBlockedSends().increment();
+                        producerExchange.blockingOnFlowControl(true);
                         if (!context.isNetworkConnection() && systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
                             flowControlTimeoutMessages.add(new TimeoutMessage(message, context, systemUsage
                                     .getSendFailIfNoSpaceAfterTimeout()));
@@ -823,6 +839,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         ListenableFuture<Object> result = null;
 
         producerExchange.incrementSend();
+        pendingSends.incrementAndGet();
         do {
             checkUsage(context, producerExchange, message);
             message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
@@ -839,15 +856,20 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     } else {
                         store.addMessage(context, message);
                     }
-                    if (isReduceMemoryFootprint()) {
-                        message.clearMarshalledState();
-                    }
                 } catch (Exception e) {
                     // we may have a store in inconsistent state, so reset the cursor
                     // before restarting normal broker operations
                     resetNeeded = true;
+                    pendingSends.decrementAndGet();
                     throw e;
                 }
+            }
+
+            //Clear the unmarshalled state if the message is marshalled
+            //Persistent messages will always be marshalled but non-persistent may not be
+            //Specially non-persistent messages over the VM transport won't be
+            if (isReduceMemoryFootprint() && message.isMarshalled()) {
+                message.clearUnMarshalledState();
             }
             if(tryOrderedCursorAdd(message, context)) {
                 break;
@@ -1235,33 +1257,35 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public void purge() throws Exception {
         ConnectionContext c = createConnectionContext();
         List<MessageReference> list = null;
-        long originalMessageCount = this.destinationStatistics.getMessages().getCount();
-        do {
-            doPageIn(true, false, getMaxPageSize());  // signal no expiry processing needed.
-            pagedInMessagesLock.readLock().lock();
-            try {
-                list = new ArrayList<MessageReference>(pagedInMessages.values());
-            }finally {
-                pagedInMessagesLock.readLock().unlock();
-            }
-
-            for (MessageReference ref : list) {
+        try {
+            sendLock.lock();
+            long originalMessageCount = this.destinationStatistics.getMessages().getCount();
+            do {
+                doPageIn(true, false, getMaxPageSize());  // signal no expiry processing needed.
+                pagedInMessagesLock.readLock().lock();
                 try {
-                    QueueMessageReference r = (QueueMessageReference) ref;
-                    removeMessage(c, r);
-                } catch (IOException e) {
+                    list = new ArrayList<MessageReference>(pagedInMessages.values());
+                }finally {
+                    pagedInMessagesLock.readLock().unlock();
                 }
-            }
-            // don't spin/hang if stats are out and there is nothing left in the
-            // store
-        } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
 
-        if (this.destinationStatistics.getMessages().getCount() > 0) {
-            LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
+                for (MessageReference ref : list) {
+                    try {
+                        QueueMessageReference r = (QueueMessageReference) ref;
+                        removeMessage(c, r);
+                    } catch (IOException e) {
+                    }
+                }
+                // don't spin/hang if stats are out and there is nothing left in the
+                // store
+            } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
+
+            if (this.destinationStatistics.getMessages().getCount() > 0) {
+                LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
+            }
+        } finally {
+            sendLock.unlock();
         }
-        gc();
-        this.destinationStatistics.getMessages().setCount(0);
-        getMessages().clear();
     }
 
     @Override
@@ -1829,6 +1853,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     final void messageSent(final ConnectionContext context, final Message msg) throws Exception {
+        pendingSends.decrementAndGet();
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         destinationStatistics.getMessageSize().addSize(msg.getSize());
@@ -1975,7 +2000,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         // store should have trapped duplicate in it's index, or cursor audit trapped insert
                         // or producerBrokerExchange suppressed send.
                         // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
-                        LOG.warn("{}, duplicate message {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessage());
+                        LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
                         if (store != null) {
                             ConnectionContext connectionContext = createConnectionContext();
                             dropMessage(ref);

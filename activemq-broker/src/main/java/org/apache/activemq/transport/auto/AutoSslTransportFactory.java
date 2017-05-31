@@ -29,22 +29,19 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
-import org.apache.activemq.transport.tcp.SslTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
+import org.apache.activemq.transport.tcp.TcpTransportFactory;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class AutoSslTransportFactory extends SslTransportFactory implements BrokerServiceAware  {
-    private static final Logger LOG = LoggerFactory.getLogger(AutoSslTransportFactory.class);
-
 
     protected BrokerService brokerService;
     /* (non-Javadoc)
@@ -97,21 +94,24 @@ public class AutoSslTransportFactory extends SslTransportFactory implements Brok
      * @throws IOException
      * @throws URISyntaxException
      */
-   // @Override
     protected AutoSslTransportServer createAutoSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         AutoSslTransportServer server = new AutoSslTransportServer(this, location, serverSocketFactory,
                 this.brokerService, enabledProtocols) {
+
             @Override
-            protected TcpTransport createTransport(Socket socket, WireFormat format)
-                    throws IOException {
-                if (format.getClass().toString().contains("MQTT") && !allowLinkStealingSet) {
-                    this.setAllowLinkStealing(true);
-                }
-                return super.createTransport(socket, format);
+            protected TcpTransport createTransport(Socket socket, WireFormat format,
+                    TcpTransportFactory detectedTransportFactory, InitBuffer initBuffer) throws IOException {
+                setDefaultLinkStealing(format, this);
+                return super.createTransport(socket, format, detectedTransportFactory, initBuffer);
             }
         };
         return server;
     }
 
+    private void setDefaultLinkStealing(WireFormat format, TcpTransportServer server) {
+        if (format.getClass().toString().contains("MQTT") && !allowLinkStealingSet) {
+            server.setAllowLinkStealing(true);
+        }
+    }
 
 }

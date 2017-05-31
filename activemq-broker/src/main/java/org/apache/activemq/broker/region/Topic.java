@@ -51,6 +51,8 @@ import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.store.MessageRecoveryListener;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
@@ -81,7 +83,7 @@ public class Topic extends BaseDestination implements Task {
                 Topic.this.taskRunner.wakeup();
             } catch (InterruptedException e) {
             }
-        };
+        }
     };
 
     public Topic(BrokerService brokerService, ActiveMQDestination destination, TopicMessageStore store,
@@ -190,9 +192,12 @@ public class Topic extends BaseDestination implements Task {
     @Override
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception {
         if (!sub.getConsumerInfo().isDurable()) {
-            super.removeSubscription(context, sub, lastDeliveredSequenceId);
+            boolean removed = false;
             synchronized (consumers) {
-                consumers.remove(sub);
+                removed = consumers.remove(sub);
+            }
+            if (removed) {
+                super.removeSubscription(context, sub, lastDeliveredSequenceId);
             }
         }
         sub.remove(context, this);
@@ -211,7 +216,7 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
-    private boolean hasDurableSubChanged(SubscriptionInfo info1, ConsumerInfo info2) {
+    private boolean hasDurableSubChanged(SubscriptionInfo info1, ConsumerInfo info2) throws IOException {
         if (hasSelectorChanged(info1, info2)) {
             return true;
         }
@@ -219,9 +224,10 @@ public class Topic extends BaseDestination implements Task {
         return hasNoLocalChanged(info1, info2);
     }
 
-    private boolean hasNoLocalChanged(SubscriptionInfo info1, ConsumerInfo info2) {
-        // Prior to V11 the broker did not store the noLocal value for durable subs.
-        if (brokerService.getStoreOpenWireVersion() >= 11) {
+    private boolean hasNoLocalChanged(SubscriptionInfo info1, ConsumerInfo info2) throws IOException {
+        //Not all persistence adapters store the noLocal value for a subscription
+        PersistenceAdapter adapter = broker.getBrokerService().getPersistenceAdapter();
+        if (adapter instanceof NoLocalSubscriptionAware) {
             if (info1.isNoLocal() ^ info2.isNoLocal()) {
                 return true;
             }
@@ -376,8 +382,7 @@ public class Topic extends BaseDestination implements Task {
 
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
 
-                if (warnOnProducerFlowControl) {
-                    warnOnProducerFlowControl = false;
+                if (isFlowControlLogRequired()) {
                     LOG.info("{}, Usage Manager memory limit reached {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
                             getActiveMQDestination().getQualifiedName(), memoryUsage.getLimit());
                 }
@@ -513,9 +518,7 @@ public class Topic extends BaseDestination implements Task {
             }
             result = topicStore.asyncAddTopicMessage(context, message,isOptimizeStorage());
 
-            if (isReduceMemoryFootprint()) {
-                message.clearMarshalledState();
-            }
+            //Moved the reduceMemoryfootprint clearing to the dispatch method
         }
 
         message.incrementReferenceCount();
@@ -597,30 +600,34 @@ public class Topic extends BaseDestination implements Task {
 
     @Override
     public void start() throws Exception {
-        this.subscriptionRecoveryPolicy.start();
-        if (memoryUsage != null) {
-            memoryUsage.start();
-        }
+        if (started.compareAndSet(false, true)) {
+            this.subscriptionRecoveryPolicy.start();
+            if (memoryUsage != null) {
+                memoryUsage.start();
+            }
 
-        if (getExpireMessagesPeriod() > 0 && !AdvisorySupport.isAdvisoryTopic(getActiveMQDestination())) {
-            scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
+            if (getExpireMessagesPeriod() > 0 && !AdvisorySupport.isAdvisoryTopic(getActiveMQDestination())) {
+                scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
+            }
         }
     }
 
     @Override
     public void stop() throws Exception {
-        if (taskRunner != null) {
-            taskRunner.shutdown();
-        }
-        this.subscriptionRecoveryPolicy.stop();
-        if (memoryUsage != null) {
-            memoryUsage.stop();
-        }
-        if (this.topicStore != null) {
-            this.topicStore.stop();
-        }
+        if (started.compareAndSet(true, false)) {
+            if (taskRunner != null) {
+                taskRunner.shutdown();
+            }
+            this.subscriptionRecoveryPolicy.stop();
+            if (memoryUsage != null) {
+                memoryUsage.stop();
+            }
+            if (this.topicStore != null) {
+                this.topicStore.stop();
+            }
 
-         scheduler.cancel(expireMessagesTask);
+            scheduler.cancel(expireMessagesTask);
+        }
     }
 
     @Override
@@ -755,6 +762,13 @@ public class Topic extends BaseDestination implements Task {
                     return;
                 }
             }
+
+            // Clear memory before dispatch - need to clear here because the call to
+            //subscriptionRecoveryPolicy.add() will unmarshall the state
+            if (isReduceMemoryFootprint() && message.isMarshalled()) {
+                message.clearUnMarshalledState();
+            }
+
             msgContext = context.getMessageEvaluationContext();
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);

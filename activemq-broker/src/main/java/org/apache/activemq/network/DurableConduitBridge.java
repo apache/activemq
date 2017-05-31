@@ -17,18 +17,18 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
-import java.util.Map;
 
-import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.util.TypeConversionSupport;
+import org.apache.activemq.util.NetworkBridgeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,6 +88,35 @@ public class DurableConduitBridge extends ConduitBridge {
                         LOG.error("Failed to add static destination {}", dest, e);
                     }
                     LOG.trace("Forwarding messages for durable destination: {}", dest);
+                } else if (configuration.isSyncDurableSubs() && !isPermissableDestination(dest)) {
+                    if (dest.isTopic()) {
+                        RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
+                        TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
+
+                        String candidateSubName = getSubscriberName(dest);
+                        for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
+                            String subName = subscription.getConsumerInfo().getSubscriptionName();
+                            if (subName != null && subName.equals(candidateSubName) &&
+                                    subscription instanceof DurableTopicSubscription) {
+                               try {
+                                    DurableTopicSubscription durableSub = (DurableTopicSubscription) subscription;
+                                    //check the clientId so we only remove subs for the matching bridge
+                                    if (durableSub.getSubscriptionKey().getClientId().equals(localClientId)) {
+                                        // remove the NC subscription as it is no longer for a permissible dest
+                                        RemoveSubscriptionInfo sending = new RemoveSubscriptionInfo();
+                                        sending.setClientId(localClientId);
+                                        sending.setSubscriptionName(subName);
+                                        sending.setConnectionId(this.localConnectionInfo.getConnectionId());
+                                        localBroker.oneway(sending);
+                                    }
+                                } catch (IOException e) {
+                                    LOG.debug("Exception removing NC durable subscription: {}", subName, e);
+                                    serviceRemoteException(e);
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -95,7 +124,8 @@ public class DurableConduitBridge extends ConduitBridge {
 
     @Override
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
-        boolean isForcedDurable = isForcedDurable(info);
+        boolean isForcedDurable = NetworkBridgeUtils.isForcedDurable(info,
+                dynamicallyIncludedDestinations, staticallyIncludedDestinations);
 
         if (addToAlreadyInterestedConsumers(info, isForcedDurable)) {
             return null; // don't want this subscription added
@@ -119,40 +149,6 @@ public class DurableConduitBridge extends ConduitBridge {
             forcedDurableRemoteId.add(forcedDurableId);
         }
         return demandSubscription;
-    }
-
-
-    private boolean isForcedDurable(ConsumerInfo info) {
-        if (info.isDurable()) {
-            return false;
-        }
-
-        ActiveMQDestination destination = info.getDestination();
-        if (AdvisorySupport.isAdvisoryTopic(destination) || destination.isTemporary() ||
-                destination.isQueue()) {
-            return false;
-        }
-
-        ActiveMQDestination matching = findMatchingDestination(dynamicallyIncludedDestinations, destination);
-        if (matching != null) {
-            return isDestForcedDurable(matching);
-        }
-        matching = findMatchingDestination(staticallyIncludedDestinations, destination);
-        if (matching != null) {
-            return isDestForcedDurable(matching);
-        }
-        return false;
-    }
-
-    private boolean isDestForcedDurable(ActiveMQDestination destination) {
-        final Map<String, String> options = destination.getOptions();
-
-        boolean isForceDurable = false;
-        if (options != null) {
-            isForceDurable = (boolean) TypeConversionSupport.convert(options.get("forceDurable"), boolean.class);
-        }
-
-        return isForceDurable;
     }
 
     protected String getSubscriberName(ActiveMQDestination dest) {

@@ -16,13 +16,28 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.zip.InflaterInputStream;
 
+import javax.jms.JMSException;
+
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQMapMessage;
+import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Data;
@@ -34,11 +49,43 @@ import org.apache.qpid.proton.message.Message;
  */
 public final class AmqpMessageSupport {
 
+    // Message Properties used to map AMQP to JMS and back
+
+    public static final String JMS_AMQP_PREFIX = "JMS_AMQP_";
+    public static final int JMS_AMQP_PREFIX_LENGTH = JMS_AMQP_PREFIX.length();
+
+    public static final String MESSAGE_FORMAT = "MESSAGE_FORMAT";
+    public static final String ORIGINAL_ENCODING = "ORIGINAL_ENCODING";
+    public static final String NATIVE = "NATIVE";
+    public static final String HEADER = "HEADER";
+    public static final String PROPERTIES = "PROPERTIES";
+
+    public static final String FIRST_ACQUIRER = "FirstAcquirer";
+    public static final String CONTENT_TYPE = "ContentType";
+    public static final String CONTENT_ENCODING = "ContentEncoding";
+    public static final String REPLYTO_GROUP_ID = "ReplyToGroupID";
+
+    public static final String DELIVERY_ANNOTATION_PREFIX = "DA_";
+    public static final String MESSAGE_ANNOTATION_PREFIX = "MA_";
+    public static final String FOOTER_PREFIX = "FT_";
+
+    public static final String JMS_AMQP_HEADER = JMS_AMQP_PREFIX + HEADER;
+    public static final String JMS_AMQP_PROPERTIES = JMS_AMQP_PREFIX + PROPERTIES;
+    public static final String JMS_AMQP_ORIGINAL_ENCODING = JMS_AMQP_PREFIX + ORIGINAL_ENCODING;
+    public static final String JMS_AMQP_MESSAGE_FORMAT = JMS_AMQP_PREFIX + MESSAGE_FORMAT;
+    public static final String JMS_AMQP_NATIVE = JMS_AMQP_PREFIX + NATIVE;
+    public static final String JMS_AMQP_FIRST_ACQUIRER = JMS_AMQP_PREFIX + FIRST_ACQUIRER;
+    public static final String JMS_AMQP_CONTENT_TYPE = JMS_AMQP_PREFIX + CONTENT_TYPE;
+    public static final String JMS_AMQP_CONTENT_ENCODING = JMS_AMQP_PREFIX + CONTENT_ENCODING;
+    public static final String JMS_AMQP_REPLYTO_GROUP_ID = JMS_AMQP_PREFIX + REPLYTO_GROUP_ID;
+    public static final String JMS_AMQP_DELIVERY_ANNOTATION_PREFIX = JMS_AMQP_PREFIX + DELIVERY_ANNOTATION_PREFIX;
+    public static final String JMS_AMQP_MESSAGE_ANNOTATION_PREFIX = JMS_AMQP_PREFIX + MESSAGE_ANNOTATION_PREFIX;
+    public static final String JMS_AMQP_FOOTER_PREFIX = JMS_AMQP_PREFIX + FOOTER_PREFIX;
+
+    // Message body type definitions
     public static final Binary EMPTY_BINARY = new Binary(new byte[0]);
     public static final Data EMPTY_BODY = new Data(EMPTY_BINARY);
     public static final Data NULL_OBJECT_BODY;
-
-    public static final String AMQP_ORIGINAL_ENCODING_KEY = "JMS_AMQP_ORIGINAL_ENCODING";
 
     public static final short AMQP_UNKNOWN = 0;
     public static final short AMQP_NULL = 1;
@@ -146,5 +193,141 @@ public final class AmqpMessageSupport {
 
             return baos.toByteArray();
         }
+    }
+
+    /**
+     * Return the encoded form of the BytesMessage as an AMQP Binary instance.
+     *
+     * @param message
+     *      the Message whose binary encoded body is needed.
+     *
+     * @return a Binary instance containing the encoded message body.
+     *
+     * @throws JMSException if an error occurs while fetching the binary payload.
+     */
+    public static Binary getBinaryFromMessageBody(ActiveMQBytesMessage message) throws JMSException {
+        Binary result = null;
+
+        if (message.getContent() != null) {
+            ByteSequence contents = message.getContent();
+
+            if (message.isCompressed()) {
+                int length = (int) message.getBodyLength();
+                byte[] uncompressed = new byte[length];
+                message.readBytes(uncompressed);
+
+                result = new Binary(uncompressed);
+            } else {
+                return new Binary(contents.getData(), contents.getOffset(), contents.getLength());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Return the encoded form of the BytesMessage as an AMQP Binary instance.
+     *
+     * @param message
+     *      the Message whose binary encoded body is needed.
+     *
+     * @return a Binary instance containing the encoded message body.
+     *
+     * @throws JMSException if an error occurs while fetching the binary payload.
+     */
+    public static Binary getBinaryFromMessageBody(ActiveMQObjectMessage message) throws JMSException {
+        Binary result = null;
+
+        if (message.getContent() != null) {
+            ByteSequence contents = message.getContent();
+
+            if (message.isCompressed()) {
+                try (ByteArrayOutputStream os = new ByteArrayOutputStream();
+                     ByteArrayInputStream is = new ByteArrayInputStream(contents);
+                     InflaterInputStream iis = new InflaterInputStream(is);) {
+
+                    byte value;
+                    while ((value = (byte) iis.read()) != -1) {
+                        os.write(value);
+                    }
+
+                    ByteSequence expanded = os.toByteSequence();
+                    result = new Binary(expanded.getData(), expanded.getOffset(), expanded.getLength());
+                } catch (Exception cause) {
+                   throw JMSExceptionSupport.create(cause);
+               }
+            } else {
+                return new Binary(contents.getData(), contents.getOffset(), contents.getLength());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Return the encoded form of the Message as an AMQP Binary instance.
+     *
+     * @param message
+     *      the Message whose binary encoded body is needed.
+     *
+     * @return a Binary instance containing the encoded message body.
+     *
+     * @throws JMSException if an error occurs while fetching the binary payload.
+     */
+    public static Binary getBinaryFromMessageBody(ActiveMQTextMessage message) throws JMSException {
+        Binary result = null;
+
+        if (message.getContent() != null) {
+            ByteSequence contents = message.getContent();
+
+            if (message.isCompressed()) {
+                try (ByteArrayInputStream is = new ByteArrayInputStream(contents);
+                     InflaterInputStream iis = new InflaterInputStream(is);
+                     DataInputStream dis = new DataInputStream(iis);) {
+
+                    int size = dis.readInt();
+                    byte[] uncompressed = new byte[size];
+                    dis.readFully(uncompressed);
+
+                    result = new Binary(uncompressed);
+                } catch (Exception cause) {
+                    throw JMSExceptionSupport.create(cause);
+                }
+            } else {
+                // Message includes a size prefix of four bytes for the OpenWire marshaler
+                result = new Binary(contents.getData(), contents.getOffset() + 4, contents.getLength() - 4);
+            }
+        } else if (message.getText() != null) {
+            result = new Binary(message.getText().getBytes(StandardCharsets.UTF_8));
+        }
+
+        return result;
+    }
+
+    /**
+     * Return the underlying Map from the JMS MapMessage instance.
+     *
+     * @param message
+     *      the MapMessage whose underlying Map is requested.
+     *
+     * @return the underlying Map used to store the value in the given MapMessage.
+     *
+     * @throws JMSException if an error occurs in constructing or fetching the Map.
+     */
+    public static Map<String, Object> getMapFromMessageBody(ActiveMQMapMessage message) throws JMSException {
+        final HashMap<String, Object> map = new LinkedHashMap<String, Object>();
+
+        final Map<String, Object> contentMap = message.getContentMap();
+        if (contentMap != null) {
+            for (Entry<String, Object> entry : contentMap.entrySet()) {
+                Object value = entry.getValue();
+                if (value instanceof byte[]) {
+                    value = new Binary((byte[]) value);
+                }
+                map.put(entry.getKey(), value);
+            }
+        }
+
+        return map;
     }
 }

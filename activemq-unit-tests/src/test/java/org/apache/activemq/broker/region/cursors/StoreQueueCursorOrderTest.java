@@ -184,7 +184,7 @@ public class StoreQueueCursorOrderTest {
         msg = getMessage(1);
         messages[0] = msg;
         msg.setMemoryUsage(systemUsage.getMemoryUsage());
-        msg.getMessageId().setFutureOrSequenceLong(1l);
+        msg.getMessageId().setFutureOrSequenceLong(0l);
         underTest.addMessageLast(msg);
 
 
@@ -354,7 +354,7 @@ public class StoreQueueCursorOrderTest {
         msg = getMessage(3);
         messages[2] = msg;
         msg.setMemoryUsage(systemUsage.getMemoryUsage());
-        msg.getMessageId().setFutureOrSequenceLong(3l);
+        msg.getMessageId().setFutureOrSequenceLong(2l);
         underTest.addMessageLast(msg);
 
 
@@ -375,6 +375,14 @@ public class StoreQueueCursorOrderTest {
         }
         underTest.release();
         assertEquals(count, dequeueCount);
+
+        msg = getMessage(4);
+        msg.setMemoryUsage(systemUsage.getMemoryUsage());
+        msg.getMessageId().setFutureOrSequenceLong(4l);
+        underTest.addMessageLast(msg);
+
+        assertTrue("cache enabled on empty store",  underTest.isCacheEnabled());
+
     }
 
     @Test

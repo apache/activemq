@@ -67,11 +67,13 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     public static final String CONNECTION_FACTORY_PREFETCH_PARAM = "org.apache.activemq.connectionFactory.prefetch";
     public static final String CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM = "org.apache.activemq.connectionFactory.optimizeAck";
     public static final String BROKER_URL_INIT_PARAM = "org.apache.activemq.brokerURL";
+    public static final String USERNAME_INIT_PARAM = "org.apache.activemq.username";
+    public static final String PASSWORD_INIT_PARAM = "org.apache.activemq.password";
     public static final String SELECTOR_NAME = "org.apache.activemq.selectorName";
 
     private static final Logger LOG = LoggerFactory.getLogger(WebClient.class);
 
-    private static transient ConnectionFactory factory;
+    private static transient ActiveMQConnectionFactory factory;
 
     private transient Map<Destination, MessageConsumer> consumers = new HashMap<Destination, MessageConsumer>();
     private transient Connection connection;
@@ -264,10 +266,10 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     protected static synchronized void initConnectionFactory(ServletContext servletContext) {
         if (factory == null) {
-            factory = (ConnectionFactory)servletContext.getAttribute(CONNECTION_FACTORY_ATTRIBUTE);
+            factory = (ActiveMQConnectionFactory)servletContext.getAttribute(CONNECTION_FACTORY_ATTRIBUTE);
         }
         if (factory == null) {
-            String brokerURL = servletContext.getInitParameter(BROKER_URL_INIT_PARAM);
+            String brokerURL = getInitParameter(servletContext, BROKER_URL_INIT_PARAM);
 
 
             if (brokerURL == null) {
@@ -281,18 +283,19 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
             }
 
             LOG.debug("Using broker URL: " + brokerURL);
-
-            ActiveMQConnectionFactory amqfactory = new ActiveMQConnectionFactory(brokerURL);
+            String username = getInitParameter(servletContext, USERNAME_INIT_PARAM);
+            String password = getInitParameter(servletContext, PASSWORD_INIT_PARAM);
+            ActiveMQConnectionFactory amqfactory = new ActiveMQConnectionFactory(username, password, brokerURL);
 
             // Set prefetch policy for factory
             if (servletContext.getInitParameter(CONNECTION_FACTORY_PREFETCH_PARAM) != null) {
-                int prefetch = Integer.valueOf(servletContext.getInitParameter(CONNECTION_FACTORY_PREFETCH_PARAM)).intValue();
+                int prefetch = Integer.valueOf(getInitParameter(servletContext, CONNECTION_FACTORY_PREFETCH_PARAM)).intValue();
                 amqfactory.getPrefetchPolicy().setAll(prefetch);
             }
 
             // Set optimize acknowledge setting
             if (servletContext.getInitParameter(CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM) != null) {
-                boolean optimizeAck = Boolean.valueOf(servletContext.getInitParameter(CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM)).booleanValue();
+                boolean optimizeAck = Boolean.valueOf(getInitParameter(servletContext, CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM)).booleanValue();
                 amqfactory.setOptimizeAcknowledge(optimizeAck);
             }
 
@@ -300,6 +303,15 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
             servletContext.setAttribute(CONNECTION_FACTORY_ATTRIBUTE, factory);
         }
+    }
+
+    private static String getInitParameter(ServletContext servletContext, String initParam) {
+        String result = servletContext.getInitParameter(initParam);
+        if(result != null && result.startsWith("${") && result.endsWith("}"))
+        {
+            result = System.getProperty(result.substring(2,result.length()-1));
+        }
+        return result;
     }
 
     public synchronized MessageProducer getProducer() throws JMSException {
@@ -367,8 +379,9 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     protected static WebClient createWebClient(HttpServletRequest request) {
         WebClient client = new WebClient();
+
         String auth = request.getHeader("Authorization");
-        if (auth != null) {
+        if (factory.getUserName() == null && factory.getPassword() == null && auth != null) {
             String[] tokens = auth.split(" ");
             if (tokens.length == 2) {
                 String encoded = tokens[1].trim();

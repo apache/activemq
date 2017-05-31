@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 class QueueStorePrefetch extends AbstractStoreCursor {
     private static final Logger LOG = LoggerFactory.getLogger(QueueStorePrefetch.class);
     private final MessageStore store;
+    private final Queue queue;
     private final Broker broker;
 
     /**
@@ -46,6 +47,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
      */
     public QueueStorePrefetch(Queue queue, Broker broker) {
         super(queue);
+        this.queue = queue;
         this.store = queue.getMessageStore();
         this.broker = broker;
 
@@ -85,6 +87,11 @@ class QueueStorePrefetch extends AbstractStoreCursor {
             LOG.error("Failed to get message size", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected boolean canEnableCash() {
+        return super.canEnableCash() && queue.singlePendingSend();
     }
 
     @Override

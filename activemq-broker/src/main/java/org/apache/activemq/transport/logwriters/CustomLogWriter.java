@@ -36,7 +36,12 @@ import org.slf4j.Logger;
  * 
  */
 public class CustomLogWriter implements LogWriter {
-    
+
+    @Override
+    public void setPrefix(String prefix) {
+        // for the custom case, revert to the logger per connection
+    }
+
     // doc comment inherited from LogWriter
     public void initialMessage(Logger log) {
         

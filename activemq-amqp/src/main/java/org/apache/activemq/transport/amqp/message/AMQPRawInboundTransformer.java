@@ -16,15 +16,16 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import javax.jms.BytesMessage;
-import javax.jms.DeliveryMode;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_MESSAGE_FORMAT;
+import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_NATIVE;
+
 import javax.jms.Message;
 
-public class AMQPRawInboundTransformer extends InboundTransformer {
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.util.ByteSequence;
 
-    public AMQPRawInboundTransformer(ActiveMQJMSVendor vendor) {
-        super(vendor);
-    }
+public class AMQPRawInboundTransformer extends InboundTransformer {
 
     @Override
     public String getTransformerName() {
@@ -37,22 +38,23 @@ public class AMQPRawInboundTransformer extends InboundTransformer {
     }
 
     @Override
-    protected Message doTransform(EncodedMessage amqpMessage) throws Exception {
-        BytesMessage result = vendor.createBytesMessage(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength());
+    protected ActiveMQMessage doTransform(EncodedMessage amqpMessage) throws Exception {
+        ActiveMQBytesMessage result = new ActiveMQBytesMessage();
+        result.setContent(new ByteSequence(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength()));
 
         // We cannot decode the message headers to check so err on the side of caution
         // and mark all messages as persistent.
-        result.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-        result.setJMSPriority(defaultPriority);
+        result.setPersistent(true);
+        result.setPriority((byte) Message.DEFAULT_PRIORITY);
 
         final long now = System.currentTimeMillis();
-        result.setJMSTimestamp(now);
-        if (defaultTtl > 0) {
-            result.setJMSExpiration(now + defaultTtl);
+        result.setTimestamp(now);
+
+        if (amqpMessage.getMessageFormat() != 0) {
+            result.setLongProperty(JMS_AMQP_MESSAGE_FORMAT, amqpMessage.getMessageFormat());
         }
 
-        result.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
-        result.setBooleanProperty(prefixVendor + "NATIVE", true);
+        result.setBooleanProperty(JMS_AMQP_NATIVE, true);
 
         return result;
     }

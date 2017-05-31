@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.activemq.transport.amqp.client.transport.NettyTransportFactory;
 import org.apache.activemq.transport.amqp.client.transport.NettyTransport;
+import org.apache.activemq.transport.amqp.client.transport.NettyTransportFactory;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +40,7 @@ public class AmqpClient {
     private final URI remoteURI;
     private String authzid;
     private String mechanismRestriction;
+    private boolean traceFrames;
 
     private AmqpValidator stateInspector = new AmqpValidator();
     private List<Symbol> offeredCapabilities = Collections.emptyList();
@@ -103,6 +104,7 @@ public class AmqpClient {
         connection.setOfferedCapabilities(getOfferedCapabilities());
         connection.setOfferedProperties(getOfferedProperties());
         connection.setStateInspector(getStateInspector());
+        connection.setTraceFrames(isTraceFrames());
 
         return connection;
     }
@@ -216,6 +218,24 @@ public class AmqpClient {
         }
 
         this.stateInspector = stateInspector;
+    }
+
+    /**
+     * @return the traceFrames setting for the client, true indicates frame tracing is on.
+     */
+    public boolean isTraceFrames() {
+        return traceFrames;
+    }
+
+    /**
+     * Controls whether connections created from this client object will log AMQP
+     * frames to a trace level logger or not.
+     *
+     * @param traceFrames
+     *      configure the trace frames option for the client created connections.
+     */
+    public void setTraceFrames(boolean traceFrames) {
+        this.traceFrames = traceFrames;
     }
 
     @Override

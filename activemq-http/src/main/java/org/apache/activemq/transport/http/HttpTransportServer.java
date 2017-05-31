@@ -30,9 +30,9 @@ import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlets.gzip.GzipHandler;
 
 public class HttpTransportServer extends WebTransportServerSupport {
 
@@ -123,9 +123,32 @@ public class HttpTransportServer extends WebTransportServerSupport {
     private int getConnectorLocalPort() throws Exception {
         return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
     }
+
     private void addGzipHandler(ServletContextHandler contextHandler) throws Exception {
-        Handler handler = new GzipHandler();
-        contextHandler.setHandler(handler);
+        HandlerWrapper handler = null;
+        try {
+            handler = (HandlerWrapper) forName("org.eclipse.jetty.servlets.gzip.GzipHandler").newInstance();
+        } catch (Throwable t) {
+            handler = (HandlerWrapper) forName("org.eclipse.jetty.server.handler.gzip.GzipHandler").newInstance();
+        }
+        contextHandler.insertHandler(handler);
+    }
+
+    private Class<?> forName(String name) throws ClassNotFoundException {
+        Class<?> clazz = null;
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader != null) {
+            try {
+                clazz = loader.loadClass(name);
+            } catch (ClassNotFoundException e) {
+                // ignore
+            }
+        }
+        if (clazz == null) {
+            clazz = HttpTransportServer.class.getClassLoader().loadClass(name);
+        }
+
+        return clazz;
     }
 
     @Override

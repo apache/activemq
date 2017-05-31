@@ -265,7 +265,9 @@ public class MapTransformFilter extends ResultTransformFilter {
         if (msg.getJMSType() != null) {
             props.put(AmqMessagesUtil.JMS_MESSAGE_HEADER_PREFIX + "JMSType", msg.getJMSType());
         }
-
+        if (msg.getOriginalDestination() != null) {
+            props.put(AmqMessagesUtil.JMS_MESSAGE_CUSTOM_PREFIX + "OriginalDestination", msg.getOriginalDestination().getPhysicalName());
+        }
         // Get custom properties
         Enumeration e = msg.getPropertyNames();
         while (e.hasMoreElements()) {

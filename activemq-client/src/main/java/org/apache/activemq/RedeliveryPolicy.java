@@ -45,6 +45,7 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     protected boolean useExponentialBackOff;
     protected double backOffMultiplier = 5.0;
     protected long redeliveryDelay = initialRedeliveryDelay;
+    protected boolean preDispatchCheck = true;
 
     public RedeliveryPolicy() {
     }
@@ -155,5 +156,13 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     @Override
     public String toString() {
         return IntrospectionSupport.toString(this, DestinationMapEntry.class, null);
+    }
+
+    public void setPreDispatchCheck(boolean preDispatchCheck) {
+        this.preDispatchCheck = preDispatchCheck;
+    }
+
+    public boolean isPreDispatchCheck() {
+        return preDispatchCheck;
     }
 }

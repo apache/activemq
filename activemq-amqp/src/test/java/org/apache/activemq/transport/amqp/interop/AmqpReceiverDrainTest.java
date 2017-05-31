@@ -22,7 +22,9 @@ import static org.junit.Assert.assertNull;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
@@ -37,47 +39,93 @@ import org.junit.Test;
 public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
-    public void testReceiverCanDrainMessages() throws Exception {
+    public void testReceiverCanDrainMessagesQueue() throws Exception {
+        doTestReceiverCanDrainMessages(false);
+    }
+
+    @Test(timeout = 60000)
+    public void testReceiverCanDrainMessagesTopic() throws Exception {
+        doTestReceiverCanDrainMessages(true);
+    }
+
+    private void doTestReceiverCanDrainMessages(boolean topic) throws Exception {
+        final String destinationName;
+        if (topic) {
+            destinationName = "topic://" + getTestName();
+        } else {
+            destinationName = "queue://" + getTestName();
+        }
+
         int MSG_COUNT = 20;
-        sendMessages(getTestName(), MSG_COUNT, false);
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
-        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        AmqpReceiver receiver = session.createReceiver(destinationName);
 
-        QueueViewMBean queueView = getProxyToQueue(getTestName());
-        assertEquals(MSG_COUNT, queueView.getQueueSize());
-        assertEquals(0, queueView.getDispatchCount());
+        sendMessages(getTestName(), MSG_COUNT, topic);
+
+        final DestinationViewMBean destinationView;
+        if (topic) {
+            destinationView = getProxyToTopic(getTestName());
+        } else {
+            destinationView = getProxyToQueue(getTestName());
+        }
+
+        assertEquals(MSG_COUNT, destinationView.getEnqueueCount());
+        assertEquals(0, destinationView.getDispatchCount());
 
         receiver.drain(MSG_COUNT);
         for (int i = 0; i < MSG_COUNT; ++i) {
             AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
-            assertNotNull(message);
+            assertNotNull("Failed to read message: " + (i + 1), message);
+            LOG.info("Read message: {}", message.getMessageId());
             message.accept();
         }
         receiver.close();
 
-        assertEquals(0, queueView.getQueueSize());
+        assertEquals(MSG_COUNT, destinationView.getDequeueCount());
 
         connection.close();
     }
 
     @Test(timeout = 60000)
-    public void testPullWithNoMessageGetDrained() throws Exception {
+    public void testPullWithNoMessageGetDrainedQueue() throws Exception {
+        doTestPullWithNoMessageGetDrained(false);
+    }
+
+    @Test(timeout = 60000)
+    public void testPullWithNoMessageGetDrainedTopic() throws Exception {
+        doTestPullWithNoMessageGetDrained(true);
+    }
+
+    private void doTestPullWithNoMessageGetDrained(boolean topic) throws Exception {
+
+        final String destinationName;
+        if (topic) {
+            destinationName = "topic://" + getTestName();
+        } else {
+            destinationName = "queue://" + getTestName();
+        }
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
-        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        AmqpReceiver receiver = session.createReceiver(destinationName);
 
         receiver.flow(10);
 
-        QueueViewMBean queueView = getProxyToQueue(getTestName());
-        assertEquals(0, queueView.getQueueSize());
-        assertEquals(0, queueView.getDispatchCount());
+        final DestinationViewMBean destinationView;
+        if (topic) {
+            destinationView = getProxyToTopic(getTestName());
+        } else {
+            destinationView = getProxyToQueue(getTestName());
+        }
+
+        assertEquals(0, destinationView.getEnqueueCount());
+        assertEquals(0, destinationView.getDispatchCount());
 
         assertEquals(10, receiver.getReceiver().getRemoteCredit());
 
@@ -89,19 +137,42 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
-    public void testPullOneFromRemote() throws Exception {
-        int MSG_COUNT = 20;
-        sendMessages(getTestName(), MSG_COUNT, false);
+    public void testPullOneFromRemoteQueue() throws Exception {
+        doTestPullOneFromRemote(false);
+    }
+
+    @Test(timeout = 60000)
+    public void testPullOneFromRemoteTopic() throws Exception {
+        doTestPullOneFromRemote(true);
+    }
+
+    private void doTestPullOneFromRemote(boolean topic) throws Exception {
 
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
-        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        final String destinationName;
+        if (topic) {
+            destinationName = "topic://" + getTestName();
+        } else {
+            destinationName = "queue://" + getTestName();
+        }
 
-        QueueViewMBean queueView = getProxyToQueue(getTestName());
-        assertEquals(MSG_COUNT, queueView.getQueueSize());
-        assertEquals(0, queueView.getDispatchCount());
+        AmqpReceiver receiver = session.createReceiver(destinationName);
+
+        int MSG_COUNT = 20;
+        sendMessages(getTestName(), MSG_COUNT, topic);
+
+        final DestinationViewMBean destinationView;
+        if (topic) {
+            destinationView = getProxyToTopic(getTestName());
+        } else {
+            destinationView = getProxyToQueue(getTestName());
+        }
+
+        assertEquals(MSG_COUNT, destinationView.getEnqueueCount());
+        assertEquals(0, destinationView.getDispatchCount());
 
         assertEquals(0, receiver.getReceiver().getRemoteCredit());
 
@@ -113,25 +184,48 @@ public class AmqpReceiverDrainTest extends AmqpClientTestSupport {
 
         receiver.close();
 
-        assertEquals(MSG_COUNT - 1, queueView.getQueueSize());
-        assertEquals(1, queueView.getDispatchCount());
+        assertEquals(MSG_COUNT - 1, destinationView.getEnqueueCount() - destinationView.getDequeueCount());
+        assertEquals(1, destinationView.getDispatchCount());
 
         connection.close();
     }
 
     @Test(timeout = 60000)
-    public void testMultipleZeroResultPulls() throws Exception {
+    public void testMultipleZeroResultPullsQueue() throws Exception {
+        doTestMultipleZeroResultPulls(false);
+    }
+
+    @Test(timeout = 60000)
+    public void testMultipleZeroResultPullsTopic() throws Exception {
+        doTestMultipleZeroResultPulls(true);
+    }
+
+    private void doTestMultipleZeroResultPulls(boolean topic) throws Exception {
+
         AmqpClient client = createAmqpClient();
-        AmqpConnection connection = client.connect();
+        AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
 
-        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        final String destinationName;
+        if (topic) {
+            destinationName = "topic://" + getTestName();
+        } else {
+            destinationName = "queue://" + getTestName();
+        }
+
+        AmqpReceiver receiver = session.createReceiver(destinationName);
 
         receiver.flow(10);
 
-        QueueViewMBean queueView = getProxyToQueue(getTestName());
-        assertEquals(0, queueView.getQueueSize());
-        assertEquals(0, queueView.getDispatchCount());
+        if (topic) {
+            TopicViewMBean topicView = getProxyToTopic(getTestName());
+            assertEquals(0, topicView.getEnqueueCount());
+            assertEquals(0, topicView.getDispatchCount());
+        } else {
+            QueueViewMBean queueView = getProxyToQueue(getTestName());
+            assertEquals(0, queueView.getQueueSize());
+            assertEquals(0, queueView.getDispatchCount());
+        }
 
         assertEquals(10, receiver.getReceiver().getRemoteCredit());
 

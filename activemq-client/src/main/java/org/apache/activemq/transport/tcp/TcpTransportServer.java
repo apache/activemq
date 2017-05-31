@@ -112,6 +112,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * TransportConnector URIs.
      */
     protected boolean startLogging = true;
+    protected int jmxPort = TransportLoggerSupport.defaultJmxPort;
     protected final ServerSocketFactory serverSocketFactory;
     protected final BlockingQueue<Socket> socketQueue = new LinkedBlockingQueue<Socket>();
     protected Thread socketHandlerThread;
@@ -181,7 +182,9 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                 }
             }
 
-            IntrospectionSupport.setProperties(socket, transportOptions);
+            //AMQ-6599 - don't strip out set properties on the socket as we need to set them
+            //on the Transport as well later
+            IntrospectionSupport.setProperties(socket, transportOptions, false);
         }
     }
 
@@ -256,6 +259,14 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     public void setDynamicManagement(boolean useJmx) {
         this.dynamicManagement = useJmx;
+    }
+
+    public void setJmxPort(int jmxPort) {
+        this.jmxPort = jmxPort;
+    }
+
+    public int getJmxPort() {
+        return jmxPort;
     }
 
     public boolean isStartLogging() {
@@ -577,6 +588,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             options.put("logWriterName", logWriterName);
             options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
             options.put("startLogging", Boolean.valueOf(startLogging));
+            options.put("jmxPort", Integer.valueOf(jmxPort));
             options.putAll(transportOptions);
 
             TransportInfo transportInfo = configureTransport(this, socket);

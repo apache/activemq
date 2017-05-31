@@ -1,0 +1,178 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+ 
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core 
+    http://activemq.apache.org/schema/core/activemq-core-5.4.2.xsd">
+
+  <!-- first broker instance -->
+  <broker xmlns="http://activemq.apache.org/schema/core" brokerName="broker1" id="broker1"
+   dataDirectory="./target/activemq-data-broker1" persistent="false" start="false">
+  
+    <destinationPolicy>
+     <policyMap>
+       <policyEntries>
+         <policyEntry queue=">" memoryLimit="20mb">
+           <deadLetterStrategy>
+             <sharedDeadLetterStrategy processExpired="false" processNonPersistent="false"/>
+           </deadLetterStrategy>
+         </policyEntry>
+
+         <policyEntry topic=">" producerFlowControl="true" >
+         </policyEntry>
+       </policyEntries>
+     </policyMap>
+    </destinationPolicy>
+
+    <managementContext>
+      <managementContext createConnector="false" />
+    </managementContext>
+
+    <!-- network of brokers configuration -->
+    <networkConnectors>
+      <networkConnector decreaseNetworkConsumerPriority="true" duplex="true" dynamicOnly="true" name="to-A" networkTTL="2" uri="static://(ssl://localhost:61626)" >
+        <!-- userName="admin" password="admin" -->
+        <excludedDestinations>
+          <queue physicalName="MyQueue"/>
+        </excludedDestinations>
+      </networkConnector>
+    </networkConnectors>
+
+
+      <plugins>
+        <!--jaasAuthenticationPlugin configuration="activemq" /-->
+        <jaasDualAuthenticationPlugin configuration="activemq-domain" sslConfiguration="activemq-ssl-domain"/>
+        <authorizationPlugin>
+          <map>
+        <authorizationMap>
+          <authorizationEntries>
+            <authorizationEntry queue="&gt;" admin="administrators" read="administrators" write="administrators"/>
+            <authorizationEntry topic="&gt;" admin="administrators" read="administrators" write="administrators"/>
+            <authorizationEntry topic="ActiveMQ.Advisory.&gt;" admin="*" read="*" write="*"/>
+            <authorizationEntry queue="ActiveMQ.DLQ" admin="administrators" read="*" write="*"/>
+          </authorizationEntries>
+        </authorizationMap>
+          </map>
+        </authorizationPlugin>
+      </plugins>
+
+
+    <sslContext>
+      <sslContext
+          keyStore="server.keystore"
+          keyStorePassword="password"
+          trustStore="server.keystore"
+          trustStorePassword="password"
+          />
+    </sslContext>
+
+    <systemUsage>
+      <systemUsage>
+        <memoryUsage>
+          <memoryUsage limit="60 mb" />
+        </memoryUsage>
+        <storeUsage>
+          <storeUsage limit="1 mb" />
+        </storeUsage>
+        <tempUsage>
+          <tempUsage limit="50 mb" />
+        </tempUsage>
+      </systemUsage>
+    </systemUsage>
+
+    <transportConnectors>
+        <transportConnector name="openwire+ssl" uri="ssl://0.0.0.0:62626?transport.closeAsync=false&amp;transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2&amp;transport.needClientAuth=true"/>
+    </transportConnectors>
+  </broker>
+
+  <!-- second broker instance -->
+  <broker xmlns="http://activemq.apache.org/schema/core" brokerName="broker2" id="broker2"
+   dataDirectory="./target/activemq-data-broker2" persistent="false" start="false">
+
+    <destinationPolicy>
+     <policyMap>
+       <policyEntries>
+         <policyEntry queue=">" memoryLimit="20mb">
+           <deadLetterStrategy>
+             <sharedDeadLetterStrategy processExpired="false" processNonPersistent="false"/>
+           </deadLetterStrategy>
+         </policyEntry>
+
+         <policyEntry topic=">" producerFlowControl="true" >
+           <deadLetterStrategy>
+             <sharedDeadLetterStrategy processExpired="false" processNonPersistent="false"/>
+           </deadLetterStrategy>
+         </policyEntry>
+       </policyEntries>
+     </policyMap>
+    </destinationPolicy>
+
+    <managementContext>
+      <managementContext createConnector="false" />
+    </managementContext>
+
+    <plugins>
+      <!--jaasAuthenticationPlugin configuration="activemq" /-->
+      <!--jaasCertificateAuthenticationPlugin configuration="activemq-ssl-domain" /-->
+      <jaasDualAuthenticationPlugin configuration="activemq-domain" sslConfiguration="activemq-ssl-domain"/>
+      <authorizationPlugin>
+        <map>
+          <authorizationMap>
+            <authorizationEntries> 
+              <authorizationEntry queue="&gt;" admin="administrators" read="administrators" write="administrators"/>
+              <authorizationEntry topic="&gt;" admin="administrators" read="administrators" write="administrators"/>
+              <authorizationEntry topic="ActiveMQ.Advisory.&gt;" admin="*" read="*" write="*"/>
+              <authorizationEntry queue="ActiveMQ.DLQ" admin="administrators" read="*" write="*"/>
+            </authorizationEntries>
+          </authorizationMap>
+        </map>
+      </authorizationPlugin>
+    </plugins>
+
+    <sslContext>
+      <sslContext
+          keyStore="server.keystore"
+          keyStorePassword="password"
+          trustStore="server.keystore"
+          trustStorePassword="password"
+          />
+    </sslContext>
+
+    <systemUsage>
+      <systemUsage>
+        <memoryUsage>
+          <memoryUsage limit="60 mb" />
+        </memoryUsage>
+        <storeUsage>
+          <storeUsage limit="1 mb" />
+        </storeUsage>
+        <tempUsage>
+          <tempUsage limit="50 mb" />
+        </tempUsage>
+      </systemUsage>
+    </systemUsage>
+
+    <transportConnectors>
+        <transportConnector name="openwire+nio-ssl-2" uri="nio+ssl://0.0.0.0:61626?transport.closeAsync=false&amp;transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2&amp;transport.needClientAuth=true"/>
+    </transportConnectors>
+  </broker>
+</beans>
+

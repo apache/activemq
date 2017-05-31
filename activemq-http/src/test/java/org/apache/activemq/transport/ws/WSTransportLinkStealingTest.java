@@ -50,7 +50,7 @@ public class WSTransportLinkStealingTest {
         context.afterPropertiesSet();
         broker.setSslContext(context);
 
-        broker.addConnector(getWSConnectorURI()).setName("ws+mqtt");;
+        broker.addConnector(getWSConnectorURI()).setName("ws+mqtt");
         broker.setDeleteAllMessagesOnStartup(deleteMessages);
         broker.start();
         broker.waitUntilStarted();

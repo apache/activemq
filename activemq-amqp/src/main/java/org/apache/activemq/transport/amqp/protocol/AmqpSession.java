@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,13 +19,16 @@ package org.apache.activemq.transport.amqp.protocol;
 import static org.apache.activemq.transport.amqp.AmqpSupport.COPY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_FILTER_IDS;
 import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_NAME;
+import static org.apache.activemq.transport.amqp.AmqpSupport.LIFETIME_POLICY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_FILTER_IDS;
 import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_NAME;
 import static org.apache.activemq.transport.amqp.AmqpSupport.createDestination;
 import static org.apache.activemq.transport.amqp.AmqpSupport.findFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.InvalidSelectorException;
@@ -35,6 +38,7 @@ import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
@@ -45,10 +49,12 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
+import org.apache.activemq.transport.amqp.AmqpSupport;
 import org.apache.activemq.transport.amqp.ResponseHandler;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.DeleteOnClose;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
@@ -68,7 +74,7 @@ public class AmqpSession implements AmqpResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpSession.class);
 
-    private final Map<ConsumerId, AmqpSender> consumers = new HashMap<ConsumerId, AmqpSender>();
+    private final Map<ConsumerId, AmqpSender> consumers = new HashMap<>();
 
     private final AmqpConnection connection;
     private final Session protonSession;
@@ -123,11 +129,14 @@ public class AmqpSession implements AmqpResource {
     /**
      * Commits all pending work for all resources managed under this session.
      *
+     * @param txId
+     *      The specific TransactionId that is being committed.
+     *
      * @throws Exception if an error occurs while attempting to commit work.
      */
-    public void commit() throws Exception {
+    public void commit(LocalTransactionId txId) throws Exception {
         for (AmqpSender consumer : consumers.values()) {
-            consumer.commit();
+            consumer.commit(txId);
         }
 
         enlisted = false;
@@ -136,11 +145,14 @@ public class AmqpSession implements AmqpResource {
     /**
      * Rolls back any pending work being down under this session.
      *
+     * @param txId
+     *      The specific TransactionId that is being rolled back.
+     *
      * @throws Exception if an error occurs while attempting to roll back work.
      */
-    public void rollback() throws Exception {
+    public void rollback(LocalTransactionId txId) throws Exception {
         for (AmqpSender consumer : consumers.values()) {
-            consumer.rollback();
+            consumer.rollback(txId);
         }
 
         enlisted = false;
@@ -179,9 +191,17 @@ public class AmqpSession implements AmqpResource {
 
             if (target.getDynamic()) {
                 destination = connection.createTemporaryDestination(protonReceiver, target.getCapabilities());
+
+                Map<Symbol, Object> dynamicNodeProperties = new HashMap<>();
+                dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
+
+                // Currently we only support temporary destinations with delete on close lifetime policy.
                 Target actualTarget = new Target();
                 actualTarget.setAddress(destination.getQualifiedName());
+                actualTarget.setCapabilities(AmqpSupport.getDestinationTypeSymbol(destination));
                 actualTarget.setDynamic(true);
+                actualTarget.setDynamicNodeProperties(dynamicNodeProperties);
+
                 protonReceiver.setTarget(actualTarget);
                 receiver.addCloseAction(new Runnable() {
 
@@ -197,6 +217,14 @@ public class AmqpSession implements AmqpResource {
                     if (connectionId == null) {
                         throw new AmqpProtocolException(AmqpError.PRECONDITION_FAILED.toString(), "Not a broker created temp destination");
                     }
+                }
+            }
+
+            Symbol[] remoteDesiredCapabilities = protonReceiver.getRemoteDesiredCapabilities();
+            if (remoteDesiredCapabilities != null) {
+                List<Symbol> list = Arrays.asList(remoteDesiredCapabilities);
+                if (list.contains(AmqpSupport.DELAYED_DELIVERY)) {
+                    protonReceiver.setOfferedCapabilities(new Symbol[] { AmqpSupport.DELAYED_DELIVERY });
                 }
             }
 
@@ -237,7 +265,7 @@ public class AmqpSession implements AmqpResource {
         LOG.debug("opening new sender {} on link: {}", consumerInfo.getConsumerId(), protonSender.getName());
 
         try {
-            final Map<Symbol, Object> supportedFilters = new HashMap<Symbol, Object>();
+            final Map<Symbol, Object> supportedFilters = new HashMap<>();
             protonSender.setContext(sender);
 
             boolean noLocal = false;
@@ -291,11 +319,18 @@ public class AmqpSession implements AmqpResource {
                     return;
                 }
             } else if (source.getDynamic()) {
-                // lets create a temp dest.
                 destination = connection.createTemporaryDestination(protonSender, source.getCapabilities());
+
+                Map<Symbol, Object> dynamicNodeProperties = new HashMap<>();
+                dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
+
+                // Currently we only support temporary destinations with delete on close lifetime policy.
                 source = new org.apache.qpid.proton.amqp.messaging.Source();
                 source.setAddress(destination.getQualifiedName());
+                source.setCapabilities(AmqpSupport.getDestinationTypeSymbol(destination));
                 source.setDynamic(true);
+                source.setDynamicNodeProperties(dynamicNodeProperties);
+
                 sender.addCloseAction(new Runnable() {
 
                     @Override

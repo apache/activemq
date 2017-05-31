@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.kahadb.disk.journal;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
@@ -65,8 +66,6 @@ public class Journal {
     public static final String CALLER_BUFFER_APPENDER = "org.apache.kahadb.journal.CALLER_BUFFER_APPENDER";
     public static final boolean callerBufferAppender = Boolean.parseBoolean(System.getProperty(CALLER_BUFFER_APPENDER, "false"));
 
-    private static final int MAX_BATCH_SIZE = 32*1024*1024;
-
     private static final int PREALLOC_CHUNK_SIZE = 1024*1024;
 
     // ITEM_HEAD_SPACE = length + type+ reserved space + SOR
@@ -93,7 +92,7 @@ public class Journal {
         try {
             int nextOffset = findNextBatchRecord(reader, recoveryPosition.getOffset() + 1);
             Sequence sequence = new Sequence(recoveryPosition.getOffset(), nextOffset >= 0 ? nextOffset - 1 : dataFile.getLength() - 1);
-            LOG.warn("Corrupt journal records found in '" + dataFile.getFile() + "' between offsets: " + sequence);
+            LOG.warn("Corrupt journal records found in '{}' between offsets: {}", dataFile.getFile(), sequence);
 
             // skip corruption on getNextLocation
             recoveryPosition.setOffset((int) sequence.getLast() + 1);
@@ -108,6 +107,13 @@ public class Journal {
 
     public DataFileAccessorPool getAccessorPool() {
         return accessorPool;
+    }
+
+    public void allowIOResumption() {
+        if (appender instanceof DataFileAppender) {
+            DataFileAppender dataFileAppender = (DataFileAppender)appender;
+            dataFileAppender.shutdown = false;
+        }
     }
 
     public enum PreallocationStrategy {
@@ -215,6 +221,8 @@ public class Journal {
     protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
     protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
     private File osKernelCopyTemplateFile = null;
+    private ByteBuffer preAllocateDirectBuffer = null;
+
     protected JournalDiskSyncStrategy journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
 
     public interface DataFileRemovedListener {
@@ -276,13 +284,24 @@ public class Journal {
             }
         }
 
-        if (preallocationScope != PreallocationScope.NONE && preallocationStrategy == PreallocationStrategy.OS_KERNEL_COPY) {
-            // create a template file that will be used to pre-allocate the journal files
-            if (osKernelCopyTemplateFile == null) {
-                osKernelCopyTemplateFile = createJournalTemplateFile();
+        if (preallocationScope != PreallocationScope.NONE) {
+            switch (preallocationStrategy) {
+                case SPARSE_FILE:
+                    break;
+                case OS_KERNEL_COPY: {
+                    osKernelCopyTemplateFile = createJournalTemplateFile();
+                }
+                break;
+                case CHUNKED_ZEROS: {
+                    preAllocateDirectBuffer = allocateDirectBuffer(PREALLOC_CHUNK_SIZE);
+                }
+                break;
+                case ZEROS: {
+                    preAllocateDirectBuffer = allocateDirectBuffer(getMaxFileLength());
+                }
+                break;
             }
         }
-
         scheduler = Executors.newScheduledThreadPool(1, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
@@ -308,8 +327,9 @@ public class Journal {
         }
 
         // ensure we don't report unused space of last journal file in size metric
-        if (totalLength.get() > maxFileLength && lastAppendLocation.get().getOffset() > 0) {
-            totalLength.addAndGet(lastAppendLocation.get().getOffset() - maxFileLength);
+        int lastFileLength = dataFiles.getTail().getLength();
+        if (totalLength.get() > lastFileLength && lastAppendLocation.get().getOffset() > 0) {
+            totalLength.addAndGet(lastAppendLocation.get().getOffset() - lastFileLength);
         }
 
         cleanupTask = scheduler.scheduleAtFixedRate(new Runnable() {
@@ -323,18 +343,29 @@ public class Journal {
         LOG.trace("Startup took: "+(end-start)+" ms");
     }
 
+    private ByteBuffer allocateDirectBuffer(int size) {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(size);
+        buffer.put(EOF_RECORD);
+        return buffer;
+    }
+
     public void preallocateEntireJournalDataFile(RecoverableRandomAccessFile file) {
 
         if (PreallocationScope.NONE != preallocationScope) {
 
-            if (PreallocationStrategy.OS_KERNEL_COPY == preallocationStrategy) {
-                doPreallocationKernelCopy(file);
-            } else if (PreallocationStrategy.ZEROS == preallocationStrategy) {
-                doPreallocationZeros(file);
-            } else if (PreallocationStrategy.CHUNKED_ZEROS == preallocationStrategy) {
-                doPreallocationChunkedZeros(file);
-            } else {
-                doPreallocationSparseFile(file);
+            try {
+                if (PreallocationStrategy.OS_KERNEL_COPY == preallocationStrategy) {
+                    doPreallocationKernelCopy(file);
+                } else if (PreallocationStrategy.ZEROS == preallocationStrategy) {
+                    doPreallocationZeros(file);
+                } else if (PreallocationStrategy.CHUNKED_ZEROS == preallocationStrategy) {
+                    doPreallocationChunkedZeros(file);
+                } else {
+                    doPreallocationSparseFile(file);
+                }
+            } catch (Throwable continueWithNoPrealloc) {
+                // error on preallocation is non fatal, and we don't want to leak the journal handle
+                LOG.error("cound not preallocate journal data file", continueWithNoPrealloc);
             }
         }
     }
@@ -358,12 +389,10 @@ public class Journal {
     }
 
     private void doPreallocationZeros(RecoverableRandomAccessFile file) {
-        ByteBuffer buffer = ByteBuffer.allocate(maxFileLength);
-        buffer.put(EOF_RECORD);
-        buffer.rewind();
+        preAllocateDirectBuffer.rewind();
         try {
             FileChannel channel = file.getChannel();
-            channel.write(buffer);
+            channel.write(preAllocateDirectBuffer);
             channel.force(false);
             channel.position(0);
         } catch (ClosedByInterruptException ignored) {
@@ -374,10 +403,8 @@ public class Journal {
     }
 
     private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
-        try {
-            RandomAccessFile templateRaf = new RandomAccessFile(osKernelCopyTemplateFile, "rw");
+        try (RandomAccessFile templateRaf = new RandomAccessFile(osKernelCopyTemplateFile, "rw");){
             templateRaf.getChannel().transferTo(0, getMaxFileLength(), file.getChannel());
-            templateRaf.close();
         } catch (ClosedByInterruptException ignored) {
             LOG.trace("Could not preallocate journal file with kernel copy", ignored);
         } catch (FileNotFoundException e) {
@@ -403,22 +430,19 @@ public class Journal {
     }
 
     private void doPreallocationChunkedZeros(RecoverableRandomAccessFile file) {
-
-        ByteBuffer buffer = ByteBuffer.allocate(PREALLOC_CHUNK_SIZE);
-        buffer.put(EOF_RECORD);
-        buffer.rewind();
-
+        preAllocateDirectBuffer.limit(preAllocateDirectBuffer.capacity());
+        preAllocateDirectBuffer.rewind();
         try {
             FileChannel channel = file.getChannel();
 
             int remLen = maxFileLength;
             while (remLen > 0) {
-                if (remLen < buffer.remaining()) {
-                    buffer.limit(remLen);
+                if (remLen < preAllocateDirectBuffer.remaining()) {
+                    preAllocateDirectBuffer.limit(remLen);
                 }
-                int writeLen = channel.write(buffer);
+                int writeLen = channel.write(preAllocateDirectBuffer);
                 remLen -= writeLen;
-                buffer.rewind();
+                preAllocateDirectBuffer.rewind();
             }
 
             channel.force(false);
@@ -479,7 +503,7 @@ public class Journal {
                     int nextOffset = findNextBatchRecord(reader, location.getOffset() + 1);
                     if (nextOffset >= 0) {
                         Sequence sequence = new Sequence(location.getOffset(), nextOffset - 1);
-                        LOG.warn("Corrupt journal records found in '" + dataFile.getFile() + "' between offsets: " + sequence);
+                        LOG.warn("Corrupt journal records found in '{}' between offsets: {}", dataFile.getFile(), sequence);
                         dataFile.corruptedBlocks.add(sequence);
                         location.setOffset(nextOffset);
                     } else {
@@ -553,7 +577,7 @@ public class Journal {
             }
 
             int size = controlIs.readInt();
-            if (size > MAX_BATCH_SIZE) {
+            if (size < 0 || size > Integer.MAX_VALUE - (BATCH_CONTROL_RECORD_SIZE + EOF_RECORD.length)) {
                 return -1;
             }
 
@@ -805,6 +829,10 @@ public class Journal {
     }
 
     public Location getNextLocation(Location location) throws IOException, IllegalStateException {
+        return getNextLocation(location, null);
+    }
+
+    public Location getNextLocation(Location location, Location limit) throws IOException, IllegalStateException {
         Location cur = null;
         while (true) {
             if (cur == null) {
@@ -844,6 +872,10 @@ public class Journal {
                 } else {
                     cur.setDataFileId(dataFile.getDataFileId().intValue());
                     cur.setOffset(0);
+                    if (limit != null && cur.compareTo(limit) >= 0) {
+                        LOG.trace("reached limit: {} at: {}", limit, cur);
+                        return null;
+                    }
                 }
             }
 
@@ -851,6 +883,9 @@ public class Journal {
             DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
             try {
                 reader.readLocationDetails(cur);
+            } catch (EOFException eof) {
+                LOG.trace("EOF on next: " + location + ", cur: " + cur);
+                throw eof;
             } finally {
                 accessorPool.closeDataFileAccessor(reader);
             }
@@ -979,11 +1014,22 @@ public class Journal {
     }
 
     public DataFile getCurrentDataFile(int capacity) throws IOException {
+        //First just acquire the currentDataFile lock and return if no rotation needed
         synchronized (currentDataFile) {
-            if (currentDataFile.get().getLength() + capacity >= maxFileLength) {
-                rotateWriteFile();
+            if (currentDataFile.get().getLength() + capacity < maxFileLength) {
+                return currentDataFile.get();
             }
-            return currentDataFile.get();
+        }
+
+        //AMQ-6545 - if rotation needed, acquire dataFileIdLock first to prevent deadlocks
+        //then re-check if rotation is needed
+        synchronized (dataFileIdLock) {
+            synchronized (currentDataFile) {
+                if (currentDataFile.get().getLength() + capacity >= maxFileLength) {
+                    rotateWriteFile();
+                }
+                return currentDataFile.get();
+            }
         }
     }
 

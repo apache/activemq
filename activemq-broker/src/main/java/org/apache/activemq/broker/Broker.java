@@ -52,7 +52,7 @@ public interface Broker extends Region, Service {
      * @param type
      * @return a Broker instance.
      */
-    Broker getAdaptor(Class type);
+    Broker getAdaptor(Class<?> type);
 
     /**
      * Get the id of the broker
@@ -384,7 +384,7 @@ public interface Broker extends Region, Service {
      * @param destination
      * @param usage
      */
-    void isFull(ConnectionContext context,Destination destination,Usage usage);
+    void isFull(ConnectionContext context,Destination destination,Usage<?> usage);
 
     void virtualDestinationAdded(ConnectionContext context, VirtualDestination virtualDestination);
 

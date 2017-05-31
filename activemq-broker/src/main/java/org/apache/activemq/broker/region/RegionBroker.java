@@ -161,15 +161,6 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
-    @Override
-    @SuppressWarnings("rawtypes")
-    public Broker getAdaptor(Class type) {
-        if (type.isInstance(this)) {
-            return this;
-        }
-        return null;
-    }
-
     public Region getQueueRegion() {
         return queueRegion;
     }
@@ -484,7 +475,7 @@ public class RegionBroker extends EmptyBroker {
         consumerExchange.getRegion().acknowledge(consumerExchange, ack);
     }
 
-    protected Region getRegion(ActiveMQDestination destination) throws JMSException {
+    public Region getRegion(ActiveMQDestination destination) throws JMSException {
         switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 return queueRegion;

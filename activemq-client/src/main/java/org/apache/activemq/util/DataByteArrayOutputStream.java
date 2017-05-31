@@ -202,46 +202,17 @@ public final class DataByteArrayOutputStream extends OutputStream implements Dat
         }
     }
 
-    public void writeUTF(String str) throws IOException {
-        int strlen = str.length();
-        int encodedsize = 0;
-        int c;
-        for (int i = 0; i < strlen; i++) {
-            c = str.charAt(i);
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                encodedsize++;
-            } else if (c > 0x07FF) {
-                encodedsize += 3;
-            } else {
-                encodedsize += 2;
-            }
-        }
+    public void writeUTF(String text) throws IOException {
+        long encodedsize = MarshallingSupport.countUTFBytes(text);
         if (encodedsize > 65535) {
             throw new UTFDataFormatException("encoded string too long: " + encodedsize + " bytes");
         }
-        ensureEnoughBuffer(pos + encodedsize + 2);
-        writeShort(encodedsize);
-        int i = 0;
-        for (i = 0; i < strlen; i++) {
-            c = str.charAt(i);
-            if (!((c >= 0x0001) && (c <= 0x007F))) {
-                break;
-            }
-            buf[pos++] = (byte)c;
-        }
-        for (; i < strlen; i++) {
-            c = str.charAt(i);
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                buf[pos++] = (byte)c;
-            } else if (c > 0x07FF) {
-                buf[pos++] = (byte)(0xE0 | ((c >> 12) & 0x0F));
-                buf[pos++] = (byte)(0x80 | ((c >> 6) & 0x3F));
-                buf[pos++] = (byte)(0x80 | ((c >> 0) & 0x3F));
-            } else {
-                buf[pos++] = (byte)(0xC0 | ((c >> 6) & 0x1F));
-                buf[pos++] = (byte)(0x80 | ((c >> 0) & 0x3F));
-            }
-        }
+        ensureEnoughBuffer((int)(pos + encodedsize + 2));
+        writeShort((int)encodedsize);
+
+        byte[] buffer = new byte[(int)encodedsize];
+        MarshallingSupport.writeUTFBytesToBuffer(text, (int) encodedsize, buf, pos);
+        pos += encodedsize;
     }
 
     private void ensureEnoughBuffer(int newcount) {

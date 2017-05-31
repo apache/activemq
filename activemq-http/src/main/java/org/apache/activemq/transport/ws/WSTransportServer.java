@@ -145,9 +145,11 @@ public class WSTransportServer extends WebTransportServerSupport implements Brok
 
     @Override
     public void setTransportOption(Map<String, Object> transportOptions) {
+        // String transport from options and
         Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(transportOptions, "transport.");
         socketConnectorFactory.setTransportOptions(socketOptions);
-        super.setTransportOption(socketOptions);
+        transportOptions.putAll(socketOptions);
+        super.setTransportOption(transportOptions);
     }
 
     @Override

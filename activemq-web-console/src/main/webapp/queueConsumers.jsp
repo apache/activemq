@@ -14,6 +14,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%-- Workaround for https://ops4j1.jira.com/browse/PAXWEB-1070 --%>
+<%@include file="WEB-INF/jspf/headertags.jspf" %>
 <html>
 <head>
 <c:set var="pageTitle" value="Consumers for ${requestContext.queueConsumerQuery.JMSDestination}"/>
@@ -63,7 +65,7 @@
                 <a href="network.jsp">${row.clientId}</a><br/>
             </c:when>
             <c:otherwise>
-                <a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>"><c:out value="${row.clientId}" /></a><br/>
+                <a href="<c:out value="connection.jsp?connectionID=${row.clientId}"/>"><c:out value="${row.clientId}" /></a><br/>
             </c:otherwise>
         </c:choose>
             <c:out value="${row.connectionId}" />

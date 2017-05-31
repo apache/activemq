@@ -46,9 +46,13 @@ public class DefaultBlobDownloadStrategy extends DefaultStrategy implements Blob
 
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
         connection.setRequestMethod("DELETE");
-        connection.connect();
-        connection.disconnect();
-
+        try {
+            connection.connect();
+        } catch (IOException e) {
+            throw new IOException("DELETE failed on: " + url, e);
+        } finally {
+            connection.disconnect();
+        }
         if (!isSuccessfulCode(connection.getResponseCode())) {
             throw new IOException("DELETE was not successful: " + connection.getResponseCode() + " "
                                   + connection.getResponseMessage());

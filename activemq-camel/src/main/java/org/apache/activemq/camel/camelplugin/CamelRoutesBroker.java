@@ -162,7 +162,7 @@ public class CamelRoutesBroker extends BrokerFilter {
     }
 
     @Override
-    public void isFull(ConnectionContext context, Destination destination, Usage usage) {
+    public void isFull(ConnectionContext context, Destination destination, Usage<?> usage) {
         blockWhileLoadingCamelRoutes();
         super.isFull(context, destination, usage);
     }
