@@ -23,12 +23,15 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
 /**
- *
+ * Collection of File and Folder utility methods.
  */
 public final class IOHelper {
 
@@ -66,7 +69,7 @@ public final class IOHelper {
      * and "." characters.
      *
      * @param name
-     * @return
+     * @return safe name of the directory
      */
     public static String toFileSystemDirectorySafeName(String name) {
         return toFileSystemSafeName(name, true, MAX_DIR_NAME_LENGTH);
@@ -84,7 +87,7 @@ public final class IOHelper {
      * @param name
      * @param dirSeparators
      * @param maxFileLength
-     * @return
+     * @return file system safe name
      */
     public static String toFileSystemSafeName(String name, boolean dirSeparators, int maxFileLength) {
         int size = name.length();
@@ -186,7 +189,16 @@ public final class IOHelper {
 
     public static void moveFile(File src, File targetDirectory) throws IOException {
         if (!src.renameTo(new File(targetDirectory, src.getName()))) {
-            throw new IOException("Failed to move " + src + " to " + targetDirectory);
+
+            // If rename fails we must do a true deep copy instead.
+            Path sourcePath = src.toPath();
+            Path targetDirPath = targetDirectory.toPath();
+
+            try {
+                Files.move(sourcePath, targetDirPath.resolve(sourcePath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ex) {
+                throw new IOException("Failed to move " + src + " to " + targetDirectory + " - " + ex.getMessage());
+            }
         }
     }
 
@@ -281,14 +293,17 @@ public final class IOHelper {
     }
 
     public static void copyInputStream(InputStream in, OutputStream out) throws IOException {
-        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-        int len = in.read(buffer);
-        while (len >= 0) {
-            out.write(buffer, 0, len);
-            len = in.read(buffer);
+        try {
+            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+            int len = in.read(buffer);
+            while (len >= 0) {
+                out.write(buffer, 0, len);
+                len = in.read(buffer);
+            }
+        } finally {
+            in.close();
+            out.close();
         }
-        in.close();
-        out.close();
     }
 
     static {

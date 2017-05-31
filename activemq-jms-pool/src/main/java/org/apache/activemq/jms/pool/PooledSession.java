@@ -47,7 +47,7 @@ import javax.jms.TopicSubscriber;
 import javax.jms.XASession;
 import javax.transaction.xa.XAResource;
 
-import org.apache.commons.pool.KeyedObjectPool;
+import org.apache.commons.pool2.KeyedObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,25 +55,21 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledSession.class);
 
     private final SessionKey key;
-    private final KeyedObjectPool<SessionKey, Session> sessionPool;
+    private final KeyedObjectPool<SessionKey, SessionHolder> sessionPool;
     private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
     private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
     private final CopyOnWriteArrayList<PooledSessionEventListener> sessionEventListeners = new CopyOnWriteArrayList<PooledSessionEventListener>();
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    private MessageProducer producer;
-    private TopicPublisher publisher;
-    private QueueSender sender;
-
-    private Session session;
+    private SessionHolder sessionHolder;
     private boolean transactional = true;
     private boolean ignoreClose;
     private boolean isXa;
     private boolean useAnonymousProducers = true;
 
-    public PooledSession(SessionKey key, Session session, KeyedObjectPool<SessionKey, Session> sessionPool, boolean transactional, boolean anonymous) {
+    public PooledSession(SessionKey key, SessionHolder sessionHolder, KeyedObjectPool<SessionKey, SessionHolder> sessionPool, boolean transactional, boolean anonymous) {
         this.key = key;
-        this.session = session;
+        this.sessionHolder = sessionHolder;
         this.sessionPool = sessionPool;
         this.transactional = transactional;
         this.useAnonymousProducers = anonymous;
@@ -140,21 +136,21 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
             if (invalidate) {
                 // lets close the session and not put the session back into the pool
                 // instead invalidate it so the pool can create a new one on demand.
-                if (session != null) {
+                if (sessionHolder != null) {
                     try {
-                        session.close();
+                        sessionHolder.close();
                     } catch (JMSException e1) {
                         LOG.trace("Ignoring exception on close as discarding session: " + e1, e1);
                     }
                 }
                 try {
-                    sessionPool.invalidateObject(key, session);
+                    sessionPool.invalidateObject(key, sessionHolder);
                 } catch (Exception e) {
                     LOG.trace("Ignoring exception on invalidateObject as discarding session: " + e, e);
                 }
             } else {
                 try {
-                    sessionPool.returnObject(key, session);
+                    sessionPool.returnObject(key, sessionHolder);
                 } catch (Exception e) {
                     javax.jms.IllegalStateException illegalStateException = new javax.jms.IllegalStateException(e.toString());
                     illegalStateException.initCause(e);
@@ -162,7 +158,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                 }
             }
 
-            session = null;
+            sessionHolder = null;
         }
     }
 
@@ -276,9 +272,12 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public XAResource getXAResource() {
-        if (session instanceof XASession) {
-            return ((XASession) session).getXAResource();
+        SessionHolder session = safeGetSessionHolder();
+
+        if (session.getSession() instanceof XASession) {
+            return ((XASession) session.getSession()).getXAResource();
         }
+
         return null;
     }
 
@@ -289,8 +288,9 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public void run() {
+        SessionHolder session = safeGetSessionHolder();
         if (session != null) {
-            session.run();
+            session.getSession().run();
         }
     }
 
@@ -379,10 +379,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     }
 
     public Session getInternalSession() throws IllegalStateException {
-        if (session == null) {
-            throw new IllegalStateException("The session has already been closed");
-        }
-        return session;
+        return safeGetSessionHolder().getSession();
     }
 
     public MessageProducer getMessageProducer() throws JMSException {
@@ -393,16 +390,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         MessageProducer result = null;
 
         if (useAnonymousProducers) {
-            if (producer == null) {
-                // Don't allow for duplicate anonymous producers.
-                synchronized (this) {
-                    if (producer == null) {
-                        producer = getInternalSession().createProducer(null);
-                    }
-                }
-            }
-
-            result = producer;
+            result = safeGetSessionHolder().getOrCreateProducer();
         } else {
             result = getInternalSession().createProducer(destination);
         }
@@ -418,16 +406,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         QueueSender result = null;
 
         if (useAnonymousProducers) {
-            if (sender == null) {
-                // Don't allow for duplicate anonymous producers.
-                synchronized (this) {
-                    if (sender == null) {
-                        sender = ((QueueSession) getInternalSession()).createSender(null);
-                    }
-                }
-            }
-
-            result = sender;
+            result = safeGetSessionHolder().getOrCreateSender();
         } else {
             result = ((QueueSession) getInternalSession()).createSender(destination);
         }
@@ -443,16 +422,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         TopicPublisher result = null;
 
         if (useAnonymousProducers) {
-            if (publisher == null) {
-                // Don't allow for duplicate anonymous producers.
-                synchronized (this) {
-                    if (publisher == null) {
-                        publisher = ((TopicSession) getInternalSession()).createPublisher(null);
-                    }
-                }
-            }
-
-            result = publisher;
+            result = safeGetSessionHolder().getOrCreatePublisher();
         } else {
             result = ((TopicSession) getInternalSession()).createPublisher(destination);
         }
@@ -489,7 +459,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public String toString() {
-        return "PooledSession { " + session + " }";
+        return "PooledSession { " + safeGetSessionHolder() + " }";
     }
 
     /**
@@ -504,5 +474,14 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
      */
     protected void onConsumerClose(MessageConsumer consumer) {
         consumers.remove(consumer);
+    }
+
+    private SessionHolder safeGetSessionHolder() {
+        SessionHolder sessionHolder = this.sessionHolder;
+        if (sessionHolder == null) {
+            throw new IllegalStateException("The session has already been closed");
+        }
+
+        return sessionHolder;
     }
 }

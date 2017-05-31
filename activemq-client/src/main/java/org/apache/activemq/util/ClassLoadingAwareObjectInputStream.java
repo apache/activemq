@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Proxy;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,18 +32,33 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     private static final ClassLoader FALLBACK_CLASS_LOADER =
         ClassLoadingAwareObjectInputStream.class.getClassLoader();
 
+    public static final String[] serializablePackages;
+
+    private List<String> trustedPackages = new ArrayList<String>();
+    private boolean trustAllPackages = false;
+
     private final ClassLoader inLoader;
+
+    static {
+        serializablePackages = System.getProperty("org.apache.activemq.SERIALIZABLE_PACKAGES",
+                    "java.lang,javax.security,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper").split(",");
+    }
 
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {
         super(in);
         inLoader = in.getClass().getClassLoader();
+        trustedPackages.addAll(Arrays.asList(serializablePackages));
     }
 
+    @Override
     protected Class<?> resolveClass(ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        return load(classDesc.getName(), cl, inLoader);
+        Class clazz = load(classDesc.getName(), cl, inLoader);
+        checkSecurity(clazz);
+        return clazz;
     }
 
+    @Override
     protected Class<?> resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         Class[] cinterfaces = new Class[interfaces.length];
@@ -50,21 +66,52 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
             cinterfaces[i] = load(interfaces[i], cl);
         }
 
+        Class clazz = null;
         try {
-            return Proxy.getProxyClass(cl, cinterfaces);
+            clazz = Proxy.getProxyClass(cl, cinterfaces);
         } catch (IllegalArgumentException e) {
             try {
-                return Proxy.getProxyClass(inLoader, cinterfaces);
+                clazz = Proxy.getProxyClass(inLoader, cinterfaces);
             } catch (IllegalArgumentException e1) {
                 // ignore
             }
             try {
-                return Proxy.getProxyClass(FALLBACK_CLASS_LOADER, cinterfaces);
+                clazz = Proxy.getProxyClass(FALLBACK_CLASS_LOADER, cinterfaces);
             } catch (IllegalArgumentException e2) {
                 // ignore
             }
+        }
 
-            throw new ClassNotFoundException(null, e);
+        if (clazz != null) {
+            checkSecurity(clazz);
+            return clazz;
+        } else {
+            throw new ClassNotFoundException(null);
+        }
+    }
+
+    public static boolean isAllAllowed() {
+        return serializablePackages.length == 1 && serializablePackages[0].equals("*");
+    }
+
+    private boolean trustAllPackages() {
+        return trustAllPackages || (trustedPackages.size() == 1 && trustedPackages.get(0).equals("*"));
+    }
+
+    private void checkSecurity(Class clazz) throws ClassNotFoundException {
+        if (!clazz.isPrimitive()) {
+            if (clazz.getPackage() != null && !trustAllPackages()) {
+               boolean found = false;
+               for (String packageName : getTrustedPackages()) {
+                   if (clazz.getPackage().getName().equals(packageName) || clazz.getPackage().getName().startsWith(packageName + ".")) {
+                       found = true;
+                       break;
+                   }
+               }
+               if (!found) {
+                   throw new ClassNotFoundException("Forbidden " + clazz + "! This class is not trusted to be serialized as ObjectMessage payload. Please take a look at http://activemq.apache.org/objectmessage.html for more information on how to configure trusted classes.");
+               }
+            }
         }
     }
 
@@ -144,9 +191,30 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
             return Double.class;
         } else if ("double".equals(name)) {
             return double.class;
+        } else if ("void".equals(name)) {
+            return void.class;
         }
 
         return null;
     }
 
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
+    public void setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+    }
+
+    public void addTrustedPackage(String trustedPackage) {
+        this.trustedPackages.add(trustedPackage);
+    }
+
+    public boolean isTrustAllPackages() {
+        return trustAllPackages;
+    }
+
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        this.trustAllPackages = trustAllPackages;
+    }
 }

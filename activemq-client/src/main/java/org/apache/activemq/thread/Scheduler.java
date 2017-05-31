@@ -22,12 +22,15 @@ import java.util.TimerTask;
 
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public final class Scheduler extends ServiceSupport {
 
+    private static final Logger LOG  = LoggerFactory.getLogger(Scheduler.class);
     private final String name;
     private Timer timer;
     private final HashMap<Runnable, TimerTask> timerTasks = new HashMap<Runnable, TimerTask>();
@@ -37,6 +40,11 @@ public final class Scheduler extends ServiceSupport {
     }
 
     public synchronized void executePeriodically(final Runnable task, long period) {
+        TimerTask existing = timerTasks.get(task);
+        if (existing != null) {
+            LOG.debug("Task {} already scheduled, cancelling and rescheduling", task);
+            cancel(task);
+        }
         TimerTask timerTask = new SchedulerTimerTask(task);
         timer.schedule(timerTask, period, period);
         timerTasks.put(task, timerTask);

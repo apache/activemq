@@ -39,7 +39,6 @@ public class DataFileAccessorPool {
 
         private final DataFile file;
         private final List<DataFileAccessor> pool = new ArrayList<DataFileAccessor>();
-        private boolean used;
         private int openCounter;
         private boolean disposed;
 
@@ -54,7 +53,6 @@ public class DataFileAccessorPool {
             } else {
                 rc = pool.remove(pool.size() - 1);
             }
-            used = true;
             openCounter++;
             return rc;
         }
@@ -68,12 +66,8 @@ public class DataFileAccessorPool {
             }
         }
 
-        public synchronized void clearUsedMark() {
-            used = false;
-        }
-
         public synchronized boolean isUsed() {
-            return used;
+            return openCounter > 0;
         }
 
         public synchronized void dispose() {
@@ -94,13 +88,11 @@ public class DataFileAccessorPool {
         this.journal = dataManager;
     }
 
-    synchronized void clearUsedMark() {
-        for (Pool pool : pools.values()) {
-            pool.clearUsedMark();
-        }
+    public synchronized int size() {
+        return pools.size();
     }
 
-    synchronized void disposeUnused() {
+    public synchronized void disposeUnused() {
         for (Iterator<Pool> iter = pools.values().iterator(); iter.hasNext();) {
             Pool pool = iter.next();
             if (!pool.isUsed()) {

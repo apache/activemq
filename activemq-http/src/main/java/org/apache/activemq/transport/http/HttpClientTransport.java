@@ -20,6 +20,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URI;
+import java.security.cert.X509Certificate;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -30,6 +31,7 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.wireformat.WireFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -45,8 +47,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.client.params.HttpClientParams;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -120,8 +126,6 @@ public class HttpClientTransport extends HttpTransportSupport {
         HttpResponse answer = null;
         try {
             client = getSendHttpClient();
-            HttpParams params = client.getParams();
-            HttpConnectionParams.setSoTimeout(params, soTimeout);
             answer = client.execute(httpMethod);
             int status = answer.getStatusLine().getStatusCode();
             if (status != HttpStatus.SC_OK) {
@@ -182,6 +186,7 @@ public class HttpClientTransport extends HttpTransportSupport {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             onException(new InterruptedIOException());
+                            Thread.currentThread().interrupt();
                             break;
                         }
                     } else {
@@ -325,12 +330,22 @@ public class HttpClientTransport extends HttpTransportSupport {
             HttpHost proxy = new HttpHost(getProxyHost(), getProxyPort());
             client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
 
+            if (client.getConnectionManager().getSchemeRegistry().get("http") == null) {
+                client.getConnectionManager().getSchemeRegistry().register(
+                    new Scheme("http", getProxyPort(), PlainSocketFactory.getSocketFactory()));
+            }
+
             if(getProxyUser() != null && getProxyPassword() != null) {
                 client.getCredentialsProvider().setCredentials(
                     new AuthScope(getProxyHost(), getProxyPort()),
                     new UsernamePasswordCredentials(getProxyUser(), getProxyPassword()));
             }
         }
+
+        HttpParams params = client.getParams();
+        HttpConnectionParams.setSoTimeout(params, soTimeout);
+        HttpClientParams.setCookiePolicy(params, CookiePolicy.BROWSER_COMPATIBILITY);
+
         return client;
     }
 
@@ -388,4 +403,17 @@ public class HttpClientTransport extends HttpTransportSupport {
         this.minSendAsCompressedSize = minSendAsCompressedSize;
     }
 
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        return null;
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
+    }
+
+    @Override
+    public WireFormat getWireFormat() {
+        return getTextWireFormat();
+    }
 }

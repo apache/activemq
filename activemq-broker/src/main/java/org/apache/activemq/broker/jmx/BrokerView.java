@@ -19,34 +19,31 @@ package org.apache.activemq.broker.jmx;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.OpenDataException;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.BrokerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class BrokerView implements BrokerViewMBean {
+
     private static final Logger LOG = LoggerFactory.getLogger(BrokerView.class);
+
     ManagedRegionBroker broker;
+
     private final BrokerService brokerService;
     private final AtomicInteger sessionIdCounter = new AtomicInteger(0);
     private ObjectName jmsJobScheduler;
@@ -82,6 +79,11 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public String getUptime() {
         return brokerService.getUptime();
+    }
+
+    @Override
+    public long getUptimeMillis() {
+        return brokerService.getUptimeMillis();
     }
 
     @Override
@@ -125,8 +127,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval)
-            throws Exception {
+    public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval) throws Exception {
         brokerService.stopGracefully(connectorName, queueName, timeout, pollInterval);
     }
 
@@ -211,12 +212,12 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public long getTempLimit() {
-       return brokerService.getSystemUsage().getTempUsage().getLimit();
+        return brokerService.getSystemUsage().getTempUsage().getLimit();
     }
 
     @Override
     public int getTempPercentUsage() {
-       return brokerService.getSystemUsage().getTempUsage().getPercentUsage();
+        return brokerService.getSystemUsage().getTempUsage().getPercentUsage();
     }
 
     @Override
@@ -276,77 +277,95 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public ObjectName[] getTopics() {
-        return safeGetBroker().getTopics();
+        return safeGetBroker().getTopicsNonSuppressed();
     }
 
     @Override
     public ObjectName[] getQueues() {
-        return safeGetBroker().getQueues();
+        return safeGetBroker().getQueuesNonSuppressed();
+    }
+
+    @Override
+    public String queryQueues(String filter, int page, int pageSize) throws IOException {
+        return DestinationsViewFilter.create(filter)
+                .setDestinations(safeGetBroker().getQueueViews())
+                .filter(page, pageSize);
+    }
+
+    @Override
+    public String queryTopics(String filter, int page, int pageSize) throws IOException {
+        return DestinationsViewFilter.create(filter)
+                .setDestinations(safeGetBroker().getTopicViews())
+                .filter(page, pageSize);
+    }
+
+    public CompositeData[] browseQueue(String queueName) throws OpenDataException, MalformedObjectNameException {
+       return safeGetBroker().getQueueView(queueName).browse();
     }
 
     @Override
     public ObjectName[] getTemporaryTopics() {
-        return safeGetBroker().getTemporaryTopics();
+        return safeGetBroker().getTemporaryTopicsNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueues() {
-        return safeGetBroker().getTemporaryQueues();
+        return safeGetBroker().getTemporaryQueuesNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTopicSubscribers() {
-        return safeGetBroker().getTopicSubscribers();
+        return safeGetBroker().getTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getDurableTopicSubscribers() {
-        return safeGetBroker().getDurableTopicSubscribers();
+        return safeGetBroker().getDurableTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getQueueSubscribers() {
-        return safeGetBroker().getQueueSubscribers();
+        return safeGetBroker().getQueueSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryTopicSubscribers() {
-        return safeGetBroker().getTemporaryTopicSubscribers();
+        return safeGetBroker().getTemporaryTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueueSubscribers() {
-        return safeGetBroker().getTemporaryQueueSubscribers();
+        return safeGetBroker().getTemporaryQueueSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getInactiveDurableTopicSubscribers() {
-        return safeGetBroker().getInactiveDurableTopicSubscribers();
+        return safeGetBroker().getInactiveDurableTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTopicProducers() {
-        return safeGetBroker().getTopicProducers();
+        return safeGetBroker().getTopicProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getQueueProducers() {
-        return safeGetBroker().getQueueProducers();
+        return safeGetBroker().getQueueProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryTopicProducers() {
-        return safeGetBroker().getTemporaryTopicProducers();
+        return safeGetBroker().getTemporaryTopicProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueueProducers() {
-        return safeGetBroker().getTemporaryQueueProducers();
+        return safeGetBroker().getTemporaryQueueProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getDynamicDestinationProducers() {
-        return safeGetBroker().getDynamicDestinationProducers();
+        return safeGetBroker().getDynamicDestinationProducersNonSuppressed();
     }
 
     @Override
@@ -392,12 +411,14 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public void addTopic(String name) throws Exception {
-        safeGetBroker().getContextBroker().addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQTopic(name),true);
+        safeGetBroker().getContextBroker()
+            .addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQTopic(name), true);
     }
 
     @Override
     public void addQueue(String name) throws Exception {
-        safeGetBroker().getContextBroker().addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQQueue(name),true);
+        safeGetBroker().getContextBroker()
+            .addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQQueue(name), true);
     }
 
     @Override
@@ -411,9 +432,8 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName,
-                                              String selector) throws Exception {
-        ConnectionContext context = new ConnectionContext();
+    public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception {
+        ConnectionContext context = getConnectionContext();
         context.setBroker(safeGetBroker());
         context.setClientId(clientId);
         ConsumerInfo info = new ConsumerInfo();
@@ -438,7 +458,7 @@ public class BrokerView implements BrokerViewMBean {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
         info.setSubscriptionName(subscriberName);
-        ConnectionContext context = new ConnectionContext();
+        ConnectionContext context = getConnectionContext();
         context.setBroker(safeGetBroker());
         context.setClientId(clientId);
         brokerService.getBroker().removeSubscription(context, info);
@@ -450,7 +470,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    public  Map<String, String> getTransportConnectors() {
+    public Map<String, String> getTransportConnectors() {
         Map<String, String> answer = new HashMap<String, String>();
         try {
             for (TransportConnector connector : brokerService.getTransportConnectors()) {
@@ -468,46 +488,6 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
-    @Deprecated
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    public String getOpenWireURL() {
-        String answer = brokerService.getTransportConnectorURIsAsMap().get("tcp");
-        return answer != null ? answer : "";
-    }
-
-    @Override
-    @Deprecated
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    public String getStompURL() {
-        String answer = brokerService.getTransportConnectorURIsAsMap().get("stomp");
-        return answer != null ? answer : "";
-    }
-
-    @Override
-    @Deprecated
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    public String getSslURL() {
-        String answer = brokerService.getTransportConnectorURIsAsMap().get("ssl");
-        return answer != null ? answer : "";
-    }
-
-    @Override
-    @Deprecated
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    public String getStompSslURL() {
-        String answer = brokerService.getTransportConnectorURIsAsMap().get("stomp+ssl");
-        return answer != null ? answer : "";
-    }
-
-    @Override
     public String getVMURL() {
         URI answer = brokerService.getVmConnectorURI();
         return answer != null ? answer.toString() : "";
@@ -517,7 +497,7 @@ public class BrokerView implements BrokerViewMBean {
     public String getDataDirectory() {
         File file = brokerService.getDataDirectoryFile();
         try {
-            return file != null ? file.getCanonicalPath():"";
+            return file != null ? file.getCanonicalPath() : "";
         } catch (IOException e) {
             return "";
         }
@@ -529,7 +509,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public void setJMSJobScheduler(ObjectName name) {
-        this.jmsJobScheduler=name;
+        this.jmsJobScheduler = name;
     }
 
     @Override
@@ -543,5 +523,22 @@ public class BrokerView implements BrokerViewMBean {
         }
 
         return broker;
+    }
+
+    private ConnectionContext getConnectionContext() {
+        ConnectionContext context;
+        if (broker == null) {
+            context = new ConnectionContext();
+        } else {
+            ConnectionContext sharedContext = BrokerSupport.getConnectionContext(broker.getContextBroker());
+            // Make a local copy of the sharedContext. We do this because we do
+            // not want to set a clientId on the
+            // global sharedContext. Taking a copy of the sharedContext is a
+            // good way to make sure that we are not
+            // messing up the shared context
+            context = sharedContext.copy();
+        }
+
+        return context;
     }
 }

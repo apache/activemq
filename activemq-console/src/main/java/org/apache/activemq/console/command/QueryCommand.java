@@ -16,27 +16,22 @@
  */
 package org.apache.activemq.console.command;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
-
+import javax.management.ObjectName;
 import org.apache.activemq.console.util.JmxMBeansUtil;
+
+import java.util.*;
 
 public class QueryCommand extends AbstractJmxCommand {
     // Predefined type=identifier query
     private static final Properties PREDEFINED_OBJNAME_QUERY = new Properties();
 
     static {
-        PREDEFINED_OBJNAME_QUERY.setProperty("Broker", "type=Broker,brokerName=%1");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Connection", "type=Broker,connector=clientConnectors,connectionName=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Connector", "type=Broker,brokerName=*,connector=clientConnectors,connectorName=%1");
-        PREDEFINED_OBJNAME_QUERY.setProperty("NetworkConnector", "type=Broker,brokerName=%1,connector=networkConnectors,networkConnectorName=*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Queue", "type=Broker,brokerName=*,destinationType=Queue,destinationName=%1");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Topic", "type=Broker,brokerName=*,destinationType=Topic,destinationName=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Broker", "brokerName=%1");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Connection", "connector=clientConnectors,connectionViewType=*,connectionName=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Connector", "connector=clientConnectors,connectorName=%1");
+        PREDEFINED_OBJNAME_QUERY.setProperty("NetworkConnector", "connector=networkConnectors,networkConnectorName=%1");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Queue", "destinationType=Queue,destinationName=%1");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Topic", "destinationType=Topic,destinationName=%1");
     };
 
     protected String[] helpFile = new String[] {
@@ -54,6 +49,7 @@ public class QueryCommand extends AbstractJmxCommand {
         "                                  similar to the JMX object name format.",
         "    --view <attr1>,<attr2>,...    Select the specific attribute of the object to view.",
         "                                  By default all attributes will be displayed.",
+        "    --invoke <operation>          Specify the operation to invoke on matching objects",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
         "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",            
         "    --jmxuser <user>              Set the JMX user used for authenticating.",
@@ -85,18 +81,23 @@ public class QueryCommand extends AbstractJmxCommand {
         "        - Print all attributes of all topics except those that has a name that begins",
         "          with \"ActiveMQ.Advisory\".",
         "",
-        "    query --objname Type=*Connect*,BrokerName=local* -xQNetworkConnector=*",
+        "    query --objname type=Broker,brokerName=*,connector=clientConnectors,connectorName=* -xQNetworkConnector=*",
         "        - Print all attributes of all connectors, connections excluding network connectors",
         "          that belongs to the broker that begins with local.", 
         "", 
         "    query -QQueue=* -xQQueue=????", 
         "        - Print all attributes of all queues except those that are 4 letters long.",
         "",
+        "    query -QQueue=* --invoke pause",
+        "        - Pause all queues.",
+        "",
+
     };
 
     private final List<String> queryAddObjects = new ArrayList<String>(10);
     private final List<String> querySubObjects = new ArrayList<String>(10);
-    private final Set queryViews = new HashSet(10);
+    private final Set queryViews = new LinkedHashSet();
+    private final List<String> opAndParams = new ArrayList<String>(10);
 
     @Override
     public String getName() {
@@ -115,26 +116,52 @@ public class QueryCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     protected void runTask(List<String> tokens) throws Exception {
-        try {
-            // Query for the mbeans to add
-            List addMBeans = JmxMBeansUtil.queryMBeans(createJmxConnection(), queryAddObjects, queryViews);
+        // Query for the mbeans to add
+        Map<Object, List> addMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), queryAddObjects, queryViews);
+        // Query for the mbeans to sub
+        if (querySubObjects.size() > 0) {
+            Map<Object, List> subMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), querySubObjects, queryViews);
+            addMBeans.keySet().removeAll(subMBeans.keySet());
+        }
 
-            // Query for the mbeans to sub
-            if (querySubObjects.size() > 0) {
-                List subMBeans = JmxMBeansUtil.queryMBeans(createJmxConnection(), querySubObjects, queryViews);
-                addMBeans.removeAll(subMBeans);
-            }
-
-            context.printMBean(JmxMBeansUtil.filterMBeansView(addMBeans, queryViews));
-
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute query task. Reason: " + e));
-            throw new Exception(e);
+        if (opAndParams.isEmpty()) {
+            context.printMBean(JmxMBeansUtil.filterMBeansView(new ArrayList(addMBeans.values()), queryViews));
+        } else {
+            context.print(doInvoke(addMBeans.keySet(), opAndParams));
         }
     }
 
+    private Collection doInvoke(Set<Object> mBeans, List<String> opAndParams) throws Exception {
+        LinkedList<String> results = new LinkedList<>();
+        for (Object objectName : mBeans) {
+            Object result = createJmxConnection().invoke((ObjectName) objectName, opAndParams.get(0),
+                    params(opAndParams), stringSignature(opAndParams));
+            results.add("[" + objectName + "]." + opAndParams.get(0) + " = " + result);
+        }
+        return results;
+    }
+
+    private Object[] params(List<String> opAndParams) {
+        if (opAndParams.size() > 1) {
+            return opAndParams.subList(1, opAndParams.size()).toArray();
+        } else {
+            return null;
+        }
+    }
+
+    private String[] stringSignature(List<String> opAndParams) {
+        if (opAndParams.size() > 1) {
+            String[] sig = new String[opAndParams.size() - 1];
+            Arrays.fill(sig, String.class.getName());
+            return sig;
+        } else {
+            return null;
+        }
+    }
+
+
     /**
-     * Handle the -Q, -xQ, --objname, --xobjname, --view options.
+     * Handle the -Q, -xQ, --objname, --xobjname, --view --invoke options.
      * 
      * @param token - option token to handle
      * @param tokens - succeeding command arguments
@@ -162,6 +189,7 @@ public class QueryCommand extends AbstractJmxCommand {
             while (queryTokens.hasMoreTokens()) {
                 queryAddObjects.add(queryTokens.nextToken());
             }
+            normaliseObjectName(queryAddObjects);
         } else if (token.startsWith("-xQ")) {
             // If token is a substractive predefined query define option
             String key = token.substring(3);
@@ -183,6 +211,7 @@ public class QueryCommand extends AbstractJmxCommand {
             while (queryTokens.hasMoreTokens()) {
                 querySubObjects.add(queryTokens.nextToken());
             }
+            normaliseObjectName(querySubObjects);
         } else if (token.startsWith("--objname")) {
             // If token is an additive object name query option
 
@@ -225,10 +254,58 @@ public class QueryCommand extends AbstractJmxCommand {
             while (viewTokens.hasMoreElements()) {
                 queryViews.add(viewTokens.nextElement());
             }
+        } else if (token.startsWith("--invoke")) {
+
+            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                context.printException(new IllegalArgumentException("operation to invoke is not specified"));
+                return;
+            }
+
+            // add op and params
+            Enumeration viewTokens = new StringTokenizer((String)tokens.remove(0), COMMAND_OPTION_DELIMETER);
+            while (viewTokens.hasMoreElements()) {
+                opAndParams.add((String)viewTokens.nextElement());
+            }
+
         } else {
             // Let super class handle unknown option
             super.handleOption(token, tokens);
         }
+    }
+
+    private void normaliseObjectName(List<String> queryAddObjects) {
+        ensurePresent(queryAddObjects, "type", "Broker");
+        ensurePresent(queryAddObjects, "brokerName", "*");
+
+        // -QQueue && -QTopic
+        ensureUnique(queryAddObjects, "destinationType", "?????");
+        ensureUnique(queryAddObjects, "destinationName", "*");
+    }
+
+    private void ensurePresent(List<String> queryAddObjects, String id, String wildcard) {
+        List<String> matches = findMatchingKeys(queryAddObjects, id);
+        if (matches.size() == 0) {
+            queryAddObjects.add(id + "=" + wildcard);
+        }
+    }
+
+    private void ensureUnique(List<String> queryAddObjects, String id, String wildcard) {
+        List<String> matches = findMatchingKeys(queryAddObjects, id);
+        if (matches.size() > 1) {
+            queryAddObjects.removeAll(matches);
+            queryAddObjects.add(id + "=" + wildcard);
+        }
+    }
+
+    private List<String> findMatchingKeys(List<String> queryAddObjects, String id) {
+        List<String> matches = new LinkedList<>();
+        for (String prop : queryAddObjects) {
+            String[] keyValue = prop.split("=");
+            if (keyValue.length == 2 && keyValue[0].equals(id)) {
+                matches.add(prop);
+            }
+        }
+        return matches;
     }
 
     /**

@@ -163,6 +163,35 @@ public class BTreeIndexTest extends IndexTestSupport {
     }
 
     @Test(timeout=60000)
+    public void testLimitedIteration() throws Exception {
+        createPageFileAndIndex(500);
+        BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
+        this.index.load(tx);
+        tx.commit();
+
+        // Insert in reverse order..
+        doInsertReverse(1000);
+
+        this.index.unload(tx);
+        tx.commit();
+        this.index.load(tx);
+        tx.commit();
+
+        // BTree should iterate it in sorted order up to limit
+        int counter=0;
+        for (Iterator<Map.Entry<String,Long>> i = index.iterator(tx, key(0), key(500)); i.hasNext();) {
+            Map.Entry<String,Long> entry = i.next();
+            assertEquals(key(counter),entry.getKey());
+            assertEquals(counter,(long)entry.getValue());
+            counter++;
+        }
+
+        assertEquals("got to 500", 500, counter);
+        this.index.unload(tx);
+        tx.commit();
+    }
+
+    @Test(timeout=60000)
     public void testVisitor() throws Exception {
         createPageFileAndIndex(100);
         BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
@@ -254,7 +283,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
 
         Random rand = new Random(System.currentTimeMillis());
-        final int count = 50000;
+        final int count = 1000;
 
         String payload = new String(new byte[200]);
         for (int i = 0; i < count; i++) {

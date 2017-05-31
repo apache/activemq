@@ -16,14 +16,17 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -31,58 +34,102 @@ import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import static org.junit.Assert.assertEquals;
-
 /**
- * Stuck messages test client.
- * <p/>
- * Will kick of publisher and consumer simultaneously, and will usually result in stuck messages on the queue.
+ * Will kick of publisher and consumer simultaneously, and will usually result in
+ * stuck messages on the queue.
  */
+@RunWith(Parameterized.class)
 public class AMQ5266Test {
     static Logger LOG = LoggerFactory.getLogger(AMQ5266Test.class);
-    String activemqURL = "tcp://localhost:61617";
-    BrokerService brokerService;
-    private EmbeddedDataSource dataSource;
+
+    private String activemqURL;
+    private BrokerService brokerService;
+
+    public int messageSize = 1000;
+
+    @Parameterized.Parameter(0)
+    public int publisherMessagesPerThread = 1000;
+
+    @Parameterized.Parameter(1)
+    public int publisherThreadCount = 20;
+
+    @Parameterized.Parameter(2)
+    public int consumerThreadsPerQueue = 5;
+
+    @Parameterized.Parameter(3)
+    public int destMemoryLimit = 50 * 1024;
+
+    @Parameterized.Parameter(4)
+    public boolean useCache = true;
+
+    @Parameterized.Parameter(5)
+    public TestSupport.PersistenceAdapterChoice persistenceAdapterChoice = TestSupport.PersistenceAdapterChoice.KahaDB;
+
+    @Parameterized.Parameter(6)
+    public boolean optimizeDispatch = false;
+
+    @Parameterized.Parameters(name="#{0},producerThreads:{1},consumerThreads:{2},mL:{3},useCache:{4},store:{5},optimizedDispatch:{6}")
+    public static Iterable<Object[]> parameters() {
+        return Arrays.asList(new Object[][]{
+                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.JDBC, true},
+                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
+                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.JDBC, false},
+                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
+                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
+
+                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, true},
+                {100,  5,   5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, false},
+                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
+                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, false},
+                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
+                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
+
+                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, true},
+                {100,  5,   5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, false},
+                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
+                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, false},
+                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
+                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
+
+        });
+    }
+
+    public int consumerBatchSize = 5;
 
     @Before
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
-
-        dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("target/derbyDb");
-        dataSource.setCreateDatabase("create");
-
-        JDBCPersistenceAdapter persistenceAdapter = new JDBCPersistenceAdapter();
-        persistenceAdapter.setDataSource(dataSource);
-        brokerService.setPersistenceAdapter(persistenceAdapter);
+        TestSupport.setPersistenceAdapter(brokerService, persistenceAdapterChoice);
         brokerService.setDeleteAllMessagesOnStartup(true);
-
+        brokerService.setUseJmx(false);
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
-        defaultEntry.setEnableAudit(false);
-        defaultEntry.setUseCache(false);
+        defaultEntry.setUseConsumerPriority(false); // java.lang.IllegalArgumentException: Comparison method violates its general contract!
+        defaultEntry.setMaxAuditDepth(publisherThreadCount);
+        defaultEntry.setEnableAudit(true);
+        defaultEntry.setUseCache(useCache);
         defaultEntry.setMaxPageSize(1000);
-        defaultEntry.setOptimizedDispatch(false);
-        defaultEntry.setMemoryLimit(1024 * 1024);
+        defaultEntry.setOptimizedDispatch(optimizeDispatch);
+        defaultEntry.setMemoryLimit(destMemoryLimit);
         defaultEntry.setExpireMessagesPeriod(0);
         policyMap.setDefaultEntry(defaultEntry);
         brokerService.setDestinationPolicy(policyMap);
@@ -99,10 +146,6 @@ public class AMQ5266Test {
         if (brokerService != null) {
             brokerService.stop();
         }
-        try {
-            dataSource.setShutdownDatabase("shutdown");
-            dataSource.getConnection();
-        } catch (Exception ignored) {}
     }
 
     @Test
@@ -110,11 +153,6 @@ public class AMQ5266Test {
 
         String activemqQueues = "activemq,activemq2";//,activemq3,activemq4,activemq5,activemq6,activemq7,activemq8,activemq9";
 
-        int publisherMessagesPerThread = 1000;
-        int publisherThreadCount = 5;
-
-        int consumerThreadsPerQueue = 5;
-        int consumerBatchSize = 25;
         int consumerWaitForConsumption = 5 * 60 * 1000;
 
         ExportQueuePublisher publisher = null;
@@ -129,7 +167,6 @@ public class AMQ5266Test {
 
         consumer = new ExportQueueConsumer(activemqURL, activemqQueues, consumerThreadsPerQueue, consumerBatchSize, publisherMessagesPerThread * publisherThreadCount);
 
-
         LOG.info("Starting Publisher...");
 
         publisher.start();
@@ -140,30 +177,26 @@ public class AMQ5266Test {
 
         int distinctPublishedCount = 0;
 
-
         LOG.info("Waiting For Publisher Completion...");
 
         publisher.waitForCompletion();
 
-        distinctPublishedCount = publisher.getIDs().size();
+        List<String> publishedIds = publisher.getIDs();
+        distinctPublishedCount = new TreeSet<String>(publishedIds).size();
 
-        LOG.info("Publisher Complete. Distinct IDs Published: " + distinctPublishedCount);
-
+        LOG.info("Publisher Complete. Published: " + publishedIds.size() + ", Distinct IDs Published: " + distinctPublishedCount);
 
         long endWait = System.currentTimeMillis() + consumerWaitForConsumption;
-
-
         while (!consumer.completed() && System.currentTimeMillis() < endWait) {
             try {
                 int secs = (int) (endWait - System.currentTimeMillis()) / 1000;
                 LOG.info("Waiting For Consumer Completion. Time left: " + secs + " secs");
-                DefaultJDBCAdapter.dumpTables(dataSource.getConnection());
                 Thread.sleep(10000);
             } catch (Exception e) {
             }
         }
 
-        LOG.info("\nConsumer Complete. Shutting Down.");
+        LOG.info("\nConsumer Complete: " + consumer.completed() +", Shutting Down.");
 
         consumer.shutdown();
 
@@ -185,7 +218,6 @@ public class AMQ5266Test {
             LOG.info(sb.toString());
 
             assertEquals("expect to get all messages!", 0, diff);
-
         }
     }
 
@@ -199,7 +231,8 @@ public class AMQ5266Test {
         // Collection of distinct IDs that the publisher has published.
         // After a message is published, its UUID will be written to this list for tracking.
         // This list of IDs (or distinct count) will be used to compare to the consumed list of IDs.
-        private Set<String> ids = Collections.synchronizedSet(new TreeSet<String>());
+        //private Set<String> ids = Collections.synchronizedSet(new TreeSet<String>());
+        private List<String> ids = Collections.synchronizedList(new ArrayList<String>());
         private List<PublisherThread> threads;
 
         public ExportQueuePublisher(String activemqURL, String activemqQueues, int messagesPerThread, int threadCount) throws Exception {
@@ -216,7 +249,7 @@ public class AMQ5266Test {
             }
         }
 
-        public Set<String> getIDs() {
+        public List<String> getIDs() {
             return ids;
         }
 
@@ -241,7 +274,7 @@ public class AMQ5266Test {
             return queueConnection.createSession(true, Session.SESSION_TRANSACTED);
         }
 
-        private QueueConnection newQueueConnection() throws Exception {
+        private synchronized QueueConnection newQueueConnection() throws Exception {
 
             if (connectionFactory == null) {
                 connectionFactory = new ActiveMQConnectionFactory(amqUser, amqPassword, activemqURL);
@@ -278,6 +311,7 @@ public class AMQ5266Test {
                 mp = session.createProducer(q);
             }
 
+            @Override
             public void run() {
 
                 try {
@@ -285,7 +319,7 @@ public class AMQ5266Test {
                     // Loop until we've published enough messages
                     while (count-- > 0) {
 
-                        TextMessage tm = session.createTextMessage("test");
+                        TextMessage tm = session.createTextMessage(getMessageText());
                         String id = UUID.randomUUID().toString();
                         tm.setStringProperty("KEY", id);
                         ids.add(id);                            // keep track of the key to compare against consumer
@@ -317,7 +351,27 @@ public class AMQ5266Test {
                 }
             }
         }
+    }
 
+    String messageText;
+    private String getMessageText() {
+
+        if (messageText == null) {
+
+            synchronized (this) {
+
+                if (messageText == null) {
+
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < messageSize; i++) {
+                        sb.append("X");
+                    }
+                    messageText = sb.toString();
+                }
+            }
+        }
+
+        return messageText;
     }
 
     public class ExportQueueConsumer {
@@ -369,11 +423,8 @@ public class AMQ5266Test {
 
         // Start the threads
         public void start() throws Exception {
-
             for (List<ConsumerThread> list : threads.values()) {
-
                 for (ConsumerThread ct : list) {
-
                     ct.start();
                 }
             }
@@ -382,19 +433,14 @@ public class AMQ5266Test {
         // Tell the threads to stop
         // Then wait for them to stop
         public void shutdown() throws Exception {
-
             for (List<ConsumerThread> list : threads.values()) {
-
                 for (ConsumerThread ct : list) {
-
                     ct.shutdown();
                 }
             }
 
             for (List<ConsumerThread> list : threads.values()) {
-
                 for (ConsumerThread ct : list) {
-
                     ct.join();
                 }
             }
@@ -404,7 +450,7 @@ public class AMQ5266Test {
             return queueConnection.createSession(true, Session.SESSION_TRANSACTED);
         }
 
-        private QueueConnection newQueueConnection() throws Exception {
+        private synchronized QueueConnection newQueueConnection() throws Exception {
 
             if (connectionFactory == null) {
                 connectionFactory = new ActiveMQConnectionFactory(amqUser, amqPassword, activemqURL);
@@ -452,12 +498,13 @@ public class AMQ5266Test {
                 qName = queueName;
                 qc = newQueueConnection();
                 session = newSession(qc);
-                Queue q = session.createQueue(queueName);
+                Queue q = session.createQueue(queueName + "?consumer.prefetchSize=" + batchSize);
                 mc = session.createConsumer(q);
 
                 idList = idsByQueue.get(queueName);
             }
 
+            @Override
             public void run() {
 
                 try {
@@ -469,6 +516,7 @@ public class AMQ5266Test {
 
                         if (idList.size() >= totalToExpect) {
                             LOG.info("Got {} for q: {}", +idList.size(), qName);
+                            session.commit();
                             break;
                         }
                         Message m = mc.receive(4000);
@@ -494,11 +542,10 @@ public class AMQ5266Test {
                             session.commit();
                             count = 0;
 
-                            // Sleep a little before trying to read after not getting a message
-
                             try {
-                                LOG.info("did not receive on {}, current count: {}", qName, idList.size());
-                                //sleep(3000);
+                                if (idList.size() < totalToExpect) {
+                                    LOG.info("did not receive on {}, current count: {}", qName, idList.size());
+                                }
                             } catch (Exception e) {
                             }
                         }
@@ -506,7 +553,6 @@ public class AMQ5266Test {
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
-
                     // Once we exit, close everything
                     close();
                 }
@@ -531,7 +577,6 @@ public class AMQ5266Test {
                 try {
                     qc.close();
                 } catch (Exception e) {
-
                 }
             }
         }

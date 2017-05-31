@@ -80,14 +80,19 @@ public final class BTreeNode<Key,Value> {
     private final class BTreeIterator implements Iterator<Map.Entry<Key, Value>> {
         
         private final Transaction tx;
+        private final Key endKey;
         BTreeNode<Key,Value> current;
         int nextIndex;
         Map.Entry<Key,Value> nextEntry;
 
-        private BTreeIterator(Transaction tx, BTreeNode<Key,Value> current, int nextIndex) {
+        private BTreeIterator(Transaction tx, BTreeNode<Key, Value> current, int nextIndex, Key endKey) {
             this.tx = tx;
             this.current = current;
             this.nextIndex=nextIndex;
+            this.endKey = endKey;
+            if (endKey != null && endKey.equals(0l)) {
+                Thread.dumpStack();
+            }
         }
 
         synchronized private void findNextPage() {
@@ -107,6 +112,9 @@ public final class BTreeNode<Key,Value> {
                             break;
                         }
                     }  else {
+                        if (endKey != null && current.keys[nextIndex].equals(endKey)) {
+                            break;
+                        }
                         nextEntry = new KeyValueEntry(current.keys[nextIndex], current.values[nextIndex]);
                         nextIndex++;
                         break;
@@ -631,23 +639,23 @@ public final class BTreeNode<Key,Value> {
         return node;
     }
     
-    public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, Key startKey) throws IOException {
+    public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, Key startKey, Key endKey) throws IOException {
         if (startKey == null) {
             return iterator(tx);
         }
         if( isBranch() ) {
-            return getLeafNode(tx, this, startKey).iterator(tx, startKey);
+            return getLeafNode(tx, this, startKey).iterator(tx, startKey, endKey);
         } else {
             int idx = Arrays.binarySearch(keys, startKey);
             if (idx < 0) {
                 idx = -(idx + 1);
             }
-            return new BTreeIterator(tx, this, idx);
+            return new BTreeIterator(tx, this, idx, endKey);
         }
     }
 
     public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx) throws IOException {
-        return new BTreeIterator(tx, getFirstLeafNode(tx), 0);
+        return new BTreeIterator(tx, getFirstLeafNode(tx), 0, null);
     }
     
     public void clear(Transaction tx) throws IOException {

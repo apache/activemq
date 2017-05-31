@@ -40,8 +40,8 @@ import org.apache.activemq.jaas.GroupPrincipal;
  *
  */
 public class SimpleAuthenticationPlugin implements BrokerPlugin {
-    private Map<String, String> userPasswords;
-    private Map<String, Set<Principal>> userGroups;
+    private Map<String, String> userPasswords = new HashMap<String, String>();
+    private Map<String, Set<Principal>> userGroups = new HashMap<String, Set<Principal>>();
     private static final String DEFAULT_ANONYMOUS_USER = "anonymous";
     private static final String DEFAULT_ANONYMOUS_GROUP = "anonymous";
     private String anonymousUser = DEFAULT_ANONYMOUS_USER;
@@ -73,8 +73,8 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
      * @org.apache.xbean.ElementType class="org.apache.activemq.security.AuthenticationUser"
      */
     public void setUsers(List<?> users) {
-        userPasswords = new HashMap<String, String>();
-        userGroups = new HashMap<String, Set<Principal>>();
+        userPasswords.clear();
+        userGroups.clear();
         for (Iterator<?> it = users.iterator(); it.hasNext();) {
             AuthenticationUser user = (AuthenticationUser)it.next();
             userPasswords.put(user.getUsername(), user.getPassword());

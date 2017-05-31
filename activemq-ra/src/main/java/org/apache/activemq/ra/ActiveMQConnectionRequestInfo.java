@@ -22,14 +22,18 @@ import javax.resource.spi.ConnectionRequestInfo;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.ActiveMQSslConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *  Must override equals and hashCode (JCA spec 16.4)
+ * Must override equals and hashCode (JCA spec 16.4)
  */
 public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Serializable, Cloneable {
 
     private static final long serialVersionUID = -5754338187296859149L;
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     private String userName;
     private String password;
@@ -39,10 +43,15 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     private RedeliveryPolicy redeliveryPolicy;
     private ActiveMQPrefetchPolicy prefetchPolicy;
     private Boolean useSessionArgs;
+    private String trustStore;
+    private String trustStorePassword;
+    private String keyStore;
+    private String keyStorePassword;
+    private String keyStoreKeyPassword;
 
     public ActiveMQConnectionRequestInfo copy() {
         try {
-            ActiveMQConnectionRequestInfo answer = (ActiveMQConnectionRequestInfo)clone();
+            ActiveMQConnectionRequestInfo answer = (ActiveMQConnectionRequestInfo) clone();
             if (redeliveryPolicy != null) {
                 answer.redeliveryPolicy = redeliveryPolicy.copy();
             }
@@ -63,7 +72,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     /**
      * Configures the given connection factory
      */
-    public void configure(ActiveMQConnectionFactory factory) {
+    public void configure(ActiveMQConnectionFactory factory, MessageActivationSpec activationSpec) {
         if (serverUrl != null) {
             factory.setBrokerURL(serverUrl);
         }
@@ -76,11 +85,43 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (prefetchPolicy != null) {
             factory.setPrefetchPolicy(prefetchPolicy);
         }
+        if (factory instanceof ActiveMQSslConnectionFactory) {
+            String trustStore = defaultValue(activationSpec == null ? null : activationSpec.getTrustStore(), getTrustStore());
+            String trustStorePassword = defaultValue(activationSpec == null ? null : activationSpec.getTrustStorePassword(), getTrustStorePassword());
+            String keyStore = defaultValue(activationSpec == null ? null : activationSpec.getKeyStore(), getKeyStore());
+            String keyStorePassword = defaultValue(activationSpec == null ? null : activationSpec.getKeyStorePassword(), getKeyStorePassword());
+            String keyStoreKeyPassword = defaultValue(activationSpec == null ? null : activationSpec.getKeyStoreKeyPassword(), getKeyStoreKeyPassword());
+            ActiveMQSslConnectionFactory sslFactory = (ActiveMQSslConnectionFactory) factory;
+            if (trustStore != null) {
+                try {
+                    sslFactory.setTrustStore(trustStore);
+                } catch (Exception e) {
+                    log.warn("Unable to set TrustStore", e);
+                }
+            }
+            if (trustStorePassword != null) {
+                sslFactory.setTrustStorePassword(trustStorePassword);
+            }
+            if (keyStore != null) {
+                try {
+                    sslFactory.setKeyStore(keyStore);
+                } catch (Exception e) {
+                    log.warn("Unable to set KeyStore", e);
+                }
+            }
+            if (keyStorePassword != null) {
+                sslFactory.setKeyStorePassword(keyStorePassword);
+            }
+            if (keyStoreKeyPassword != null) {
+                sslFactory.setKeyStoreKeyPassword(keyStoreKeyPassword);
+            }
+        }
     }
 
     /**
      * @see javax.resource.spi.ConnectionRequestInfo#hashCode()
      */
+    @Override
     public int hashCode() {
         int rc = 0;
         if (useInboundSession != null) {
@@ -98,6 +139,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     /**
      * @see javax.resource.spi.ConnectionRequestInfo#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(Object o) {
         if (o == null) {
             return false;
@@ -105,7 +147,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (!getClass().equals(o.getClass())) {
             return false;
         }
-        ActiveMQConnectionRequestInfo i = (ActiveMQConnectionRequestInfo)o;
+        ActiveMQConnectionRequestInfo i = (ActiveMQConnectionRequestInfo) o;
         if (notEqual(serverUrl, i.serverUrl)) {
             return false;
         }
@@ -134,7 +176,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param url The url to set.
+     * @param url
+     *        The url to set.
      */
     public void setServerUrl(String url) {
         this.serverUrl = url;
@@ -148,7 +191,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param password The password to set.
+     * @param password
+     *        The password to set.
      */
     public void setPassword(String password) {
         this.password = password;
@@ -162,7 +206,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param userid The userid to set.
+     * @param userid
+     *        The userid to set.
      */
     public void setUserName(String userid) {
         this.userName = userid;
@@ -176,21 +221,59 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param clientid The clientid to set.
+     * @param clientid
+     *        The clientid to set.
      */
     public void setClientid(String clientid) {
         this.clientid = clientid;
     }
 
+    public String getTrustStore() {
+        return trustStore;
+    }
+
+    public void setTrustStore(String trustStore) {
+        this.trustStore = trustStore;
+    }
+
+    public String getTrustStorePassword() {
+        return trustStorePassword;
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+    }
+
+    public String getKeyStore() {
+        return keyStore;
+    }
+
+    public void setKeyStore(String keyStore) {
+        this.keyStore = keyStore;
+    }
+
+    public String getKeyStorePassword() {
+        return keyStorePassword;
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+    }
+
+    public String getKeyStoreKeyPassword() {
+        return keyStoreKeyPassword;
+    }
+
+    public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {
+        this.keyStoreKeyPassword = keyStoreKeyPassword;
+    }
+
     @Override
     public String toString() {
-        return new StringBuffer("ActiveMQConnectionRequestInfo{ userName = '").append(userName).append("' ")
-                .append(", serverUrl = '").append(serverUrl).append("' ")
-                .append(", clientid = '").append(clientid).append("' ")
-                .append(", userName = '").append(userName).append("' ")
-                .append(", useSessionArgs = '").append(useSessionArgs).append("' ")
-                .append(", useInboundSession = '").append(useInboundSession).append("'  }")
-                .toString();
+        return new StringBuffer("ActiveMQConnectionRequestInfo{ userName = '").append(userName).append("' ").append(", serverUrl = '").append(serverUrl)
+            .append("' ").append(", clientid = '").append(clientid).append("' ").append(", userName = '").append(userName).append("' ")
+            .append(", useSessionArgs = '").append(useSessionArgs).append("' ").append(", useInboundSession = '").append(useInboundSession).append("'  }")
+            .toString();
     }
 
     public Boolean getUseInboundSession() {
@@ -263,8 +346,9 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         return Integer.valueOf(prefetchPolicy().getOptimizeDurableTopicPrefetch());
     }
 
+    @Deprecated
     public Integer getInputStreamPrefetch() {
-        return Integer.valueOf(prefetchPolicy().getInputStreamPrefetch());
+        return 0;
     }
 
     public Integer getQueueBrowserPrefetch() {
@@ -294,12 +378,6 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     public void setOptimizeDurableTopicPrefetch(Integer optimizeDurableTopicPrefetch) {
         if (optimizeDurableTopicPrefetch != null) {
             prefetchPolicy().setOptimizeDurableTopicPrefetch(optimizeDurableTopicPrefetch.intValue());
-        }
-    }
-
-    public void setInputStreamPrefetch(Integer inputStreamPrefetch) {
-        if (inputStreamPrefetch != null) {
-            prefetchPolicy().setInputStreamPrefetch(inputStreamPrefetch.intValue());
         }
     }
 
@@ -353,5 +431,12 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
 
     public void setUseSessionArgs(Boolean useSessionArgs) {
         this.useSessionArgs = useSessionArgs;
+    }
+
+    protected String defaultValue(String value, String defaultValue) {
+        if (value != null) {
+            return value;
+        }
+        return defaultValue;
     }
 }

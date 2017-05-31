@@ -33,6 +33,7 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.junit.After;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +80,10 @@ public class DbRestartJDBCQueueTest extends JmsTopicSendReceiveWithTwoConnection
        broker.stop();
     }
 
+    @After
+    public void shutDownDerby() {
+        DataSourceServiceSupport.shutdownDefaultDataSource(sharedDs);
+    }
 
     protected Session createSendSession(Connection sendConnection) throws Exception {
         if (transactedSends) {

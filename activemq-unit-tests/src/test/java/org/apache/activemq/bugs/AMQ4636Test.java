@@ -33,11 +33,11 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
-import org.apache.activemq.store.jdbc.JDBCIOExceptionHandler;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
 import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
@@ -78,15 +78,8 @@ public class AMQ4636Test {
             broker.stop();
             broker.waitUntilStopped();
         }
-        try {
-            if (embeddedDataSource != null) {
-                // ref http://svn.apache.org/viewvc/db/derby/code/trunk/java/testing/org/apache/derbyTesting/junit/JDBCDataSource.java?view=markup
-                embeddedDataSource.setShutdownDatabase("shutdown");
-                embeddedDataSource.getConnection();
-            }
-        } catch (Exception ignored) {
-        } finally {
-            embeddedDataSource.setShutdownDatabase(null);
+        if (embeddedDataSource != null) {
+            DataSourceServiceSupport.shutdownDefaultDataSource(embeddedDataSource);
         }
     }
 
@@ -114,7 +107,7 @@ public class AMQ4636Test {
         broker.setDestinationPolicy(policyMap);
         broker.setPersistenceAdapter(jdbc);
 
-        broker.setIoExceptionHandler(new JDBCIOExceptionHandler());
+        broker.setIoExceptionHandler(new LeaseLockerIOExceptionHandler());
 
         transportUrl = broker.addConnector(transportUrl).getPublishableConnectString();
         return broker;

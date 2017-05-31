@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author sepandm@gmail.com (Sepand)
  */
-public abstract class CertificateLoginModule implements LoginModule {
+public abstract class CertificateLoginModule extends PropertiesLoader implements LoginModule {
 
     private static final Logger LOG = LoggerFactory.getLogger(CertificateLoginModule.class);
 
@@ -52,9 +51,7 @@ public abstract class CertificateLoginModule implements LoginModule {
 
     private X509Certificate certificates[];
     private String username;
-    private Set<String> groups;
     private Set<Principal> principals = new HashSet<Principal>();
-    private boolean debug;
 
     /**
      * Overriding to allow for proper initialization. Standard JAAS.
@@ -63,12 +60,7 @@ public abstract class CertificateLoginModule implements LoginModule {
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-
-        debug = "true".equalsIgnoreCase((String)options.get("debug"));
-
-        if (debug) {
-            LOG.debug("Initialized debug");
-        }
+        init(options);
     }
 
     /**
@@ -93,8 +85,6 @@ public abstract class CertificateLoginModule implements LoginModule {
             throw new FailedLoginException("No user for client certificate: " + getDistinguishedName(certificates));
         }
 
-        groups = getUserGroups(username);
-
         if (debug) {
             LOG.debug("Certificate for user: " + username);
         }
@@ -108,7 +98,7 @@ public abstract class CertificateLoginModule implements LoginModule {
     public boolean commit() throws LoginException {
         principals.add(new UserPrincipal(username));
 
-        for (String group : groups) {
+        for (String group : getUserGroups(username)) {
              principals.add(new GroupPrincipal(group));
         }
 
@@ -153,8 +143,8 @@ public abstract class CertificateLoginModule implements LoginModule {
      * Helper method.
      */
     private void clear() {
-        groups.clear();
         certificates = null;
+        username = null;
     }
 
     /**

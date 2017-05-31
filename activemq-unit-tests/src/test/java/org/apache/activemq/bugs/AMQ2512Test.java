@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
@@ -33,31 +34,41 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.IOHelper;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class AMQ2512Test extends EmbeddedBrokerTestSupport {
-    private static Connection connection;
-    private final static String QUEUE_NAME = "dee.q";
-    private final static int INITIAL_MESSAGES_CNT = 1000;
-    private final static int WORKER_INTERNAL_ITERATIONS = 100;
-    private final static int TOTAL_MESSAGES_CNT = INITIAL_MESSAGES_CNT * WORKER_INTERNAL_ITERATIONS
-            + INITIAL_MESSAGES_CNT;
-    private final static byte[] payload = new byte[5 * 1024];
-    private final static String TEXT = new String(payload);
+public class AMQ2512Test {
 
-    private final static String PRP_INITIAL_ID = "initial-id";
-    private final static String PRP_WORKER_ID = "worker-id";
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2512Test.class);
 
-    private final static CountDownLatch LATCH = new CountDownLatch(TOTAL_MESSAGES_CNT);
+    private final String QUEUE_NAME = "dee.q";
+    private final int INITIAL_MESSAGES_CNT = 1000;
+    private final int WORKER_INTERNAL_ITERATIONS = 100;
+    private final int TOTAL_MESSAGES_CNT = INITIAL_MESSAGES_CNT * WORKER_INTERNAL_ITERATIONS + INITIAL_MESSAGES_CNT;
+    private final byte[] payload = new byte[5 * 1024];
+    private final String TEXT = new String(payload);
 
-    private final static AtomicInteger ON_MSG_COUNTER = new AtomicInteger();
+    private final String PRP_INITIAL_ID = "initial-id";
+    private final String PRP_WORKER_ID = "worker-id";
 
+    private final CountDownLatch LATCH = new CountDownLatch(TOTAL_MESSAGES_CNT);
+    private final AtomicInteger ON_MSG_COUNTER = new AtomicInteger();
+
+    private BrokerService brokerService;
+    private Connection connection;
+    private String connectionURI;
+
+    @Test(timeout = 5*60000)
     public void testKahaDBFailure() throws Exception {
-        final ConnectionFactory fac = new ActiveMQConnectionFactory(this.bindAddress);
+        final ConnectionFactory fac = new ActiveMQConnectionFactory(connectionURI);
         connection = fac.createConnection();
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue queue = session.createQueue(QUEUE_NAME);
@@ -80,18 +91,20 @@ public class AMQ2512Test extends EmbeddedBrokerTestSupport {
 
         LATCH.await();
         final long endTime = System.nanoTime();
-        System.out.println("Total execution time = "
+        LOG.info("Total execution time = "
                 + TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS) + " [ms].");
-        System.out.println("Rate = " + TOTAL_MESSAGES_CNT
+        LOG.info("Rate = " + TOTAL_MESSAGES_CNT
                 / TimeUnit.SECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS) + " [msg/s].");
 
         for (Consumer c : consumers) {
             c.close();
         }
+
         connection.close();
     }
 
-    private final static class Consumer implements MessageListener {
+    private final class Consumer implements MessageListener {
+
         private final String name;
         private final Session session;
         private final MessageProducer producer;
@@ -111,6 +124,7 @@ public class AMQ2512Test extends EmbeddedBrokerTestSupport {
             }
         }
 
+        @Override
         public void onMessage(Message message) {
             final TextMessage msg = (TextMessage) message;
             try {
@@ -130,7 +144,7 @@ public class AMQ2512Test extends EmbeddedBrokerTestSupport {
             } finally {
                 final int onMsgCounter = ON_MSG_COUNTER.getAndIncrement();
                 if (onMsgCounter % 1000 == 0) {
-                    System.out.println("message received: " + onMsgCounter);
+                    LOG.info("message received: " + onMsgCounter);
                 }
                 LATCH.countDown();
             }
@@ -148,27 +162,37 @@ public class AMQ2512Test extends EmbeddedBrokerTestSupport {
         }
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        bindAddress = "tcp://0.0.0.0:61617";
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
+        brokerService = createBroker();
+        brokerService.start();
+
+        connectionURI = brokerService.getTransportConnectorByName("openwire").getPublishableConnectString();
     }
 
-    @Override
+    @After
+    public void tearDown() throws Exception {
+        if (brokerService != null) {
+            brokerService.stop();
+            brokerService.waitUntilStopped();
+        }
+    }
+
     protected BrokerService createBroker() throws Exception {
         File dataFileDir = new File("target/test-amq-2512/datadb");
         IOHelper.mkdirs(dataFileDir);
         IOHelper.deleteChildren(dataFileDir);
+
         KahaDBStore kaha = new KahaDBStore();
-        kaha.setDirectory(dataFileDir); 
+        kaha.setDirectory(dataFileDir);
+        kaha.setEnableJournalDiskSyncs(false);
+
         BrokerService answer = new BrokerService();
         answer.setPersistenceAdapter(kaha);
-      
-        kaha.setEnableJournalDiskSyncs(false);
-        //kaha.setIndexCacheSize(10);
         answer.setDataDirectoryFile(dataFileDir);
         answer.setUseJmx(false);
-        answer.addConnector(bindAddress);
+        answer.addConnector("tcp://localhost:0").setName("openwire");
+
         return answer;
     }
 }

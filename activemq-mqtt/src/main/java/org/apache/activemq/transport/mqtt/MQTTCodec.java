@@ -26,6 +26,7 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 public class MQTTCodec {
 
     private final MQTTFrameSink frameSink;
+    private final MQTTWireFormat wireFormat;
 
     private byte header;
     private int contentLength = -1;
@@ -43,10 +44,20 @@ public class MQTTCodec {
     }
 
     public MQTTCodec(MQTTFrameSink sink) {
+        this(sink, null);
+    }
+
+    public MQTTCodec(MQTTFrameSink sink, MQTTWireFormat wireFormat) {
         this.frameSink = sink;
+        this.wireFormat = wireFormat;
     }
 
     public MQTTCodec(final TcpTransport transport) {
+        this(transport, null);
+    }
+
+    public MQTTCodec(final TcpTransport transport, MQTTWireFormat wireFormat) {
+        this.wireFormat = wireFormat;
         this.frameSink = new MQTTFrameSink() {
 
             @Override
@@ -79,6 +90,10 @@ public class MQTTCodec {
         frameSink.onFrame(frame);
     }
 
+    private int getMaxFrameSize() {
+        return wireFormat != null ? wireFormat.getMaxFrameSize() : MQTTWireFormat.MAX_MESSAGE_LENGTH;
+    }
+
     //----- Prepare the current frame parser for use -------------------------//
 
     private FrameParser initializeHeaderParser() throws IOException {
@@ -109,8 +124,7 @@ public class MQTTCodec {
 
         @Override
         public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
-            int i = 0;
-            while (i++ < readSize) {
+            while (readSize-- > 0) {
                 byte b = data.readByte();
                 // skip repeating nulls
                 if (b == 0) {
@@ -120,8 +134,8 @@ public class MQTTCodec {
                 header = b;
 
                 currentParser = initializeVariableLengthParser();
-                if (readSize > 1) {
-                    currentParser.parse(data, readSize - 1);
+                if (readSize > 0) {
+                    currentParser.parse(data, readSize);
                 }
                 return;
             }
@@ -152,6 +166,10 @@ public class MQTTCodec {
                         processCommand();
                         currentParser = initializeHeaderParser();
                     } else {
+                        if (length > getMaxFrameSize()) {
+                            throw new IOException("The maximum message length was exceeded");
+                        }
+
                         currentParser = initializeContentParser();
                         contentLength = length;
                     }
@@ -194,7 +212,7 @@ public class MQTTCodec {
             if (payLoadRead == contentLength) {
                 processCommand();
                 currentParser = initializeHeaderParser();
-                readSize = readSize - payLoadRead;
+                readSize = readSize - length;
                 if (readSize > 0) {
                     currentParser.parse(data, readSize);
                 }

@@ -39,7 +39,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     Locker locker;
     long lockKeepAlivePeriod = 0;
     private ScheduledFuture<?> keepAliveTicket;
-    private ScheduledThreadPoolExecutor clockDaemon;
+    protected ScheduledThreadPoolExecutor clockDaemon;
     protected BrokerService brokerService;
 
     /**
@@ -112,9 +112,11 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
             }
             if (locker != null) {
                 getLocker().stop();
+                locker = null;
             }
-            ThreadPoolUtils.shutdown(clockDaemon);
         }
+        ThreadPoolUtils.shutdown(clockDaemon);
+        clockDaemon = null;
     }
 
     protected void keepLockAlive() {
@@ -160,6 +162,10 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
             });
         }
         return clockDaemon;
+    }
+
+    public void setScheduledThreadPoolExecutor(ScheduledThreadPoolExecutor clockDaemon) {
+        this.clockDaemon = clockDaemon;
     }
 
     @Override

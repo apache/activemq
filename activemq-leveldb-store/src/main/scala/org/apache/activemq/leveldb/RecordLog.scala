@@ -22,7 +22,7 @@ import java.{util=>ju}
 
 import java.util.zip.CRC32
 import java.util.Map.Entry
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import java.io._
 import org.fusesource.hawtbuf.{DataByteArrayInputStream, DataByteArrayOutputStream, Buffer}
 import org.fusesource.hawtdispatch.BaseRetained
@@ -31,6 +31,8 @@ import org.apache.activemq.util.LRUCache
 import util.TimeMetric._
 import util.{TimeMetric, Log}
 import java.util.TreeMap
+import java.util.concurrent.locks.{ReentrantReadWriteLock, ReadWriteLock}
+import java.util.concurrent.CountDownLatch
 
 object RecordLog extends Log {
 
@@ -68,6 +70,63 @@ object RecordLog extends Log {
 
 }
 
+class SuspendCallSupport {
+
+  val lock = new ReentrantReadWriteLock()
+  var resumeLatch:CountDownLatch = _
+  var resumedLatch:CountDownLatch = _
+  @volatile
+  var threads = new AtomicInteger()
+
+  def suspend = this.synchronized {
+    val suspended = new CountDownLatch(1)
+    resumeLatch = new CountDownLatch(1)
+    resumedLatch = new CountDownLatch(1)
+    new Thread("Suspend Lock") {
+      override def run = {
+        try {
+          lock.writeLock().lock()
+          suspended.countDown()
+          resumeLatch.await()
+        } finally {
+          lock.writeLock().unlock();
+          resumedLatch.countDown()
+        }
+      }
+    }.start()
+    suspended.await()
+  }
+
+  def resume = this.synchronized {
+    if( resumedLatch != null ) {
+      resumeLatch.countDown()
+      resumedLatch.await();
+      resumeLatch = null
+      resumedLatch = null
+    }
+  }
+
+  def call[T](func: =>T):T= {
+    threads.incrementAndGet()
+    lock.readLock().lock()
+    try {
+      func
+    } finally {
+      threads.decrementAndGet()
+      lock.readLock().unlock()
+    }
+  }
+
+}
+
+class RecordLogTestSupport {
+
+  val forceCall = new SuspendCallSupport()
+  val writeCall = new SuspendCallSupport()
+  val deleteCall = new SuspendCallSupport()
+
+}
+
 case class RecordLog(directory: File, logSuffix:String) {
   import RecordLog._
 
@@ -77,6 +136,14 @@ case class RecordLog(directory: File, logSuffix:String) {
   var current_appender:LogAppender = _
   var verify_checksums = false
   val log_infos = new TreeMap[Long, LogInfo]()
+
+  var recordLogTestSupport:RecordLogTestSupport =
+    if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") ) {
+      new RecordLogTestSupport()
+    } else {
+      null
+    }
+
 
   object log_mutex
 
@@ -88,6 +155,12 @@ case class RecordLog(directory: File, logSuffix:String) {
           onDelete(info.file)
           onDelete(id)
           log_infos.remove(id)
+          reader_cache.synchronized {
+            val reader = reader_cache.remove(info.file);
+            if( reader!=null ) {
+              reader.release();
+            }
+          }
         }
       }
     }
@@ -97,7 +170,13 @@ case class RecordLog(directory: File, logSuffix:String) {
   }
 
   protected def onDelete(file:File) = {
-    file.delete()
+    if( recordLogTestSupport!=null ) {
+      recordLogTestSupport.deleteCall.call {
+        file.delete()
+      }
+    } else {
+      file.delete()
+    }
   }
 
   def checksum(data: Buffer): Int = {
@@ -137,9 +216,16 @@ case class RecordLog(directory: File, logSuffix:String) {
       flush
       max_log_flush_latency {
         // only need to update the file metadata if the file size changes..
-        channel.force(append_offset > logSize)
+        if( recordLogTestSupport!=null ) {
+          recordLogTestSupport.forceCall.call {
+            channel.force(append_offset > logSize)
+          }
+        } else {
+          channel.force(append_offset > logSize)
+        }
       }
     }
+
 
     def skip(length:Long) = this.synchronized {
       flush
@@ -177,7 +263,15 @@ case class RecordLog(directory: File, logSuffix:String) {
         val buffer = data.toByteBuffer
         val pos = append_offset+LOG_HEADER_SIZE
         val remaining = buffer.remaining
-        channel.write(buffer, pos)
+
+        if( recordLogTestSupport!=null ) {
+          recordLogTestSupport.writeCall.call {
+            channel.write(buffer, pos)
+          }
+        } else {
+          channel.write(buffer, pos)
+        }
+
         flushed_offset.addAndGet(remaining)
         if( buffer.hasRemaining ) {
           throw new IOException("Short write")
@@ -200,7 +294,15 @@ case class RecordLog(directory: File, logSuffix:String) {
         val buffer = write_buffer.toBuffer.toByteBuffer
         val remaining = buffer.remaining
         val pos = append_offset-remaining
-        channel.write(buffer, pos)
+
+        if( recordLogTestSupport!=null ) {
+          recordLogTestSupport.writeCall.call {
+            channel.write(buffer, pos)
+          }
+        } else {
+          channel.write(buffer, pos)
+        }
+
         flushed_offset.addAndGet(remaining)
         if( buffer.hasRemaining ) {
           throw new IOException("Short write")

@@ -1,0 +1,183 @@
+#!/bin/sh
+# ------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ------------------------------------------------------------------------
+#
+# This script tests the activemq init script
+#
+# Authors:
+# Marc Schoechlin <ms@256bit.org>  
+
+STATUS_OVERVIEW=""
+OVERALL_STATUS="0"
+
+assert(){
+ local STRATEGY="$1"
+ local SHOULD="$2"
+ local CMD="$3"
+ local RESULT="fail"
+
+ echo "****************************************************************************"
+ echo "** Expected execution result ==> $SHOULD : $CMD";
+ eval "$CMD 2>&1"
+ local RET="$?"
+ echo "**"
+
+ if [ "$SHOULD" = "failed" ];then
+   SHOULD="failed    "
+   if [ "$RET" != "0" ];then
+      RESULT="ok"
+   fi
+ elif [ "$SHOULD" = "successful" ];then
+   if [ "$RET" = "0" ];then
+      RESULT="ok"
+   fi
+ else
+   echo '$2 should be "successful" or "failed"'
+   exit 1
+ fi
+
+ if [ "$RESULT" != "ok" ];then
+   echo "** ERROR: not $SHOULD (returncode $RET)"
+   STATUS_OVERVIEW="$STATUS_OVERVIEW#  FAIL : not $SHOULD => $CMD"
+   echo "****************************************************************************"
+   OVERALL_STATUS="1"
+   if [ "$STRATEGY" = "stop" ];then
+      finalize
+      exit 100
+   else
+      return 100
+   fi
+ else
+   STATUS_OVERVIEW="$STATUS_OVERVIEW#    OK : $SHOULD     => $CMD"
+ fi
+ echo "****************************************************************************"
+ return 0
+}
+
+finalize(){
+   echo
+   echo
+   echo "*** SUMMARY"
+   echo
+   echo -n "<RESULT>:<CHECKED FOR>   => <COMMAND>"
+   echo "$STATUS_OVERVIEW"|tr '#' '\n'|sed 's,^, ,'
+}
+
+STRATEGY="stop"
+
+
+echo "****************************************************************************"
+echo "** Test Setup"
+echo
+
+if ( ! [ -x "activemq" ] );then
+   echo "'activemq' is not part of the current working directory"
+   exit 1
+fi
+
+echo "Setup a testdir"
+TESTDIR="/tmp/activemq/initscript-testing-$$-$USER"
+mkdir -p $TESTDIR
+
+echo "Setting HOME to $TESTDIR"
+export HOME="$TESTDIR"
+
+case "`uname`" in
+  CYGWIN*) 
+    echo "Set init script"
+    SCRIPT="$PWD/activemq"
+    CONFIG="$HOME/.activemqrc"
+   ;;
+  *)
+    echo "Setup a chain of symlinks to test realpath evaluation"
+    ln -snf $PWD/activemq $TESTDIR/activemq-test1
+    ln -snf $TESTDIR/activemq-test1 $TESTDIR/activemq-instance-test3
+    SCRIPT="$TESTDIR/activemq-instance-test3"
+    CONFIG="$HOME/.activemqrc-instance-test3"
+  ;;
+esac
+
+trap "finalize;exit 1" INT TERM
+
+echo "****************************************************************************"
+STRATEGY="stop"
+
+sed 's,ACTIVEMQ_KILL_MAXSECONDS=.*,ACTIVEMQ_KILL_MAXSECONDS=15,' env | \
+sed 's,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' > $CONFIG
+
+${SCRIPT} kill >/dev/null 2>&1
+sleep 2
+assert ${STRATEGY} successful "${SCRIPT} stop"
+assert ${STRATEGY}     failed "${SCRIPT}"
+assert ${STRATEGY}     failed "${SCRIPT} status"
+assert ${STRATEGY} successful "${SCRIPT} browse|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} browse FOOBAR111111111 2>&1|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} browse --amqurl tcp://localhost:11111 FOOOOO 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep -q 'Encrypted text: '"
+assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -q 'Decrypted text:'"
+assert ${STRATEGY} successful "${SCRIPT} bstat 2>&1|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} bstat --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} dstat --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} query 2>&1|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} query --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} restart"
+assert ${STRATEGY} successful "${SCRIPT} stop"
+
+# ActiveMQ is started
+assert ${STRATEGY} successful "${SCRIPT} start"
+assert ${STRATEGY}     failed "${SCRIPT}"
+assert ${STRATEGY} successful "${SCRIPT} status"
+echo "Sleeping 30 seconds to get activemq really started"; sleep 30
+assert ${STRATEGY}     failed "${SCRIPT} export"
+assert ${STRATEGY} successful "${SCRIPT} status"
+assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep -q 'Encrypted text: '"
+assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -q 'Decrypted text:'"
+
+assert ${STRATEGY} successful "${SCRIPT} browse 2>&1|grep 'No JMS destination specified'"
+assert ${STRATEGY} successful "${SCRIPT} browse --amqurl tcp://localhost:61616 FOO.BAR"
+
+assert ${STRATEGY} successful "${SCRIPT} bstat"
+assert ${STRATEGY} successful "${SCRIPT} bstat |grep TotalConsumerCount"
+
+assert ${STRATEGY} successful "${SCRIPT} dstat"
+assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1| grep ActiveMQ.Advisory.MasterBroker"
+
+assert ${STRATEGY} successful "${SCRIPT} list"
+assert ${STRATEGY} successful "${SCRIPT} list 2>&1| grep brokerName"
+
+assert ${STRATEGY} successful "${SCRIPT} purge FOO.BAR"
+
+assert ${STRATEGY} successful "${SCRIPT} status"
+
+assert ${STRATEGY} successful "${SCRIPT} query|grep brokerName"
+
+# assert ${STRATEGY} failed     "${SCRIPT} console"
+# assert ${STRATEGY} successful "${SCRIPT} create"
+# assert ${STRATEGY} successful "${SCRIPT} export"
+
+echo 
+echo 
+
+trap "" INT TERM
+finalize
+
+echo
+echo
+
+rm -rvf $TESTDIR
+exit $OVERALL_STATUS

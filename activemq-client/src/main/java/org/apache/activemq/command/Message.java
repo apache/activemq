@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.command;
 
+import java.beans.Transient;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.DeflaterOutputStream;
 
 import javax.jms.JMSException;
@@ -93,6 +95,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     private transient ActiveMQConnection connection;
     transient MessageDestination regionDestination;
     transient MemoryUsage memoryUsage;
+    transient AtomicBoolean processAsExpired = new AtomicBoolean(false);
 
     private BrokerId[] brokerPath;
     private BrokerId[] cluster;
@@ -107,9 +110,21 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public abstract void storeContent();
     public abstract void storeContentAndClear();
 
-    // useful to reduce the memory footprint of a persisted message
+    /**
+     * @deprecated - This method name is misnamed
+     * @throws JMSException
+     */
     public void clearMarshalledState() throws JMSException {
+        clearUnMarshalledState();
+    }
+
+    // useful to reduce the memory footprint of a persisted message
+    public void clearUnMarshalledState() throws JMSException {
         properties = null;
+    }
+
+    public boolean isMarshalled() {
+        return content != null && (marshalledProperties != null || properties == null);
     }
 
     protected void copy(Message copy) {
@@ -142,8 +157,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             copy.properties = properties;
         }
 
-        copy.content = content;
-        copy.marshalledProperties = marshalledProperties;
+        copy.content = copyByteSequence(content);
+        copy.marshalledProperties = copyByteSequence(marshalledProperties);
         copy.dataStructure = dataStructure;
         copy.readOnlyProperties = readOnlyProperties;
         copy.readOnlyBody = readOnlyBody;
@@ -162,6 +177,13 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         // lets not copy the following fields
         // copy.targetConsumerId = targetConsumerId;
         // copy.referenceCount = referenceCount;
+    }
+
+    private ByteSequence copyByteSequence(ByteSequence content) {
+        if (content != null) {
+            return new ByteSequence(content.getData(), content.getOffset(), content.getLength());
+        }
+        return null;
     }
 
     public Object getProperty(String name) throws IOException {
@@ -628,6 +650,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     @Override
+    @Transient
 	public MessageDestination getRegionDestination() {
         return regionDestination;
     }
@@ -827,5 +850,10 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         } catch (IOException e) {
         }
         return super.toString(overrideFields);
+    }
+
+    @Override
+    public boolean canProcessAsExpired() {
+        return processAsExpired.compareAndSet(false, true);
     }
 }

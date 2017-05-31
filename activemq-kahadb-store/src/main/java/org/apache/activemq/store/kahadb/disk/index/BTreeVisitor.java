@@ -166,7 +166,7 @@ public interface BTreeVisitor<Key,Value> {
 
         @Override
         public String toString() {
-            return first+" <= key < "+last;
+            return first+" >= key < "+last;
         }
     }
 

@@ -72,7 +72,9 @@ object ZooKeeperGroup {
  */
 class ZooKeeperGroup(val zk: ZKClient, val root: String) extends LifecycleListener with ChangeListenerSupport {
 
-  val tree = new ZooKeeperTreeTracker[Array[Byte]](zk, new ZKByteArrayDataReader, root, 1)
+  var tree = new ZooKeeperTreeTracker[Array[Byte]](zk, new ZKByteArrayDataReader, root, 1)
+  var rebuildTree = false
+
   val joins = HashMap[String, Int]()
 
   var members = new LinkedHashMap[String, Array[Byte]]
@@ -82,12 +84,13 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends LifecycleListen
   zk.registerListener(this)
 
   create(root)
-  tree.track(new NodeEventsListener[Array[Byte]]() {
+  var treeEventHandler = new NodeEventsListener[Array[Byte]]() {
     def onEvents(events: Collection[NodeEvent[Array[Byte]]]): Unit = {
       if( !closed )
-        fire_cluster_change
+        fire_cluster_change;
     }
-  })
+  }
+  tree.track(treeEventHandler)
   fire_cluster_change
 
   @volatile
@@ -110,7 +113,21 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends LifecycleListen
   }
 
   def connected = zk.isConnected
-  def onConnected() = fireConnected()
+  def onConnected() = {
+    this.synchronized {
+      // underlying ZooKeeperTreeTracker isn't rebuilding itself after
+      // the loss of the session, so we need to destroy/rebuild it on
+      // reconnect.
+      if (rebuildTree) {
+        tree.destroy
+        tree = new ZooKeeperTreeTracker[Array[Byte]](zk, new ZKByteArrayDataReader, root, 1)
+        tree.track(treeEventHandler)
+      } else {
+        rebuildTree = true
+      }
+    }
+    fireConnected()
+  }
   def onDisconnected() = {
     this.members = new LinkedHashMap()
     fireDisconnected()
@@ -187,5 +204,4 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends LifecycleListen
       }
     }
   }
-
 }

@@ -16,25 +16,33 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static org.junit.Assert.assertTrue;
 
 public class AMQ4368Test {
 
@@ -74,6 +82,8 @@ public class AMQ4368Test {
         kahadb.deleteAllMessages();
         broker.setPersistenceAdapter(kahadb);
         broker.getSystemUsage().getMemoryUsage().setLimit(1024*1024*100);
+        broker.setUseJmx(false);
+
         return broker;
     }
 
@@ -193,15 +203,17 @@ public class AMQ4368Test {
     }
 
     @Test
-    public void testENTMQ220() throws InterruptedException, JMSException {
+    public void testENTMQ220() throws Exception {
         LOG.info("Start test.");
         CountDownLatch producer1Started = new CountDownLatch(1);
         CountDownLatch producer2Started = new CountDownLatch(1);
         CountDownLatch listener1Started = new CountDownLatch(1);
 
-        ProducingClient producer1 = new ProducingClient("1", producer1Started);
-        ProducingClient producer2 = new ProducingClient("2", producer2Started);
-        ConsumingClient listener1 = new ConsumingClient("subscriber-1", listener1Started);
+        final ProducingClient producer1 = new ProducingClient("1", producer1Started);
+        final ProducingClient producer2 = new ProducingClient("2", producer2Started);
+        final ConsumingClient listener1 = new ConsumingClient("subscriber-1", listener1Started);
+        final AtomicLong lastSize = new AtomicLong();
+
         try {
 
             producer1.start();
@@ -212,13 +224,19 @@ public class AMQ4368Test {
             producer2Started.await(15, TimeUnit.SECONDS);
             listener1Started.await(15, TimeUnit.SECONDS);
 
-            long lastSize = listener1.size.get();
+            lastSize.set(listener1.size.get());
             for (int i = 0; i < 10; i++) {
-                Thread.sleep(2000);
+                Wait.waitFor(new Wait.Condition() {
+
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return listener1.size.get() > lastSize.get();
+                    }
+                });
                 long size = listener1.size.get();
-                LOG.info("Listener 1: consumed: " + (size - lastSize));
-                assertTrue("No messages received on iteration: " + i, size > lastSize);
-                lastSize = size;
+                LOG.info("Listener 1: consumed: " + (size - lastSize.get()));
+                assertTrue("No messages received on iteration: " + i, size > lastSize.get());
+                lastSize.set(size);
             }
         } finally {
             LOG.info("Stopping clients");

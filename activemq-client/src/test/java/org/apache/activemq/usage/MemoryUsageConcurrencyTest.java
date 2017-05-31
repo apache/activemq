@@ -30,13 +30,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MemoryUsageConcurrencyTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MemoryUsageConcurrencyTest.class);
 
     @Test
     public void testCycle() throws Exception {
         Random r = new Random(0xb4a14);
-        for (int i = 0; i < 50000; i++) {
+        for (int i = 0; i < 30000; i++) {
             checkPercentage(i, i, r.nextInt(100) + 10, i % 2 == 0, i % 5 == 0);
         }
     }
@@ -154,7 +158,7 @@ public class MemoryUsageConcurrencyTest {
             try {
                 waitForSpaceThread.join(1000);
             } catch (InterruptedException e) {
-                System.out.println("Attempt: " + attempt + " : " + memUsage + " waitForSpace never returned");
+                LOG.debug("Attempt: {} : {} waitForSpace never returned", attempt, memUsage);
                 waitForSpaceThread.interrupt();
                 waitForSpaceThread.join();
             }
@@ -164,8 +168,8 @@ public class MemoryUsageConcurrencyTest {
         addThread.join();
 
         if (memUsage.getPercentUsage() != 0 || memUsage.getUsage() != memUsage.getPercentUsage()) {
-            System.out.println("Attempt: " + attempt + " : " + memUsage);
-            System.out.println("Operations: " + ops);
+            LOG.debug("Attempt: {} : {}", attempt, memUsage);
+            LOG.debug("Operations: {}", ops);
             assertEquals(0, memUsage.getPercentUsage());
         }
     }

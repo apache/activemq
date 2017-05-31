@@ -35,7 +35,7 @@ import org.apache.ftpserver.usermanager.impl.WritePermission;
 import org.jmock.Mockery;
 
 public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
-    
+
     protected static final String ftpServerListenerName = "default";
     protected Connection connection;
     protected FtpServer server;
@@ -44,11 +44,12 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
     Mockery context = null;
     String ftpUrl;
     int ftpPort;
-    
+
     final File ftpHomeDirFile = new File("target/FTPBlobTest/ftptest");
-    
+
+    @Override
     protected void setUp() throws Exception {
-        
+
         if (ftpHomeDirFile.getParentFile().exists()) {
             IOHelper.deleteFile(ftpHomeDirFile.getParentFile());
         }
@@ -65,22 +66,22 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
         user.setName("activemq");
         user.setPassword("activemq");
         user.setHomeDirectory(ftpHomeDirFile.getParent());
-        
+
         // authorize user
         List<Authority> auths = new ArrayList<Authority>();
         Authority auth = new WritePermission();
         auths.add(auth);
         user.setAuthorities(auths);
-        
+
         userManager.save(user);
 
         BaseUser guest = new BaseUser();
         guest.setName("guest");
         guest.setPassword("guest");
         guest.setHomeDirectory(ftpHomeDirFile.getParent());
-        
+
         userManager.save(guest);
-        
+
         serverFactory.setUserManager(userManager);
         factory.setPort(0);
         serverFactory.addListener(ftpServerListenerName, factory
@@ -91,7 +92,7 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
                 .getPort();
         super.setUp();
     }
-    
+
     public void setConnection() throws Exception {
         ftpUrl = "ftp://"
             + userNamePass
@@ -101,16 +102,17 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
             + ftpPort
             + "/ftptest/";
         bindAddress = "vm://localhost?jms.blobTransferPolicy.defaultUploadUrl=" + ftpUrl;
-        
+
         connectionFactory = createConnectionFactory();
-        
+
         connection = createConnection();
-        connection.start();        
+        connection.start();
     }
-    
+
+    @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
-            connection.stop();
+            connection.close();
         }
         super.tearDown();
         if (server != null) {
@@ -119,6 +121,6 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
         IOHelper.deleteFile(ftpHomeDirFile.getParentFile());
     }
 
-    
-    
+
+
 }

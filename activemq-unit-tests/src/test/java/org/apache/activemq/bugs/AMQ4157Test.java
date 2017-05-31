@@ -41,9 +41,12 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionControl;
 import org.junit.After;
 import org.junit.Test;
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class AMQ4157Test {
+    static final Logger LOG = LoggerFactory.getLogger(AMQ4157Test.class);
     private BrokerService broker;
     private ActiveMQConnectionFactory connectionFactory;
     private final Destination destination = new ActiveMQQueue("Test");
@@ -96,7 +99,7 @@ public class AMQ4157Test {
 
         restartBroker(500);
 
-        Log.info("Attempting consume of {} messages", toSend);
+        LOG.info("Attempting consume of {} messages", toSend);
 
         consumeMessages(toSend);
     }
@@ -166,7 +169,7 @@ public class AMQ4157Test {
         broker.addConnector("tcp://0.0.0.0:0");
         broker.start();
 
-        String options = "?jms.prefetchPolicy.all=1000&jms.watchTopicAdvisories=false&jms.useAsyncSend=true&jms.alwaysSessionAsync=false&jms.dispatchAsync=false&socketBufferSize=131072&ioBufferSize=16384&wireFormat.tightEncodingEnabled=false&wireFormat.cacheSize=8192";
+        String options = "?jms.redeliveryPolicy.maximumRedeliveries=-1&jms.prefetchPolicy.all=1000&jms.watchTopicAdvisories=false&jms.useAsyncSend=true&jms.alwaysSessionAsync=false&jms.dispatchAsync=false&socketBufferSize=131072&ioBufferSize=16384&wireFormat.tightEncodingEnabled=false&wireFormat.cacheSize=8192";
         connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri() + options);
     }
 }

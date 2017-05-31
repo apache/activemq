@@ -60,7 +60,7 @@ public class ReadOnlyJournal extends Journal {
                 String n = file.getName();
                 String numStr = n.substring(filePrefix.length(), n.length());
                 int num = Integer.parseInt(numStr);
-                DataFile dataFile = new ReadOnlyDataFile(file, num, preferedFileLength);
+                DataFile dataFile = new ReadOnlyDataFile(file, num);
                 fileMap.put(dataFile.getDataFileId(), dataFile);
                 totalLength.addAndGet(dataFile.getLength());
             } catch (NumberFormatException e) {

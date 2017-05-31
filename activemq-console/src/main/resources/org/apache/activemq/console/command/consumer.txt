@@ -1,0 +1,15 @@
+Usage: consumer [OPTIONS]
+Description: Demo consumer that can be used to receive messages to the broker
+Options :
+    [--brokerUrl                                   URL] - connection factory url; default ActiveMQConnectionFactory.DEFAULT_BROKER_URL
+    [--user                                         ..] - connection user name
+    [--password                                     ..] - connection password
+    [--destination               queue://..|topic://..] - consumer destination; default queue://TEST
+    [--messageCount                                  N] - number of messages to send; default 1000
+    [--sleep                                         N] - millisecond sleep period between sends or receives; default 0
+    [--ackMode     AUTO_ACKNOWLEDGE|CLIENT_ACKNOWLEDGE] - the type of message acknowledgement to use; default auto acknowledge
+    [--batchSize                                     N] - batch size for transactions and client acknowledgment (default 10)
+    [--durable                              true|false] - create durable topic
+    [--clientId                                     ..] - connection client id; must be set for durable topics
+    [--parallelThreads                               N] - number of threads to run in parallel; default 1
+    [--bytesAsText                          true|false] - try to treat a BytesMessage as a text string

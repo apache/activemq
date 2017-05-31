@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +26,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
@@ -38,6 +41,8 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
@@ -51,7 +56,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TopicRegion extends AbstractRegion {
     private static final Logger LOG = LoggerFactory.getLogger(TopicRegion.class);
-    protected final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
+    protected final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
     private final LongSequenceGenerator recoveredDurableSubIdGenerator = new LongSequenceGenerator();
     private final SessionId recoveredDurableSubSessionId = new SessionId(new ConnectionId("OFFLINE"), recoveredDurableSubIdGenerator.getNextSequenceId());
     private boolean keepDurableSubsActive;
@@ -109,6 +114,9 @@ public class TopicRegion extends AbstractRegion {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
+            if (broker.getBrokerService().isRejectDurableConsumers()) {
+                throw new JMSException("Durable Consumers are not allowed");
+            }
             ActiveMQDestination destination = info.getDestination();
             if (!destination.isPattern()) {
                 // Make sure the destination is created.
@@ -119,8 +127,10 @@ public class TopicRegion extends AbstractRegion {
             SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
             DurableTopicSubscription sub = durableSubscriptions.get(key);
             if (sub != null) {
-                if (sub.isActive()) {
-                    throw new JMSException("Durable consumer is in use for client: " + clientId + " and subscriptionName: " + subscriptionName);
+                // throw this exception only if link stealing is off
+                if (!context.isAllowLinkStealing() && sub.isActive()) {
+                    throw new JMSException("Durable consumer is in use for client: " + clientId +
+                                           " and subscriptionName: " + subscriptionName);
                 }
                 // Has the selector changed??
                 if (hasDurableSubChanged(info, sub.getConsumerInfo())) {
@@ -129,7 +139,7 @@ public class TopicRegion extends AbstractRegion {
                     destinationsLock.readLock().lock();
                     try {
                         for (Destination dest : destinations.values()) {
-                            //Account for virtual destinations
+                            // Account for virtual destinations
                             if (dest instanceof Topic){
                                 Topic topic = (Topic)dest;
                                 topic.deleteSubscription(context, key);
@@ -146,14 +156,30 @@ public class TopicRegion extends AbstractRegion {
                     if (sub.getConsumerInfo().getConsumerId() != null) {
                         subscriptions.remove(sub.getConsumerInfo().getConsumerId());
                     }
+                    // set the info and context to the new ones.
+                    // this is set in the activate() call below, but
+                    // that call is a NOP if it is already active.
+                    // hence need to set here and deactivate it first
+                    if ((sub.context != context) || (sub.info != info)) {
+                        sub.info = info;
+                        sub.context = context;
+                        sub.deactivate(keepDurableSubsActive, info.getLastDeliveredSequenceId());
+                    }
+                    //If NoLocal we need to update the NoLocal selector with the new connectionId
+                    //Simply setting the selector with the current one will trigger a
+                    //refresh of of the connectionId for the NoLocal expression
+                    if (info.isNoLocal()) {
+                        sub.setSelector(sub.getSelector());
+                    }
                     subscriptions.put(info.getConsumerId(), sub);
                 }
             } else {
                 super.addConsumer(context, info);
                 sub = durableSubscriptions.get(key);
                 if (sub == null) {
-                    throw new JMSException("Cannot use the same consumerId: " + info.getConsumerId() + " for two different durable subscriptions clientID: " + key.getClientId()
-                                           + " subscriberName: " + key.getSubscriptionName());
+                    throw new JMSException("Cannot use the same consumerId: " + info.getConsumerId() +
+                                           " for two different durable subscriptions clientID: " + key.getClientId() +
+                                           " subscriberName: " + key.getSubscriptionName());
                 }
             }
             sub.activate(usageManager, context, info, broker);
@@ -166,13 +192,16 @@ public class TopicRegion extends AbstractRegion {
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
-
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
             DurableTopicSubscription sub = durableSubscriptions.get(key);
             if (sub != null) {
-                sub.deactivate(keepDurableSubsActive);
+                // deactivate only if given context is same
+                // as what is in the sub. otherwise, during linksteal
+                // sub will get new context, but will be removed here
+                if (sub.getContext() == context) {
+                    sub.deactivate(keepDurableSubsActive, info.getLastDeliveredSequenceId());
+                }
             }
-
         } else {
             super.removeConsumer(context, info);
         }
@@ -183,7 +212,9 @@ public class TopicRegion extends AbstractRegion {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubscriptionName());
         DurableTopicSubscription sub = durableSubscriptions.get(key);
         if (sub == null) {
-            throw new InvalidDestinationException("No durable subscription exists for: " + info.getSubscriptionName());
+            throw new InvalidDestinationException("No durable subscription exists for clientID: " +
+                                                  info.getClientId() + " and subscriptionName: " +
+                                                  info.getSubscriptionName());
         }
         if (sub.isActive()) {
             throw new JMSException("Durable consumer is in use");
@@ -280,6 +311,7 @@ public class TopicRegion extends AbstractRegion {
         rc.setSubscriptionName(info.getSubscriptionName());
         rc.setDestination(info.getSubscribedDestination());
         rc.setConsumerId(createConsumerId());
+        rc.setNoLocal(info.isNoLocal());
         return rc;
     }
 
@@ -319,7 +351,9 @@ public class TopicRegion extends AbstractRegion {
                 }
                 durableSubscriptions.put(key, sub);
             } else {
-                throw new JMSException("That durable subscription is already active.");
+                throw new JMSException("Durable subscription is already active for clientID: " +
+                                       context.getClientId() + " and subscriptionName: " +
+                                       info.getSubscriptionName());
             }
             return sub;
         }
@@ -342,12 +376,19 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
-    private boolean hasDurableSubChanged(ConsumerInfo info1, ConsumerInfo info2) {
+    private boolean hasDurableSubChanged(ConsumerInfo info1, ConsumerInfo info2) throws IOException {
         if (info1.getSelector() != null ^ info2.getSelector() != null) {
             return true;
         }
         if (info1.getSelector() != null && !info1.getSelector().equals(info2.getSelector())) {
             return true;
+        }
+        //Not all persistence adapters store the noLocal value for a subscription
+        PersistenceAdapter adapter = broker.getBrokerService().getPersistenceAdapter();
+        if (adapter instanceof NoLocalSubscriptionAware) {
+            if (info1.isNoLocal() ^ info2.isNoLocal()) {
+                return true;
+            }
         }
         return !info1.getDestination().equals(info2.getDestination());
     }
@@ -364,6 +405,27 @@ public class TopicRegion extends AbstractRegion {
         return inactiveDestinations;
     }
 
+    public DurableTopicSubscription lookupSubscription(String subscriptionName, String clientId) {
+        SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
+        if (durableSubscriptions.containsKey(key)) {
+            return durableSubscriptions.get(key);
+        }
+
+        return null;
+    }
+
+    public List<DurableTopicSubscription> lookupSubscriptions(String clientId) {
+        List<DurableTopicSubscription> result = new ArrayList<DurableTopicSubscription>();
+
+        for (Map.Entry<SubscriptionKey, DurableTopicSubscription> subscriptionEntry : durableSubscriptions.entrySet()) {
+            if (subscriptionEntry.getKey().getClientId().equals(clientId)) {
+                result.add(subscriptionEntry.getValue());
+            }
+        }
+
+        return result;
+    }
+
     public boolean isKeepDurableSubsActive() {
         return keepDurableSubsActive;
     }
@@ -378,5 +440,9 @@ public class TopicRegion extends AbstractRegion {
 
     public DurableTopicSubscription getDurableSubscription(SubscriptionKey key) {
         return durableSubscriptions.get(key);
+    }
+
+    public Map<SubscriptionKey, DurableTopicSubscription> getDurableSubscriptions() {
+        return durableSubscriptions;
     }
 }

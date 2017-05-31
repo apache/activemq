@@ -19,8 +19,11 @@ package org.apache.activemq.transport.nio;
 import java.io.IOException;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.LinkedList;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -40,27 +43,56 @@ public final class SelectorManager {
     private Executor selectorExecutor = createDefaultExecutor();
     private Executor channelExecutor = selectorExecutor;
     private final LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
-    private int maxChannelsPerWorker = 1024;
+    private int maxChannelsPerWorker = -1;
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(getDefaultCorePoolSize(), getDefaultMaximumPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, newWorkQueue(),
             new ThreadFactory() {
 
                 private long i = 0;
 
                 @Override
                 public Thread newThread(Runnable runnable) {
-                    this.i++;
-                    final Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + this.i);
+                    Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + (i++));
+                    t.setDaemon(true);
                     return t;
                 }
-            });
+            }, newRejectionHandler());
 
         return rc;
     }
 
+    private RejectedExecutionHandler newRejectionHandler() {
+        return canRejectWork() ? new ThreadPoolExecutor.AbortPolicy() : new ThreadPoolExecutor.CallerRunsPolicy();
+    }
+
+    private BlockingQueue<Runnable> newWorkQueue() {
+        final int workQueueCapicity = getDefaultWorkQueueCapacity();
+        return workQueueCapicity > 0 ? new LinkedBlockingQueue<Runnable>(workQueueCapicity) : new SynchronousQueue<Runnable>();
+    }
+
+    private static boolean canRejectWork() {
+        return Boolean.getBoolean("org.apache.activemq.transport.nio.SelectorManager.rejectWork");
+    }
+
+    private static int getDefaultWorkQueueCapacity() {
+        return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.workQueueCapacity", 0);
+    }
+
+    private static int getDefaultCorePoolSize() {
+        return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.corePoolSize", 10);
+    }
+
+    private static int getDefaultMaximumPoolSize() {
+        return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.maximumPoolSize", 1024);
+    }
+
     private static int getDefaultKeepAliveTime() {
         return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.keepAliveTime", 30);
+    }
+
+    private static int getDefaultMaxChannelsPerWorker() {
+        return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.maxChannelsPerWorker", 1024);
     }
 
     public static SelectorManager getInstance() {
@@ -116,7 +148,7 @@ public final class SelectorManager {
     }
 
     public int getMaxChannelsPerWorker() {
-        return maxChannelsPerWorker;
+        return maxChannelsPerWorker >= 0 ? maxChannelsPerWorker : getDefaultMaxChannelsPerWorker();
     }
 
     public void setMaxChannelsPerWorker(int maxChannelsPerWorker) {

@@ -22,6 +22,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 
+import org.apache.activemq.filter.AnyDestination;
+import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -58,6 +61,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     public static final String TOPIC_QUALIFIED_PREFIX = "topic://";
     public static final String TEMP_QUEUE_QUALIFED_PREFIX = "temp-queue://";
     public static final String TEMP_TOPIC_QUALIFED_PREFIX = "temp-topic://";
+    public static final String IS_DLQ = "isDLQ";
 
     public static final String TEMP_DESTINATION_NAME_PREFIX = "ID:";
 
@@ -149,13 +153,32 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         if (destination == destination2) {
             return 0;
         }
-        if (destination == null) {
+        if (destination == null || destination2 instanceof AnyDestination) {
             return -1;
-        } else if (destination2 == null) {
+        } else if (destination2 == null || destination instanceof AnyDestination) {
             return 1;
         } else {
-            if (destination.isQueue() == destination2.isQueue()) {
+            if (destination.getDestinationType() == destination2.getDestinationType()) {
+
+                if (destination.isPattern() && destination2.isPattern() ) {
+                    if (destination.getPhysicalName().compareTo(destination2.getPhysicalName()) == 0) {
+                        return 0;
+                    }
+                }
+                if (destination.isPattern()) {
+                    DestinationFilter filter = DestinationFilter.parseFilter(destination);
+                    if (filter.matches(destination2)) {
+                        return 1;
+                    }
+                }
+                if (destination2.isPattern()) {
+                    DestinationFilter filter = DestinationFilter.parseFilter(destination2);
+                    if (filter.matches(destination)) {
+                        return -1;
+                    }
+                }
                 return destination.getPhysicalName().compareTo(destination2.getPhysicalName());
+
             } else {
                 return destination.isQueue() ? -1 : 1;
             }
@@ -396,6 +419,17 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
 
     public boolean isPattern() {
         return isPattern;
+    }
+
+    public boolean isDLQ() {
+        return options != null && options.containsKey(IS_DLQ);
+    }
+
+    public void setDLQ(boolean val) {
+        if (options == null) {
+            options = new HashMap<String, String>();
+        }
+        options.put(IS_DLQ, String.valueOf(val));
     }
 
     public static UnresolvedDestinationTransformer getUnresolvableDestinationTransformer() {

@@ -44,7 +44,17 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
         }
     }
 
+    @Override
+    public void start() throws Exception {
+        if (!isMonitorStarted()) {
+            startConnectCheckTask();
+        }
+        super.start();
+    }
+
+    @Override
     protected void processInboundWireFormatInfo(WireFormatInfo info) throws IOException {
+        stopConnectCheckTask();
         IOException error = null;
         remoteWireFormatInfo = info;
         try {
@@ -57,6 +67,7 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
         }
     }
 
+    @Override
     protected void processOutboundWireFormatInfo(WireFormatInfo info) throws IOException{
         localWireFormatInfo = info;
         startMonitorThreads();

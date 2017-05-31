@@ -219,7 +219,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected boolean asyncDispatch;
     protected boolean sessionAsyncDispatch;
     protected final boolean debug;
-    protected Object sendMutex = new Object();
+    protected final Object sendMutex = new Object();
+    protected final Object redeliveryGuard = new Object();
+
     private final AtomicBoolean clearInProgress = new AtomicBoolean();
 
     private MessageListener messageListener;
@@ -228,7 +230,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private DeliveryListener deliveryListener;
     private MessageTransformer transformer;
     private BlobTransferPolicy blobTransferPolicy;
-    private long lastDeliveredSequenceId;
+    private long lastDeliveredSequenceId = -2;
 
     /**
      * Construct the Session
@@ -504,7 +506,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * <CODE>BlobMessage</CODE> object is used to send a message containing
      * the <CODE>File</CODE> content. Before the message is sent the file
      * conent will be uploaded to the broker or some other remote repository
-     * depending on the {@link #getBlobTransferPolicy()}.
+     * depending on the {@link #getBlobTransferPolicy()}. <br/>
+     * <p>
+     * The caller of this method is responsible for closing the
+     * input stream that is used, however the stream can not be closed
+     * until <b>after</b> the message has been sent.  To have this class
+     * manage the stream and close it automatically, use the method
+     * {@link ActiveMQSession#createBlobMessage(File)}
      *
      * @param in the stream to be uploaded to some remote repo (or the broker)
      *                depending on the strategy
@@ -652,14 +660,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     private void doClose() throws JMSException {
-        boolean interrupted = Thread.interrupted();
         dispose();
         RemoveInfo removeCommand = info.createRemoveCommand();
         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
         connection.asyncSendPacket(removeCommand);
-        if (interrupted) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     final AtomicInteger clearRequestsCounter = new AtomicInteger(0);
@@ -717,7 +721,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         if (!closed) {
 
             try {
-                executor.stop();
+                executor.close();
 
                 for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
                     ActiveMQMessageConsumer consumer = iter.next();
@@ -878,11 +882,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         MessageDispatch messageDispatch;
         while ((messageDispatch = executor.dequeueNoWait()) != null) {
             final MessageDispatch md = messageDispatch;
-            ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
+            final ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
 
             MessageAck earlyAck = null;
             if (message.isExpired()) {
                 earlyAck = new MessageAck(md, MessageAck.EXPIRED_ACK_TYPE, 1);
+                earlyAck.setFirstMessageId(message.getMessageId());
             } else if (connection.isDuplicate(ActiveMQSession.this, message)) {
                 LOG.debug("{} got duplicate: {}", this, message.getMessageId());
                 earlyAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
@@ -913,107 +918,171 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }
 
             md.setDeliverySequenceId(getNextDeliveryId());
+            lastDeliveredSequenceId = message.getMessageId().getBrokerSequenceId();
 
             final MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
-            try {
-                ack.setFirstMessageId(md.getMessage().getMessageId());
-                doStartTransaction();
-                ack.setTransactionId(getTransactionContext().getTransactionId());
-                if (ack.getTransactionId() != null) {
-                    getTransactionContext().addSynchronization(new Synchronization() {
 
-                        final int clearRequestCount = (clearRequestsCounter.get() == Integer.MAX_VALUE ? clearRequestsCounter.incrementAndGet() : clearRequestsCounter.get());
-                        @Override
-                        public void beforeEnd() throws Exception {
-                            // validate our consumer so we don't push stale acks that get ignored
-                            if (ack.getTransactionId().isXATransaction() && !connection.hasDispatcher(ack.getConsumerId())) {
-                                LOG.debug("forcing rollback - {} consumer no longer active on {}", ack, connection);
-                                throw new TransactionRolledBackException("consumer " + ack.getConsumerId() + " no longer active on " + connection);
-                            }
-                            LOG.trace("beforeEnd ack {}", ack);
-                            sendAck(ack);
-                        }
+            final AtomicBoolean afterDeliveryError = new AtomicBoolean(false);
+            /*
+            * The redelivery guard is to allow the endpoint lifecycle to complete before the messsage is dispatched.
+            * We dont want the after deliver being called after the redeliver as it may cause some weird stuff.
+            * */
+            synchronized (redeliveryGuard) {
+                try {
+                    ack.setFirstMessageId(md.getMessage().getMessageId());
+                    doStartTransaction();
+                    ack.setTransactionId(getTransactionContext().getTransactionId());
+                    if (ack.getTransactionId() != null) {
+                        getTransactionContext().addSynchronization(new Synchronization() {
 
-                        @Override
-                        public void afterRollback() throws Exception {
-                            LOG.trace("rollback {}", ack, new Throwable("here"));
-                            md.getMessage().onMessageRolledBack();
-                            // ensure we don't filter this as a duplicate
-                            connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
+                            final int clearRequestCount = (clearRequestsCounter.get() == Integer.MAX_VALUE ? clearRequestsCounter.incrementAndGet() : clearRequestsCounter.get());
 
-                            // don't redeliver if we have been interrupted b/c the broker will redeliver on reconnect
-                            if (clearRequestsCounter.get() > clearRequestCount) {
-                                LOG.debug("No redelivery of {} on rollback of {} due to failover of {}", md, ack.getTransactionId(), connection.getTransport());
-                                return;
-                            }
-
-                            // validate our consumer so we don't push stale acks that get ignored or redeliver what will be redispatched
-                            if (ack.getTransactionId().isXATransaction() && !connection.hasDispatcher(ack.getConsumerId())) {
-                                LOG.debug("No local redelivery of {} on rollback of {} because consumer is no longer active on {}", md, ack.getTransactionId(), connection.getTransport());
-                                return;
-                            }
-
-                            RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
-                            int redeliveryCounter = md.getMessage().getRedeliveryCounter();
-                            if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
-                                && redeliveryCounter > redeliveryPolicy.getMaximumRedeliveries()) {
-                                // We need to NACK the messages so that they get
-                                // sent to the
-                                // DLQ.
-                                // Acknowledge the last message.
-                                MessageAck ack = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
-                                ack.setFirstMessageId(md.getMessage().getMessageId());
-                                ack.setPoisonCause(new Throwable("Exceeded ra redelivery policy limit:" + redeliveryPolicy));
-                                asyncSendPacket(ack);
-
-                            } else {
-
-                                MessageAck ack = new MessageAck(md, MessageAck.REDELIVERED_ACK_TYPE, 1);
-                                ack.setFirstMessageId(md.getMessage().getMessageId());
-                                asyncSendPacket(ack);
-
-                                // Figure out how long we should wait to resend
-                                // this message.
-                                long redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
-                                for (int i = 0; i < redeliveryCounter; i++) {
-                                    redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
+                            @Override
+                            public void beforeEnd() throws Exception {
+                                // validate our consumer so we don't push stale acks that get ignored
+                                if (ack.getTransactionId().isXATransaction() && !connection.hasDispatcher(ack.getConsumerId())) {
+                                    LOG.debug("forcing rollback - {} consumer no longer active on {}", ack, connection);
+                                    throw new TransactionRolledBackException("consumer " + ack.getConsumerId() + " no longer active on " + connection);
                                 }
-                                connection.getScheduler().executeAfterDelay(new Runnable() {
-
-                                    @Override
-                                    public void run() {
-                                        ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
-                                    }
-                                }, redeliveryDelay);
+                                LOG.trace("beforeEnd ack {}", ack);
+                                sendAck(ack);
                             }
+
+                            @Override
+                            public void afterRollback() throws Exception {
+                                LOG.trace("rollback {}", ack, new Throwable("here"));
+                                // ensure we don't filter this as a duplicate
+                                connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
+
+                                // don't redeliver if we have been interrupted b/c the broker will redeliver on reconnect
+                                if (clearRequestsCounter.get() > clearRequestCount) {
+                                    LOG.debug("No redelivery of {} on rollback of {} due to failover of {}", md, ack.getTransactionId(), connection.getTransport());
+                                    return;
+                                }
+
+                                // validate our consumer so we don't push stale acks that get ignored or redeliver what will be redispatched
+                                if (ack.getTransactionId().isXATransaction() && !connection.hasDispatcher(ack.getConsumerId())) {
+                                    LOG.debug("No local redelivery of {} on rollback of {} because consumer is no longer active on {}", md, ack.getTransactionId(), connection.getTransport());
+                                    return;
+                                }
+
+                                RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
+                                int redeliveryCounter = md.getMessage().getRedeliveryCounter();
+                                if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+                                        && redeliveryCounter >= redeliveryPolicy.getMaximumRedeliveries()) {
+                                    // We need to NACK the messages so that they get
+                                    // sent to the
+                                    // DLQ.
+                                    // Acknowledge the last message.
+                                    MessageAck ack = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
+                                    ack.setFirstMessageId(md.getMessage().getMessageId());
+                                    ack.setPoisonCause(new Throwable("Exceeded ra redelivery policy limit:" + redeliveryPolicy));
+                                    asyncSendPacket(ack);
+
+                                } else {
+
+                                    MessageAck ack = new MessageAck(md, MessageAck.REDELIVERED_ACK_TYPE, 1);
+                                    ack.setFirstMessageId(md.getMessage().getMessageId());
+                                    asyncSendPacket(ack);
+
+                                    // Figure out how long we should wait to resend
+                                    // this message.
+                                    long redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
+                                    for (int i = 0; i < redeliveryCounter; i++) {
+                                        redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
+                                    }
+
+                                    /*
+                                    * If we are a non blocking delivery then we need to stop the executor to avoid more
+                                    * messages being delivered, once the message is redelivered we can restart it.
+                                    * */
+                                    if (!connection.isNonBlockingRedelivery()) {
+                                        LOG.debug("Blocking session until re-delivery...");
+                                        executor.stop();
+                                    }
+
+                                    connection.getScheduler().executeAfterDelay(new Runnable() {
+
+                                        @Override
+                                        public void run() {
+                                            /*
+                                            * wait for the first delivery to be complete, i.e. after delivery has been called.
+                                            * */
+                                            synchronized (redeliveryGuard) {
+                                                /*
+                                                * If its non blocking then we can just dispatch in a new session.
+                                                * */
+                                                if (connection.isNonBlockingRedelivery()) {
+                                                    ((ActiveMQDispatcher) md.getConsumer()).dispatch(md);
+                                                } else {
+                                                    /*
+                                                    * If there has been an error thrown during afterDelivery then the
+                                                    * endpoint will be marked as dead so redelivery will fail (and eventually
+                                                    * the session marked as stale), in this case we can only call dispatch
+                                                    * which will create a new session with a new endpoint.
+                                                    * */
+                                                    if (afterDeliveryError.get()) {
+                                                        ((ActiveMQDispatcher) md.getConsumer()).dispatch(md);
+                                                    } else {
+                                                        executor.executeFirst(md);
+                                                        executor.start();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }, redeliveryDelay);
+                                }
+                                md.getMessage().onMessageRolledBack();
+                            }
+                        });
+                    }
+
+                    LOG.trace("{} onMessage({})", this, message.getMessageId());
+                    messageListener.onMessage(message);
+
+                } catch (Throwable e) {
+                    LOG.error("error dispatching message: ", e);
+
+                    if (getTransactionContext().isInXATransaction()) {
+                        LOG.debug("Marking transaction: {} rollbackOnly", getTransactionContext());
+                        getTransactionContext().setRollbackOnly(true);
+                    }
+
+                    // A problem while invoking the MessageListener does not
+                    // in general indicate a problem with the connection to the broker, i.e.
+                    // it will usually be sufficient to let the afterDelivery() method either
+                    // commit or roll back in order to deal with the exception.
+                    // However, we notify any registered client internal exception listener
+                    // of the problem.
+                    connection.onClientInternalException(e);
+                } finally {
+                    if (ack.getTransactionId() == null) {
+                        try {
+                            asyncSendPacket(ack);
+                        } catch (Throwable e) {
+                            connection.onClientInternalException(e);
                         }
-                    });
+                    }
                 }
 
-                LOG.trace("{} onMessage({})", this, message.getMessageId());
-                messageListener.onMessage(message);
-
-            } catch (Throwable e) {
-                LOG.error("error dispatching message: ", e);
-                // A problem while invoking the MessageListener does not
-                // in general indicate a problem with the connection to the broker, i.e.
-                // it will usually be sufficient to let the afterDelivery() method either
-                // commit or roll back in order to deal with the exception.
-                // However, we notify any registered client internal exception listener
-                // of the problem.
-                connection.onClientInternalException(e);
-            } finally {
-                if (ack.getTransactionId() == null) {
+                if (deliveryListener != null) {
                     try {
-                        asyncSendPacket(ack);
-                    } catch (Throwable e) {
-                        connection.onClientInternalException(e);
+                        deliveryListener.afterDelivery(this, message);
+                    } catch (Throwable t) {
+                        LOG.debug("Unable to call after delivery", t);
+                        afterDeliveryError.set(true);
+                        throw new RuntimeException(t);
                     }
                 }
             }
-
-            if (deliveryListener != null) {
-                deliveryListener.afterDelivery(this, message);
+            /*
+            * this can be outside the try/catch as if an exception is thrown then this session will be marked as stale anyway.
+            * It also needs to be outside the redelivery guard.
+            * */
+            try {
+                executor.waitForQueueRestart();
+            } catch (InterruptedException ex) {
+                connection.onClientInternalException(ex);
             }
         }
     }
@@ -1484,7 +1553,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * the specified queue.
      *
      * @param queue the <CODE>Queue</CODE> to access
-     * @return
+     * @return a new QueueBrowser instance.
      * @throws JMSException if the session fails to create a receiver due to
      *                 some internal error.
      * @throws JMSException
@@ -1806,14 +1875,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * @return
+     * @return a unique ConsumerId instance.
      */
     protected ConsumerId getNextConsumerId() {
         return new ConsumerId(info.getSessionId(), consumerIdGenerator.getNextSequenceId());
     }
 
     /**
-     * @return
+     * @return a unique ProducerId instance.
      */
     protected ProducerId getNextProducerId() {
         return new ProducerId(info.getSessionId(), producerIdGenerator.getNextSequenceId());
@@ -1822,11 +1891,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Sends the message for dispatch by the broker.
      *
-     *
      * @param producer - message producer.
      * @param destination - message destination.
      * @param message - message to be sent.
-     * @param deliveryMode - JMS messsage delivery mode.
+     * @param deliveryMode - JMS message delivery mode.
      * @param priority - message priority.
      * @param timeToLive - message expiration.
      * @param producerWindow
@@ -1998,7 +2066,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Send the asynchronus command.
+     * Send the asynchronous command.
      *
      * @param command - command to be executed.
      * @throws JMSException
@@ -2008,7 +2076,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Send the synchronus command.
+     * Send the synchronous command.
      *
      * @param command - command to be executed.
      * @return Response
@@ -2098,7 +2166,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     @Override
     public String toString() {
-        return "ActiveMQSession {id=" + info.getSessionId() + ",started=" + started.get() + "}";
+        return "ActiveMQSession {id=" + info.getSessionId() + ",started=" + started.get() + "} " + sendMutex;
     }
 
     public void checkMessageListener() throws JMSException {

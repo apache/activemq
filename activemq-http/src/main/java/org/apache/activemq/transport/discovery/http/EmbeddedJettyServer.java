@@ -19,7 +19,6 @@ package org.apache.activemq.transport.discovery.http;
 import java.net.URI;
 
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -27,13 +26,16 @@ public class EmbeddedJettyServer implements org.apache.activemq.Service {
 
     private HTTPDiscoveryAgent agent;
     private Server server;
-    private SelectChannelConnector connector;
     private DiscoveryRegistryServlet camelServlet = new DiscoveryRegistryServlet();
     
     public void start() throws Exception {
         URI uri = new URI(agent.getRegistryURL());
 
-        server = new Server();
+        int port = 80;
+        if( uri.getPort() >=0 ) {
+            port = uri.getPort();
+        }
+        server = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SECURITY | ServletContextHandler.NO_SESSIONS);
         
         context.setContextPath("/");
@@ -42,23 +44,9 @@ public class EmbeddedJettyServer implements org.apache.activemq.Service {
         context.addServlet(holder, "/*");
         server.setHandler(context);
         server.start();
-        
-        int port = 80;
-        if( uri.getPort() >=0 ) {
-            port = uri.getPort();
-        }
-        
-        connector = new SelectChannelConnector();
-        connector.setPort(port);
-        server.addConnector(connector);
-        connector.start();
     }
 
     public void stop() throws Exception {
-        if( connector!=null ) {
-            connector.stop();
-            connector = null;
-        }
         if( server!=null ) {
             server.stop();
             server = null;

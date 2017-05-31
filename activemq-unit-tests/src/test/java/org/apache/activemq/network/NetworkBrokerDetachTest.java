@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -107,11 +108,15 @@ public class NetworkBrokerDetachTest {
 
     @After
     public void cleanup() throws Exception {
-        networkedBroker.stop();
-        networkedBroker.waitUntilStopped();
+        if (networkedBroker != null) {
+            networkedBroker.stop();
+            networkedBroker.waitUntilStopped();
+        }
 
-        broker.stop();
-        broker.waitUntilStopped();
+        if (broker != null) {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
     }
 
     @Test
@@ -267,6 +272,7 @@ public class NetworkBrokerDetachTest {
 
                         if (view.getName().equals(destination.getPhysicalName())) {
                             LOG.info("Consumers for " + destination.getPhysicalName() + " on " + broker + " : " + view.getConsumerCount());
+                            LOG.info("Subs: " + Arrays.asList(view.getSubscriptions()));
                             if (expectedCount == view.getConsumerCount()) {
                                 result = true;
                             }
@@ -290,7 +296,7 @@ public class NetworkBrokerDetachTest {
                 if (view != null) {
                     ObjectName[] subs = broker.getAdminView().getInactiveDurableTopicSubscribers();
                     if (subs != null) {
-                        LOG.info("inactive durable subs on " + broker + " : " + subs);
+                        LOG.info("inactive durable subs on " + broker + " : " + Arrays.asList(subs));
                         if (expectedCount == subs.length) {
                             result = true;
                         }

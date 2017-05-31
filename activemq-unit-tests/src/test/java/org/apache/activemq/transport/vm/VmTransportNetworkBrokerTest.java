@@ -20,17 +20,26 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
+import javax.jms.Session;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.bugs.embedded.ThreadExplorer;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.network.DurableConduitBridge;
 import org.apache.activemq.network.NetworkConnector;
 
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.util.Wait;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +51,12 @@ public class VmTransportNetworkBrokerTest extends TestCase {
     private static final String VM_BROKER_URI = 
         "vm://localhost?create=false";
     
-    CountDownLatch started = new CountDownLatch(1);
-    CountDownLatch gotConnection = new CountDownLatch(1);
-
     public void testNoThreadLeak() throws Exception {
 
         // with VMConnection and simple discovery network connector
-        int originalThreadCount = Thread.activeCount();
+        Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
+        final int originalThreadCount = threads.length;
+
         LOG.debug(ThreadExplorer.show("threads at beginning"));
         
         BrokerService broker = new BrokerService();
@@ -67,11 +75,11 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         TimeUnit.SECONDS.sleep(5);
         
         int threadCountAfterStart = Thread.activeCount();
-        TimeUnit.SECONDS.sleep(30);
+        TimeUnit.SECONDS.sleep(20);
         int threadCountAfterSleep = Thread.activeCount();
         
         assertTrue("Threads are leaking: " + ThreadExplorer.show("active sleep") + ", threadCount=" +threadCountAfterStart + " threadCountAfterSleep=" + threadCountAfterSleep,
-                threadCountAfterSleep < threadCountAfterStart + 8);
+                threadCountAfterSleep < 2 * threadCountAfterStart);
 
         connection.close();
         broker.stop();
@@ -92,15 +100,18 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         broker.stop();
         broker.waitUntilStopped();
 
-        // let it settle
-        TimeUnit.SECONDS.sleep(5);        
+        final AtomicInteger threadCountAfterStop = new AtomicInteger();
+        boolean ok = Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info(ThreadExplorer.show("active after stop"));
+                // get final threads but filter out any daemon threads that the JVM may have created.
+                Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
+                threadCountAfterStop.set(threads.length);
+                return threadCountAfterStop.get() <= originalThreadCount;
+            }
+        });
 
-        // get final threads but filter out any daemon threads that the JVM may have created.
-        Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
-        int threadCountAfterStop = threads.length;
-
-        // lets see the thread counts at INFO level so they are always in the test log
-        LOG.info(ThreadExplorer.show("active after stop"));
         LOG.info("originalThreadCount=" + originalThreadCount + " threadCountAfterStop=" + threadCountAfterStop);
 
         assertTrue("Threads are leaking: " + 
@@ -108,11 +119,76 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         		". originalThreadCount=" + 
         		originalThreadCount + 
         		" threadCountAfterStop=" + 
-        		threadCountAfterStop,
-            threadCountAfterStop <= originalThreadCount);
+        		threadCountAfterStop.get(),
+            ok);
     }
     
-    
+
+    public void testInvalidClientIdAndDurableSubs() throws Exception {
+
+        BrokerService broker = new BrokerService();
+        broker.setUseJmx(false);
+        broker.setDedicatedTaskRunner(true);
+        broker.setPersistent(false);
+        broker.addConnector("tcp://localhost:0");
+        broker.start();
+
+        // ensure remoteConnection fails with InvalidClientId
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
+        Connection connection = connectionFactory.createConnection("system", "manager");
+        connection.setClientID("F1_forwarder_outbound");
+        connection.start();
+
+        BrokerService forwarder = new BrokerService();
+        forwarder.setBrokerName("forwarder");
+        forwarder.setPersistent(false);
+        forwarder.setUseJmx(false);
+
+        forwarder.start();
+
+        // setup some durable subs to have some local work to do
+        ActiveMQConnectionFactory vmFactory = new ActiveMQConnectionFactory("vm://forwarder");
+        Connection vmConnection = vmFactory.createConnection("system", "manager");
+        vmConnection.setClientID("vm_local");
+        vmConnection.start();
+        Session session = vmConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        for (int i=0; i<5000; i++) {
+            session.createDurableSubscriber(new ActiveMQTopic("T" + i), "" + i);
+        }
+        vmConnection.close();
+
+        final AtomicInteger logCounts = new AtomicInteger(0);
+        DefaultTestAppender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel() == Level.ERROR) {
+                    logCounts.incrementAndGet();
+                }
+            }
+        };
+
+        org.apache.log4j.Logger.getLogger(DurableConduitBridge.class).addAppender(appender);
+        try {
+
+            NetworkConnector networkConnector = forwarder.addNetworkConnector("static:("
+                    + broker.getTransportConnectors().get(0).getPublishableConnectString() + ")");
+            networkConnector.setName("F1");
+            forwarder.addNetworkConnector(networkConnector);
+            forwarder.startAllConnectors();
+
+            TimeUnit.SECONDS.sleep(1);
+            connection.close();
+
+            forwarder.stop();
+            broker.stop();
+
+            assertEquals("no errors", 0, logCounts.get());
+
+        } finally {
+            org.apache.log4j.Logger.getLogger(DurableConduitBridge.class).removeAppender(appender);
+        }
+    }
+
     /**
      * Filters any daemon threads from the thread list.
      * 
@@ -142,7 +218,7 @@ public class VmTransportNetworkBrokerTest extends TestCase {
     		
     		Thread thread = threadList.get(i);
     		LOG.debug("Inspecting thread " + thread.getName());
-    		if (thread.isDaemon()) {
+    		if (thread.isDaemon() && !thread.getName().contains("ActiveMQ")) {
     			LOG.debug("Removing deamon thread.");
     			threadList.remove(thread);
     			Thread.sleep(100);

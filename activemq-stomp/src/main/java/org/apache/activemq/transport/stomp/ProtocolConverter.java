@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
@@ -83,15 +84,17 @@ public class ProtocolConverter {
     private static final StompFrame ping = new StompFrame(Stomp.Commands.KEEPALIVE);
 
     static {
-        InputStream in = null;
         String version = "5.6.0";
-        if ((in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            try {
-                version = reader.readLine();
-            } catch(Exception e) {
+        try(InputStream in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) {
+            if (in != null) {
+                try(InputStreamReader isr = new InputStreamReader(in);
+                    BufferedReader reader = new BufferedReader(isr)) {
+                    version = reader.readLine();
+                }
             }
+        }catch(Exception e) {
         }
+
         BROKER_VERSION = version;
     }
 
@@ -104,15 +107,15 @@ public class ProtocolConverter {
     private final LongSequenceGenerator transactionIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator tempDestinationGenerator = new LongSequenceGenerator();
 
-    private final ConcurrentHashMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
-    private final ConcurrentHashMap<ConsumerId, StompSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, StompSubscription>();
-    private final ConcurrentHashMap<String, StompSubscription> subscriptions = new ConcurrentHashMap<String, StompSubscription>();
-    private final ConcurrentHashMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<String, ActiveMQDestination>();
-    private final ConcurrentHashMap<String, String> tempDestinationAmqToStompMap = new ConcurrentHashMap<String, String>();
+    private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
+    private final ConcurrentMap<ConsumerId, StompSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, StompSubscription>();
+    private final ConcurrentMap<String, StompSubscription> subscriptions = new ConcurrentHashMap<String, StompSubscription>();
+    private final ConcurrentMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<String, ActiveMQDestination>();
+    private final ConcurrentMap<String, String> tempDestinationAmqToStompMap = new ConcurrentHashMap<String, String>();
     private final Map<String, LocalTransactionId> transactions = new ConcurrentHashMap<String, LocalTransactionId>();
     private final StompTransport stompTransport;
 
-    private final ConcurrentHashMap<String, AckEntry> pedingAcks = new ConcurrentHashMap<String, AckEntry>();
+    private final ConcurrentMap<String, AckEntry> pedingAcks = new ConcurrentHashMap<String, AckEntry>();
     private final IdGenerator ACK_ID_GENERATOR = new IdGenerator();
 
     private final Object commnadIdMutex = new Object();
@@ -263,7 +266,7 @@ public class ProtocolConverter {
             } else if (action.startsWith(Stomp.Commands.DISCONNECT)) {
                 onStompDisconnect(command);
             } else {
-                throw new ProtocolException("Unknown STOMP action: " + action);
+                throw new ProtocolException("Unknown STOMP action: " + action, true);
             }
 
         } catch (ProtocolException e) {
@@ -276,9 +279,18 @@ public class ProtocolConverter {
     }
 
     protected void handleException(Throwable exception, StompFrame command) throws IOException {
-        LOG.warn("Exception occurred processing: \n" + command + ": " + exception.toString());
+        if (command == null) {
+            LOG.warn("Exception occurred while processing a command: {}", exception.toString());
+        } else {
+            LOG.warn("Exception occurred processing: {} -> {}", safeGetAction(command), exception.toString());
+        }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("Exception detail", exception);
+        }
+
+        if (command != null && LOG.isTraceEnabled()) {
+            LOG.trace("Command that caused the error: {}", command);
         }
 
         // Let the stomp client know about any protocol errors.
@@ -329,6 +341,7 @@ public class ProtocolConverter {
         }
 
         message.onSend();
+        message.beforeMarshall(null);
         sendToActiveMQ(message, createResponseHandler(command));
     }
 
@@ -369,7 +382,7 @@ public class ProtocolConverter {
         boolean nacked = false;
 
         if (ackId != null) {
-            AckEntry pendingAck = this.pedingAcks.get(ackId);
+            AckEntry pendingAck = this.pedingAcks.remove(ackId);
             if (pendingAck != null) {
                 messageId = pendingAck.getMessageId();
                 MessageAck ack = pendingAck.onMessageNack(activemqTx);
@@ -425,8 +438,7 @@ public class ProtocolConverter {
         boolean acked = false;
 
         if (ackId != null) {
-
-            AckEntry pendingAck = this.pedingAcks.get(ackId);
+            AckEntry pendingAck = this.pedingAcks.remove(ackId);
             if (pendingAck != null) {
                 messageId = pendingAck.getMessageId();
                 MessageAck ack = pendingAck.onMessageAck(activemqTx);
@@ -437,7 +449,6 @@ public class ProtocolConverter {
             }
 
         } else if (subscriptionId != null) {
-
             StompSubscription sub = this.subscriptions.get(subscriptionId);
             if (sub != null) {
                 MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
@@ -446,13 +457,10 @@ public class ProtocolConverter {
                     acked = true;
                 }
             }
-
         } else {
-
             // STOMP v1.0: acking with just a message id is very bogus since the same message id
             // could have been sent to 2 different subscriptions on the same Stomp connection.
             // For example, when 2 subs are created on the same topic.
-
             for (StompSubscription sub : subscriptionsByConsumerId.values()) {
                 MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
                 if (ack != null) {
@@ -513,6 +521,8 @@ public class ProtocolConverter {
             sub.onStompCommit(activemqTx);
         }
 
+        pedingAcks.clear();
+
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
         tx.setTransactionId(activemqTx);
@@ -542,6 +552,8 @@ public class ProtocolConverter {
             }
         }
 
+        pedingAcks.clear();
+
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
         tx.setTransactionId(activemqTx);
@@ -558,7 +570,7 @@ public class ProtocolConverter {
         String subscriptionId = headers.get(Stomp.Headers.Subscribe.ID);
         String destination = headers.get(Stomp.Headers.Subscribe.DESTINATION);
 
-        if (this.version.equals(Stomp.V1_1) && subscriptionId == null) {
+        if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("SUBSCRIBE received without a subscription id!");
         }
 
@@ -598,7 +610,7 @@ public class ProtocolConverter {
             throw new ProtocolException("Invalid Subscription: cannot durably subscribe to a Queue destination!");
         }
 
-        consumerInfo.setDestination(translator.convertDestination(this, destination, true));
+        consumerInfo.setDestination(actualDest);
 
         StompSubscription stompSubscription;
         if (!consumerInfo.isBrowser()) {
@@ -676,7 +688,7 @@ public class ProtocolConverter {
         }
 
         String subscriptionId = headers.get(Stomp.Headers.Unsubscribe.ID);
-        if (this.version.equals(Stomp.V1_1) && subscriptionId == null) {
+        if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("UNSUBSCRIBE received without a subscription id!");
         }
 
@@ -687,7 +699,7 @@ public class ProtocolConverter {
         // check if it is a durable subscription
         String durable = command.getHeaders().get("activemq.subscriptionName");
         String clientId = durable;
-        if (this.version.equals(Stomp.V1_1)) {
+        if (!this.version.equals(Stomp.V1_0)) {
             clientId = connectionInfo.getClientId();
         }
 
@@ -701,15 +713,12 @@ public class ProtocolConverter {
         }
 
         if (subscriptionId != null) {
-
             StompSubscription sub = this.subscriptions.remove(subscriptionId);
             if (sub != null) {
                 sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
                 return;
             }
-
         } else {
-
             // Unsubscribing using a destination is a bit weird if multiple subscriptions
             // are created with the same destination.
             for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
@@ -971,7 +980,7 @@ public class ProtocolConverter {
             }
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Stomp Connect heartbeat conf RW[" + hbReadInterval + "," + hbWriteInterval + "]");
+                LOG.debug("Stomp Connect heartbeat conf RW[{},{}]", hbReadInterval, hbWriteInterval);
             }
         }
     }
@@ -986,8 +995,46 @@ public class ProtocolConverter {
             try {
                 sendToStomp(sc);
             } catch (IOException e) {
-                LOG.warn("Could not send a receipt for " + command, e);
+                LOG.warn("Could not send a receipt for {}", command, e);
             }
         }
+    }
+
+    /**
+     * Retrieve the STOMP action value from a frame if the value is valid, otherwise
+     * return an unknown string to allow for safe log output.
+     *
+     * @param command
+     *      The STOMP command to fetch an action from.
+     *
+     * @return the command action or a safe string to use in logging.
+     */
+    protected Object safeGetAction(StompFrame command) {
+        String result = "<Unknown>";
+        if (command != null && command.getAction() != null) {
+            String action = command.getAction().trim();
+
+            if (action != null) {
+                switch (action) {
+                    case Stomp.Commands.SEND:
+                    case Stomp.Commands.ACK:
+                    case Stomp.Commands.NACK:
+                    case Stomp.Commands.BEGIN:
+                    case Stomp.Commands.COMMIT:
+                    case Stomp.Commands.ABORT:
+                    case Stomp.Commands.SUBSCRIBE:
+                    case Stomp.Commands.UNSUBSCRIBE:
+                    case Stomp.Commands.CONNECT:
+                    case Stomp.Commands.STOMP:
+                    case Stomp.Commands.DISCONNECT:
+                        result = action;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return result;
     }
 }

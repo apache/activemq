@@ -146,6 +146,35 @@ objectClass: top
 member: cn=users
 member: cn=admins
 
+## TEST.BAR
+
+dn: cn=TEST.BAR,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
+cn: TEST.BAR
+description: A topic
+objectClass: applicationProcess
+objectClass: top
+
+dn: cn=admin,cn=TEST.BAR,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
+cn: admin
+description: Admin privilege group, members are roles
+member: cn=admins
+member: cn=users
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=read,cn=TEST.BAR,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
+cn: read
+member: cn=users
+member: cn=admins
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,cn=TEST.BAR,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
+cn: write
+objectClass: groupOfNames
+objectClass: top
+member: cn=users
+member: cn=admins
 
 
 #######################
@@ -209,3 +238,4 @@ member: cn=admins
 member: cn=users
 objectClass: groupOfNames
 objectClass: top
+

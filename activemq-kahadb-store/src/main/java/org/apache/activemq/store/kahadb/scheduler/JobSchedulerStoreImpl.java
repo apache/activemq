@@ -397,22 +397,22 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
                 Iterator<Entry<Integer, List<Integer>>> removals = metaData.getRemoveLocationTracker().iterator(tx);
                 List<Integer> orphans = new ArrayList<Integer>();
                 while (removals.hasNext()) {
-                    boolean orphanedRemve = true;
+                    boolean orphanedRemove = true;
                     Entry<Integer, List<Integer>> entry = removals.next();
 
                     // If this log is not a GC candidate then there's no need to do a check to rule it out
                     if (gcCandidateSet.contains(entry.getKey())) {
                         for (Integer addLocation : entry.getValue()) {
                             if (completeFileSet.contains(addLocation)) {
-                                orphanedRemve = false;
+                                LOG.trace("A remove in log {} has an add still in existance in {}.", entry.getKey(), addLocation);
+                                orphanedRemove = false;
                                 break;
                             }
                         }
 
                         // If it's not orphaned than we can't remove it, otherwise we
                         // stop tracking it it's log will get deleted on the next check.
-                        if (!orphanedRemve) {
-                            LOG.trace("A remove in log {} has an add still in existance.", entry.getKey());
+                        if (!orphanedRemove) {
                             gcCandidateSet.remove(entry.getKey());
                         } else {
                             LOG.trace("All removes in log {} are orphaned, file can be GC'd", entry.getKey());
@@ -753,12 +753,22 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
 
             if (recoveryPosition != null) {
                 int redoCounter = 0;
-                LOG.info("Recovering from the journal ...");
+                LOG.info("Recovering from the scheduled job journal @" + recoveryPosition);
                 while (recoveryPosition != null) {
-                    JournalCommand<?> message = load(recoveryPosition);
-                    metaData.setLastUpdateLocation(recoveryPosition);
-                    doRecover(message, recoveryPosition, lastIndoubtPosition);
-                    redoCounter++;
+                    try {
+                        JournalCommand<?> message = load(recoveryPosition);
+                        metaData.setLastUpdateLocation(recoveryPosition);
+                        doRecover(message, recoveryPosition, lastIndoubtPosition);
+                        redoCounter++;
+                    } catch (IOException failedRecovery) {
+                        if (isIgnoreMissingJournalfiles()) {
+                            LOG.debug("Failed to recover data at position:" + recoveryPosition, failedRecovery);
+                            // track this dud location
+                            journal.corruptRecoveryLocation(recoveryPosition);
+                        } else {
+                            throw new IOException("Failed to recover data at position:" + recoveryPosition, failedRecovery);
+                        }
+                    }
                     recoveryPosition = journal.getNextLocation(recoveryPosition);
                      if (LOG.isInfoEnabled() && redoCounter % 100000 == 0) {
                          LOG.info("@ {}, {} entries recovered ..", recoveryPosition, redoCounter);

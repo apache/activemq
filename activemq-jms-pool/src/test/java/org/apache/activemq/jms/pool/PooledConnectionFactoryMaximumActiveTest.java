@@ -16,8 +16,11 @@
  */
 package org.apache.activemq.jms.pool;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -26,46 +29,25 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.log4j.Logger;
+import org.junit.Test;
 
 /**
  * Checks the behavior of the PooledConnectionFactory when the maximum amount of sessions is being reached
  * (maximumActive). When using setBlockIfSessionPoolIsFull(true) on the ConnectionFactory, further requests for sessions
  * should block. If it does not block, its a bug.
- *
- * @author: tmielke
  */
-public class PooledConnectionFactoryMaximumActiveTest extends TestCase {
+public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport {
+
     public final static Logger LOG = Logger.getLogger(PooledConnectionFactoryMaximumActiveTest.class);
     public static Connection conn = null;
     public static int sleepTimeout = 5000;
 
-    private static ConcurrentHashMap<Integer, Session> sessions = new ConcurrentHashMap<Integer, Session>();
-
-    /**
-     * Create the test case
-     *
-     * @param testName
-     *            name of the test case
-     */
-    public PooledConnectionFactoryMaximumActiveTest(String testName) {
-        super(testName);
-    }
+    private static ConcurrentMap<Integer, Session> sessions = new ConcurrentHashMap<Integer, Session>();
 
     public static void addSession(Session s) {
         sessions.put(s.hashCode(), s);
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite() {
-        return new TestSuite(PooledConnectionFactoryMaximumActiveTest.class);
     }
 
     /**
@@ -73,11 +55,13 @@ public class PooledConnectionFactoryMaximumActiveTest extends TestCase {
      * This test uses maximumActive=1. When creating two threads that both try to create a JMS session from the same JMS
      * connection, the thread that is second to call createSession() should block (as only 1 session is allowed) until
      * the session is returned to pool. If it does not block, its a bug.
-     *
      */
+    @Test(timeout = 60000)
     public void testApp() throws Exception {
         // Initialize JMS connection
-        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.useJmx=false&broker.persistent=false");
+
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(3);
@@ -90,7 +74,6 @@ public class PooledConnectionFactoryMaximumActiveTest extends TestCase {
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.submit(new TestRunner2());
-        // Thread.sleep(100);
         Future<Boolean> result2 = executor.submit(new TestRunner2());
 
         // sleep to allow threads to run
@@ -105,47 +88,48 @@ public class PooledConnectionFactoryMaximumActiveTest extends TestCase {
 
         // Take all threads down
         executor.shutdownNow();
+
+        cf.stop();
     }
-}
 
-class TestRunner2 implements Callable<Boolean> {
+    static class TestRunner2 implements Callable<Boolean> {
 
-    public final static Logger LOG = Logger.getLogger(TestRunner2.class);
+        public final static Logger TASK_LOG = Logger.getLogger(TestRunner2.class);
 
-    /**
-     * @return true if test succeeded, false otherwise
-     */
-    @Override
-    public Boolean call() {
+        /**
+         * @return true if test succeeded, false otherwise
+         */
+        @Override
+        public Boolean call() {
 
-        Session one = null;
+            Session one = null;
 
-        // wait at most 5 seconds for the call to createSession
-        try {
+            // wait at most 5 seconds for the call to createSession
+            try {
 
-            if (PooledConnectionFactoryMaximumActiveTest.conn == null) {
-                LOG.error("Connection not yet initialized. Aborting test.");
+                if (PooledConnectionFactoryMaximumActiveTest.conn == null) {
+                    TASK_LOG.error("Connection not yet initialized. Aborting test.");
+                    return new Boolean(false);
+                }
+
+                one = PooledConnectionFactoryMaximumActiveTest.conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                TASK_LOG.info("Created new Session with id" + one);
+                PooledConnectionFactoryMaximumActiveTest.addSession(one);
+                Thread.sleep(2 * PooledConnectionFactoryMaximumActiveTest.sleepTimeout);
+            } catch (Exception ex) {
+                TASK_LOG.error(ex.getMessage());
                 return new Boolean(false);
+            } finally {
+                if (one != null)
+                    try {
+                        one.close();
+                    } catch (JMSException e) {
+                        TASK_LOG.error(e.getMessage());
+                    }
             }
 
-            one = PooledConnectionFactoryMaximumActiveTest.conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            LOG.info("Created new Session with id" + one);
-            PooledConnectionFactoryMaximumActiveTest.addSession(one);
-            Thread.sleep(2 * PooledConnectionFactoryMaximumActiveTest.sleepTimeout);
-        } catch (Exception ex) {
-            LOG.error(ex.getMessage());
-            return new Boolean(false);
-
-        } finally {
-            if (one != null)
-                try {
-                    one.close();
-                } catch (JMSException e) {
-                    LOG.error(e.getMessage());
-                }
+            // all good, test succeeded
+            return new Boolean(true);
         }
-
-        // all good, test succeeded
-        return new Boolean(true);
     }
 }

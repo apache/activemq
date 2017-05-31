@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-blueprint</artifactId>
@@ -32,7 +32,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-        org.apache.xbean*;version="[3.13,4)",
+        org.apache.xbean*;version="[3.13,5)",
         org.apache.aries.blueprint.*;version="[1.0,2)",
           *
     </activemq.osgi.import.pkg>

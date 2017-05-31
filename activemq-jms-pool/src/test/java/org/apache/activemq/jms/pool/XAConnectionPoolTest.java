@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.jms.pool;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -47,11 +52,12 @@ import javax.transaction.xa.XAResource;
 import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.ActiveMQXASession;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.test.TestSupport;
+import org.junit.Test;
 
-public class XAConnectionPoolTest extends TestSupport {
+public class XAConnectionPoolTest extends JmsPoolTestSupport {
 
     // https://issues.apache.org/jira/browse/AMQ-3251
+    @Test(timeout = 60000)
     public void testAfterCompletionCanClose() throws Exception {
         final Vector<Synchronization> syncs = new Vector<Synchronization>();
         ActiveMQTopic topic = new ActiveMQTopic("test");
@@ -150,13 +156,17 @@ public class XAConnectionPoolTest extends TestSupport {
             sync.afterCompletion(1);
         }
         connection.close();
+
+        pcf.stop();
     }
 
+    @Test(timeout = 60000)
     public void testAckModeOfPoolNonXAWithTM() throws Exception {
         final Vector<Synchronization> syncs = new Vector<Synchronization>();
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new XAConnectionFactoryOnly(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE)));
+        pcf.setConnectionFactory(new XAConnectionFactoryOnly(new ActiveMQXAConnectionFactory(
+            "vm://test?broker.persistent=false&broker.useJmx=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE)));
 
         // simple TM that is in a tx and will track syncs
         pcf.setTransactionManager(new TransactionManager(){
@@ -248,21 +258,27 @@ public class XAConnectionPoolTest extends TestSupport {
             sync.afterCompletion(1);
         }
         connection.close();
+        pcf.stop();
     }
 
+    @Test(timeout = 60000)
     public void testInstanceOf() throws  Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof QueueConnectionFactory);
         assertTrue(pcf instanceof TopicConnectionFactory);
+        pcf.stop();
     }
 
+    @Test(timeout = 60000)
     public void testBindable() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof ObjectFactory);
         assertTrue(((ObjectFactory)pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
         assertTrue(pcf.isTmFromJndi());
+        pcf.stop();
     }
 
+    @Test(timeout = 60000)
     public void testBindableEnvOverrides() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof ObjectFactory);
@@ -270,11 +286,14 @@ public class XAConnectionPoolTest extends TestSupport {
         environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
         assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
         assertFalse(pcf.isTmFromJndi());
+        pcf.stop();
     }
 
+    @Test(timeout = 60000)
     public void testSenderAndPublisherDest() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory(
+            "vm://test?broker.persistent=false&broker.useJmx=false"));
 
         QueueConnection connection = pcf.createQueueConnection();
         QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -289,11 +308,15 @@ public class XAConnectionPoolTest extends TestSupport {
         assertNotNull(topicPublisher.getTopic().getTopicName());
 
         topicConnection.close();
+        pcf.stop();
     }
 
+    @Test(timeout = 60000)
     public void testSessionArgsIgnoredWithTm() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory(
+            "vm://test?broker.persistent=false&broker.useJmx=false"));
+
         // simple TM that with no tx
         pcf.setTransactionManager(new TransactionManager() {
             @Override
@@ -346,6 +369,7 @@ public class XAConnectionPoolTest extends TestSupport {
         assertNotNull("can create session(false, 0)", connection.createQueueSession(false, 0));
 
         connection.close();
+        pcf.stop();
     }
 
     static class XAConnectionFactoryOnly implements XAConnectionFactory {

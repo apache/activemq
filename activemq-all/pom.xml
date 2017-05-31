@@ -14,7 +14,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-all</artifactId>
@@ -71,6 +71,10 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -116,7 +120,21 @@
                   <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
                   <include>org.slf4j:slf4j-api</include>
                   <include>org.slf4j:slf4j-log4j12</include>
+                  <include>org.slf4j:jcl-over-slf4j</include>
                   <include>log4j:log4j</include>
+                  <include>org.springframework:spring-core</include>
+                  <include>org.springframework:spring-beans</include>
+                  <include>org.springframework:spring-context</include>
+                  <include>org.springframework:spring-expression</include>
+                  <include>org.springframework:spring-jms</include>
+                  <include>org.springframework:spring-messaging</include>
+                  <include>org.springframework:spring-tx</include>
+                  <include>org.apache.xbean:xbean-spring</include>
+                  <include>org.apache.camel:camel-jms</include>
+                  <include>org.apache.camel:camel-core</include>
+                  <include>org.apache.camel:camel-spring</include>
+                  <include>com.sun.xml.bind:jaxb-core</include>
+                  <include>com.sun.xml.bind:jaxb-impl</include>
                 </includes>
               </artifactSet>
 
@@ -140,6 +158,11 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                   <resource>META-INF/spring.schemas</resource>
                 </transformer>
+
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                    <mainClass>org.apache.activemq.console.command.ShellCommand</mainClass>
+                </transformer>
+
               </transformers>
             </configuration>
           </execution>

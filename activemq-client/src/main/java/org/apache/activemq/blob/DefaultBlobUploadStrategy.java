@@ -40,7 +40,9 @@ public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUp
     }
 
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
-        return uploadStream(message, new FileInputStream(file));
+        try(FileInputStream fis = new FileInputStream(file)) {
+            return uploadStream(message, fis);
+        }
     }
 
     public URL uploadStream(ActiveMQBlobMessage message, InputStream fis) throws JMSException, IOException {
@@ -55,18 +57,18 @@ public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUp
         // (chunked mode not supported before JRE 1.5)
         connection.setChunkedStreamingMode(transferPolicy.getBufferSize());
 
-        OutputStream os = connection.getOutputStream();
-
-        byte[] buf = new byte[transferPolicy.getBufferSize()];
-        for (int c = fis.read(buf); c != -1; c = fis.read(buf)) {
-            os.write(buf, 0, c);
-            os.flush();
+        try(OutputStream os = connection.getOutputStream()) {
+            byte[] buf = new byte[transferPolicy.getBufferSize()];
+            for (int c = fis.read(buf); c != -1; c = fis.read(buf)) {
+                os.write(buf, 0, c);
+                os.flush();
+            }
+        } catch (IOException error) {
+            throw new IOException("PUT failed to: " + url, error);
         }
-        os.close();
-        fis.close();
 
         if (!isSuccessfulCode(connection.getResponseCode())) {
-            throw new IOException("PUT was not successful: " + connection.getResponseCode() + " "
+            throw new IOException("PUT to " + url + " was not successful: " + connection.getResponseCode() + " "
                                   + connection.getResponseMessage());
         }
 

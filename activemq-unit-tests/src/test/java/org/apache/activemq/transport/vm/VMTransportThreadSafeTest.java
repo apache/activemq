@@ -298,6 +298,7 @@ public class VMTransportThreadSafeTest {
 
         final VMTestTransportListener remoteListener = new VMTestTransportListener(remoteReceived);
         remote.setTransportListener(remoteListener);
+        remote.start();
 
         final Response[] answer = new Response[1];
         ResponseCorrelator responseCorrelator = new ResponseCorrelator(local);
@@ -317,7 +318,7 @@ public class VMTransportThreadSafeTest {
         // simulate broker stop
         remote.stop();
 
-        assertTrue(Wait.waitFor(new Wait.Condition() {
+        assertTrue("got expected exception response", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("answer: " + answer[0]);
@@ -522,18 +523,32 @@ public class VMTransportThreadSafeTest {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                 } catch (InterruptedException e) {
                 }
                 ((GatedVMTestTransportListener) remote.getTransportListener()).gate.countDown();
             }
         });
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return remoteReceived.size() == 1;
+            }
+        }));
+
         gateman.start();
 
         remote.stop();
         local.stop();
 
-        assertEquals(1, remoteReceived.size());
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return remoteReceived.size() == 1;
+            }
+        }));
+
         assertMessageAreOrdered(remoteReceived);
     }
 

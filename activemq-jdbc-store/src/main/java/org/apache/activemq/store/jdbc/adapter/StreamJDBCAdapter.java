@@ -28,15 +28,15 @@ import org.apache.activemq.util.ByteArrayInputStream;
 /**
  * This JDBCAdapter inserts and extracts BLOB data using the
  * setBinaryStream()/getBinaryStream() operations.
- * 
+ *
  * The databases/JDBC drivers that use this adapter are:
  * <ul>
  * <li>Axion</li>
  * </ul>
- * 
+ *
  * @org.apache.xbean.XBean element="streamJDBCAdapter"
- * 
- * 
+ *
+ *
  */
 public class StreamJDBCAdapter extends DefaultJDBCAdapter {
 
@@ -47,16 +47,13 @@ public class StreamJDBCAdapter extends DefaultJDBCAdapter {
     @Override
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
 
-        try {
-            InputStream is = rs.getBinaryStream(index);
-            ByteArrayOutputStream os = new ByteArrayOutputStream(1024 * 4);
+        try (InputStream is = rs.getBinaryStream(index);
+             ByteArrayOutputStream os = new ByteArrayOutputStream(1024 * 4)) {
 
             int ch;
             while ((ch = is.read()) >= 0) {
                 os.write(ch);
             }
-            is.close();
-            os.close();
 
             return os.toByteArray();
         } catch (IOException e) {

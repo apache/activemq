@@ -36,9 +36,14 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 public class MQTTWireFormat implements WireFormat {
 
     static final int MAX_MESSAGE_LENGTH = 1024 * 1024 * 256;
+    static final long DEFAULT_CONNECTION_TIMEOUT = 30000L;
 
     private int version = 1;
 
+    private int maxFrameSize = MAX_MESSAGE_LENGTH;
+    private long connectAttemptTimeout = MQTTWireFormat.DEFAULT_CONNECTION_TIMEOUT;
+
+    @Override
     public ByteSequence marshal(Object command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -47,12 +52,14 @@ public class MQTTWireFormat implements WireFormat {
         return baos.toByteSequence();
     }
 
+    @Override
     public Object unmarshal(ByteSequence packet) throws IOException {
         ByteArrayInputStream stream = new ByteArrayInputStream(packet);
         DataInputStream dis = new DataInputStream(stream);
         return unmarshal(dis);
     }
 
+    @Override
     public void marshal(Object command, DataOutput dataOut) throws IOException {
         MQTTFrame frame = (MQTTFrame) command;
         dataOut.write(frame.header());
@@ -74,6 +81,7 @@ public class MQTTWireFormat implements WireFormat {
         }
     }
 
+    @Override
     public Object unmarshal(DataInput dataIn) throws IOException {
         byte header = dataIn.readByte();
 
@@ -88,7 +96,7 @@ public class MQTTWireFormat implements WireFormat {
         while ((digit & 0x80) != 0);
 
         if (length >= 0) {
-            if (length > MAX_MESSAGE_LENGTH) {
+            if (length > getMaxFrameSize()) {
                 throw new IOException("The maximum message length was exceeded");
             }
 
@@ -107,6 +115,7 @@ public class MQTTWireFormat implements WireFormat {
     /**
      * @param the version of the wire format
      */
+    @Override
     public void setVersion(int version) {
         this.version = version;
     }
@@ -114,7 +123,44 @@ public class MQTTWireFormat implements WireFormat {
     /**
      * @return the version of the wire format
      */
+    @Override
     public int getVersion() {
         return this.version;
+    }
+
+    /**
+     * @return the maximum number of bytes a single MQTT message frame is allowed to be.
+     */
+    public int getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    /**
+     * Sets the maximum frame size for an incoming MQTT frame.  The protocl limit is
+     * 256 megabytes and this value cannot be set higher.
+     *
+     * @param maxFrameSize
+     *        the maximum allowed frame size for a single MQTT frame.
+     */
+    public void setMaxFrameSize(int maxFrameSize) {
+        this.maxFrameSize = Math.min(MAX_MESSAGE_LENGTH, maxFrameSize);
+    }
+
+    /**
+     * @return the timeout value used to fail a connection if no CONNECT frame read.
+     */
+    public long getConnectAttemptTimeout() {
+        return connectAttemptTimeout;
+    }
+
+    /**
+     * Sets the timeout value used to fail a connection if no CONNECT frame is read
+     * in the given interval.
+     *
+     * @param connectTimeout
+     *        the connection frame received timeout value.
+     */
+    public void setConnectAttemptTimeout(long connectTimeout) {
+        this.connectAttemptTimeout = connectTimeout;
     }
 }

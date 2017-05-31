@@ -26,3 +26,5 @@ org.apache.activemq.console.command.EncryptCommand
 org.apache.activemq.console.command.DecryptCommand
 org.apache.activemq.console.command.StoreExportCommand
 org.apache.activemq.console.command.PurgeCommand
+org.apache.activemq.console.command.ProducerCommand
+org.apache.activemq.console.command.ConsumerCommand

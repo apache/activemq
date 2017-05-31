@@ -137,7 +137,7 @@ public class ThreadExplorer
             if (thread != null)
             {
                 out.append("* [" + thread.getName() + "] " + (thread.isDaemon() ? "(Daemon)" : "")
-                        + " Group: " + thread.getThreadGroup().getName() + "\n");
+                        + " Group: " + (thread.getThreadGroup() != null ? thread.getThreadGroup().getName() : "") + "\n");
             }
             else
             {

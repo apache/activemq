@@ -39,7 +39,7 @@ public class FilePendingMessageCursorTestSupport {
     @After
     public void stopBroker() throws Exception {
         if (brokerService != null) {
-            brokerService.getTempDataStore().stop();
+            brokerService.stop();
         }
     }
 
@@ -48,6 +48,7 @@ public class FilePendingMessageCursorTestSupport {
         brokerService.setUseJmx(false);
         SystemUsage usage = brokerService.getSystemUsage();
         usage.getTempUsage().setLimit(1025*1024*15);
+        brokerService.start();
 
         // put something in the temp store to on demand initialise it
         PList dud = brokerService.getTempDataStore().getPList("dud");
@@ -58,6 +59,15 @@ public class FilePendingMessageCursorTestSupport {
     public void testAddToEmptyCursorWhenTempStoreIsFull() throws Exception {
         createBrokerWithTempStoreLimit();
         SystemUsage usage = brokerService.getSystemUsage();
+
+        PList dud = brokerService.getTempDataStore().getPList("dud");
+        // fill the temp store
+        int id=0;
+        ByteSequence payload = new ByteSequence(new byte[1024]);
+        while (!usage.getTempUsage().isFull()) {
+            dud.addFirst("A-" + (++id), payload);
+        }
+
         assertTrue("temp store is full: %" + usage.getTempUsage().getPercentUsage(), usage.getTempUsage().isFull());
 
         underTest = new FilePendingMessageCursor(brokerService.getBroker(), "test", false);

@@ -36,19 +36,19 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
  */
 public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadStrategy{
 
-   
+
     private final BlobTransferPolicy policy;
     private File rootFile;
-    
+
     public FileSystemBlobStrategy(final BlobTransferPolicy policy) throws MalformedURLException, URISyntaxException  {
         this.policy = policy;
-        
+
         createRootFolder();
     }
-    
+
     /**
-     * Create the root folder if not exist 
-     * 
+     * Create the root folder if not exist
+     *
      * @throws MalformedURLException
      * @throws URISyntaxException
      */
@@ -65,7 +65,9 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
      * @see org.apache.activemq.blob.BlobUploadStrategy#uploadFile(org.apache.activemq.command.ActiveMQBlobMessage, java.io.File)
      */
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
-        return uploadStream(message, new FileInputStream(file));
+        try(FileInputStream fis = new FileInputStream(file)) {
+            return uploadStream(message, fis);
+        }
     }
 
     /*
@@ -74,14 +76,13 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
      */
     public URL uploadStream(ActiveMQBlobMessage message, InputStream in) throws JMSException, IOException {
         File f = getFile(message);
-        FileOutputStream out = new FileOutputStream(f);
-        byte[] buffer = new byte[policy.getBufferSize()];
-        for (int c = in.read(buffer); c != -1; c = in.read(buffer)) {
-            out.write(buffer, 0, c);
-            out.flush();
+        try(FileOutputStream out = new FileOutputStream(f)) {
+            byte[] buffer = new byte[policy.getBufferSize()];
+            for (int c = in.read(buffer); c != -1; c = in.read(buffer)) {
+                out.write(buffer, 0, c);
+                out.flush();
+            }
         }
-        out.flush();
-        out.close();
         // File.toURL() is deprecated
         return f.toURI().toURL();
     }
@@ -104,14 +105,14 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
         return new FileInputStream(getFile(message));
     }
 
-    
+
     /**
-     * Return the {@link File} for the {@link ActiveMQBlobMessage}. 
-     * 
+     * Return the {@link File} for the {@link ActiveMQBlobMessage}.
+     *
      * @param message
      * @return file
      * @throws JMSException
-     * @throws IOException 
+     * @throws IOException
      */
     protected File getFile(ActiveMQBlobMessage message) throws JMSException, IOException {
     	if (message.getURL() != null) {
@@ -123,8 +124,8 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
 			}
     	}
         //replace all : with _ to make windows more happy
-        String fileName = message.getJMSMessageID().replaceAll(":", "_"); 
-        return new File(rootFile, fileName);        
-        
+        String fileName = message.getJMSMessageID().replaceAll(":", "_");
+        return new File(rootFile, fileName);
+
     }
 }

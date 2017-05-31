@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-http</artifactId>
@@ -39,6 +39,10 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
+     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jms</artifactId>
+    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-stomp</artifactId>
@@ -53,12 +57,7 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-websocket</artifactId>
-      <version>${jetty-version}</version>
+      <artifactId>jetty-all</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -85,6 +84,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jaas</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>compile</scope>
@@ -100,17 +104,40 @@
       <artifactId>selenium-java</artifactId>
       <version>2.25.0</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-chrome-driver</artifactId>
       <version>2.25.0</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-firefox-driver</artifactId>
       <version>2.25.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>websocket-server</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+   <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -136,10 +163,11 @@
               org.apache.activemq.transport.https*;version=${project.version};-noimport:=;-split-package:=merge-last
             </Export-Package>
             <Import-Package>
-              org.eclipse.jetty*;version="[7.5,8.0)";resolution:=optional,
+              org.eclipse.jetty*;version="[9.0,10.0)";resolution:=optional,
               !org.apache.activemq.transport.ws*;version=${project.version},
               !org.apache.activemq.transport.xstream;version=${project.version},
               !org.apache.activemq.transport.util;version=${project.version},
+              org.apache.xbean*;version="[3.13,5)",
               org.apache.activemq*;version=${project.version};resolution:=optional
             </Import-Package>
           </instructions>
@@ -184,6 +212,49 @@
                 <exclude>org/apache/activemq/transport/http/HttpJmsDurableTopicSendReceiveTest.*</exclude>
                 <exclude>org/apache/activemq/transport/http/HttpPersistentSendAndReceiveTest.*</exclude>
                 <exclude>org/apache/activemq/transport/http/HttpSpringTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/HttpsJmsSendAndReceiveTest.*</include>
+                <include>**/WSTransportTest.*</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**</exclude>
               </excludes>
             </configuration>
           </plugin>

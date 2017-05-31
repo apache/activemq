@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.store;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import junit.framework.Test;
@@ -34,15 +35,16 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
 
 public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
     final ArrayList<String> expected = new ArrayList<String>();
     final ActiveMQDestination destination = new ActiveMQQueue("TEST");
     public PendingQueueMessageStoragePolicy queuePendingPolicy;
-    public PersistenceAdapter persistenceAdapter;
 
     @Override
     protected void setUp() throws Exception {
@@ -52,13 +54,21 @@ public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
 
     public void initCombosForTestRecovery() throws Exception {
         addCombinationValues("queuePendingPolicy", new PendingQueueMessageStoragePolicy[] {new FilePendingQueueMessageStoragePolicy(), new VMPendingQueueMessageStoragePolicy()});
-        addCombinationValues("persistenceAdapter", new PersistenceAdapter[] {new KahaDBPersistenceAdapter(), new JDBCPersistenceAdapter()});
+        PersistenceAdapter[] persistenceAdapters = new PersistenceAdapter[] {
+                new KahaDBPersistenceAdapter(),
+                new JDBCPersistenceAdapter()
+        };
+        for (PersistenceAdapter adapter : persistenceAdapters) {
+            adapter.setDirectory(new File(IOHelper.getDefaultDataDirectory()));
+        }
+        addCombinationValues("persistenceAdapter", persistenceAdapters);
     }
 
     public void testRecovery() throws Exception {
         sendSomeMessagesThatWillExpireIn5AndThenOne();
 
         broker.stop();
+        broker.waitUntilStopped();
         TimeUnit.SECONDS.sleep(6);
         broker = createRestartedBroker();
         broker.start();
@@ -124,6 +134,9 @@ public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
         super.configureBroker(broker);
+        if (persistenceAdapter instanceof JDBCPersistenceAdapter) {
+           ((JDBCPersistenceAdapter) persistenceAdapter).setLockDataSource(null);
+        }
         broker.setPersistenceAdapter(persistenceAdapter);
     }
 

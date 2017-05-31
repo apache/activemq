@@ -32,9 +32,15 @@
 				trustStorePassword="password" />
 		</amq:sslContext>
 
+        <amq:plugins>
+            <amq:jaasDualAuthenticationPlugin configuration="activemq-domain" sslConfiguration="activemq-ssl-domain"/>
+        </amq:plugins>
+
 		<amq:transportConnectors>
 			<amq:transportConnector name="https"
 				uri="https://localhost:8161?transport.needClientAuth=true" />
+            <amq:transportConnector name="wss"
+                uri="wss://localhost:61618?transport.needClientAuth=true"/>
 		</amq:transportConnectors>
 	</amq:broker>
 

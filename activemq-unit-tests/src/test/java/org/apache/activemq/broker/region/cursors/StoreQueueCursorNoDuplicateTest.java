@@ -31,14 +31,16 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.usage.SystemUsage;
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author gtully
  * https://issues.apache.org/activemq/browse/AMQ-2020
  **/
 public class StoreQueueCursorNoDuplicateTest extends TestCase {
-    ActiveMQQueue destination = new ActiveMQQueue("queue-"
+    static final Logger LOG = LoggerFactory.getLogger(StoreQueueCursorNoDuplicateTest.class);
+            ActiveMQQueue destination = new ActiveMQQueue("queue-"
             + StoreQueueCursorNoDuplicateTest.class.getSimpleName());
     BrokerService brokerService;
 
@@ -78,6 +80,7 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
                 queueMessageStore, destinationStatistics, null);
 
         queueMessageStore.start();
+        queueMessageStore.registerIndexListener(null);
 
         QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
         SystemUsage systemUsage = new SystemUsage();
@@ -106,7 +109,7 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
             MessageReference ref = underTest.next();
             ref.decrementReferenceCount();
             underTest.remove();
-            Log.info("Received message: {} with body: {}",
+            LOG.info("Received message: {} with body: {}",
                      ref.getMessageId(), ((ActiveMQTextMessage)ref.getMessage()).getText());
             assertEquals(dequeueCount++, ref.getMessageId().getProducerSequenceId());
         }

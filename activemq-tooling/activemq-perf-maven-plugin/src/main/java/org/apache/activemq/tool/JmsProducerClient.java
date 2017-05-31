@@ -31,6 +31,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.tool.properties.JmsClientProperties;
 import org.apache.activemq.tool.properties.JmsProducerProperties;
 import org.slf4j.Logger;
@@ -322,6 +323,24 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         client = (JmsProducerProperties)clientProps;
     }
 
+    @Override
+    protected Destination createTemporaryDestination(String destName) throws JMSException {
+        String simpleName = getSimpleName(destName);
+        byte destinationType = getDestinationType(destName);
+
+        // when we produce to temp destinations, we publish to them as
+        // though they were normal queues or topics
+        if (destinationType == ActiveMQDestination.TEMP_QUEUE_TYPE) {
+            LOG.info("Creating queue: {}", destName);
+            return getSession().createQueue(simpleName);
+        } else if (destinationType == ActiveMQDestination.TEMP_TOPIC_TYPE) {
+            LOG.info("Creating topic: {}", destName);
+            return getSession().createTopic(simpleName);
+        } else {
+            throw new IllegalArgumentException("Unrecognized destination type: " + destinationType);
+        }
+    }
+
     protected String buildText(String text, int size) {
         byte[] data = new byte[size - text.length()];
         Arrays.fill(data, (byte) 0);
@@ -357,13 +376,14 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
             }
 
             // try to load file
-            BufferedReader br = new BufferedReader(new FileReader(f));
             StringBuffer payload = new StringBuffer();
-            String tmp = null;
-            while ((tmp = br.readLine()) != null) {
-                payload.append(tmp);
+            try(FileReader fr = new FileReader(f);
+                BufferedReader br = new BufferedReader(fr)) {
+                String tmp = null;
+                while ((tmp = br.readLine()) != null) {
+                    payload.append(tmp);
+                }
             }
-            br.close();
             jmsTextMessage = getSession().createTextMessage(payload.toString());
             return jmsTextMessage;
         } catch (FileNotFoundException ex) {

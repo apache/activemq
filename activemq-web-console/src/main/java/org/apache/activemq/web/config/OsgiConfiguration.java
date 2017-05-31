@@ -44,7 +44,7 @@ public class OsgiConfiguration extends AbstractConfiguration implements ManagedS
     public OsgiConfiguration() {
 
         BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        Dictionary properties = new Hashtable();
+        Dictionary<String, String> properties = new Hashtable<String, String>();
         properties.put(Constants.SERVICE_PID, "org.apache.activemq.webconsole");
         service = context.registerService(ManagedService.class.getName(),
             this, properties);

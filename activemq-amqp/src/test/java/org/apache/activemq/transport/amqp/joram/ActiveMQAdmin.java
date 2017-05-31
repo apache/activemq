@@ -27,7 +27,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import javax.jms.ConnectionFactory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -35,9 +34,9 @@ import javax.naming.NamingException;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.TopicImpl;
+import org.apache.qpid.jms.JmsConnectionFactory;
+import org.apache.qpid.jms.JmsQueue;
+import org.apache.qpid.jms.JmsTopic;
 import org.objectweb.jtests.jms.admin.Admin;
 
 /**
@@ -52,7 +51,8 @@ public class ActiveMQAdmin implements Admin {
             // Use the jetty JNDI context since it's mutable.
             final Hashtable<String, String> env = new Hashtable<String, String>();
             env.put("java.naming.factory.initial", "org.eclipse.jetty.jndi.InitialContextFactory");
-            env.put("java.naming.factory.url.pkgs", "org.eclipse.jetty.jndi");;
+            env.put("java.naming.factory.url.pkgs", "org.eclipse.jetty.jndi");
+            ;
             context = new InitialContext(env);
         } catch (NamingException e) {
             throw new RuntimeException(e);
@@ -90,7 +90,7 @@ public class ActiveMQAdmin implements Admin {
     }
 
     protected BrokerService createBroker() throws Exception {
-        return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
+        return BrokerFactory.createBroker(new URI("broker://()/localhost" + "?persistent=false&useJmx=false&advisorySupport=false&schedulerSupport=false"));
     }
 
     @Override
@@ -103,7 +103,7 @@ public class ActiveMQAdmin implements Admin {
 
     @Override
     public void startServer() throws Exception {
-        if( broker!=null ) {
+        if (broker != null) {
             stopServer();
         }
         if (System.getProperty("basedir") == null) {
@@ -142,7 +142,7 @@ public class ActiveMQAdmin implements Admin {
     @Override
     public void createQueue(String name) {
         try {
-            context.bind(name, new QueueImpl("queue://"+name));
+            context.bind(name, new JmsQueue(name));
         } catch (NamingException e) {
             throw new RuntimeException(e);
         }
@@ -151,7 +151,7 @@ public class ActiveMQAdmin implements Admin {
     @Override
     public void createTopic(String name) {
         try {
-            context.bind(name, new TopicImpl("topic://"+name));
+            context.bind(name, new JmsTopic(name));
         } catch (NamingException e) {
             throw new RuntimeException(e);
         }
@@ -159,7 +159,6 @@ public class ActiveMQAdmin implements Admin {
 
     @Override
     public void deleteQueue(String name) {
-        // BrokerTestSupport.delete_queue((Broker)base.broker, name);
         try {
             context.unbind(name);
         } catch (NamingException e) {
@@ -179,7 +178,7 @@ public class ActiveMQAdmin implements Admin {
     @Override
     public void createConnectionFactory(String name) {
         try {
-            final ConnectionFactory factory = new ConnectionFactoryImpl("localhost", port, null, null);
+            final JmsConnectionFactory factory = new JmsConnectionFactory("amqp://localhost:" + port);
             context.bind(name, factory);
         } catch (NamingException e) {
             throw new RuntimeException(e);

@@ -16,11 +16,17 @@
  */
 package org.apache.activemq.usecases;
 
+import javax.management.openmbean.TabularData;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.page.PageFile;
+import org.apache.activemq.transport.vm.VMTransport;
+import org.apache.activemq.transport.vm.VMTransportFactory;
+import org.apache.activemq.transport.vm.VMTransportServer;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -32,6 +38,8 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -92,6 +100,46 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         assertEquals(sent, listener.count);
     }
 
+    @Test(timeout = 60 * 1000)
+    public void testBrowseOfflineSub() throws Exception {
+        // create durable subscription
+        Connection con = createConnection();
+        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId");
+        session.close();
+        con.close();
+
+        // send messages
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+
+        for (int i = 0; i < 10; i++) {
+            Message message = session.createMessage();
+            message.setStringProperty("filter", "true");
+            producer.send(topic, message);
+        }
+
+        Thread.sleep(1 * 1000);
+
+        session.close();
+        con.close();
+
+        // browse the durable sub
+        ObjectName[] subs = broker.getAdminView().getInactiveDurableTopicSubscribers();
+        assertEquals(1, subs.length);
+        ObjectName subName = subs[0];
+        DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)
+                broker.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
+        CompositeData[] data  = sub.browse();
+        assertNotNull(data);
+        assertEquals(10, data.length);
+
+        TabularData tabularData = sub.browseAsTable();
+        assertNotNull(tabularData);
+        assertEquals(10, tabularData.size());
+
+    }
 
     @Test(timeout = 60 * 1000)
     public void testTwoOfflineSubscriptionCanConsume() throws Exception {

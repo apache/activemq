@@ -257,7 +257,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
     // first ack delivered after expiry
     public void testExpiredMessagesWithVerySlowConsumer() throws Exception {
         createBroker();
-        final long queuePrefetch = 600;
+        final long queuePrefetch = 5;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
                 connectionUri + "?jms.prefetchPolicy.queuePrefetch=" + queuePrefetch);
         connection = factory.createConnection();
@@ -266,7 +266,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         final int ttl = 4000;
         producer.setTimeToLive(ttl);
 
-        final long sendCount = 1500;
+        final long sendCount = 10;
         final CountDownLatch receivedOneCondition = new CountDownLatch(1);
         final CountDownLatch waitCondition = new CountDownLatch(1);
 
@@ -328,10 +328,14 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                 return queuePrefetch == view.getDispatchCount();
             }
         }));
-        assertTrue("Not all sent have expired ", Wait.waitFor(new Wait.Condition() {
+        assertTrue("all non inflight have expired ", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return sendCount == view.getExpiredCount();
+                LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
+                        + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
+                        + ", size= " + view.getQueueSize());
+
+                return view.getExpiredCount() > 0 && (view.getEnqueueCount() - view.getInFlightCount()) == view.getExpiredCount();
             }
         }));
 
@@ -448,10 +452,15 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                 return queuePrefetch == view.getDispatchCount();
             }
         }));
-        assertTrue("All have not sent have expired ", Wait.waitFor(new Wait.Condition() {
+
+        assertTrue("all non inflight have expired ", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return sendCount == view.getExpiredCount();
+                LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
+                        + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
+                        + ", size= " + view.getQueueSize());
+
+                return view.getExpiredCount() > 0 && (view.getEnqueueCount() - view.getInFlightCount()) == view.getExpiredCount();
             }
         }));
 

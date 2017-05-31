@@ -21,12 +21,17 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -316,6 +321,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 mcast.joinGroup(sockAddress, NetworkInterface.getByName(mcJoinNetworkInterface));
             }
             else {
+                mcast.setNetworkInterface(findNetworkInterface());
             	mcast.joinGroup(inetAddress);
             }
             mcast.setSoTimeout((int)keepAliveInterval);
@@ -331,6 +337,27 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             runner.start();
             doAdvertizeSelf();
         }
+    }
+    
+    private NetworkInterface findNetworkInterface() throws SocketException {
+        Enumeration<NetworkInterface> ifcs = NetworkInterface.getNetworkInterfaces();
+        List<NetworkInterface> possibles = new ArrayList<NetworkInterface>();
+        while (ifcs.hasMoreElements()) {
+            NetworkInterface ni = ifcs.nextElement();
+            try {
+                if (ni.supportsMulticast()
+                        && ni.isUp()) {
+                    for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
+                        if (ia != null && ia.getAddress() instanceof java.net.Inet4Address
+                                && !ia.getAddress().isLoopbackAddress()
+                                && (ni.getDisplayName()==null || !ni.getDisplayName().startsWith("vnic"))) {
+                            possibles.add(ni);
+                        }
+                    }
+                }
+            } catch (SocketException ignored) {}
+        }
+        return possibles.isEmpty() ? null : possibles.get(possibles.size() - 1);
     }
 
     /**

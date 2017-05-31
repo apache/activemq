@@ -32,6 +32,8 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
     public static final String PROVIDER_VERSION;
     public static final int PROVIDER_MAJOR_VERSION;
     public static final int PROVIDER_MINOR_VERSION;
+    public static final String PROVIDER_NAME = "ActiveMQ";
+    public static final String PLATFORM_DETAILS;
 
     public static final ActiveMQConnectionMetaData INSTANCE = new ActiveMQConnectionMetaData();
 
@@ -43,11 +45,13 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
             Package p = Package.getPackage("org.apache.activemq");
             if (p != null) {
                 version = p.getImplementationVersion();
-                Pattern pattern = Pattern.compile("(\\d+)\\.(\\d+).*");
-                Matcher m = pattern.matcher(version);
-                if (m.matches()) {
-                    major = Integer.parseInt(m.group(1));
-                    minor = Integer.parseInt(m.group(2));
+                if (version != null) {
+                    Pattern pattern = Pattern.compile("(\\d+)\\.(\\d+).*");
+                    Matcher m = pattern.matcher(version);
+                    if (m.matches()) {
+                        major = Integer.parseInt(m.group(1));
+                        minor = Integer.parseInt(m.group(2));
+                    }
                 }
             }
         } catch (Throwable e) {
@@ -55,6 +59,7 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
         PROVIDER_VERSION = version;
         PROVIDER_MAJOR_VERSION = major;
         PROVIDER_MINOR_VERSION = minor;
+        PLATFORM_DETAILS = ActiveMQConnectionMetaData.getPlatformDetails();
     }
 
     private ActiveMQConnectionMetaData() {
@@ -144,5 +149,34 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
         jmxProperties.add("JMSXDeliveryCount");
         jmxProperties.add("JMSXProducerTXID");
         return jmxProperties.elements();
+    }
+
+    /**
+     * Get the platform details for the JMS provider.
+     *
+     * @return String containing the platform details
+     */
+    private static String getPlatformDetails() {
+        String details = "java";
+        try {
+            StringBuilder platformInfo = new StringBuilder(128);
+
+            platformInfo.append("JVM: ");
+            platformInfo.append(System.getProperty("java.version"));
+            platformInfo.append(", ");
+            platformInfo.append(System.getProperty("java.vm.version"));
+            platformInfo.append(", ");
+            platformInfo.append(System.getProperty("java.vendor"));
+            platformInfo.append(", OS: ");
+            platformInfo.append(System.getProperty("os.name"));
+            platformInfo.append(", ");
+            platformInfo.append(System.getProperty("os.version"));
+            platformInfo.append(", ");
+            platformInfo.append(System.getProperty("os.arch"));
+
+            details = platformInfo.toString();
+        } catch (Throwable e) {
+        }
+        return details;
     }
 }

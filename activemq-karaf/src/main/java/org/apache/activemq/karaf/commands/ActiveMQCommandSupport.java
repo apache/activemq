@@ -17,6 +17,7 @@
 package org.apache.activemq.karaf.commands;
 
 import org.apache.activemq.console.CommandContext;
+import org.apache.activemq.console.command.AbstractJmxCommand;
 import org.apache.activemq.console.command.Command;
 import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
 import org.apache.felix.gogo.commands.Argument;
@@ -42,7 +43,9 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
         try {
             currentCommand.setCommandContext(context2);
             // must be added first
-            arguments.add(0, "--jmxlocal");
+            if (command instanceof AbstractJmxCommand) {
+                arguments.add(0, "--jmxlocal");
+            }
             currentCommand.execute(arguments);
             return null;
         } catch (Throwable e) {
@@ -69,6 +72,13 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
         }
         return null;
 
+    }
+
+    /**
+     * @return the description of the command.
+     */
+    public String description() {
+        return command.getOneLineDescription();
     }
 
     public Command getCommand() {

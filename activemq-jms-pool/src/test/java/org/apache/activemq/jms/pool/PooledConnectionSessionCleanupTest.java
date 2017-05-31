@@ -28,8 +28,6 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -39,15 +37,8 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class PooledConnectionSessionCleanupTest {
-
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(PooledConnectionSessionCleanupTest.class);
-
-    protected BrokerService service;
+public class PooledConnectionSessionCleanupTest extends JmsPoolTestSupport {
 
     protected ActiveMQConnectionFactory directConnFact;
     protected Connection directConn1;
@@ -64,20 +55,25 @@ public class PooledConnectionSessionCleanupTest {
      * Prepare to run a test case: create, configure, and start the embedded
      * broker, as well as creating the client connections to the broker.
      */
+    @Override
     @Before
-    public void prepTest() throws java.lang.Exception {
-        service = new BrokerService();
-        service.setBrokerName("PooledConnectionSessionCleanupTestBroker");
-        service.setUseJmx(true);
-        service.setPersistent(false);
-        service.setSchedulerSupport(false);
-        service.start();
-        service.waitUntilStarted();
+    public void setUp() throws java.lang.Exception {
+        super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setBrokerName("PooledConnectionSessionCleanupTestBroker");
+        brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
+        brokerService.setPersistent(false);
+        brokerService.setSchedulerSupport(false);
+        brokerService.setAdvisorySupport(false);
+        brokerService.start();
+        brokerService.waitUntilStarted();
 
         // Create the ActiveMQConnectionFactory and the PooledConnectionFactory.
         // Set a long idle timeout on the pooled connections to better show the
         // problem of holding onto created resources on close.
-        directConnFact = new ActiveMQConnectionFactory(service.getVmConnectorURI());
+        directConnFact = new ActiveMQConnectionFactory(brokerService.getVmConnectorURI());
         pooledConnFact = new PooledConnectionFactory();
         pooledConnFact.setConnectionFactory(directConnFact);
         pooledConnFact.setIdleTimeout((int)TimeUnit.MINUTES.toMillis(60));
@@ -96,8 +92,9 @@ public class PooledConnectionSessionCleanupTest {
         pooledConn2.start();
     }
 
+    @Override
     @After
-    public void cleanupTest() throws java.lang.Exception {
+    public void tearDown() throws java.lang.Exception {
         try {
             if (pooledConn1 != null) {
                 pooledConn1.close();
@@ -122,14 +119,8 @@ public class PooledConnectionSessionCleanupTest {
             }
         } catch (JMSException jms_exc) {
         }
-        try {
-            if (service != null) {
-                service.stop();
-                service.waitUntilStopped();
-                service = null;
-            }
-        } catch (JMSException jms_exc) {
-        }
+
+        super.tearDown();
     }
 
     private void produceMessages() throws Exception {
@@ -142,16 +133,7 @@ public class PooledConnectionSessionCleanupTest {
         producer.close();
     }
 
-    private QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
-                + ":destinationType=Queue,destinationName=" + name
-                + ",type=Broker,brokerName=" + service.getBrokerName());
-        QueueViewMBean proxy = (QueueViewMBean) service.getManagementContext()
-                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
-        return proxy;
-    }
-
-    @Test
+    @Test(timeout = 60000)
     public void testLingeringPooledSessionsHoldingPrefetchedMessages() throws Exception {
 
         produceMessages();
@@ -167,12 +149,12 @@ public class PooledConnectionSessionCleanupTest {
             public boolean isSatisified() throws Exception {
                 return view.getInFlightCount() == MESSAGE_COUNT;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(25)));
 
         // While all the message are in flight we should get anything on this consumer.
         Session session = directConn1.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(queue);
-        assertNull(consumer.receive(2000));
+        assertNull(consumer.receive(1000));
 
         pooledConn1.close();
 
@@ -182,14 +164,14 @@ public class PooledConnectionSessionCleanupTest {
             public boolean isSatisified() throws Exception {
                 return view.getSubscriptions().length == 1;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(25)));
 
         // Now we'd expect that the message stuck in the prefetch of the pooled session's
         // consumer would be rerouted to the non-pooled session's consumer.
         assertNotNull(consumer.receive(10000));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testNonPooledConnectionCloseNotHoldingPrefetchedMessages() throws Exception {
 
         produceMessages();
@@ -205,12 +187,12 @@ public class PooledConnectionSessionCleanupTest {
             public boolean isSatisified() throws Exception {
                 return view.getInFlightCount() == MESSAGE_COUNT;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(25)));
 
         // While all the message are in flight we should get anything on this consumer.
         Session session = directConn1.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(queue);
-        assertNull(consumer.receive(2000));
+        assertNull(consumer.receive(1000));
 
         directConn2.close();
 
@@ -220,7 +202,7 @@ public class PooledConnectionSessionCleanupTest {
             public boolean isSatisified() throws Exception {
                 return view.getSubscriptions().length == 1;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(25)));
 
         // Now we'd expect that the message stuck in the prefetch of the first session's
         // consumer would be rerouted to the alternate session's consumer.

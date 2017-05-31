@@ -61,7 +61,7 @@ public class AMQ2910Test extends JmsMultipleClientsTestSupport {
         return broker;
     }
 
-    @Test(timeout = 30 * 1000)
+    @Test(timeout = 120 * 1000)
     public void testConcurrentSendToPendingCursor() throws Exception {
         final ActiveMQConnectionFactory factory =
                 new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
@@ -102,9 +102,9 @@ public class AMQ2910Test extends JmsMultipleClientsTestSupport {
         }
 
         executor.shutdown();
-        assertTrue("consumers completed", executor.awaitTermination(60, TimeUnit.SECONDS));
+        assertTrue("consumers completed", executor.awaitTermination(30, TimeUnit.SECONDS));
 
-        allMessagesList.setMaximumDuration(120*1000);
+        allMessagesList.setMaximumDuration(90*1000);
         final int numExpected = maxConcurrency * msgCount;
         allMessagesList.waitForMessagesToArrive(numExpected);
 

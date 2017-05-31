@@ -16,25 +16,14 @@
  */
 package org.apache.activemq.console.util;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import org.apache.activemq.console.filter.*;
 
-import javax.management.ObjectName;
+import javax.management.Attribute;
+import javax.management.AttributeList;
 import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXServiceURL;
+import javax.management.ObjectName;
+import java.util.*;
 
-import org.apache.activemq.console.filter.GroupPropertiesViewFilter;
-import org.apache.activemq.console.filter.MBeansAttributeQueryFilter;
-import org.apache.activemq.console.filter.MBeansObjectNameQueryFilter;
-import org.apache.activemq.console.filter.MBeansRegExQueryFilter;
-import org.apache.activemq.console.filter.MapTransformFilter;
-import org.apache.activemq.console.filter.MessagesQueryFilter;
-import org.apache.activemq.console.filter.PropertiesViewFilter;
-import org.apache.activemq.console.filter.QueryFilter;
-import org.apache.activemq.console.filter.StubQueryFilter;
-import org.apache.activemq.console.filter.WildcardToMsgSelectorTransformFilter;
-import org.apache.activemq.console.filter.WildcardToRegExTransformFilter;
 
 public final class JmxMBeansUtil {
 
@@ -67,6 +56,20 @@ public final class JmxMBeansUtil {
             return createMBeansObjectNameQuery(jmxConnection).query(queryList);
         }
     }
+
+    public static Map<Object, List> queryMBeansAsMap(MBeanServerConnection jmxConnection, List queryList, Set attributes) throws Exception {
+        Map<Object, List> answer = new HashMap<Object, List>();
+        List<AttributeList> mbeans = queryMBeans(jmxConnection, queryList, attributes);
+        for (AttributeList mbean : mbeans) {
+            for(Attribute attr: mbean.asList()) {
+                if (attr.getName().equals(MBeansAttributeQueryFilter.KEY_OBJECT_NAME_ATTRIBUTE)) {
+                    answer.put(attr.getValue(), mbean);
+                }
+            }
+        }
+        return answer;
+    }
+
 
     public static List queryMBeans(MBeanServerConnection jmxConnection, List queryList, Set attributes) throws Exception {
         // If there is no query defined get all mbeans

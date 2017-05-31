@@ -36,6 +36,10 @@
      <jxb:property name="Contents" />
    </jxb:bindings>
 
+   <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice/xs:choice/xs:element[@name='destinations']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
    <jxb:bindings node="xs:element[@name='queue']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
    </jxb:bindings>

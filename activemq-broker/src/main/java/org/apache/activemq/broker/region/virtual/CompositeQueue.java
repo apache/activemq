@@ -38,4 +38,9 @@ public class CompositeQueue extends CompositeDestination {
         // nothing to do for mapped destinations
         return destination;
     }
+
+    @Override
+    public String toString() {
+        return "CompositeQueue [" + getName() + "]";
+    }
 }

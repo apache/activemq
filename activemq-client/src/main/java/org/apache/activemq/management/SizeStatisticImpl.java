@@ -16,7 +16,8 @@
  */
 package org.apache.activemq.management;
 
-public class SizeStatisticImpl extends StatisticImpl{
+public class SizeStatisticImpl extends StatisticImpl {
+
     private long count;
     private long maxSize;
     private long minSize;
@@ -36,8 +37,9 @@ public class SizeStatisticImpl extends StatisticImpl{
         super(name, unit, description);
     }
 
+    @Override
     public synchronized void reset() {
-        if(isDoReset()) {
+        if (isDoReset()) {
             super.reset();
             count = 0;
             maxSize = 0;
@@ -66,29 +68,46 @@ public class SizeStatisticImpl extends StatisticImpl{
     }
 
     /**
-     * @return the maximum time of any step
+     * Reset the total size to the new value
+     *
+     * @param size
+     */
+    public synchronized void setTotalSize(long size) {
+        count++;
+        totalSize = size;
+        if (size > maxSize) {
+            maxSize = size;
+        }
+        if (size < minSize || minSize == 0) {
+            minSize = size;
+        }
+        updateSampleTime();
+    }
+
+    /**
+     * @return the maximum size of any step
      */
     public long getMaxSize() {
         return maxSize;
     }
 
     /**
-     * @return the minimum time of any step
+     * @return the minimum size of any step
      */
     public synchronized long getMinSize() {
         return minSize;
     }
 
     /**
-     * @return the total time of all the steps added together
+     * @return the total size of all the steps added together
      */
     public synchronized long getTotalSize() {
         return totalSize;
     }
 
     /**
-     * @return the average time calculated by dividing the
-     *         total time by the number of counts
+     * @return the average size calculated by dividing the total size by the
+     *         number of counts
      */
     public synchronized double getAverageSize() {
         if (count == 0) {
@@ -98,11 +117,9 @@ public class SizeStatisticImpl extends StatisticImpl{
         return d / count;
     }
 
-
     /**
-     * @return the average time calculated by dividing the
-     *         total time by the number of counts but excluding the
-     *         minimum and maximum times.
+     * @return the average size calculated by dividing the total size by the
+     *         number of counts but excluding the minimum and maximum sizes.
      */
     public synchronized double getAverageSizeExcludingMinMax() {
         if (count <= 2) {
@@ -111,7 +128,6 @@ public class SizeStatisticImpl extends StatisticImpl{
         double d = totalSize - minSize - maxSize;
         return d / (count - 2);
     }
-
 
     /**
      * @return the average number of steps per second
@@ -126,7 +142,8 @@ public class SizeStatisticImpl extends StatisticImpl{
     }
 
     /**
-     * @return the average number of steps per second excluding the min & max values
+     * @return the average number of steps per second excluding the min & max
+     *         values
      */
     public double getAveragePerSecondExcludingMinMax() {
         double d = 1000;
@@ -145,6 +162,7 @@ public class SizeStatisticImpl extends StatisticImpl{
         this.parent = parent;
     }
 
+    @Override
     protected synchronized void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" count: ");
         buffer.append(Long.toString(count));
@@ -164,5 +182,4 @@ public class SizeStatisticImpl extends StatisticImpl{
         buffer.append(Double.toString(getAveragePerSecondExcludingMinMax()));
         super.appendFieldDescription(buffer);
     }
-
 }

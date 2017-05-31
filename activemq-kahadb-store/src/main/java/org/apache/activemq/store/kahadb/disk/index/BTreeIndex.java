@@ -229,7 +229,11 @@ public class BTreeIndex<Key,Value> implements Index<Key,Value> {
     }
     
     synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, Key initialKey) throws IOException {
-        return getRoot(tx).iterator(tx, initialKey);
+        return getRoot(tx).iterator(tx, initialKey, null);
+    }
+
+    synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, Key initialKey, Key maxKey) throws IOException {
+        return getRoot(tx).iterator(tx, initialKey, maxKey);
     }
     
     synchronized public void visit(Transaction tx, BTreeVisitor<Key, Value> visitor) throws IOException {

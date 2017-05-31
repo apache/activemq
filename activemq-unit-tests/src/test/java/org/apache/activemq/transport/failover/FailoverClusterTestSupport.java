@@ -36,6 +36,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,26 +50,31 @@ public class FailoverClusterTestSupport extends TestCase {
     private final Map<String, BrokerService> brokers = new HashMap<String, BrokerService>();
     private final List<ActiveMQConnection> connections = new ArrayList<ActiveMQConnection>();
 
-    protected void assertClientsConnectedToTwoBrokers() {
-        Set<String> set = new HashSet<String>();
-        for (ActiveMQConnection c : connections) {
-            if (c.getTransportChannel().getRemoteAddress() != null) {
-                set.add(c.getTransportChannel().getRemoteAddress());
-            }
-        }
-        assertTrue("Only 2 connections should be found: " + set,
-                set.size() == 2);
+    protected void assertClientsConnectedToTwoBrokers() throws Exception {
+        assertClientsConnectedToXBrokers(2);
     }
 
-    protected void assertClientsConnectedToThreeBrokers() {
-        Set<String> set = new HashSet<String>();
-        for (ActiveMQConnection c : connections) {
-            if (c.getTransportChannel().getRemoteAddress() != null) {
-                set.add(c.getTransportChannel().getRemoteAddress());
+    protected void assertClientsConnectedToThreeBrokers() throws Exception {
+        assertClientsConnectedToXBrokers(3);
+    }
+
+    protected void assertClientsConnectedToXBrokers(final int x) throws Exception {
+        final Set<String> set = new HashSet<String>();
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                set.clear();
+                for (ActiveMQConnection c : connections) {
+                    if (c.getTransportChannel().getRemoteAddress() != null) {
+                        set.add(c.getTransportChannel().getRemoteAddress());
+                    }
+                }
+                return set.size() == x;
             }
-        }
-        assertTrue("Only 3 connections should be found: " + set,
-                set.size() == 3);
+        });
+
+        assertTrue("Only " + x + " connections should be found: " + set,
+                set.size() == x);
     }
 
     protected void assertClientsConnectionsEvenlyDistributed(double minimumPercentage) {
@@ -101,6 +107,12 @@ public class FailoverClusterTestSupport extends TestCase {
     protected void assertAllConnectedTo(String url) throws Exception {
         for (ActiveMQConnection c : connections) {
             assertEquals(url, c.getTransportChannel().getRemoteAddress());
+        }
+    }
+
+    protected void assertBrokerInfo(String brokerName) throws Exception {
+        for (ActiveMQConnection c : connections) {
+            assertEquals(brokerName, c.getBrokerInfo().getBrokerName());
         }
     }
 

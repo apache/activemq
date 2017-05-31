@@ -48,12 +48,4 @@ public class SharedDeadLetterStrategy extends AbstractDeadLetterStrategy {
         this.deadLetterQueue = deadLetterQueue;
     }
 
-    @Override
-    public boolean isDLQ(ActiveMQDestination destination) {
-        if (destination.equals(deadLetterQueue)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 }

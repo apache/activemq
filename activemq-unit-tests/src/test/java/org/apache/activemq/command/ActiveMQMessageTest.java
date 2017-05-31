@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Map;
 
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageFormatException;
@@ -351,6 +352,41 @@ public class ActiveMQMessageTest extends TestCase {
         msg.setFloatProperty(name, 1.3f);
         assertTrue(msg.getObjectProperty(name) instanceof Float);
         assertTrue(((Float) msg.getObjectProperty(name)).floatValue() == 1.3f);
+    }
+
+    public void testSetJMSDeliveryModeProperty() throws JMSException {
+        ActiveMQMessage message = new ActiveMQMessage();
+        String propertyName = "JMSDeliveryMode";
+
+        // Set as Boolean
+        message.setObjectProperty(propertyName, Boolean.TRUE);
+        assertTrue(message.isPersistent());
+        message.setObjectProperty(propertyName, Boolean.FALSE);
+        assertFalse(message.isPersistent());
+        message.setBooleanProperty(propertyName, true);
+        assertTrue(message.isPersistent());
+        message.setBooleanProperty(propertyName, false);
+        assertFalse(message.isPersistent());
+
+        // Set as Integer
+        message.setObjectProperty(propertyName, DeliveryMode.PERSISTENT);
+        assertTrue(message.isPersistent());
+        message.setObjectProperty(propertyName, DeliveryMode.NON_PERSISTENT);
+        assertFalse(message.isPersistent());
+        message.setIntProperty(propertyName, DeliveryMode.PERSISTENT);
+        assertTrue(message.isPersistent());
+        message.setIntProperty(propertyName, DeliveryMode.NON_PERSISTENT);
+        assertFalse(message.isPersistent());
+
+        // Set as String
+        message.setObjectProperty(propertyName, "PERSISTENT");
+        assertTrue(message.isPersistent());
+        message.setObjectProperty(propertyName, "NON_PERSISTENT");
+        assertFalse(message.isPersistent());
+        message.setStringProperty(propertyName, "PERSISTENT");
+        assertTrue(message.isPersistent());
+        message.setStringProperty(propertyName, "NON_PERSISTENT");
+        assertFalse(message.isPersistent());
     }
 
     @SuppressWarnings("rawtypes")

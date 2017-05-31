@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.tcp;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -26,11 +27,13 @@ import java.util.Map;
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -45,11 +48,13 @@ import org.slf4j.LoggerFactory;
  * factory will have their needClientAuth option set to false.
  */
 public class SslTransportFactory extends TcpTransportFactory {
+
     private static final Logger LOG = LoggerFactory.getLogger(SslTransportFactory.class);
 
     /**
      * Overriding to use SslTransportServer and allow for proper reflection.
      */
+    @Override
     public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
@@ -74,7 +79,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      *
      * @param location
      * @param serverSocketFactory
-     * @return
+     * @return a new SslTransportServer initialized from the given location and socket factory.
      * @throws IOException
      * @throws URISyntaxException
      */
@@ -86,9 +91,10 @@ public class SslTransportFactory extends TcpTransportFactory {
      * Overriding to allow for proper configuration through reflection but delegate to get common
      * configuration
      */
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        SslTransport sslTransport = (SslTransport)transport.narrow(SslTransport.class);
+        SslTransport sslTransport = transport.narrow(SslTransport.class);
         IntrospectionSupport.setProperties(sslTransport, options);
 
         return super.compositeConfigure(transport, format, options);
@@ -97,6 +103,7 @@ public class SslTransportFactory extends TcpTransportFactory {
     /**
      * Overriding to use SslTransports.
      */
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         URI localLocation = null;
         String path = location.getPath();
@@ -122,6 +129,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      * @return Newly created (Ssl)ServerSocketFactory.
      * @throws IOException
      */
+    @Override
     protected ServerSocketFactory createServerSocketFactory() throws IOException {
         if( SslContext.getCurrentSslContext()!=null ) {
             SslContext ctx = SslContext.getCurrentSslContext();
@@ -142,6 +150,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      * @return Newly created (Ssl)SocketFactory.
      * @throws IOException
      */
+    @Override
     protected SocketFactory createSocketFactory() throws IOException {
         if( SslContext.getCurrentSslContext()!=null ) {
             SslContext ctx = SslContext.getCurrentSslContext();
@@ -153,5 +162,12 @@ public class SslTransportFactory extends TcpTransportFactory {
         } else {
             return SSLSocketFactory.getDefault();
         }
+    }
+
+    @Override
+    public SslTransport createTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer)
+            throws IOException {
+
+        return new SslTransport(wireFormat, (SSLSocket)socket, initBuffer);
     }
 }

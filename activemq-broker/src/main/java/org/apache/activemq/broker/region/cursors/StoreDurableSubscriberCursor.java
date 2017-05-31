@@ -183,7 +183,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public synchronized void addMessageLast(MessageReference node) throws Exception {
+    public synchronized boolean tryAddMessageLast(MessageReference node, long wait) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
             if (isStarted()) {
@@ -206,6 +206,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             }
 
         }
+        return true;
     }
 
     @Override
@@ -302,6 +303,15 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
+    public synchronized long messageSize() {
+        long pendingSize=0;
+        for (PendingMessageCursor tsp : storePrefetches) {
+            pendingSize += tsp.messageSize();
+        }
+        return pendingSize;
+    }
+
+    @Override
     public void setMaxBatchSize(int newMaxBatchSize) {
         for (PendingMessageCursor storePrefetch : storePrefetches) {
             storePrefetch.setMaxBatchSize(newMaxBatchSize);
@@ -336,7 +346,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
-            cursor.setMaxAuditDepth(maxAuditDepth);
+            cursor.setMaxProducersToAudit(maxProducersToAudit);
         }
     }
 

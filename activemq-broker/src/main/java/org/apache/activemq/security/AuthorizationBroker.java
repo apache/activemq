@@ -39,8 +39,8 @@ import org.apache.activemq.command.ProducerInfo;
 /**
  * Verifies if a authenticated user can do an operation against the broker using
  * an authorization map.
- * 
- * 
+ *
+ *
  */
 public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMBean {
 
@@ -95,7 +95,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         }
         return true;
     }
-           
+
     @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
@@ -110,7 +110,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
-        
+
         if (!checkDestinationAdmin(securityContext, destination)) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to create: " + destination);
         }
@@ -126,6 +126,8 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + destination);
         }
 
+        securityContext.getAuthorizedWriteDests().remove(destination);
+
         super.removeDestination(context, destination, timeout);
     }
 
@@ -136,6 +138,8 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (!checkDestinationAdmin(securityContext, info.getDestination())) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + info.getDestination());
         }
+
+        securityContext.getAuthorizedWriteDests().remove(info.getDestination());
 
         super.removeDestinationInfo(context, info);
     }
@@ -154,7 +158,6 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs) ) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + info.getDestination());
         }
-        securityContext.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());
 
         /*
          * Need to think about this a little more. We could do per message
@@ -205,7 +208,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(producerExchange.getConnectionContext());
 
-        if (!securityContext.isBrokerContext() && !securityContext.getAuthorizedWriteDests().contains(messageSend.getDestination())) {
+        if (!securityContext.isBrokerContext() && !securityContext.getAuthorizedWriteDests().containsValue(messageSend.getDestination())) {
 
             Set<?> allowedACLs = null;
             if (!messageSend.getDestination().isTemporary()) {
@@ -226,18 +229,22 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     // SecurityAdminMBean interface
     // -------------------------------------------------------------------------
 
+    @Override
     public void addQueueRole(String queue, String operation, String role) {
         addDestinationRole(new ActiveMQQueue(queue), operation, role);
     }
 
+    @Override
     public void addTopicRole(String topic, String operation, String role) {
         addDestinationRole(new ActiveMQTopic(topic), operation, role);
     }
 
+    @Override
     public void removeQueueRole(String queue, String operation, String role) {
         removeDestinationRole(new ActiveMQQueue(queue), operation, role);
     }
 
+    @Override
     public void removeTopicRole(String topic, String operation, String role) {
         removeDestinationRole(new ActiveMQTopic(topic), operation, role);
     }
@@ -248,15 +255,19 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public void removeDestinationRole(javax.jms.Destination destination, String operation, String role) {
     }
 
+    @Override
     public void addRole(String role) {
     }
 
+    @Override
     public void addUserRole(String user, String role) {
     }
 
+    @Override
     public void removeRole(String role) {
     }
 
+    @Override
     public void removeUserRole(String user, String role) {
     }
 

@@ -32,25 +32,28 @@ import org.slf4j.LoggerFactory;
 /**
  * persist pending messages pending message (messages awaiting dispatch to a
  * consumer) cursor
- * 
- * 
+ *
+ *
  */
 class QueueStorePrefetch extends AbstractStoreCursor {
     private static final Logger LOG = LoggerFactory.getLogger(QueueStorePrefetch.class);
     private final MessageStore store;
+    private final Queue queue;
     private final Broker broker;
-   
+
     /**
      * Construct it
      * @param queue
      */
     public QueueStorePrefetch(Queue queue, Broker broker) {
         super(queue);
+        this.queue = queue;
         this.store = queue.getMessageStore();
         this.broker = broker;
 
     }
 
+    @Override
     public boolean recoverMessageReference(MessageId messageReference) throws Exception {
         Message msg = this.store.getMessage(messageReference);
         if (msg != null) {
@@ -62,43 +65,61 @@ class QueueStorePrefetch extends AbstractStoreCursor {
         }
     }
 
-   
-        
+
+
     @Override
     protected synchronized int getStoreSize() {
         try {
             int result = this.store.getMessageCount();
             return result;
-            
+
         } catch (IOException e) {
             LOG.error("Failed to get message count", e);
             throw new RuntimeException(e);
         }
     }
-    
+
+    @Override
+    protected synchronized long getStoreMessageSize() {
+        try {
+            return this.store.getMessageSize();
+        } catch (IOException e) {
+            LOG.error("Failed to get message size", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected boolean canEnableCash() {
+        return super.canEnableCash() && queue.singlePendingSend();
+    }
+
     @Override
     protected synchronized boolean isStoreEmpty() {
         try {
             return this.store.isEmpty();
-            
+
         } catch (Exception e) {
             LOG.error("Failed to get message count", e);
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     protected void resetBatch() {
         this.store.resetBatching();
     }
-    
+
     @Override
     protected void setBatch(MessageId messageId) throws Exception {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("{}  setBatch {} seq: {}, loc: {}", this, messageId, messageId.getFutureOrSequenceLong(), messageId.getEntryLocator());
+        }
         store.setBatch(messageId);
         batchResetNeeded = false;
     }
 
-    
+
     @Override
     protected void doFillBatch() throws Exception {
         hadSpace = this.hasSpace();
@@ -108,4 +129,8 @@ class QueueStorePrefetch extends AbstractStoreCursor {
         }
     }
 
+    @Override
+    public String toString(){
+        return super.toString() + ",store=" + store;
+    }
 }

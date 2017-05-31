@@ -17,31 +17,51 @@
 
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageProducer;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.MutableBrokerFilter;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
+@RunWith(value = Parameterized.class)
 public class AMQ5212Test {
 
     BrokerService brokerService;
+
+    @Parameterized.Parameter(0)
+    public boolean concurrentStoreAndDispatchQ = true;
+
+    @Parameterized.Parameters(name = "concurrentStoreAndDispatch={0}")
+    public static Iterable<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{{Boolean.TRUE}, {Boolean.FALSE}});
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -53,8 +73,10 @@ public class AMQ5212Test {
         if (deleteAllMessages) {
             brokerService.deleteAllMessages();
         }
+        ((KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter()).setConcurrentStoreAndDispatchQueues(concurrentStoreAndDispatchQ);
         brokerService.addConnector("tcp://localhost:0");
         brokerService.setAdvisorySupport(false);
+        brokerService.getManagementContext().setCreateConnector(false);
         brokerService.start();
     }
 
@@ -118,6 +140,12 @@ public class AMQ5212Test {
         executorService.shutdown();
         executorService.awaitTermination(5, TimeUnit.MINUTES);
 
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return expectedTotalEnqueue == brokerService.getAdminView().getTotalEnqueueCount();
+            }
+        });
         assertEquals("total enqueue as expected", expectedTotalEnqueue, brokerService.getAdminView().getTotalEnqueueCount());
     }
 
@@ -200,5 +228,110 @@ public class AMQ5212Test {
         received.acknowledge();
 
         activeMQConnection.close();
+    }
+
+    @Test
+    public void verifyProducerAudit() throws Exception {
+
+        MutableBrokerFilter filter = (MutableBrokerFilter)brokerService.getBroker().getAdaptor(MutableBrokerFilter.class);
+        filter.setNext(new MutableBrokerFilter(filter.getNext()) {
+            @Override
+            public void send(ProducerBrokerExchange producerExchange, org.apache.activemq.command.Message messageSend) throws Exception {
+                super.send(producerExchange, messageSend);
+                Object seq = messageSend.getProperty("seq");
+                if (seq instanceof Integer) {
+                    if  ( ((Integer) seq).intValue() %200 == 0 && producerExchange.getConnectionContext().getConnection() != null) {
+                        producerExchange.getConnectionContext().setDontSendReponse(true);
+                        producerExchange.getConnectionContext().getConnection().serviceException(new IOException("force reconnect"));
+                    }
+                }
+            }
+        });
+
+        final AtomicInteger received = new AtomicInteger(0);
+        final ActiveMQQueue dest = new ActiveMQQueue("Q");
+        final ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover://" + brokerService.getTransportConnectors().get(0).getPublishableConnectString());
+        connectionFactory.setCopyMessageOnSend(false);
+        connectionFactory.setWatchTopicAdvisories(false);
+
+        final int numConsumers = 40;
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        final CountDownLatch consumerStarted = new CountDownLatch(numConsumers);
+        final ConcurrentLinkedQueue<ActiveMQConnection> connectionList = new ConcurrentLinkedQueue<ActiveMQConnection>();
+        for (int i=0; i<numConsumers; i++) {
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ActiveMQConnection activeMQConnection = (ActiveMQConnection) connectionFactory.createConnection();
+                        activeMQConnection.getPrefetchPolicy().setAll(0);
+                        activeMQConnection.start();
+                        connectionList.add(activeMQConnection);
+
+                        ActiveMQSession activeMQSession = (ActiveMQSession) activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                        MessageConsumer messageConsumer = activeMQSession.createConsumer(dest);
+                        consumerStarted.countDown();
+                        while (true) {
+                            if(messageConsumer.receive(500) != null) {
+                                received.incrementAndGet();
+                            }
+                        }
+
+                    } catch (javax.jms.IllegalStateException expected) {
+                    } catch (Exception ignored) {
+                        ignored.printStackTrace();
+                    }
+                }
+            });
+        }
+
+        final String payload = new String(new byte[8 * 1024]);
+        final int totalToProduce =  5000;
+        final AtomicInteger toSend = new AtomicInteger(totalToProduce);
+        final int numProducers = 10;
+        final CountDownLatch producerDone = new CountDownLatch(numProducers);
+        for (int i=0;i<numProducers;i++) {
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ActiveMQConnection activeMQConnectionP = (ActiveMQConnection) connectionFactory.createConnection();
+                        activeMQConnectionP.start();
+                        ActiveMQSession activeMQSessionP = (ActiveMQSession) activeMQConnectionP.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                        ActiveMQMessageProducer activeMQMessageProducer = (ActiveMQMessageProducer) activeMQSessionP.createProducer(dest);
+                        int seq = 0;
+                        while ((seq = toSend.decrementAndGet()) >= 0) {
+                            ActiveMQTextMessage message = new ActiveMQTextMessage();
+                            message.setText(payload);
+                            message.setIntProperty("seq", seq);
+                            activeMQMessageProducer.send(message);
+                        }
+                        activeMQConnectionP.close();
+                    } catch (Exception ignored) {
+                        ignored.printStackTrace();
+                    } finally {
+                        producerDone.countDown();
+                    }
+                }
+            });
+        }
+
+        consumerStarted.await(10, TimeUnit.MINUTES);
+        producerDone.await(10, TimeUnit.MINUTES);
+
+        for (ActiveMQConnection c : connectionList) {
+            c.close();
+        }
+
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.MINUTES);
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return brokerService.getAdminView().getTotalEnqueueCount() >= totalToProduce;
+            }
+        });
+        assertEquals("total enqueue as expected, nothing added to dlq", totalToProduce, brokerService.getAdminView().getTotalEnqueueCount());
     }
 }

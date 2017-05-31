@@ -23,7 +23,33 @@ import org.apache.activemq.wireformat.WireFormatFactory;
  * Creates WireFormat objects that marshalls the <a href="http://stomp.codehaus.org/">Stomp</a> protocol.
  */
 public class StompWireFormatFactory implements WireFormatFactory {
+
+    private int maxDataLength = StompWireFormat.MAX_DATA_LENGTH;
+    private long maxFrameSize = StompWireFormat.DEFAULT_MAX_FRAME_SIZE;
+
+    @Override
     public WireFormat createWireFormat() {
-        return new StompWireFormat();
+        StompWireFormat wireFormat = new StompWireFormat();
+
+        wireFormat.setMaxDataLength(getMaxDataLength());
+        wireFormat.setMaxFrameSize(getMaxFrameSize());
+
+        return wireFormat;
+    }
+
+    public int getMaxDataLength() {
+        return maxDataLength;
+    }
+
+    public void setMaxDataLength(int maxDataLength) {
+        this.maxDataLength = maxDataLength;
+    }
+
+    public long getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    public void setMaxFrameSize(long maxFrameSize) {
+        this.maxFrameSize = maxFrameSize;
     }
 }

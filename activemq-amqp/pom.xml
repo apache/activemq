@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-amqp</artifactId>
@@ -42,7 +42,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.qpid</groupId>
-      <artifactId>proton-jms</artifactId>
+      <artifactId>proton-j</artifactId>
       <version>${qpid-proton-version}</version>
     </dependency>
     <dependency>
@@ -54,7 +54,7 @@
     <!-- Testing Dependencies -->
     <dependency>
       <groupId>org.apache.qpid</groupId>
-      <artifactId>qpid-amqp-1-0-client-jms</artifactId>
+      <artifactId>qpid-jms-client</artifactId>
       <version>${qpid-jms-version}</version>
       <scope>test</scope>
     </dependency>
@@ -79,7 +79,7 @@
     <dependency>
       <!-- using it for Jetty's JNDI context to work /w Joram tests. -->
       <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
+      <artifactId>jetty-all</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -94,6 +94,21 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-http</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-mqtt</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>websocket-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
       <scope>test</scope>
@@ -104,13 +119,59 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.activemq.tooling</groupId>
+      <artifactId>activemq-junit</artifactId>
+      <scope>test</scope>
+     </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-buffer</artifactId>
+      <version>${netty-all-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-common</artifactId>
+      <version>${netty-all-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
+      <version>${netty-all-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+      <version>${netty-all-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport</artifactId>
+      <version>${netty-all-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.stompjms</groupId>
+      <artifactId>stompjms-client</artifactId>
+      <version>${stompjms-version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -176,6 +237,52 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/AmqpConnectionsTest.*</include>
+                <include>**/JMSClientSslTest.*</include>
+                <include>**/JoramJmsNioTest.*</include>
+                <include>**/AmqpFrameParserTest.*</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/auto/*Test.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
       <profile>
           <id>activemq.tests.windows.excludes</id>
           <activation>
@@ -191,6 +298,8 @@
                           <excludes combine.children="append">
                               <exclude>**/JoramJmsTest.*</exclude>
                               <exclude>**/JoramJmsNioTest.*</exclude>
+                              <exclude>**/JoramSslTest.*</exclude>
+                              <exclude>**/JoramJmsNioPlusSslTest.*</exclude>
                           </excludes>
                       </configuration>
                   </plugin>

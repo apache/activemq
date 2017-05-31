@@ -46,7 +46,7 @@ public class ConduitBridge extends DemandForwardingBridge {
 
     @Override
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
-        if (addToAlreadyInterestedConsumers(info)) {
+        if (addToAlreadyInterestedConsumers(info, false)) {
             return null; // don't want this subscription added
         }
         //add our original id to ourselves
@@ -55,7 +55,7 @@ public class ConduitBridge extends DemandForwardingBridge {
         return doCreateDemandSubscription(info);
     }
 
-    protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info) {
+    protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info, boolean isForcedDurable) {
         // search through existing subscriptions and see if we have a match
         if (info.isNetworkSubscription()) {
             return false;
@@ -71,6 +71,10 @@ public class ConduitBridge extends DemandForwardingBridge {
                 // add the interest in the subscription
                 if (!info.isDurable()) {
                     ds.add(info.getConsumerId());
+                    if (isForcedDurable) {
+                        forcedDurableRemoteId.add(info.getConsumerId());
+                        ds.addForcedDurableConsumer(info.getConsumerId());
+                    }
                 } else {
                     ds.getDurableRemoteSubs().add(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
                 }

@@ -45,20 +45,13 @@ public interface SubscriptionViewMBean {
     /**
      * @return the id of the Subscription
      */
-    @Deprecated
-    @MBeanInfo("ID of the Subscription.")
-    long getSubcriptionId();
-
-    /**
-     * @return the id of the Subscription
-     */
     @MBeanInfo("ID of the Subscription.")
     long getSubscriptionId();
 
     /**
      * @return the destination name
      */
-    @MBeanInfo("The name of the destionation the subscription is on.")
+    @MBeanInfo("The name of the destination the subscription is on.")
     String getDestinationName();
 
     /**
@@ -113,9 +106,8 @@ public interface SubscriptionViewMBean {
     int getDispatchedQueueSize();
 
     /**
-     * The same as the number of messages dispatched -
-     * making it explicit
-     * @return
+     * The same as the number of messages dispatched - making it explicit
+     * @return number of messages waiting for an acknowledge.
      */
     @MBeanInfo("Number of messages dispatched awaiting acknowledgement.")
     int getMessageCountAwaitingAcknowledge();
@@ -159,14 +151,20 @@ public interface SubscriptionViewMBean {
     /**
      * @return whether or not the subscriber is durable (persistent)
      */
-    @MBeanInfo("The subsription is persistent.")
+    @MBeanInfo("The subscription is persistent.")
     boolean isDurable();
 
     /**
      * @return whether or not the subscriber ignores local messages
      */
-    @MBeanInfo("The subsription ignores local messages.")
+    @MBeanInfo("The subscription ignores local messages.")
     boolean isNoLocal();
+
+    /**
+     * @return if the Consumer is configured for Async dispatch
+     */
+    @MBeanInfo("Is the consumer configured for Async Dispatch")
+    boolean isDispatchAsync();
 
     /**
      * @return the maximum number of pending messages allowed in addition to the
@@ -182,14 +180,6 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("The subscription priority")
     byte getPriority();
-
-    /**
-     * @return the name of the consumer which is only used for durable
-     *         consumers.
-     */
-    @Deprecated
-    @MBeanInfo("The name of the subscription (durable subscriptions only).")
-    String getSubcriptionName();
 
     /**
      * @return the name of the consumer which is only used for durable
@@ -241,7 +231,6 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("ObjectName of the Connection that created this Subscription")
     ObjectName getConnection();
-
 
     @MBeanInfo("Resets statistics.")
     void resetStatistics();

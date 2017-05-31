@@ -32,6 +32,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     private boolean processExpired = true;
     private boolean enableAudit = true;
     private final ActiveMQMessageAudit messageAudit = new ActiveMQMessageAudit();
+    private long expiration;
 
     @Override
     public void rollback(Message message) {
@@ -97,5 +98,13 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
 
     public void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
+    }
+
+    public long getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(long expiration) {
+        this.expiration = expiration;
     }
 }

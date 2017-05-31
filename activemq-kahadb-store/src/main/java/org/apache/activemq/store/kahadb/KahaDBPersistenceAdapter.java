@@ -42,6 +42,7 @@ import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.JournaledStore;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.NoLocalSubscriptionAware;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.SharedFileLocker;
 import org.apache.activemq.store.TopicMessageStore;
@@ -51,6 +52,7 @@ import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
 
@@ -61,7 +63,9 @@ import org.apache.activemq.util.ServiceStopper;
  * @org.apache.xbean.XBean element="kahaDB"
  *
  */
-public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, JournaledStore, TransactionIdTransformerAware {
+public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter,
+    JournaledStore, TransactionIdTransformerAware, NoLocalSubscriptionAware {
+
     private final KahaDBStore letter = new KahaDBStore();
 
     /**
@@ -211,7 +215,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     @Override
     public long size() {
-        return this.letter.size();
+        return this.letter.isStarted() ? this.letter.size() : 0l;
     }
 
     /**
@@ -415,8 +419,25 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     /**
-     * Get the enableJournalDiskSyncs
+     * @return the currently configured location of the KahaDB index files.
+     */
+    public File getIndexDirectory() {
+        return this.letter.getIndexDirectory();
+    }
+
+    /**
+     * Sets the directory where KahaDB index files should be written.
      *
+     * @param indexDirectory
+     *        the directory where the KahaDB store index files should be written.
+     */
+    public void setIndexDirectory(File indexDirectory) {
+        this.letter.setIndexDirectory(indexDirectory);
+    }
+
+    /**
+     * Get the enableJournalDiskSyncs
+     * @deprecated use {@link #getJournalDiskSyncStrategy} instead
      * @return the enableJournalDiskSyncs
      */
     public boolean isEnableJournalDiskSyncs() {
@@ -426,11 +447,44 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     /**
      * Set the enableJournalDiskSyncs
      *
+     * @deprecated use {@link #setJournalDiskSyncStrategy} instead
      * @param enableJournalDiskSyncs
      *            the enableJournalDiskSyncs to set
      */
     public void setEnableJournalDiskSyncs(boolean enableJournalDiskSyncs) {
         this.letter.setEnableJournalDiskSyncs(enableJournalDiskSyncs);
+    }
+
+    /**
+     * @return
+     */
+    public String getJournalDiskSyncStrategy() {
+        return letter.getJournalDiskSyncStrategy();
+    }
+
+    public JournalDiskSyncStrategy getJournalDiskSyncStrategyEnum() {
+        return letter.getJournalDiskSyncStrategyEnum();
+    }
+
+    /**
+     * @param journalDiskSyncStrategy
+     */
+    public void setJournalDiskSyncStrategy(String journalDiskSyncStrategy) {
+        letter.setJournalDiskSyncStrategy(journalDiskSyncStrategy);
+    }
+
+    /**
+     * @return
+     */
+    public long getJournalDiskSyncInterval() {
+        return letter.getJournalDiskSyncInterval();
+    }
+
+    /**
+     * @param journalDiskSyncInterval
+     */
+    public void setJournalDiskSyncInterval(long journalDiskSyncInterval) {
+        letter.setJournalDiskSyncInterval(journalDiskSyncInterval);
     }
 
     /**
@@ -492,6 +546,22 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     public void setBrokerService(BrokerService brokerService) {
         super.setBrokerService(brokerService);
         letter.setBrokerService(brokerService);
+    }
+
+    public String getPreallocationScope() {
+        return letter.getPreallocationScope();
+    }
+
+    public void setPreallocationScope(String preallocationScope) {
+        this.letter.setPreallocationScope(preallocationScope);
+    }
+
+    public String getPreallocationStrategy() {
+        return letter.getPreallocationStrategy();
+    }
+
+    public void setPreallocationStrategy(String preallocationStrategy) {
+        this.letter.setPreallocationStrategy(preallocationStrategy);
     }
 
     public boolean isArchiveDataLogs() {
@@ -603,6 +673,77 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         return letter.isEnableIndexPageCaching();
     }
 
+    public int getCompactAcksAfterNoGC() {
+        return letter.getCompactAcksAfterNoGC();
+    }
+
+    /**
+     * Sets the number of GC cycles where no journal logs were removed before an attempt to
+     * move forward all the acks in the last log that contains them and is otherwise unreferenced.
+     * <p>
+     * A value of -1 will disable this feature.
+     *
+     * @param compactAcksAfterNoGC
+     *      Number of empty GC cycles before we rewrite old ACKS.
+     */
+    public void setCompactAcksAfterNoGC(int compactAcksAfterNoGC) {
+        this.letter.setCompactAcksAfterNoGC(compactAcksAfterNoGC);
+    }
+
+    public boolean isCompactAcksIgnoresStoreGrowth() {
+        return this.letter.isCompactAcksIgnoresStoreGrowth();
+    }
+
+    /**
+     * Configure if Ack compaction will occur regardless of continued growth of the
+     * journal logs meaning that the store has not run out of space yet.  Because the
+     * compaction operation can be costly this value is defaulted to off and the Ack
+     * compaction is only done when it seems that the store cannot grow and larger.
+     *
+     * @param compactAcksIgnoresStoreGrowth the compactAcksIgnoresStoreGrowth to set
+     */
+    public void setCompactAcksIgnoresStoreGrowth(boolean compactAcksIgnoresStoreGrowth) {
+        this.letter.setCompactAcksIgnoresStoreGrowth(compactAcksIgnoresStoreGrowth);
+    }
+
+    /**
+     * Returns whether Ack compaction is enabled
+     *
+     * @return enableAckCompaction
+     */
+    public boolean isEnableAckCompaction() {
+        return letter.isEnableAckCompaction();
+    }
+
+    /**
+     * Configure if the Ack compaction task should be enabled to run
+     *
+     * @param enableAckCompaction
+     */
+    public void setEnableAckCompaction(boolean enableAckCompaction) {
+        letter.setEnableAckCompaction(enableAckCompaction);
+    }
+
+    /**
+     * Whether non-blocking subscription statistics have been enabled
+     *
+     * @return
+     */
+    public boolean isEnableSubscriptionStatistics() {
+        return letter.isEnableSubscriptionStatistics();
+    }
+
+    /**
+     * Enable caching statistics for each subscription to allow non-blocking
+     * retrieval of metrics.  This could incur some overhead to compute if there are a lot
+     * of subscriptions.
+     *
+     * @param enableSubscriptionStatistics
+     */
+    public void setEnableSubscriptionStatistics(boolean enableSubscriptionStatistics) {
+        letter.setEnableSubscriptionStatistics(enableSubscriptionStatistics);
+    }
+
     public KahaDBStore getStore() {
         return letter;
     }
@@ -643,7 +784,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
-        return "KahaDBPersistenceAdapter[" + path + "]";
+        return "KahaDBPersistenceAdapter[" + path + (getIndexDirectory() != null ? ",Index:" + getIndexDirectory().getAbsolutePath() : "") +  "]";
     }
 
     @Override
@@ -654,5 +795,13 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         return this.letter.createJobSchedulerStore();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.NoLocalSubscriptionAware#isPersistNoLocal()
+     */
+    @Override
+    public boolean isPersistNoLocal() {
+        return this.letter.isPersistNoLocal();
     }
 }

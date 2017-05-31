@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,7 +20,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
@@ -28,6 +27,7 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.DatagramChannel;
+import java.security.cert.X509Certificate;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
@@ -47,10 +47,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the {@link Transport} interface using raw UDP
- * 
- * 
  */
 public class UdpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
+
     private static final Logger LOG = LoggerFactory.getLogger(UdpTransport.class);
 
     private static final int MAX_BIND_ATTEMPTS = 50;
@@ -112,6 +111,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     /**
      * A one way asynchronous send
      */
+    @Override
     public void oneway(Object command) throws IOException {
         oneway(command, targetAddress);
     }
@@ -130,6 +130,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     /**
      * @return pretty print of 'this'
      */
+    @Override
     public String toString() {
         if (description != null) {
             return description + port;
@@ -141,6 +142,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     /**
      * reads packets from a Socket
      */
+    @Override
     public void run() {
         LOG.trace("Consumer thread starting for: " + toString());
         while (!isStopped()) {
@@ -350,6 +352,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         return host;
     }
 
+    @Override
     protected void doStart() throws Exception {
         getCommandChannel().start();
 
@@ -387,7 +390,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         // down
         // a previously bound socket, it can take a little while before we can
         // bind it again.
-        // 
+        //
         for (int i = 0; i < MAX_BIND_ATTEMPTS; i++) {
             try {
                 socket.bind(localAddress);
@@ -419,6 +422,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         return new InetSocketAddress(port);
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (channel != null) {
             channel.close();
@@ -457,6 +461,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         }
     }
 
+    @Override
     public String getRemoteAddress() {
         if (targetAddress != null) {
             return "" + targetAddress;
@@ -464,10 +469,20 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         return null;
     }
 
+    @Override
     public int getReceiveCounter() {
         if (commandChannel == null) {
             return 0;
         }
         return commandChannel.getReceiveCounter();
+    }
+
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        return null;
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
     }
 }

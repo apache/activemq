@@ -16,48 +16,40 @@
  */
 package org.apache.activemq.console.command;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.openmbean.CompositeData;
-import javax.management.remote.JMXConnector;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.console.util.AmqMessagesUtil;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class PurgeCommand extends AbstractJmxCommand {
 
     protected String[] helpFile = new String[] {
         "Task Usage: Main purge [browse-options] <destinations>",
-        "Description: Delete selected destination's messages that matches the message selector.", 
-        "", 
+        "Description: Delete selected destination's messages that matches the message selector.",
+        "",
         "Purge Options:",
         "    --msgsel <msgsel1,msglsel2>   Add to the search list messages matched by the query similar to",
         "                                  the messages selector format.",
+        "    --reset                       After the purge operation, reset the destination statistics.",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
-        "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",            
+        "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",
         "    --jmxuser <user>              Set the JMX user used for authenticating.",
         "    --jmxpassword <password>      Set the JMX password used for authenticating.",
         "    --jmxlocal                    Use the local JMX server instead of a remote one.",
         "    --version                     Display the version information.",
-        "    -h,-?,--help                  Display the browse broker help information.", 
-        "", 
+        "    -h,-?,--help                  Display the browse broker help information.",
+        "",
         "Examples:",
-        "    Main purge FOO.BAR", 
+        "    Main purge FOO.BAR",
         "        - Delete all the messages in queue FOO.BAR",
 
-        "    Main purge --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.*", 
+        "    Main purge --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.*",
         "        - Delete all the messages in the destinations that matches FOO.* and has a JMSMessageID in",
         "          the header field that matches the wildcard *:10, and has a JMSPriority field > 5 in the",
         "          queue FOO.BAR.",
@@ -69,6 +61,7 @@ public class PurgeCommand extends AbstractJmxCommand {
 
     private final List<String> queryAddObjects = new ArrayList<String>(10);
     private final List<String> querySubObjects = new ArrayList<String>(10);
+    private boolean resetStatistics;
 
     @Override
     public String getName() {
@@ -83,96 +76,95 @@ public class PurgeCommand extends AbstractJmxCommand {
     /**
      * Execute the purge command, which allows you to purge the messages in a
      * given JMS destination
-     * 
+     *
      * @param tokens - command arguments
      * @throws Exception
      */
+    @Override
     protected void runTask(List<String> tokens) throws Exception {
-        try {
-            // If there is no queue name specified, let's select all
-            if (tokens.isEmpty()) {
-                tokens.add("*");
-            }
+        // If there is no queue name specified, let's select all
+        if (tokens.isEmpty()) {
+            tokens.add("*");
+        }
 
-            // Iterate through the queue names
-            for (Iterator<String> i = tokens.iterator(); i.hasNext();) {
-                List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + i.next());
+        // Iterate through the queue names
+        for (Iterator<String> i = tokens.iterator(); i.hasNext(); ) {
+            List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + i.next());
 
-                for (Iterator j = queueList.iterator(); j.hasNext();) {
-                    ObjectName queueName = ((ObjectInstance)j.next()).getObjectName();
-                    if (queryAddObjects.isEmpty()) {
-                        purgeQueue(queueName);
-                    } else {
-                        
-                    	QueueViewMBean proxy = (QueueViewMBean) MBeanServerInvocationHandler.
-                    			newProxyInstance(createJmxConnection(), 
-                    					queueName, 
-                    					QueueViewMBean.class, 
-                    					true);
-                        int removed = 0;
-                        
-                        // AMQ-3404: We support two syntaxes for the message 
-                        // selector query:
-                        // 1) AMQ specific: 
-                        //    "JMSPriority>2,MyHeader='Foo'"
-                        //
-                        // 2) SQL-92 syntax:
-                        //    "(JMSPriority>2) AND (MyHeader='Foo')"
-                        //
-                        // If syntax style 1) is used, the comma separated
-                        // criterias are broken into List<String> elements. 
-                        // We then need to construct the SQL-92 query out of 
-                        // this list.
-                        
-                        String sqlQuery = null;
-                        if (queryAddObjects.size() > 1) {
-                        	 sqlQuery = convertToSQL92(queryAddObjects);
-                        } else {
-                        	sqlQuery = queryAddObjects.get(0);
-                        }
-                        removed = proxy.removeMatchingMessages(sqlQuery);
-                        context.printInfo("Removed: " + removed
-                                + " messages for message selector " + sqlQuery.toString());
+            for (Iterator j = queueList.iterator(); j.hasNext(); ) {
+                ObjectName queueName = ((ObjectInstance) j.next()).getObjectName();
+                if (queryAddObjects.isEmpty()) {
+                    purgeQueue(queueName);
+                } else {
+
+                    QueueViewMBean proxy = MBeanServerInvocationHandler.
+                            newProxyInstance(createJmxConnection(),
+                                    queueName,
+                                    QueueViewMBean.class,
+                                    true);
+                    int removed = 0;
+
+                    // AMQ-3404: We support two syntaxes for the message
+                    // selector query:
+                    // 1) AMQ specific:
+                    //    "JMSPriority>2,MyHeader='Foo'"
+                    //
+                    // 2) SQL-92 syntax:
+                    //    "(JMSPriority>2) AND (MyHeader='Foo')"
+                    //
+                    // If syntax style 1) is used, the comma separated
+                    // criterias are broken into List<String> elements.
+                    // We then need to construct the SQL-92 query out of
+                    // this list.
+
+                    String sqlQuery = convertToSQL92(queryAddObjects);
+                    removed = proxy.removeMatchingMessages(sqlQuery);
+                    context.printInfo("Removed: " + removed
+                            + " messages for message selector " + sqlQuery);
+
+                    if (resetStatistics) {
+                        proxy.resetStatistics();
                     }
                 }
             }
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute purge task. Reason: " + e));
-            throw new Exception(e);
         }
     }
-    
-    
+
+
     /**
      * Purge all the messages in the queue
-     * 
+     *
      * @param queue - ObjectName of the queue to purge
      * @throws Exception
      */
     public void purgeQueue(ObjectName queue) throws Exception {
         context.printInfo("Purging all messages in queue: " + queue.getKeyProperty("destinationName"));
         createJmxConnection().invoke(queue, "purge", new Object[] {}, new String[] {});
+        if (resetStatistics) {
+            createJmxConnection().invoke(queue, "resetStatistics", new Object[] {}, new String[] {});
+        }
     }
 
     /**
      * Handle the --msgsel, --xmsgsel.
-     * 
+     *
      * @param token - option token to handle
      * @param tokens - succeeding command arguments
      * @throws Exception
      */
+    @Override
     protected void handleOption(String token, List<String> tokens) throws Exception {
         // If token is an additive message selector option
         if (token.startsWith("--msgsel")) {
 
             // If no message selector is specified, or next token is a new
             // option
-            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+            if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
                 context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
 
-            StringTokenizer queryTokens = new StringTokenizer((String)tokens.remove(0), COMMAND_OPTION_DELIMETER);
+            StringTokenizer queryTokens = new StringTokenizer(tokens.remove(0), COMMAND_OPTION_DELIMETER);
             while (queryTokens.hasMoreTokens()) {
                 queryAddObjects.add(queryTokens.nextToken());
             }
@@ -181,53 +173,61 @@ public class PurgeCommand extends AbstractJmxCommand {
 
             // If no message selector is specified, or next token is a new
             // option
-            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+            if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
                 context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
 
-            StringTokenizer queryTokens = new StringTokenizer((String)tokens.remove(0), COMMAND_OPTION_DELIMETER);
+            StringTokenizer queryTokens = new StringTokenizer(tokens.remove(0), COMMAND_OPTION_DELIMETER);
             while (queryTokens.hasMoreTokens()) {
                 querySubObjects.add(queryTokens.nextToken());
             }
-
+        } else if (token.startsWith("--reset")) {
+            resetStatistics = true;
         } else {
             // Let super class handle unknown option
             super.handleOption(token, tokens);
         }
     }
-    
+
     /**
      * Converts the message selector as provided on command line
-     * argument to activem-admin into an SQL-92 conform string. 
+     * argument to activem-admin into an SQL-92 conform string.
      * E.g.
      *   "JMSMessageID='*:10',JMSPriority>5"
-     * gets converted into 
+     * gets converted into
      *   "(JMSMessageID='%:10') AND (JMSPriority>5)"
-     * 
-     * @param tokens - List of message selector query parameters 
-     * @return SQL-92 string of that query. 
+     *
+     * @param tokens - List of message selector query parameters
+     * @return SQL-92 string of that query.
      */
     public String convertToSQL92(List<String> tokens) {
-    	String selector = "";
+        StringBuilder selector = new StringBuilder();
 
-        // Convert to message selector
+        boolean isFirstToken = true;
         for (Iterator i = tokens.iterator(); i.hasNext(); ) {
-            selector = selector + "(" + i.next().toString() + ") AND ";
+            String token = i.next().toString();
+            if (token.matches("^[^=]*='.*[\\*\\?].*'$")) {
+                token = token.replace('?', '_')
+                        .replace('*', '%')
+                        .replaceFirst("=", " LIKE ");
+            }
+            if (isFirstToken) {
+                isFirstToken = false;
+            } else {
+                selector.append(" AND ");
+            }
+            selector.append('(')
+                    .append(token)
+                    .append(')');
         }
-
-        // Remove last AND and replace '*' with '%'
-        if (!selector.equals("")) {
-            selector = selector.substring(0, selector.length() - 5);
-            selector = selector.replace('*', '%');
-        }
-        return selector;
+        return selector.toString();
     }
-    
 
     /**
      * Print the help messages for the browse command
      */
+    @Override
     protected void printHelp() {
         context.printHelp(helpFile);
     }

@@ -19,8 +19,15 @@ package org.apache.activemq.filter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.jms.JMSException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -35,8 +42,10 @@ public final class XPathExpression implements BooleanExpression {
     private static final Logger LOG = LoggerFactory.getLogger(XPathExpression.class);
     private static final String EVALUATOR_SYSTEM_PROPERTY = "org.apache.activemq.XPathEvaluatorClassName";
     private static final String DEFAULT_EVALUATOR_CLASS_NAME = "org.apache.activemq.filter.XalanXPathEvaluator";
+    public static final String DOCUMENT_BUILDER_FACTORY_FEATURE = "org.apache.activemq.documentBuilderFactory.feature";
 
     private static final Constructor EVALUATOR_CONSTRUCTOR;
+    private static DocumentBuilder builder = null;
 
     static {
         String cn = System.getProperty(EVALUATOR_SYSTEM_PROPERTY, DEFAULT_EVALUATOR_CLASS_NAME);
@@ -44,6 +53,21 @@ public final class XPathExpression implements BooleanExpression {
         try {
             try {
                 m = getXPathEvaluatorConstructor(cn);
+                DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+                builderFactory.setNamespaceAware(true);
+                builderFactory.setIgnoringElementContentWhitespace(true);
+                builderFactory.setIgnoringComments(true);
+                try {
+                    // set some reasonable defaults
+                    builderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                    builderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                    builderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                } catch (ParserConfigurationException e) {
+                    LOG.warn("Error setting document builder factory feature", e);
+                }
+                // setup the feature from the system property
+                setupFeatures(builderFactory);
+                builder = builderFactory.newDocumentBuilder();
             } catch (Throwable e) {
                 LOG.warn("Invalid " + XPathEvaluator.class.getName() + " implementation: " + cn + ", reason: " + e, e);
                 cn = DEFAULT_EVALUATOR_CLASS_NAME;
@@ -75,12 +99,41 @@ public final class XPathExpression implements BooleanExpression {
         if (!XPathEvaluator.class.isAssignableFrom(c)) {
             throw new ClassCastException("" + c + " is not an instance of " + XPathEvaluator.class);
         }
-        return c.getConstructor(new Class[] {String.class});
+        return c.getConstructor(new Class[] {String.class, DocumentBuilder.class});
+    }
+
+    protected static void setupFeatures(DocumentBuilderFactory factory) {
+        Properties properties = System.getProperties();
+        List<String> features = new ArrayList<String>();
+        for (Map.Entry<Object, Object> prop : properties.entrySet()) {
+            String key = (String) prop.getKey();
+            if (key.startsWith(DOCUMENT_BUILDER_FACTORY_FEATURE)) {
+                String uri = key.split(DOCUMENT_BUILDER_FACTORY_FEATURE + ":")[1];
+                Boolean value = Boolean.valueOf((String)prop.getValue());
+                try {
+                    factory.setFeature(uri, value);
+                    features.add("feature " + uri + " value " + value);
+                } catch (ParserConfigurationException e) {
+                    LOG.warn("DocumentBuilderFactory doesn't support the feature {} with value {}, due to {}.", new Object[]{uri, value, e});
+                }
+            }
+        }
+        if (features.size() > 0) {
+            StringBuffer featureString = new StringBuffer();
+            // just log the configured feature
+            for (String feature : features) {
+                if (featureString.length() != 0) {
+                    featureString.append(", ");
+                }
+                featureString.append(feature);
+            }
+        }
+
     }
 
     private XPathEvaluator createEvaluator(String xpath2) {
         try {
-            return (XPathEvaluator)EVALUATOR_CONSTRUCTOR.newInstance(new Object[] {xpath});
+            return (XPathEvaluator)EVALUATOR_CONSTRUCTOR.newInstance(new Object[] {xpath, builder});
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException) {

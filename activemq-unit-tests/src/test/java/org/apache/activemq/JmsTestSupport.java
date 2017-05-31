@@ -111,9 +111,12 @@ public class JmsTestSupport extends CombinationTestSupport {
     }
 
     protected BrokerService createBroker() throws Exception {
-        return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
+        BrokerService service = BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
+        service.getManagementContext().setCreateConnector(false);;
+        return service;
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -129,6 +132,7 @@ public class JmsTestSupport extends CombinationTestSupport {
         connections.add(connection);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         for (Iterator<Connection> iter = connections.iterator(); iter.hasNext();) {
             Connection conn = iter.next();

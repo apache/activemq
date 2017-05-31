@@ -19,6 +19,8 @@ package org.apache.activemq.transport.amqp;
 import org.fusesource.hawtbuf.Buffer;
 
 /**
+ * Represents the AMQP protocol handshake packet that is sent during the
+ * initial exchange with a remote peer.
  */
 public class AmqpHeader {
 
@@ -31,7 +33,11 @@ public class AmqpHeader {
     }
 
     public AmqpHeader(Buffer buffer) {
-        setBuffer(buffer);
+        this(buffer, true);
+    }
+
+    public AmqpHeader(Buffer buffer, boolean validate) {
+        setBuffer(buffer, validate);
     }
 
     public int getProtocolId() {
@@ -71,14 +77,32 @@ public class AmqpHeader {
     }
 
     public void setBuffer(Buffer value) {
-        if (!value.startsWith(PREFIX) || value.length() != 8) {
+        setBuffer(value, true);
+    }
+
+    public void setBuffer(Buffer value, boolean validate) {
+        if (validate && !value.startsWith(PREFIX) || value.length() != 8) {
             throw new IllegalArgumentException("Not an AMQP header buffer");
         }
         buffer = value.buffer();
     }
 
+    public boolean hasValidPrefix() {
+        return buffer.startsWith(PREFIX);
+    }
+
     @Override
     public String toString() {
-        return buffer.toString();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < buffer.length(); ++i) {
+            char value = (char) buffer.get(i);
+            if (Character.isLetter(value)) {
+                builder.append(value);
+            } else {
+                builder.append(",");
+                builder.append((int) value);
+            }
+        }
+        return builder.toString();
     }
 }

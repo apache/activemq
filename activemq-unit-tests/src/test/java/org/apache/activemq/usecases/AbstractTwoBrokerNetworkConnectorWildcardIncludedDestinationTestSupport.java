@@ -87,14 +87,14 @@ public abstract class AbstractTwoBrokerNetworkConnectorWildcardIncludedDestinati
 
     public void sendReceive(String broker1, String dest1, boolean topic1, String broker2, String dest2, boolean topic2, int send, int expected) throws Exception{
         MessageConsumer client = createConsumer(broker2, createDestination(dest2, topic2));
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         sendMessages(broker1, createDestination(dest1, topic1), send);
         MessageIdList msgs = getConsumerMessages(broker2, client);
-        msgs.setMaximumDuration(1000);
+        msgs.setMaximumDuration(10000);
         msgs.waitForMessagesToArrive(send);
         assertEquals(expected, msgs.getMessageCount());
         client.close();
-        Thread.sleep(500);
+        Thread.sleep(1000);
     }
 
     protected abstract void addIncludedDestination(NetworkConnector networkConnector);

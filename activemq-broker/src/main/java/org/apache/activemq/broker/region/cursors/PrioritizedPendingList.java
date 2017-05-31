@@ -16,8 +16,11 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
-import java.util.ArrayList;
+import static org.apache.activemq.broker.region.cursors.OrderedPendingList.getValues;
+
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,50 +28,64 @@ import java.util.Map;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.management.SizeStatisticImpl;
 
 public class PrioritizedPendingList implements PendingList {
 
     private static final Integer MAX_PRIORITY = 10;
     private final OrderedPendingList[] lists = new OrderedPendingList[MAX_PRIORITY];
     private final Map<MessageId, PendingNode> map = new HashMap<MessageId, PendingNode>();
+    private final SizeStatisticImpl messageSize;
+    private final PendingMessageHelper pendingMessageHelper;
+
 
     public PrioritizedPendingList() {
         for (int i = 0; i < MAX_PRIORITY; i++) {
             this.lists[i] = new OrderedPendingList();
         }
+        messageSize = new SizeStatisticImpl("messageSize", "The size in bytes of the pending messages");
+        messageSize.setEnabled(true);
+        pendingMessageHelper = new PendingMessageHelper(map, messageSize);
     }
 
+    @Override
     public PendingNode addMessageFirst(MessageReference message) {
         PendingNode node = getList(message).addMessageFirst(message);
-        this.map.put(message.getMessageId(), node);
+        this.pendingMessageHelper.addToMap(message, node);
         return node;
     }
 
+    @Override
     public PendingNode addMessageLast(MessageReference message) {
         PendingNode node = getList(message).addMessageLast(message);
-        this.map.put(message.getMessageId(), node);
+        this.pendingMessageHelper.addToMap(message, node);
         return node;
     }
 
+    @Override
     public void clear() {
         for (int i = 0; i < MAX_PRIORITY; i++) {
             this.lists[i].clear();
         }
         this.map.clear();
+        this.messageSize.reset();
     }
 
+    @Override
     public boolean isEmpty() {
         return this.map.isEmpty();
     }
 
+    @Override
     public Iterator<MessageReference> iterator() {
         return new PrioritizedPendingListIterator();
     }
 
+    @Override
     public PendingNode remove(MessageReference message) {
         PendingNode node = null;
         if (message != null) {
-            node = this.map.remove(message.getMessageId());
+            node = this.pendingMessageHelper.removeFromMap(message);
             if (node != null) {
                 node.getList().removeNode(node);
             }
@@ -76,8 +93,14 @@ public class PrioritizedPendingList implements PendingList {
         return node;
     }
 
+    @Override
     public int size() {
         return this.map.size();
+    }
+
+    @Override
+    public long messageSize() {
+        return this.messageSize.getTotalSize();
     }
 
     @Override
@@ -98,55 +121,73 @@ public class PrioritizedPendingList implements PendingList {
         return lists[getPriority(msg)];
     }
 
-    private class PrioritizedPendingListIterator implements Iterator<MessageReference> {
-        private int index = 0;
-        private int currentIndex = 0;
-        List<PendingNode> list = new ArrayList<PendingNode>(size());
+    private final class PrioritizedPendingListIterator implements Iterator<MessageReference> {
+
+        private final Deque<Iterator<MessageReference>> iterators = new ArrayDeque<Iterator<MessageReference>>();
+
+        private Iterator<MessageReference> current;
+        private MessageReference currentMessage;
 
         PrioritizedPendingListIterator() {
-            for (int i = MAX_PRIORITY - 1; i >= 0; i--) {
-                OrderedPendingList orderedPendingList = lists[i];
-                if (!orderedPendingList.isEmpty()) {
-                    list.addAll(orderedPendingList.getAsList());
+            for (OrderedPendingList list : lists) {
+                if (!list.isEmpty()) {
+                    iterators.push(list.iterator());
                 }
             }
+
+            current = iterators.poll();
         }
+
+        @Override
         public boolean hasNext() {
-            return list.size() > index;
+            while (current != null) {
+                if (current.hasNext()) {
+                    return true;
+                } else {
+                    current = iterators.poll();
+                }
+            }
+
+            return false;
         }
 
+        @Override
         public MessageReference next() {
-            PendingNode node = list.get(this.index);
-            this.currentIndex = this.index;
-            this.index++;
-            return node.getMessage();
+            MessageReference result = null;
+
+            while (current != null) {
+                if (current.hasNext()) {
+                    result = currentMessage = current.next();
+                    break;
+                } else {
+                    current = iterators.poll();
+                }
+            }
+
+            return result;
         }
 
+        @Override
         public void remove() {
-            PendingNode node = list.get(this.currentIndex);
-            if (node != null) {
-                map.remove(node.getMessage().getMessageId());
-                node.getList().removeNode(node);
+            if (currentMessage != null) {
+                pendingMessageHelper.removeFromMap(currentMessage);
+                current.remove();
+                currentMessage = null;
             }
         }
     }
 
     @Override
     public boolean contains(MessageReference message) {
-        if (map.values().contains(message)) {
-            return true;
+        if (message != null) {
+            return this.map.containsKey(message.getMessageId());
         }
-
         return false;
     }
 
     @Override
     public Collection<MessageReference> values() {
-        List<MessageReference> messageReferences = new ArrayList<MessageReference>();
-        for (PendingNode pendingNode : map.values()) {
-            messageReferences.add(pendingNode.getMessage());
-        }
-        return messageReferences;
+        return getValues(this);
     }
 
     @Override

@@ -22,6 +22,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import javax.jms.*;
 
 import java.io.File;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
@@ -77,6 +79,7 @@ public class AMQ3120Test {
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(500);
         adapter.setCleanupInterval(500);
+        adapter.setPreallocationScope(Journal.PreallocationScope.ENTIRE_JOURNAL.name());
 
         if (!deleteAllOnStart) {
             adapter.setForceRecoverIndex(true);
@@ -101,6 +104,7 @@ public class AMQ3120Test {
     private int getFileCount(File dir){
         if (dir.isDirectory()) {
             String[] children = dir.list();
+            LOG.info("Children: " + Arrays.asList(children));
             return children.length;
         }
 
@@ -123,7 +127,7 @@ public class AMQ3120Test {
         ProducerThread producer = new ProducerThread(producerSess, destination) {
             @Override
             protected Message createMessage(int i) throws Exception {
-                return sess.createTextMessage(payload + "::" + i);
+                return session.createTextMessage(payload + "::" + i);
             }
         };
         producer.setSleep(650);

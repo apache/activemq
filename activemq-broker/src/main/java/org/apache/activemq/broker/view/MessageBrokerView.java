@@ -36,7 +36,7 @@ import org.apache.activemq.util.LRUCache;
  */
 public class MessageBrokerView  {
     private final BrokerService brokerService;
-    private Map<ActiveMQDestination,BrokerDestinationView> destinationViewMap = new LRUCache<ActiveMQDestination, BrokerDestinationView>();
+    private final Map<ActiveMQDestination,BrokerDestinationView> destinationViewMap = new LRUCache<ActiveMQDestination, BrokerDestinationView>();
 
 
     /**
@@ -198,7 +198,7 @@ public class MessageBrokerView  {
     public Set<ActiveMQTempQueue> getTempQueues(){
         Set<ActiveMQTempQueue> result = new HashSet<ActiveMQTempQueue>();
         for (ActiveMQDestination destination:getDestinations()){
-            if (destination.isTopic() && destination.isTemporary()){
+            if (destination.isQueue() && destination.isTemporary()){
                 result.add((ActiveMQTempQueue) destination);
             }
         }

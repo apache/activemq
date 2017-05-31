@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 package org.apache.activemq.leveldb.record;
 
 option java_multiple_files = true;
@@ -53,4 +53,5 @@ message SubscriptionRecord {
   optional string subscription_name = 3;
   optional string selector = 4;
   optional string destination_name = 5;
+  optional string subscribed_destination_name = 6;
 }

@@ -21,10 +21,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 
-import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,9 +50,12 @@ public class Stomp12Test extends StompTestSupport {
     }
 
     @Override
-    protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
-        port = connector.getConnectUri().getPort();
+    public void tearDown() throws Exception {
+        try {
+            connection.close();
+        } catch (Exception ex) {}
+
+        super.tearDown();
     }
 
     @Override
@@ -62,7 +68,7 @@ public class Stomp12Test extends StompTestSupport {
         return getClass().getName() + "." + getName();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testTelnetStyleSends() throws Exception {
 
         stompConnection.setVersion(Stomp.V1_2);
@@ -97,12 +103,9 @@ public class Stomp12Test extends StompTestSupport {
         assertTrue(receipt.getAction().startsWith("RECEIPT"));
         String receiptId = receipt.getHeaders().get("receipt-id");
         assertEquals("1", receiptId);
-
-        String disconnect = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(disconnect);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testClientAckWithoutAckId() throws Exception {
 
         stompConnection.setVersion(Stomp.V1_2);
@@ -154,12 +157,9 @@ public class Stomp12Test extends StompTestSupport {
         received = stompConnection.receive();
         assertTrue(received.getAction().equals("ERROR"));
         LOG.info("Broker sent: " + received);
-
-        String disconnect = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(disconnect);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testClientAck() throws Exception {
 
         stompConnection.setVersion(Stomp.V1_2);
@@ -218,9 +218,14 @@ public class Stomp12Test extends StompTestSupport {
 
         frame = "DISCONNECT\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        try {
-            Thread.sleep(400);
-        } catch (InterruptedException e){}
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getProxyToBroker().getCurrentConnectionsCount() == 1;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25)));
 
         // reconnect and send some messages to the offline subscribers and then try to get
         // them after subscribing again.
@@ -250,12 +255,9 @@ public class Stomp12Test extends StompTestSupport {
         frame = "ACK\n" + "id:" +
                 received.getHeaders().get(Stomp.Headers.Message.ACK_ID) + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-
-        String disconnect = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(disconnect);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testClientIndividualAck() throws Exception {
 
         stompConnection.setVersion(Stomp.V1_2);
@@ -312,9 +314,13 @@ public class Stomp12Test extends StompTestSupport {
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        try {
-            Thread.sleep(400);
-        } catch (InterruptedException e){}
+        Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getProxyToBroker().getCurrentConnectionsCount() <= 1;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
 
         // reconnect and send some messages to the offline subscribers and then try to get
         // them after subscribing again.
@@ -352,12 +358,9 @@ public class Stomp12Test extends StompTestSupport {
         frame = "ACK\n" + "id:" +
                 received.getHeaders().get(Stomp.Headers.Message.ACK_ID) + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-
-        String disconnect = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(disconnect);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQueueBrowerSubscription() throws Exception {
 
         final int MSG_COUNT = 10;
@@ -404,10 +407,11 @@ public class Stomp12Test extends StompTestSupport {
         assertTrue(browseDone.getHeaders().get(Stomp.Headers.Message.DESTINATION) != null);
 
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
-                       "id:12345\n\n" + Stomp.NULL;
+                       "receipt:1\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(unsub);
 
-        Thread.sleep(2000);
+        StompFrame stompFrame = stompConnection.receive();
+        assertTrue(stompFrame.getAction().equals("RECEIPT"));
 
         subscribe = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(subscribe);
@@ -419,12 +423,9 @@ public class Stomp12Test extends StompTestSupport {
         }
 
         stompConnection.sendFrame(unsub);
-
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQueueBrowerNotInAutoAckMode() throws Exception {
         String connectFrame = "STOMP\n" +
                               "login:system\n" +
@@ -454,8 +455,149 @@ public class Stomp12Test extends StompTestSupport {
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
                        "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(unsub);
+    }
 
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+    @Test(timeout = 60000)
+    public void testDurableSubAndUnSub() throws Exception {
+        BrokerViewMBean view = getProxyToBroker();
+
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.2\n" +
+                              "host:localhost\n" +
+                              "client-id:durableSubTest\n" +
+                              "\n" + Stomp.NULL;
+        stompConnection.sendFrame(connectFrame);
+
+        String frame = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + frame);
+
+        assertTrue(frame.startsWith("CONNECTED"));
+        assertEquals(view.getDurableTopicSubscribers().length, 0);
+
+        // subscribe to destination durably
+        frame = "SUBSCRIBE\n" +
+                "destination:/topic/" + getQueueName() + "1" + "\n" +
+                "ack:auto\n" + "receipt:1\n" + "id:durablesub-1\n" +
+                "activemq.subscriptionName:test1\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+
+        StompFrame receipt = stompConnection.receive();
+        LOG.debug("Broker sent: " + receipt);
+        assertTrue(receipt.getAction().startsWith("RECEIPT"));
+        assertEquals("1", receipt.getHeaders().get("receipt-id"));
+        assertEquals(view.getDurableTopicSubscribers().length, 1);
+
+        frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        stompConnection.close();
+        Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getProxyToBroker().getCurrentConnectionsCount() <= 1;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
+
+        stompConnect();
+        stompConnection.sendFrame(connectFrame);
+        frame = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + frame);
+        assertTrue(frame.startsWith("CONNECTED"));
+        assertEquals(view.getDurableTopicSubscribers().length, 0);
+        assertEquals(view.getInactiveDurableTopicSubscribers().length, 1);
+
+        // unsubscribe from topic
+        frame = "UNSUBSCRIBE\n" + "destination:/topic/" + getQueueName() + "1\n" +
+                "id:durablesub-1\n" + "receipt:3\n" +
+                "activemq.subscriptionName:test1\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        receipt = stompConnection.receive();
+        LOG.debug("Broker sent: " + frame);
+        assertTrue(receipt.getAction().startsWith("RECEIPT"));
+        assertEquals("3", receipt.getHeaders().get("receipt-id"));
+
+        assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
+    }
+
+    @Test(timeout = 60000)
+    public void testSubscribeWithNoId() throws Exception {
+
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.2\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+        stompConnection.sendFrame(connectFrame);
+
+        String f = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + f);
+
+        assertTrue(f.startsWith("CONNECTED"));
+
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                       "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("ERROR"));
+    }
+
+    @Test(timeout = 60000)
+    public void testSizeAndBrokerUsage() throws Exception {
+        final int MSG_COUNT = 10;
+        final int numK = 4;
+
+        final byte[] bigPropContent = new byte[numK*1024];
+        // fill so we don't fall foul to trimming in v<earlier than 1.2>
+        Arrays.fill(bigPropContent, Byte.MAX_VALUE);
+        final String bigProp = new String(bigPropContent);
+
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.2\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(connectFrame);
+
+        String f = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + f);
+
+        assertTrue(f.startsWith("CONNECTED"));
+
+        long usageStart = brokerService.getSystemUsage().getMemoryUsage().getUsage();
+
+        for(int i = 0; i < MSG_COUNT; ++i) {
+            String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
+                             "receipt:0\n" +
+                             "myXkProp:" + bigProp + "\n"+
+                             "\n" + "Hello World {" + i + "}" + Stomp.NULL;
+            stompConnection.sendFrame(message);
+            StompFrame repsonse = stompConnection.receive();
+            LOG.info("response:" + repsonse);
+            assertEquals("0", repsonse.getHeaders().get(Stomp.Headers.Response.RECEIPT_ID));
+        }
+
+        // verify usage accounts for our numK
+        long usageEnd = brokerService.getSystemUsage().getMemoryUsage().getUsage();
+
+        long usageDiff = usageEnd - usageStart;
+        LOG.info("usageDiff:" + usageDiff);
+        assertTrue(usageDiff > MSG_COUNT * numK * 1024);
+
+        String subscribe = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                           "id:12345\n" + "browser:true\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(subscribe);
+
+        for(int i = 0; i < MSG_COUNT; ++i) {
+            StompFrame message = stompConnection.receive();
+            assertEquals(Stomp.Responses.MESSAGE, message.getAction());
+            assertEquals("12345", message.getHeaders().get(Stomp.Headers.Message.SUBSCRIPTION));
+        }
+
     }
 }

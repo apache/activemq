@@ -383,6 +383,13 @@ public class ConfigTest {
             } catch (JMSException expected) {
             }
 
+            // Tests the anonymous producer case also counts.
+            try {
+                session.createProducer(null);
+                fail("Should have got an exception on exceeding MAX_PRODUCERS");
+            } catch (JMSException expected) {
+            }
+
             try {
                 for (int i = 0; i < (MAX_CONSUMERS + 1); i++) {
                     MessageConsumer consumer = session.createConsumer(topic);

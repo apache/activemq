@@ -62,10 +62,13 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     protected KeyManager[] keyManager;
     protected TrustManager[] trustManager;
     protected SecureRandom secureRandom;
+    protected String trustStoreType = KeyStore.getDefaultType();
     protected String trustStore;
     protected String trustStorePassword;
+    protected String keyStoreType = KeyStore.getDefaultType();
     protected String keyStore;
     protected String keyStorePassword;
+    protected String keyStoreKeyPassword;
 
     public ActiveMQSslConnectionFactory() {
         super();
@@ -124,32 +127,34 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
 
     protected TrustManager[] createTrustManager() throws Exception {
         TrustManager[] trustStoreManagers = null;
-        KeyStore trustedCertStore = KeyStore.getInstance("jks");
+        KeyStore trustedCertStore = KeyStore.getInstance(getTrustStoreType());
 
         if (trustStore != null) {
-            InputStream tsStream = getInputStream(trustStore);
+            try(InputStream tsStream = getInputStream(trustStore)) {
 
-            trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 
-            tmf.init(trustedCertStore);
-            trustStoreManagers = tmf.getTrustManagers();
+                tmf.init(trustedCertStore);
+                trustStoreManagers = tmf.getTrustManagers();
+            }
         }
         return trustStoreManagers;
     }
 
     protected KeyManager[] createKeyManager() throws Exception {
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        KeyStore ks = KeyStore.getInstance("jks");
+        KeyStore ks = KeyStore.getInstance(getKeyStoreType());
         KeyManager[] keystoreManagers = null;
         if (keyStore != null) {
             byte[] sslCert = loadClientCredential(keyStore);
 
             if (sslCert != null && sslCert.length > 0) {
-                ByteArrayInputStream bin = new ByteArrayInputStream(sslCert);
-                ks.load(bin, keyStorePassword.toCharArray());
-                kmf.init(ks, keyStorePassword.toCharArray());
-                keystoreManagers = kmf.getKeyManagers();
+                try(ByteArrayInputStream bin = new ByteArrayInputStream(sslCert)) {
+                    ks.load(bin, keyStorePassword.toCharArray());
+                    kmf.init(ks, keyStoreKeyPassword !=null ? keyStoreKeyPassword.toCharArray() : keyStorePassword.toCharArray());
+                    keystoreManagers = kmf.getKeyManagers();
+                }
             }
         }
         return keystoreManagers;
@@ -159,16 +164,16 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         if (fileName == null) {
             return null;
         }
-        InputStream in = getInputStream(fileName);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[512];
-        int i = in.read(buf);
-        while (i > 0) {
-            out.write(buf, 0, i);
-            i = in.read(buf);
+        try(InputStream in = getInputStream(fileName);
+            ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            byte[] buf = new byte[512];
+            int i = in.read(buf);
+            while (i > 0) {
+                out.write(buf, 0, i);
+                i = in.read(buf);
+            }
+            return out.toByteArray();
         }
-        in.close();
-        return out.toByteArray();
     }
 
     protected InputStream getInputStream(String urlOrResource) throws IOException {
@@ -204,6 +209,14 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         return ins;
     }
 
+    public String getTrustStoreType() {
+        return trustStoreType;
+    }
+
+    public void setTrustStoreType(String type) {
+        trustStoreType = type;
+    }
+
     public String getTrustStore() {
         return trustStore;
     }
@@ -234,6 +247,15 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     public void setTrustStorePassword(String trustStorePassword) {
         this.trustStorePassword = trustStorePassword;
     }
+
+    public String getKeyStoreType() {
+        return keyStoreType;
+    }
+
+    public void setKeyStoreType(String type) {
+        keyStoreType = type;
+    }
+
 
     public String getKeyStore() {
         return keyStore;
@@ -266,6 +288,22 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      */
     public void setKeyStorePassword(String keyStorePassword) {
         this.keyStorePassword = keyStorePassword;
+    }
+
+
+    public String getKeyStoreKeyPassword() {
+        return keyStoreKeyPassword;
+    }
+
+    /**
+     * The password to match the key from the keyStore.
+     *
+     * @param keyStoreKeyPassword
+     *            The password for the private key stored in the
+     *            keyStore if different from keyStorePassword.
+     */
+    public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {
+        this.keyStoreKeyPassword = keyStoreKeyPassword;
     }
 
 }

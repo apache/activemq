@@ -559,7 +559,17 @@ class LevelDBClient(store: LevelDBStore) {
     might_fail {
       log.open()
     }
-    replay_from(lastIndexSnapshotPos, log.appender_limit)
+
+    var startPosition = lastIndexSnapshotPos;
+    // if we cannot locate a log for a snapshot, replay from
+    // first entry of first available log
+    if (log.log_info(startPosition).isEmpty) {
+        if (!log.log_infos.isEmpty) {
+          startPosition = log.log_infos.firstKey();
+        }
+    }
+
+    replay_from(startPosition, log.appender_limit)
     replay_write_batch = null;
   }
 
@@ -1004,10 +1014,12 @@ class LevelDBClient(store: LevelDBStore) {
           debug("Gracefuly closed the index")
           copyDirtyIndexToSnapshot
         }
-        if (log!=null && log.isOpen) {
-          log.close
-          stored_wal_append_position = log.appender_limit
-          log = null
+        this synchronized {
+          if (log!=null && log.isOpen) {
+            log.close
+            stored_wal_append_position = log.appender_limit
+            log = null
+          }
         }
         if( plist!=null ) {
           plist.close
@@ -1255,8 +1267,8 @@ class LevelDBClient(store: LevelDBStore) {
     return rc
   }
 
-  def queueCursor(collectionKey: Long, seq:Long)(func: (Message)=>Boolean) = {
-    collectionCursor(collectionKey, encodeLong(seq)) { (key, value) =>
+  def queueCursor(collectionKey: Long, seq:Long, endSeq:Long)(func: (Message)=>Boolean) = {
+    collectionCursor(collectionKey, encodeLong(seq), encodeLong(endSeq)) { (key, value) =>
       val seq = decodeLong(key)
       var locator = DataLocator(store, value.getValueLocation, value.getValueLength)
       val msg = getMessage(locator)
@@ -1273,7 +1285,7 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   def transactionCursor(collectionKey: Long)(func: (AnyRef)=>Boolean) = {
-    collectionCursor(collectionKey, encodeLong(0)) { (key, value) =>
+    collectionCursor(collectionKey, encodeLong(0), encodeLong(Long.MaxValue)) { (key, value) =>
       val seq = decodeLong(key)
       if( value.getMeta != null ) {
 
@@ -1336,12 +1348,12 @@ class LevelDBClient(store: LevelDBStore) {
     store.wireFormat.unmarshal(new ByteSequence(data.data, data.offset, data.length)).asInstanceOf[Message]
   }
 
-  def collectionCursor(collectionKey: Long, cursorPosition:Buffer)(func: (Buffer, EntryRecord.Buffer)=>Boolean) = {
+  def collectionCursor(collectionKey: Long, cursorPosition:Buffer, endCursorPosition:Buffer)(func: (Buffer, EntryRecord.Buffer)=>Boolean) = {
     val ro = new ReadOptions
     ro.fillCache(true)
     ro.verifyChecksums(verifyChecksums)
     val start = encodeEntryKey(ENTRY_PREFIX, collectionKey, cursorPosition)
-    val end = encodeLongKey(ENTRY_PREFIX, collectionKey+1)
+    val end = encodeEntryKey(ENTRY_PREFIX, collectionKey, endCursorPosition)
     might_fail_using_index {
       index.cursorRange(start, end, ro) { case (key, value) =>
         func(key.buffer.moveHead(9), EntryRecord.FACTORY.parseUnframed(value))

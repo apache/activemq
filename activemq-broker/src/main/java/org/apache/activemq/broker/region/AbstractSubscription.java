@@ -20,7 +20,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.management.ObjectName;
@@ -43,17 +44,21 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractSubscription implements Subscription {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSubscription.class);
+
     protected Broker broker;
     protected ConnectionContext context;
     protected ConsumerInfo info;
     protected final DestinationFilter destinationFilter;
     protected final CopyOnWriteArrayList<Destination> destinations = new CopyOnWriteArrayList<Destination>();
+    protected final AtomicInteger prefetchExtension = new AtomicInteger(0);
+
+    private boolean usePrefetchExtension = true;
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
     private int cursorMemoryHighWaterMark = 70;
     private boolean slowConsumer;
     private long lastAckTime;
-    private AtomicLong consumedCount = new AtomicLong();
+    private final SubscriptionStatistics subscriptionStatistics = new SubscriptionStatistics();
 
     public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
@@ -89,7 +94,7 @@ public abstract class AbstractSubscription implements Subscription {
     @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         this.lastAckTime = System.currentTimeMillis();
-        this.consumedCount.incrementAndGet();
+        subscriptionStatistics.getConsumedCount().increment();
     }
 
     @Override
@@ -180,6 +185,15 @@ public abstract class AbstractSubscription implements Subscription {
     public int getPrefetchSize() {
         return info.getPrefetchSize();
     }
+
+    public boolean isUsePrefetchExtension() {
+        return usePrefetchExtension;
+    }
+
+    public void setUsePrefetchExtension(boolean usePrefetchExtension) {
+        this.usePrefetchExtension = usePrefetchExtension;
+    }
+
     public void setPrefetchSize(int newSize) {
         info.setPrefetchSize(newSize);
     }
@@ -210,7 +224,6 @@ public abstract class AbstractSubscription implements Subscription {
             if (result) {
                 doAddRecoveredMessage(message);
             }
-
         } finally {
             msgContext.clear();
         }
@@ -228,9 +241,15 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     @Override
+    public long getInFlightMessageSize() {
+        return subscriptionStatistics.getInflightMessageSize().getTotalSize();
+    }
+
+    @Override
     public int getInFlightUsage() {
-        if (info.getPrefetchSize() > 0) {
-        return (getInFlightSize() * 100)/info.getPrefetchSize();
+        int prefetchSize = info.getPrefetchSize();
+        if (prefetchSize > 0) {
+            return (getInFlightSize() * 100) / prefetchSize;
         }
         return Integer.MAX_VALUE;
     }
@@ -240,7 +259,6 @@ public abstract class AbstractSubscription implements Subscription {
      * @param destination
      */
     public void addDestination(Destination destination) {
-
     }
 
     /**
@@ -248,7 +266,6 @@ public abstract class AbstractSubscription implements Subscription {
      * @param destination
      */
     public void removeDestination(Destination destination) {
-
     }
 
     @Override
@@ -263,7 +280,7 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public int countBeforeFull() {
-        return getDispatchedQueueSize() - info.getPrefetchSize();
+        return info.getPrefetchSize() - getDispatchedQueueSize();
     }
 
     @Override
@@ -284,15 +301,33 @@ public abstract class AbstractSubscription implements Subscription {
         this.lastAckTime = value;
     }
 
+    @Override
     public long getConsumedCount(){
-        return consumedCount.get();
+        return subscriptionStatistics.getConsumedCount().getCount();
     }
 
+    @Override
     public void incrementConsumedCount(){
-        consumedCount.incrementAndGet();
+        subscriptionStatistics.getConsumedCount().increment();
     }
 
+    @Override
     public void resetConsumedCount(){
-        consumedCount.set(0);
+        subscriptionStatistics.getConsumedCount().reset();
+    }
+
+    @Override
+    public SubscriptionStatistics getSubscriptionStatistics() {
+        return subscriptionStatistics;
+    }
+
+    public void wakeupDestinationsForDispatch() {
+        for (Destination dest : destinations) {
+            dest.wakeup();
+        }
+    }
+
+    public AtomicInteger getPrefetchExtension() {
+        return this.prefetchExtension;
     }
 }

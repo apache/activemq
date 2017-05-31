@@ -19,7 +19,6 @@ package org.apache.activemq.transport.amqp;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.MutexTransport;
@@ -33,7 +32,7 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class AmqpTransportFactory extends TcpTransportFactory implements BrokerServiceAware {
 
-    private BrokerContext brokerContext = null;
+    private BrokerService brokerService = null;
 
     @Override
     protected String getDefaultWireFormatType() {
@@ -43,14 +42,19 @@ public class AmqpTransportFactory extends TcpTransportFactory implements BrokerS
     @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new AmqpTransportFilter(transport, format, brokerContext);
-        IntrospectionSupport.setProperties(transport, options);
-        return super.compositeConfigure(transport, format, options);
+        AmqpTransportFilter amqpTransport = new AmqpTransportFilter(transport, format, brokerService);
+
+        Map<String, Object> wireFormatOptions = IntrospectionSupport.extractProperties(options, "wireFormat.");
+
+        IntrospectionSupport.setProperties(amqpTransport, options);
+        IntrospectionSupport.setProperties(amqpTransport.getWireFormat(), wireFormatOptions);
+
+        return super.compositeConfigure(amqpTransport, format, options);
     }
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
-        this.brokerContext = brokerService.getBrokerContext();
+        this.brokerService = brokerService;
     }
 
     @SuppressWarnings("rawtypes")
@@ -67,7 +71,10 @@ public class AmqpTransportFactory extends TcpTransportFactory implements BrokerS
     }
 
     @Override
-    protected boolean isUseInactivityMonitor(Transport transport) {
-        return false;
+    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+        AmqpInactivityMonitor monitor = new AmqpInactivityMonitor(transport, format);
+        AmqpTransportFilter filter = transport.narrow(AmqpTransportFilter.class);
+        filter.setInactivityMonitor(monitor);
+        return monitor;
     }
 }

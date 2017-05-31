@@ -23,6 +23,8 @@ import java.util.zip.Checksum;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An optimized writer to do batch appends to a data file. This object is thread
@@ -33,6 +35,8 @@ import org.apache.activemq.util.RecoverableRandomAccessFile;
  *
  */
 class CallerBufferingDataFileAppender extends DataFileAppender {
+
+    private static final Logger logger = LoggerFactory.getLogger(CallerBufferingDataFileAppender.class);
 
     final DataByteArrayOutputStream cachedBuffers[] = new DataByteArrayOutputStream[] {
             new DataByteArrayOutputStream(maxWriteBatchSize),
@@ -111,14 +115,16 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 wb = (WriteBatch)o;
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
-                        file.setLength(dataFile.getLength());
+                        if (periodicSync) {
+                            if (logger.isTraceEnabled()) {
+                                logger.trace("Syning file {} on rotate", dataFile.getFile().getName());
+                            }
+                            file.sync();
+                        }
                         dataFile.closeRandomAccessFile(file);
                     }
                     dataFile = wb.dataFile;
                     file = dataFile.openRandomAccessFile();
-                    if( file.length() < journal.preferedFileLength ) {
-                        file.setLength(journal.preferedFileLength);
-                    }
                 }
 
                 final DataByteArrayOutputStream buff = wb.buff;
@@ -181,6 +187,12 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
         } finally {
             try {
                 if (file != null) {
+                    if (periodicSync) {
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Syning file {} on close", dataFile.getFile().getName());
+                        }
+                        file.sync();
+                    }
                     dataFile.closeRandomAccessFile(file);
                 }
             } catch (Throwable ignore) {

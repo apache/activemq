@@ -47,8 +47,6 @@ public class JDBCCommitExceptionTest extends TestCase {
     protected ActiveMQConnectionFactory factory;
     protected BrokerService broker;
     protected String connectionUri;
-    protected EmbeddedDataSource dataSource;
-    protected java.sql.Connection dbConnection;
     protected BrokenPersistenceAdapter jdbc;
 
     @Override
@@ -155,11 +153,6 @@ public class JDBCCommitExceptionTest extends TestCase {
         BrokerService broker = new BrokerService();
         jdbc = new BrokenPersistenceAdapter();
 
-        dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("target/derbyDb");
-        dataSource.setCreateDatabase("create");
-
-        jdbc.setDataSource(dataSource);
         jdbc.setUseLock(false);
         jdbc.deleteAllMessages();
 

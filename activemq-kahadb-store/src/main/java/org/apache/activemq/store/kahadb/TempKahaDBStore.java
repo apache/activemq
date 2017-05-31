@@ -46,6 +46,7 @@ import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
@@ -198,25 +199,6 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
 
         @Override
-        public int getMessageCount() throws IOException {
-            synchronized(indexMutex) {
-                return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>(){
-                    @Override
-                    public Integer execute(Transaction tx) throws IOException {
-                        // Iterate through all index entries to get a count of messages in the destination.
-                        StoredDestination sd = getStoredDestination(dest, tx);
-                        int rc=0;
-                        for (Iterator<Entry<String, Long>> iterator = sd.messageIdIndex.iterator(tx); iterator.hasNext();) {
-                            iterator.next();
-                            rc++;
-                        }
-                        return rc;
-                    }
-                });
-            }
-        }
-
-        @Override
         public void recover(final MessageRecoveryListener listener) throws Exception {
             synchronized(indexMutex) {
                 pageFile.tx().execute(new Transaction.Closure<Exception>(){
@@ -295,6 +277,27 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
         @Override
         public void stop() throws Exception {
+        }
+
+        @Override
+        public void recoverMessageStoreStatistics() throws IOException {
+            int count = 0;
+            synchronized(indexMutex) {
+                count = pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>(){
+                    @Override
+                    public Integer execute(Transaction tx) throws IOException {
+                        // Iterate through all index entries to get a count of messages in the destination.
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        int rc=0;
+                        for (Iterator<Entry<String, Long>> iterator = sd.messageIdIndex.iterator(tx); iterator.hasNext();) {
+                            iterator.next();
+                            rc++;
+                        }
+                        return rc;
+                    }
+                });
+            }
+            getMessageStoreStatistics().getMessageCount().setCount(count);
         }
 
     }
@@ -404,6 +407,18 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                     }
                 });
             }
+        }
+
+        @Override
+        public long getMessageSize(String clientId, String subscriptionName) throws IOException {
+            return 0;
+        }
+
+        private final MessageStoreSubscriptionStatistics stats = new MessageStoreSubscriptionStatistics(false);
+
+        @Override
+        public MessageStoreSubscriptionStatistics getMessageStoreSubStatistics() {
+            return stats;
         }
 
         @Override

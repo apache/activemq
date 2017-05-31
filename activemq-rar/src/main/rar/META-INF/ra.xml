@@ -80,6 +80,31 @@
             <config-property-type>java.lang.Boolean</config-property-type>
             <config-property-value>false</config-property-value>
         </config-property>
+        <config-property>
+            <description>The location of a Trust Store to use with the Connection Factory</description>
+            <config-property-name>TrustStore</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+        </config-property>
+        <config-property>
+            <description>The password for the Trust Store</description>
+            <config-property-name>TrustStorePassword</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+        </config-property>
+        <config-property>
+            <description>The location of a Key Store to use with the Connection Factory</description>
+            <config-property-name>KeyStore</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+        </config-property>
+        <config-property>
+            <description>The password for the Key Store</description>
+            <config-property-name>KeyStorePassword</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+        </config-property>
+        <config-property>
+            <description>The Key password for the Key Store</description>
+            <config-property-name>KeyStoreKeyPassword</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+        </config-property>
 
 			  <!-- NOTE disable the following property if you do not wish to deploy an embedded broker -->
         <config-property>
@@ -186,6 +211,14 @@
             <config-property-type>java.lang.Boolean</config-property-type>
           </config-property>
       </adminobject>
+      <adminobject>
+          <adminobject-interface>javax.jms.XAConnectionFactory</adminobject-interface>
+          <adminobject-class>org.apache.activemq.ActiveMQXAConnectionFactory</adminobject-class>
+          <config-property>
+            <config-property-name>brokerURL</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+          </config-property>
+       </adminobject>
 
 
     </resourceadapter>

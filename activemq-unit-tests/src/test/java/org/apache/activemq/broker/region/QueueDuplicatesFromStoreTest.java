@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.region.SubscriptionStatistics;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -101,7 +102,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
     public void doTestNoDuplicateAfterCacheFullAndAcked(final int auditDepth) throws Exception {
         final PersistenceAdapter persistenceAdapter =  brokerService.getPersistenceAdapter();
         final MessageStore queueMessageStore =
-            persistenceAdapter.createQueueMessageStore(destination);
+                persistenceAdapter.createQueueMessageStore(destination);
         final ConnectionContext contextNotInTx = new ConnectionContext();
         final ConsumerInfo consumerInfo = new ConsumerInfo();
         final DestinationStatistics destinationStatistics = new DestinationStatistics();
@@ -138,6 +139,8 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
         // pull from store in small windows
         Subscription subscription = new Subscription() {
+
+            private SubscriptionStatistics subscriptionStatistics = new SubscriptionStatistics();
 
             @Override
             public void add(MessageReference node) throws Exception {
@@ -221,6 +224,11 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
             @Override
             public int getPendingQueueSize() {
+                return 0;
+            }
+
+            @Override
+            public long getPendingMessageSize() {
                 return 0;
             }
 
@@ -351,12 +359,24 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
                 return 0;
             }
 
+            @Override
             public void incrementConsumedCount(){
 
             }
 
+            @Override
             public void resetConsumedCount(){
 
+            }
+
+            @Override
+            public SubscriptionStatistics getSubscriptionStatistics() {
+                return subscriptionStatistics;
+            }
+
+            @Override
+            public long getInFlightMessageSize() {
+                return subscriptionStatistics.getInflightMessageSize().getTotalSize();
             }
         };
 

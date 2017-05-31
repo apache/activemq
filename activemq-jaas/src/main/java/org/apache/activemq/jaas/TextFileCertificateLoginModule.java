@@ -17,9 +17,8 @@
 
 package org.apache.activemq.jaas;
 
-import java.io.File;
-import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,17 +39,16 @@ import javax.security.auth.login.LoginException;
  * org.apache.activemq.jaas.textfiledn.user properties respectively. NOTE: This
  * class will re-read user and group files for every authentication (i.e it does
  * live updates of allowed groups and users).
- * 
+ *
  * @author sepandm@gmail.com (Sepand)
  */
 public class TextFileCertificateLoginModule extends CertificateLoginModule {
 
-    private static final String USER_FILE = "org.apache.activemq.jaas.textfiledn.user";
-    private static final String GROUP_FILE = "org.apache.activemq.jaas.textfiledn.group";
+    private static final String USER_FILE_PROP_NAME = "org.apache.activemq.jaas.textfiledn.user";
+    private static final String GROUP_FILE_PROP_NAME = "org.apache.activemq.jaas.textfiledn.group";
 
-    private File baseDir;
-    private String usersFilePathname;
-    private String groupsFilePathname;
+    private Map<String, Set<String>> groupsByUser;
+    private Map<String, String> usersByDn;
 
     /**
      * Performs initialization of file paths. A standard JAAS override.
@@ -58,20 +56,15 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         super.initialize(subject, callbackHandler, sharedState, options);
-        if (System.getProperty("java.security.auth.login.config") != null) {
-            baseDir = new File(System.getProperty("java.security.auth.login.config")).getParentFile();
-        } else {
-            baseDir = new File(".");
-        }
 
-        usersFilePathname = (String)options.get(USER_FILE) + "";
-        groupsFilePathname = (String)options.get(GROUP_FILE) + "";
-    }
+        usersByDn = load(USER_FILE_PROP_NAME, "", options).invertedPropertiesMap();
+        groupsByUser = load(GROUP_FILE_PROP_NAME, "", options).invertedPropertiesValuesMap();
+     }
 
     /**
      * Overriding to allow DN authorization based on DNs specified in text
      * files.
-     * 
+     *
      * @param certs The certificate the incoming connection provided.
      * @return The user's authenticated name or null if unable to authenticate
      *         the user.
@@ -84,35 +77,12 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
             throw new LoginException("Client certificates not found. Cannot authenticate.");
         }
 
-        File usersFile = new File(baseDir, usersFilePathname);
-
-        Properties users = new Properties();
-
-        try {
-            java.io.FileInputStream in = new java.io.FileInputStream(usersFile);
-            users.load(in);
-            in.close();
-        } catch (IOException ioe) {
-            throw new LoginException("Unable to load user properties file " + usersFile);
-        }
-
-        String dn = getDistinguishedName(certs);
-
-        Enumeration<Object> keys = users.keys();
-        for (Enumeration<Object> vals = users.elements(); vals.hasMoreElements();) {
-            if (((String)vals.nextElement()).equals(dn)) {
-                return (String)keys.nextElement();
-            } else {
-                keys.nextElement();
-            }
-        }
-
-        return null;
+        return usersByDn.get(getDistinguishedName(certs));
     }
 
     /**
      * Overriding to allow for group discovery based on text files.
-     * 
+     *
      * @param username The name of the user being examined. This is the same
      *                name returned by getUserNameForCertificates.
      * @return A Set of name Strings for groups this user belongs to.
@@ -120,28 +90,10 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
      */
     @Override
     protected Set<String> getUserGroups(String username) throws LoginException {
-        File groupsFile = new File(baseDir, groupsFilePathname);
-
-        Properties groups = new Properties();
-        try {
-            java.io.FileInputStream in = new java.io.FileInputStream(groupsFile);
-            groups.load(in);
-            in.close();
-        } catch (IOException ioe) {
-            throw new LoginException("Unable to load group properties file " + groupsFile);
+        Set<String> userGroups = groupsByUser.get(username);
+        if (userGroups == null) {
+            userGroups = Collections.emptySet();
         }
-        Set<String> userGroups = new HashSet<String>();
-        for (Enumeration<Object> enumeration = groups.keys(); enumeration.hasMoreElements();) {
-            String groupName = (String)enumeration.nextElement();
-            String[] userList = (groups.getProperty(groupName) + "").split(",");
-            for (int i = 0; i < userList.length; i++) {
-                if (username.equals(userList[i])) {
-                    userGroups.add(groupName);
-                    break;
-                }
-            }
-        }
-
         return userGroups;
     }
 }

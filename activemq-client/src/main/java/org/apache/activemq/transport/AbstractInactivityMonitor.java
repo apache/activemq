@@ -43,9 +43,10 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractInactivityMonitor.class);
 
+    private static final long DEFAULT_CHECK_TIME_MILLS = 30000;
+
     private static ThreadPoolExecutor ASYNC_TASKS;
     private static int CHECKER_COUNTER;
-    private static long DEFAULT_CHECK_TIME_MILLS = 30000;
     private static Timer READ_CHECK_TIMER;
     private static Timer WRITE_CHECK_TIMER;
 
@@ -61,9 +62,11 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     private final ReentrantReadWriteLock sendLock = new ReentrantReadWriteLock();
 
+    private SchedulerTimerTask connectCheckerTask;
     private SchedulerTimerTask writeCheckerTask;
     private SchedulerTimerTask readCheckerTask;
 
+    private long connectAttemptTimeout = DEFAULT_CHECK_TIME_MILLS;
     private long readCheckTime = DEFAULT_CHECK_TIME_MILLS;
     private long writeCheckTime = DEFAULT_CHECK_TIME_MILLS;
     private long initialDelayTime = DEFAULT_CHECK_TIME_MILLS;
@@ -71,6 +74,34 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     private boolean keepAliveResponseRequired;
 
     protected WireFormat wireFormat;
+
+    private final Runnable connectChecker = new Runnable() {
+
+        private final long startTime = System.currentTimeMillis();
+
+        @Override
+        public void run() {
+            long now = System.currentTimeMillis();
+
+            if ((now - startTime) >= connectAttemptTimeout && connectCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
+                LOG.debug("No connection attempt made in time for {}! Throwing InactivityIOException.", AbstractInactivityMonitor.this.toString());
+                try {
+                    ASYNC_TASKS.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            onException(new InactivityIOException(
+                                "Channel was inactive (no connection attempt made) for too (>" + (connectAttemptTimeout) + ") long: " + next.getRemoteAddress()));
+                        }
+                    });
+                } catch (RejectedExecutionException ex) {
+                    if (!ASYNC_TASKS.isShutdown()) {
+                        LOG.error("Async connection timeout task was rejected from the executor: ", ex);
+                        throw ex;
+                    }
+                }
+            }
+        }
+    };
 
     private final Runnable readChecker = new Runnable() {
         long lastRunTime;
@@ -151,7 +182,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             return;
         }
 
-        if (!commandSent.get() && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
+        if (!commandSent.get() && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isShutdown()) {
             LOG.trace("{} no message sent since last write check, sending a KeepAliveInfo", this);
 
             try {
@@ -185,7 +216,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     };
                 });
             } catch (RejectedExecutionException ex) {
-                if (!ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
+                if (!ASYNC_TASKS.isShutdown()) {
                     LOG.error("Async write check was rejected from the executor: ", ex);
                     throw ex;
                 }
@@ -204,7 +235,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             LOG.trace("A receive is in progress, skipping read check.");
             return;
         }
-        if (!commandReceived.get() && monitorStarted.get() && !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
+        if (!commandReceived.get() && monitorStarted.get() && !ASYNC_TASKS.isShutdown()) {
             LOG.debug("No message received since last read check for {}. Throwing InactivityIOException.", this);
 
             try {
@@ -221,7 +252,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     };
                 });
             } catch (RejectedExecutionException ex) {
-                if (!ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
+                if (!ASYNC_TASKS.isShutdown()) {
                     LOG.error("Async read check was rejected from the executor: ", ex);
                     throw ex;
                 }
@@ -280,14 +311,14 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         // are performing a send we take a read lock. The inactivity monitor
         // sends its Heart-beat commands under a write lock. This means that
         // the MutexTransport is still responsible for synchronizing sends
-        this.sendLock.readLock().lock();
+        sendLock.readLock().lock();
         inSend.set(true);
         try {
             doOnewaySend(o);
         } finally {
             commandSent.set(true);
             inSend.set(false);
-            this.sendLock.readLock().unlock();
+            sendLock.readLock().unlock();
         }
     }
 
@@ -317,6 +348,14 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     public void setUseKeepAlive(boolean val) {
         useKeepAlive = val;
+    }
+
+    public long getConnectAttemptTimeout() {
+        return connectAttemptTimeout;
+    }
+
+    public void setConnectAttemptTimeout(long connectionTimeout) {
+        this.connectAttemptTimeout = connectionTimeout;
     }
 
     public long getReadCheckTime() {
@@ -355,6 +394,52 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         return this.monitorStarted.get();
     }
 
+    abstract protected boolean configuredOk() throws IOException;
+
+    public synchronized void startConnectCheckTask() {
+        startConnectCheckTask(getConnectAttemptTimeout());
+    }
+
+    public synchronized void startConnectCheckTask(long connectionTimeout) {
+        if (connectionTimeout <= 0) {
+            return;
+        }
+
+        LOG.trace("Starting connection check task for: {}", this);
+
+        this.connectAttemptTimeout = connectionTimeout;
+
+        if (connectCheckerTask == null) {
+            connectCheckerTask = new SchedulerTimerTask(connectChecker);
+
+            synchronized (AbstractInactivityMonitor.class) {
+                if (CHECKER_COUNTER == 0) {
+                    if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
+                        ASYNC_TASKS = createExecutor();
+                    }
+                    if (READ_CHECK_TIMER == null) {
+                        READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer", true);
+                    }
+                }
+                CHECKER_COUNTER++;
+                READ_CHECK_TIMER.schedule(connectCheckerTask, connectionTimeout);
+            }
+        }
+    }
+
+    public synchronized void stopConnectCheckTask() {
+        if (connectCheckerTask != null) {
+            LOG.trace("Stopping connection check task for: {}", this);
+            connectCheckerTask.cancel();
+            connectCheckerTask = null;
+
+            synchronized (AbstractInactivityMonitor.class) {
+                READ_CHECK_TIMER.purge();
+                CHECKER_COUNTER--;
+            }
+        }
+    }
+
     protected synchronized void startMonitorThreads() throws IOException {
         if (monitorStarted.get()) {
             return;
@@ -375,11 +460,16 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         if (writeCheckTime > 0 || readCheckTime > 0) {
             monitorStarted.set(true);
             synchronized (AbstractInactivityMonitor.class) {
-                if (CHECKER_COUNTER == 0) {
+                if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
                     ASYNC_TASKS = createExecutor();
+                }
+                if (READ_CHECK_TIMER == null) {
                     READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer", true);
+                }
+                if (WRITE_CHECK_TIMER == null) {
                     WRITE_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor WriteCheckTimer", true);
                 }
+
                 CHECKER_COUNTER++;
                 if (readCheckTime > 0) {
                     READ_CHECK_TIMER.schedule(readCheckerTask, initialDelayTime, readCheckTime);
@@ -391,9 +481,8 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         }
     }
 
-    abstract protected boolean configuredOk() throws IOException;
-
     protected synchronized void stopMonitorThreads() {
+        stopConnectCheckTask();
         if (monitorStarted.compareAndSet(true, false)) {
             if (readCheckerTask != null) {
                 readCheckerTask.cancel();
@@ -401,6 +490,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             if (writeCheckerTask != null) {
                 writeCheckerTask.cancel();
             }
+
             synchronized (AbstractInactivityMonitor.class) {
                 WRITE_CHECK_TIMER.purge();
                 READ_CHECK_TIMER.purge();
@@ -410,7 +500,11 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     READ_CHECK_TIMER.cancel();
                     WRITE_CHECK_TIMER = null;
                     READ_CHECK_TIMER = null;
-                    ThreadPoolUtils.shutdown(ASYNC_TASKS);
+                    try {
+                        ThreadPoolUtils.shutdownGraceful(ASYNC_TASKS, TimeUnit.SECONDS.toMillis(10));
+                    } finally {
+                        ASYNC_TASKS = null;
+                    }
                 }
             }
         }

@@ -22,15 +22,20 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.CountDownLatch;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 
@@ -50,6 +55,7 @@ public class NIOSSLTransport extends NIOTransport {
     protected boolean needClientAuth;
     protected boolean wantClientAuth;
     protected String[] enabledCipherSuites;
+    protected String[] enabledProtocols;
 
     protected SSLContext sslContext;
     protected SSLEngine sslEngine;
@@ -64,16 +70,27 @@ public class NIOSSLTransport extends NIOTransport {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
     }
 
-    public NIOSSLTransport(WireFormat wireFormat, Socket socket) throws IOException {
-        super(wireFormat, socket);
+    public NIOSSLTransport(WireFormat wireFormat, Socket socket, SSLEngine engine, InitBuffer initBuffer,
+            ByteBuffer inputBuffer) throws IOException {
+        super(wireFormat, socket, initBuffer);
+        this.sslEngine = engine;
+        if (engine != null) {
+            this.sslSession = engine.getSession();
+        }
+        this.inputBuffer = inputBuffer;
     }
 
     public void setSslContext(SSLContext sslContext) {
         this.sslContext = sslContext;
     }
 
+    volatile boolean hasSslEngine = false;
+
     @Override
     protected void initializeStreams() throws IOException {
+        if (sslEngine != null) {
+            hasSslEngine = true;
+        }
         NIOOutputStream outputStream = null;
         try {
             channel = socket.getChannel();
@@ -95,62 +112,58 @@ public class NIOSSLTransport extends NIOTransport {
 
             // initialize engine, the initial sslSession we get will need to be
             // updated once the ssl handshake process is completed.
-            if (remoteHost != null && remotePort != -1) {
-                sslEngine = sslContext.createSSLEngine(remoteHost, remotePort);
-            } else {
-                sslEngine = sslContext.createSSLEngine();
+            if (!hasSslEngine) {
+                if (remoteHost != null && remotePort != -1) {
+                    sslEngine = sslContext.createSSLEngine(remoteHost, remotePort);
+                } else {
+                    sslEngine = sslContext.createSSLEngine();
+                }
+
+                sslEngine.setUseClientMode(false);
+                if (enabledCipherSuites != null) {
+                    sslEngine.setEnabledCipherSuites(enabledCipherSuites);
+                }
+
+                if (enabledProtocols != null) {
+                    sslEngine.setEnabledProtocols(enabledProtocols);
+                }
+
+                if (wantClientAuth) {
+                    sslEngine.setWantClientAuth(wantClientAuth);
+                }
+
+                if (needClientAuth) {
+                    sslEngine.setNeedClientAuth(needClientAuth);
+                }
+
+                sslSession = sslEngine.getSession();
+
+                inputBuffer = ByteBuffer.allocate(sslSession.getPacketBufferSize());
+                inputBuffer.clear();
             }
-
-            sslEngine.setUseClientMode(false);
-            if (enabledCipherSuites != null) {
-                sslEngine.setEnabledCipherSuites(enabledCipherSuites);
-            }
-
-            if (wantClientAuth) {
-                sslEngine.setWantClientAuth(wantClientAuth);
-            }
-
-            if (needClientAuth) {
-                sslEngine.setNeedClientAuth(needClientAuth);
-            }
-
-            sslSession = sslEngine.getSession();
-
-            inputBuffer = ByteBuffer.allocate(sslSession.getPacketBufferSize());
-            inputBuffer.clear();
 
             outputStream = new NIOOutputStream(channel);
             outputStream.setEngine(sslEngine);
             this.dataOut = new DataOutputStream(outputStream);
             this.buffOut = outputStream;
-            sslEngine.beginHandshake();
+
+            //If the sslEngine was not passed in, then handshake
+            if (!hasSslEngine) {
+                sslEngine.beginHandshake();
+            }
             handshakeStatus = sslEngine.getHandshakeStatus();
-            doHandshake();
-        } catch (Exception e) {
-            try {
-                if(outputStream != null) {
-                    outputStream.close();
-                }
-                super.closeStreams();
-            } catch (Exception ex) {}
-            throw new IOException(e);
-        }
-    }
+            if (!hasSslEngine) {
+                doHandshake();
+            }
 
-    protected void finishHandshake() throws Exception {
-        if (handshakeInProgress) {
-            handshakeInProgress = false;
-            nextFrameSize = -1;
-
-            // Once handshake completes we need to ask for the now real sslSession
-            // otherwise the session would return 'SSL_NULL_WITH_NULL_NULL' for the
-            // cipher suite.
-            sslSession = sslEngine.getSession();
-
-            // listen for events telling us when the socket is readable.
             selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
                 @Override
                 public void onSelect(SelectorSelection selection) {
+                    try {
+                        initialized.await();
+                    } catch (InterruptedException error) {
+                        onException(IOExceptionSupport.create(error));
+                    }
                     serviceRead();
                 }
 
@@ -163,15 +176,73 @@ public class NIOSSLTransport extends NIOTransport {
                     }
                 }
             });
+            doInit();
+
+        } catch (Exception e) {
+            try {
+                if(outputStream != null) {
+                    outputStream.close();
+                }
+                super.closeStreams();
+            } catch (Exception ex) {}
+            throw new IOException(e);
+        }
+    }
+
+    final protected CountDownLatch initialized = new CountDownLatch(1);
+
+    protected void doInit() throws Exception {
+        taskRunnerFactory.execute(new Runnable() {
+
+            @Override
+            public void run() {
+                //Need to start in new thread to let startup finish first
+                //We can trigger a read because we know the channel is ready since the SSL handshake
+                //already happened
+                serviceRead();
+                initialized.countDown();
+            }
+        });
+    }
+
+    //Only used for the auto transport to abort the openwire init method early if already initialized
+    boolean openWireInititialized = false;
+
+    protected void doOpenWireInit() throws Exception {
+        //Do this later to let wire format negotiation happen
+        if (initBuffer != null && !openWireInititialized && this.wireFormat instanceof OpenWireFormat) {
+            initBuffer.buffer.flip();
+            if (initBuffer.buffer.hasRemaining()) {
+                nextFrameSize = -1;
+                receiveCounter += initBuffer.readSize;
+                processCommand(initBuffer.buffer);
+                processCommand(initBuffer.buffer);
+                initBuffer.buffer.clear();
+                openWireInititialized = true;
+            }
+        }
+    }
+
+    protected void finishHandshake() throws Exception {
+        if (handshakeInProgress) {
+            handshakeInProgress = false;
+            nextFrameSize = -1;
+
+            // Once handshake completes we need to ask for the now real sslSession
+            // otherwise the session would return 'SSL_NULL_WITH_NULL_NULL' for the
+            // cipher suite.
+            sslSession = sslEngine.getSession();
         }
     }
 
     @Override
-    protected void serviceRead() {
+    public void serviceRead() {
         try {
             if (handshakeInProgress) {
                 doHandshake();
             }
+
+            doOpenWireInit();
 
             ByteBuffer plain = ByteBuffer.allocate(sslSession.getApplicationBufferSize());
             plain.position(plain.limit());
@@ -264,26 +335,27 @@ public class NIOSSLTransport extends NIOTransport {
             currentBuffer.putInt(nextFrameSize);
 
         } else {
-
             // If its all in one read then we can just take it all, otherwise take only
             // the current frame size and the next iteration starts a new command.
-            if (currentBuffer.remaining() >= plain.remaining()) {
-                currentBuffer.put(plain);
-            } else {
-                byte[] fill = new byte[currentBuffer.remaining()];
-                plain.get(fill);
-                currentBuffer.put(fill);
-            }
+            if (currentBuffer != null) {
+                if (currentBuffer.remaining() >= plain.remaining()) {
+                    currentBuffer.put(plain);
+                } else {
+                    byte[] fill = new byte[currentBuffer.remaining()];
+                    plain.get(fill);
+                    currentBuffer.put(fill);
+                }
 
-            // Either we have enough data for a new command or we have to wait for some more.
-            if (currentBuffer.hasRemaining()) {
-                return;
-            } else {
-                currentBuffer.flip();
-                Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
-                doConsume(command);
-                nextFrameSize = -1;
-                currentBuffer = null;
+                // Either we have enough data for a new command or we have to wait for some more.
+                if (currentBuffer.hasRemaining()) {
+                    return;
+                } else {
+                    currentBuffer.flip();
+                    Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
+                    doConsume(command);
+                    nextFrameSize = -1;
+                    currentBuffer = null;
+               }
             }
         }
     }
@@ -293,7 +365,7 @@ public class NIOSSLTransport extends NIOTransport {
         if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining()) || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
             int bytesRead = channel.read(inputBuffer);
 
-            if (bytesRead == 0) {
+            if (bytesRead == 0 && !(sslEngine.getHandshakeStatus().equals(SSLEngineResult.HandshakeStatus.NEED_UNWRAP))) {
                 return 0;
             }
 
@@ -336,25 +408,50 @@ public class NIOSSLTransport extends NIOTransport {
 
     protected void doHandshake() throws Exception {
         handshakeInProgress = true;
-        while (true) {
-            switch (sslEngine.getHandshakeStatus()) {
-            case NEED_UNWRAP:
-                secureRead(ByteBuffer.allocate(sslSession.getApplicationBufferSize()));
-                break;
-            case NEED_TASK:
-                Runnable task;
-                while ((task = sslEngine.getDelegatedTask()) != null) {
-                    taskRunnerFactory.execute(task);
+        Selector selector = null;
+        SelectionKey key = null;
+        boolean readable = true;
+        try {
+            while (true) {
+                HandshakeStatus handshakeStatus = sslEngine.getHandshakeStatus();
+                switch (handshakeStatus) {
+                    case NEED_UNWRAP:
+                        if (readable) {
+                            secureRead(ByteBuffer.allocate(sslSession.getApplicationBufferSize()));
+                        }
+                        if (this.status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
+                            long now = System.currentTimeMillis();
+                            if (selector == null) {
+                                selector = Selector.open();
+                                key = channel.register(selector, SelectionKey.OP_READ);
+                            } else {
+                                key.interestOps(SelectionKey.OP_READ);
+                            }
+                            int keyCount = selector.select(this.getSoTimeout());
+                            if (keyCount == 0 && this.getSoTimeout() > 0 && ((System.currentTimeMillis() - now) >= this.getSoTimeout())) {
+                                throw new SocketTimeoutException("Timeout during handshake");
+                            }
+                            readable = key.isReadable();
+                        }
+                        break;
+                    case NEED_TASK:
+                        Runnable task;
+                        while ((task = sslEngine.getDelegatedTask()) != null) {
+                            task.run();
+                        }
+                        break;
+                    case NEED_WRAP:
+                        ((NIOOutputStream) buffOut).write(ByteBuffer.allocate(0));
+                        break;
+                    case FINISHED:
+                    case NOT_HANDSHAKING:
+                        finishHandshake();
+                        return;
                 }
-                break;
-            case NEED_WRAP:
-                ((NIOOutputStream) buffOut).write(ByteBuffer.allocate(0));
-                break;
-            case FINISHED:
-            case NOT_HANDSHAKING:
-                finishHandshake();
-                return;
             }
+        } finally {
+            if (key!=null) try {key.cancel();} catch (Exception ignore) {}
+            if (selector!=null) try {selector.close();} catch (Exception ignore) {}
         }
     }
 
@@ -367,6 +464,8 @@ public class NIOSSLTransport extends NIOTransport {
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
+        initialized.countDown();
+
         if (taskRunnerFactory != null) {
             taskRunnerFactory.shutdownNow();
             taskRunnerFactory = null;
@@ -396,6 +495,7 @@ public class NIOSSLTransport extends NIOTransport {
     /**
      * @return peer certificate chain associated with the ssl socket
      */
+    @Override
     public X509Certificate[] getPeerCertificates() {
 
         X509Certificate[] clientCertChain = null;
@@ -434,5 +534,13 @@ public class NIOSSLTransport extends NIOTransport {
 
     public void setEnabledCipherSuites(String[] enabledCipherSuites) {
         this.enabledCipherSuites = enabledCipherSuites;
+    }
+
+    public String[] getEnabledProtocols() {
+        return enabledProtocols;
+    }
+
+    public void setEnabledProtocols(String[] enabledProtocols) {
+        this.enabledProtocols = enabledProtocols;
     }
 }

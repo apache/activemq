@@ -21,8 +21,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
@@ -49,10 +51,10 @@ import org.slf4j.LoggerFactory;
 public class DurableTopicSubscription extends PrefetchSubscription implements UsageListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableTopicSubscription.class);
-    private final ConcurrentHashMap<MessageId, Integer> redeliveredMessages = new ConcurrentHashMap<MessageId, Integer>();
-    private final ConcurrentHashMap<ActiveMQDestination, Destination> durableDestinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
+    private final ConcurrentMap<MessageId, Integer> redeliveredMessages = new ConcurrentHashMap<MessageId, Integer>();
+    private final ConcurrentMap<ActiveMQDestination, Destination> durableDestinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
-    private final boolean keepDurableSubsActive;
+    private boolean keepDurableSubsActive;
     private final AtomicBoolean active = new AtomicBoolean();
     private final AtomicLong offlineTimestamp = new AtomicLong(-1);
 
@@ -119,11 +121,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         if (active.get() || keepDurableSubsActive) {
             Topic topic = (Topic) destination;
             topic.activate(context, this);
-            this.enqueueCounter += pending.size();
+            getSubscriptionStatistics().getEnqueues().add(pending.size());
         } else if (destination.getMessageStore() != null) {
             TopicMessageStore store = (TopicMessageStore) destination.getMessageStore();
             try {
-                this.enqueueCounter += store.getMessageCount(subscriptionKey.getClientId(), subscriptionKey.getSubscriptionName());
+                getSubscriptionStatistics().getEnqueues().add(store.getMessageCount(subscriptionKey.getClientId(), subscriptionKey.getSubscriptionName()));
             } catch (IOException e) {
                 JMSException jmsEx = new JMSException("Failed to retrieve enqueueCount from store " + e);
                 jmsEx.setLinkedException(e);
@@ -184,11 +186,12 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         }
     }
 
-    public void deactivate(boolean keepDurableSubsActive) throws Exception {
+    public void deactivate(boolean keepDurableSubsActive, long lastDeliveredSequenceId) throws Exception {
         LOG.debug("Deactivating keepActive={}, {}", keepDurableSubsActive, this);
         active.set(false);
+        this.keepDurableSubsActive = keepDurableSubsActive;
         offlineTimestamp.set(System.currentTimeMillis());
-        this.usageManager.getMemoryUsage().removeUsageListener(this);
+        usageManager.getMemoryUsage().removeUsageListener(this);
 
         ArrayList<Topic> topicsToDeactivate = new ArrayList<Topic>();
         List<MessageReference> savedDispateched = null;
@@ -214,24 +217,27 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
                 for (final MessageReference node : dispatched) {
                     // Mark the dispatched messages as redelivered for next time.
-                    Integer count = redeliveredMessages.get(node.getMessageId());
-                    if (count != null) {
-                        redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
-                    } else {
-                        redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
+                    if (lastDeliveredSequenceId == 0 || (lastDeliveredSequenceId > 0 && node.getMessageId().getBrokerSequenceId() <= lastDeliveredSequenceId)) {
+                        Integer count = redeliveredMessages.get(node.getMessageId());
+                        if (count != null) {
+                            redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
+                        } else {
+                            redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
+                        }
                     }
                     if (keepDurableSubsActive && pending.isTransient()) {
                         pending.addMessageFirst(node);
                         pending.rollback(node.getMessageId());
-                    } else {
-                        node.decrementReferenceCount();
                     }
+                    // createMessageDispatch increments on remove from pending for dispatch
+                    node.decrementReferenceCount();
                 }
 
                 if (!topicsToDeactivate.isEmpty()) {
                     savedDispateched = new ArrayList<MessageReference>(dispatched);
                 }
                 dispatched.clear();
+                getSubscriptionStatistics().getInflightMessageSize().reset();
             }
             if (!keepDurableSubsActive && pending.isTransient()) {
                 try {
@@ -256,6 +262,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
         MessageDispatch md = super.createMessageDispatch(node, message);
         if (node != QueueMessageReference.NULL_MESSAGE) {
+            node.incrementReferenceCount();
             Integer count = redeliveredMessages.get(node.getMessageId());
             if (count != null) {
                 md.setRedeliveryCounter(count.intValue());
@@ -301,7 +308,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     public void setSelector(String selector) throws InvalidSelectorException {
-        throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
+        if (active.get()) {
+            throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
+        } else {
+            super.setSelector(getSelector());
+        }
     }
 
     @Override
@@ -316,12 +327,16 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         regionDestination.acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
+        ((Destination)node.getRegionDestination()).getDestinationStatistics().getDequeues().increment();
+        if (info.isNetworkSubscription()) {
+            ((Destination)node.getRegionDestination()).getDestinationStatistics().getForwards().add(ack.getMessageCount());
+        }
     }
 
     @Override
     public synchronized String toString() {
         return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations="
-                + durableDestinations.size() + ", total=" + enqueueCounter + ", pending=" + getPendingQueueSize() + ", dispatched=" + dispatchCounter
+                + durableDestinations.size() + ", total=" + getSubscriptionStatistics().getEnqueues().getCount() + ", pending=" + getPendingQueueSize() + ", dispatched=" + getSubscriptionStatistics().getDispatched().getCount()
                 + ", inflight=" + dispatched.size() + ", prefetchExtension=" + getPrefetchExtension();
     }
 
@@ -341,7 +356,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     MessageReference node = pending.next();
                     node.decrementReferenceCount();
                 }
-
             } finally {
                 pending.release();
                 pending.clear();

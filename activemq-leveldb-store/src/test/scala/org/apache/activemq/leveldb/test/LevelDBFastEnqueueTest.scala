@@ -188,6 +188,8 @@ class LevelDBFastEnqueueTest extends TestCase {
     connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors.get(0).getConnectUri + options)
   }
 
+
+
   protected def createStore: LevelDBStore = {
     var store: LevelDBStore = new LevelDBStore
     store.setDirectory(new File("target/activemq-data/leveldb"))

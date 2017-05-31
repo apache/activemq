@@ -15,45 +15,46 @@
    limitations under the License.
 -->
 
-<beans
-        xmlns="http://www.springframework.org/schema/beans"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="
-     http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
-     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+                           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <camelContext id="camel" trace="false" xmlns="http://camel.apache.org/schema/spring">
-
-        <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
         <route id="brokerComponentTest">
             <from uri="broker:topic:test.broker.>"/>
             <setHeader headerName="JMSPriority">
                 <constant>9</constant>
             </setHeader>
+            <setHeader headerName="JMSXGroupID">
+                <constant>321</constant>
+            </setHeader>
+            <setHeader headerName="CustomHeader">
+                <constant>custom</constant>
+            </setHeader>
             <to uri="broker:queue:test.broker.component.queue"/>
         </route>
 
-    <route id="brokerComponentDLQAboveLimitTest">
-        <from uri="broker:queue:test.broker.component.route"/>
-        <choice>
-            <when>
-                <spel>#{@destinationView.enqueueCount >= 100}</spel>
-                <to uri="broker:queue:test.broker.component.ProcessLater"/>
-            </when>
-            <otherwise>
-                <to uri="broker:queue:test.broker.component.route"/>
-            </otherwise>
-        </choice>
+        <route id="brokerComponentDLQAboveLimitTest">
+            <from uri="broker:queue:test.broker.component.route"/>
+            <choice>
+                <when>
+                    <spel>#{@destinationView.enqueueCount >= 100}</spel>
+                    <to uri="broker:queue:test.broker.component.ProcessLater"/>
+                </when>
+                <otherwise>
+                    <to uri="broker:queue:test.broker.component.route"/>
+                </otherwise>
+            </choice>
         </route>
-
-
     </camelContext>
+
     <bean id="brokerView" class="org.apache.activemq.broker.view.MessageBrokerView">
         <constructor-arg value="testBroker"/>
     </bean>
+
     <bean id="destinationView" factory-bean="brokerView" factory-method="getDestinationView">
         <constructor-arg value="test.broker.component.route"/>
-
     </bean>
 </beans>
 

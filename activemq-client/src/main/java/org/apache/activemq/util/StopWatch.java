@@ -20,8 +20,6 @@ package org.apache.activemq.util;
  * A very simple stop watch.
  * <p/>
  * This implementation is not thread safe and can only time one task at any given time.
- *
- * @version
  */
 public final class StopWatch {
 
@@ -57,7 +55,7 @@ public final class StopWatch {
     /**
      * Stops the stop watch
      *
-     * @return the time taken in millis.
+     * @return the time taken in milliseconds.
      */
     public long stop() {
         stop = System.currentTimeMillis();
@@ -65,9 +63,9 @@ public final class StopWatch {
     }
 
     /**
-     * Returns the time taken in millis.
+     * Returns the time taken in milliseconds.
      *
-     * @return time in millis
+     * @return time in milliseconds
      */
     public long taken() {
         if (start > 0 && stop > 0) {

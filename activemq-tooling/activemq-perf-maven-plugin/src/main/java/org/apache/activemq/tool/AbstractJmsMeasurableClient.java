@@ -23,6 +23,7 @@ import javax.jms.ConnectionFactory;
 import org.apache.activemq.tool.sampler.MeasurableClient;
 
 public abstract class AbstractJmsMeasurableClient extends AbstractJmsClient implements MeasurableClient {
+
     protected AtomicLong throughput = new AtomicLong(0);
 
     public AbstractJmsMeasurableClient(ConnectionFactory factory) {

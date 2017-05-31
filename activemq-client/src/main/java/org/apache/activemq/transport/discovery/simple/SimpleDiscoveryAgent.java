@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 /**
  * A simple DiscoveryAgent that allows static configuration of the discovered
  * services.
- * 
- * 
+ *
+ *
  */
 public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
@@ -51,35 +51,38 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     class SimpleDiscoveryEvent extends DiscoveryEvent {
 
         private int connectFailures;
-        private long reconnectDelay = initialReconnectDelay;
+        private long reconnectDelay = -1;
         private long connectTime = System.currentTimeMillis();
-        private AtomicBoolean failed = new AtomicBoolean(false);
+        private final AtomicBoolean failed = new AtomicBoolean(false);
 
         public SimpleDiscoveryEvent(String service) {
             super(service);
         }
 
-		public SimpleDiscoveryEvent(SimpleDiscoveryEvent copy) {
-			super(copy);
-			connectFailures = copy.connectFailures;
-			reconnectDelay = copy.reconnectDelay;
-			connectTime = copy.connectTime;
-			failed.set(copy.failed.get());
-		}
-        
+        public SimpleDiscoveryEvent(SimpleDiscoveryEvent copy) {
+            super(copy);
+            connectFailures = copy.connectFailures;
+            reconnectDelay = copy.reconnectDelay;
+            connectTime = copy.connectTime;
+            failed.set(copy.failed.get());
+        }
+
         @Override
         public String toString() {
             return "[" + serviceName + ", failed:" + failed + ", connectionFailures:" + connectFailures + "]";
         }
     }
 
+    @Override
     public void setDiscoveryListener(DiscoveryListener listener) {
         this.listener = listener;
     }
 
+    @Override
     public void registerService(String name) throws IOException {
     }
 
+    @Override
     public void start() throws Exception {
         taskRunner = new TaskRunnerFactory();
         taskRunner.init();
@@ -90,10 +93,13 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         running.set(false);
 
-        taskRunner.shutdown();
+        if (taskRunner != null) {
+            taskRunner.shutdown();
+        }
 
         // TODO: Should we not remove the services on the listener?
 
@@ -121,45 +127,31 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         }
     }
 
+    @Override
     public void serviceFailed(DiscoveryEvent devent) throws IOException {
 
         final SimpleDiscoveryEvent sevent = (SimpleDiscoveryEvent)devent;
-        if (sevent.failed.compareAndSet(false, true)) {
+        if (running.get() && sevent.failed.compareAndSet(false, true)) {
 
             listener.onServiceRemove(sevent);
             taskRunner.execute(new Runnable() {
+                @Override
                 public void run() {
                     SimpleDiscoveryEvent event = new SimpleDiscoveryEvent(sevent);
-                	
+
                     // We detect a failed connection attempt because the service
                     // fails right away.
                     if (event.connectTime + minConnectTime > System.currentTimeMillis()) {
-                        LOG.debug("Failure occurred soon after the discovery event was generated.  It will be classified as a connection failure: "+event);
+                        LOG.debug("Failure occurred soon after the discovery event was generated.  It will be classified as a connection failure: {}", event);
 
                         event.connectFailures++;
 
                         if (maxReconnectAttempts > 0 && event.connectFailures >= maxReconnectAttempts) {
-                            LOG.warn("Reconnect attempts exceeded "+maxReconnectAttempts+" tries.  Reconnecting has been disabled for: " + event);
+                            LOG.warn("Reconnect attempts exceeded {} tries.  Reconnecting has been disabled for: {}", maxReconnectAttempts, event);
                             return;
                         }
 
-                        synchronized (sleepMutex) {
-                            try {
-                                if (!running.get()) {
-                                    LOG.debug("Reconnecting disabled: stopped");
-                                    return;
-                                }
-
-                                LOG.debug("Waiting "+event.reconnectDelay+" ms before attempting to reconnect.");
-                                sleepMutex.wait(event.reconnectDelay);
-                            } catch (InterruptedException ie) {
-                                LOG.debug("Reconnecting disabled: " + ie);
-                                Thread.currentThread().interrupt();
-                                return;
-                            }
-                        }
-
-                        if (!useExponentialBackOff) {
+                        if (!useExponentialBackOff || event.reconnectDelay == -1) {
                             event.reconnectDelay = initialReconnectDelay;
                         } else {
                             // Exponential increment of reconnect delay.
@@ -169,9 +161,15 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                             }
                         }
 
+                        doReconnectDelay(event);
+
                     } else {
+                        LOG.trace("Failure occurred to long after the discovery event was generated.  " +
+                                  "It will not be classified as a connection failure: {}", event);
                         event.connectFailures = 0;
                         event.reconnectDelay = initialReconnectDelay;
+
+                        doReconnectDelay(event);
                     }
 
                     if (!running.get()) {
@@ -184,6 +182,24 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                     listener.onServiceAdd(event);
                 }
             }, "Simple Discovery Agent");
+        }
+    }
+
+    protected void doReconnectDelay(SimpleDiscoveryEvent event) {
+        synchronized (sleepMutex) {
+            try {
+                if (!running.get()) {
+                    LOG.debug("Reconnecting disabled: stopped");
+                    return;
+                }
+
+                LOG.debug("Waiting {}ms before attempting to reconnect.", event.reconnectDelay);
+                sleepMutex.wait(event.reconnectDelay);
+            } catch (InterruptedException ie) {
+                LOG.debug("Reconnecting disabled: ", ie);
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 

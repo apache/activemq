@@ -34,6 +34,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
+import org.apache.activemq.store.IndexListener;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -47,8 +48,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A MessageStore that uses a Journal to store it's messages.
- * 
- * 
+ *
+ *
  */
 public class JournalMessageStore extends AbstractMessageStore {
 
@@ -78,7 +79,7 @@ public class JournalMessageStore extends AbstractMessageStore {
         this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext(new NonCachedMessageEvaluationContext()));
     }
 
-    
+
     public void setMemoryUsage(MemoryUsage memoryUsage) {
         this.memoryUsage=memoryUsage;
         longTermStore.setMemoryUsage(memoryUsage);
@@ -88,7 +89,7 @@ public class JournalMessageStore extends AbstractMessageStore {
      * Not synchronized since the Journal has better throughput if you increase
      * the number of concurrent writes that it is doing.
      */
-    public void addMessage(ConnectionContext context, final Message message) throws IOException {
+    public void addMessage(final ConnectionContext context, final Message message) throws IOException {
 
         final MessageId id = message.getMessageId();
 
@@ -100,7 +101,7 @@ public class JournalMessageStore extends AbstractMessageStore {
             if (debug) {
                 LOG.debug("Journalled message add for: " + id + ", at: " + location);
             }
-            addMessage(message, location);
+            addMessage(context, message, location);
         } else {
             if (debug) {
                 LOG.debug("Journalled transacted message add for: " + id + ", at: " + location);
@@ -116,7 +117,7 @@ public class JournalMessageStore extends AbstractMessageStore {
                     }
                     synchronized (JournalMessageStore.this) {
                         inFlightTxLocations.remove(location);
-                        addMessage(message, location);
+                        addMessage(context, message, location);
                     }
                 }
 
@@ -133,11 +134,15 @@ public class JournalMessageStore extends AbstractMessageStore {
         }
     }
 
-    void addMessage(final Message message, final RecordLocation location) {
+    void addMessage(ConnectionContext context, final Message message, final RecordLocation location) {
         synchronized (this) {
             lastLocation = location;
             MessageId id = message.getMessageId();
             messages.put(id, message);
+            message.getMessageId().setFutureOrSequenceLong(0l);
+            if (indexListener != null) {
+                indexListener.onAdd(new IndexListener.MessageContext(context, message, null));
+            }
         }
     }
 
@@ -318,7 +323,7 @@ public class JournalMessageStore extends AbstractMessageStore {
     }
 
     /**
-     * 
+     *
      */
     public Message getMessage(MessageId identity) throws IOException {
         Message answer = null;
@@ -343,7 +348,7 @@ public class JournalMessageStore extends AbstractMessageStore {
      * Replays the checkpointStore first as those messages are the oldest ones,
      * then messages are replayed from the transaction log and then the cache is
      * updated.
-     * 
+     *
      * @param listener
      * @throws Exception
      */
@@ -397,6 +402,11 @@ public class JournalMessageStore extends AbstractMessageStore {
     public int getMessageCount() throws IOException {
         peristenceAdapter.checkpoint(true, true);
         return longTermStore.getMessageCount();
+    }
+
+    public long getMessageSize() throws IOException {
+        peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getMessageSize();
     }
 
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {

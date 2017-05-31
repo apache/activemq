@@ -16,8 +16,9 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
@@ -31,12 +32,13 @@ import org.objectweb.jtests.jms.conform.message.headers.MessageHeaderTest;
 import org.objectweb.jtests.jms.conform.message.properties.JMSXPropertyTest;
 import org.objectweb.jtests.jms.conform.message.properties.MessagePropertyConversionTest;
 import org.objectweb.jtests.jms.conform.message.properties.MessagePropertyTest;
+import org.objectweb.jtests.jms.conform.queue.QueueBrowserTest;
 import org.objectweb.jtests.jms.conform.queue.TemporaryQueueTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
-import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
+import org.objectweb.jtests.jms.conform.session.TopicSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 
 /**
@@ -44,11 +46,10 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    // TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
+    TopicSessionTest.class,
     MessageHeaderTest.class,
-    // QueueBrowserTest.class,  // https://issues.apache.org/jira/browse/AMQ-4641
+    QueueBrowserTest.class,
     MessageTypeTest.class,
-    UnifiedSessionTest.class,  // https://issues.apache.org/jira/browse/AMQ-4375
     TemporaryTopicTest.class,
     TopicConnectionTest.class,
     SelectorSyntaxTest.class,
@@ -65,8 +66,9 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 })
 
 public class JoramJmsNioTest {
+
     @Rule
-    public Timeout timeout = new Timeout(10 * 1000);
+    public Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
 
     @BeforeClass
     public static void beforeClass() throws Exception {

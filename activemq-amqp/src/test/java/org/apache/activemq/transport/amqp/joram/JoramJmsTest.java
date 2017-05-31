@@ -16,10 +16,14 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.Timeout;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
 import org.objectweb.jtests.jms.conform.connection.TopicConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
@@ -35,41 +39,46 @@ import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
+import org.objectweb.jtests.jms.conform.session.TopicSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 
-public class JoramJmsTest extends TestCase {
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+    TopicSessionTest.class,
+    MessageHeaderTest.class,
+    QueueBrowserTest.class,
+    MessageTypeTest.class,
+    TemporaryTopicTest.class,
+    TopicConnectionTest.class,
+    SelectorSyntaxTest.class,
+    QueueSessionTest.class,
+    SelectorTest.class,
+    TemporaryQueueTest.class,
+    ConnectionTest.class,
+    SessionTest.class,
+    JMSXPropertyTest.class,
+    MessageBodyTest.class,
+    MessageDefaultTest.class,
+    MessagePropertyConversionTest.class,
+    MessagePropertyTest.class
+})
 
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
+public class JoramJmsTest {
 
-        // TODO: Fix these tests..
-        // Fails due to
-        // https://issues.apache.org/jira/browse/PROTON-154
-        // suite.addTestSuite(TopicSessionTest.class);
+    @Rule
+    public Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
 
-        // Passing tests
-        suite.addTestSuite(MessageHeaderTest.class);
-        suite.addTestSuite(QueueBrowserTest.class);
-        suite.addTestSuite(MessageTypeTest.class);
-        // suite.addTestSuite(UnifiedSessionTest.class);   // https://issues.apache.org/jira/browse/AMQ-4375
-        suite.addTestSuite(TemporaryTopicTest.class);
-        suite.addTestSuite(TopicConnectionTest.class);
-        suite.addTestSuite(SelectorSyntaxTest.class);
-        suite.addTestSuite(QueueSessionTest.class);
-        suite.addTestSuite(SelectorTest.class);
-        suite.addTestSuite(TemporaryQueueTest.class);
-        suite.addTestSuite(ConnectionTest.class);
-        suite.addTestSuite(SessionTest.class);
-        suite.addTestSuite(JMSXPropertyTest.class);
-        suite.addTestSuite(MessageBodyTest.class);
-        suite.addTestSuite(MessageDefaultTest.class);
-        suite.addTestSuite(MessagePropertyConversionTest.class);
-        suite.addTestSuite(MessagePropertyTest.class);
-
-        return suite;
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        System.setProperty("joram.jms.test.file", getJmsTestFileName());
     }
 
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+    @AfterClass
+    public static void afterClass() throws Exception {
+        System.clearProperty("joram.jms.test.file");
+    }
+
+    public static String getJmsTestFileName() {
+        return "provider.properties";
     }
 }

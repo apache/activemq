@@ -24,6 +24,7 @@ import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
 import javax.jms.Destination;
 import javax.jms.ExceptionListener;
+import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -35,7 +36,7 @@ import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
-import javax.jms.IllegalStateException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,7 +122,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
-        return getConnection().getExceptionListener();
+        return pool.getParentExceptionListener();
     }
 
     @Override
@@ -131,7 +132,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public void setExceptionListener(ExceptionListener exceptionListener) throws JMSException {
-        getConnection().setExceptionListener(exceptionListener);
+        pool.setParentExceptionListener(exceptionListener);
     }
 
     @Override
@@ -163,8 +164,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
-        PooledSession result;
-        result = (PooledSession) pool.createSession(transacted, ackMode);
+        PooledSession result = (PooledSession) pool.createSession(transacted, ackMode);
 
         // Store the session so we can close the sessions that this PooledConnection
         // created in order to ensure that consumers etc are closed per the JMS contract.

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -31,13 +31,12 @@ import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class IndividualDeadLetterTest extends DeadLetterTest {
+
     private static final Logger LOG = LoggerFactory.getLogger(IndividualDeadLetterTest.class);
 
     @Override
@@ -50,7 +49,8 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
         policy.setDeadLetterStrategy(strategy);
 
         PolicyMap pMap = new PolicyMap();
-        pMap.setDefaultEntry(policy);
+        pMap.put(new ActiveMQQueue(getDestinationString()), policy);
+        pMap.put(new ActiveMQTopic(getDestinationString()), policy);
 
         broker.setDestinationPolicy(pMap);
 
@@ -97,7 +97,6 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
         Queue testQueue = new ActiveMQQueue("ActiveMQ.DLQ.Queue.ActiveMQ.DLQ.Queue." + getClass().getName() + "." + getName());
         MessageConsumer testConsumer = session.createConsumer(testQueue);
         assertNull("The message shouldn't be sent to another DLQ", testConsumer.receive(1000));
-
     }
 
     protected void browseDlq() throws Exception {

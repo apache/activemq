@@ -18,7 +18,7 @@
 <project name="Inbox" default="help" basedir=".">
 
     <property name="class.dir" value="target/classes" />
-    <property name="activemq.home" value=".." />
+    <property name="activemq.home" value="../../.." />
 
     <!-- example program defaults -->
     <property name="url" value="tcp://localhost:61616" />

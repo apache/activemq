@@ -46,12 +46,12 @@ public class SslContextNBrokerServiceTest {
     private ClassPathXmlApplicationContext context;
     Map<String, BrokerService> beansOfType;
 
-    @Test(timeout = 2 * 60 * 1000)
+    @Test(timeout = 3 * 60 * 1000)
     public void testDummyConfigurationIsolation() throws Exception {
         assertTrue("dummy bean has dummy cert", verifyCredentials("dummy"));
     }
 
-    @Test(timeout = 2 * 60 * 1000)
+    @Test(timeout = 3 * 60 * 1000)
     public void testActiveMQDotOrgConfigurationIsolation() throws Exception {
         assertTrue("good bean has amq cert", verifyCredentials("activemq.org"));
     }
@@ -81,7 +81,7 @@ public class SslContextNBrokerServiceTest {
         SSLSocketFactory factory = context.getSocketFactory();
         LOG.info("Connecting to broker: " + broker.getBrokerName() + " on: " + brokerUri.getHost() + ":" + brokerUri.getPort());
         SSLSocket socket = (SSLSocket) factory.createSocket(brokerUri.getHost(), brokerUri.getPort());
-        socket.setSoTimeout(60 * 1000);
+        socket.setSoTimeout(2 * 60 * 1000);
         socket.startHandshake();
         socket.close();
 

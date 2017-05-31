@@ -1,0 +1,18 @@
+Usage: producer [OPTIONS]
+Description: Demo producer that can be used to send messages to the broker
+Options :
+    [--brokerUrl                                   URL] - connection factory url; default ActiveMQConnectionFactory.DEFAULT_BROKER_URL
+    [--user                                         ..] - connection user name
+    [--password                                     ..] - connection password
+    [--destination               queue://..|topic://..] - producer destination; default queue://TEST
+    [--persistent                           true|false] - use persistent or non persistent messages; default true
+    [--messageCount                                  N] - number of messages to send; default 1000
+    [--sleep                                         N] - millisecond sleep period between sends or receives; default 0
+    [--transactionBatchSize                          N] - use send transaction batches of size N; default 0, no jms transactions
+    [--parallelThreads                               N] - number of threads to run in parallel; default 1
+    [--msgTTL                                        N] - message TTL in milliseconds
+    [--messageSize                                   N] - size in bytes of a BytesMessage; default 0, a simple TextMessage is used
+    [--textMessageSize                               N] - size in bytes of a TextMessage, a Lorem ipsum demo TextMessage is used
+    [--message                                      ..] - a text string to use as the message body
+    [--payloadUrl                                  URL] - a url pointing to a document to use as the message body
+    [--msgGroupID                                   ..] - JMS message group identifier

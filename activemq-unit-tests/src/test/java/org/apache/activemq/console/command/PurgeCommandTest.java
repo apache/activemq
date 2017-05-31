@@ -38,8 +38,6 @@ import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -50,6 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import junit.framework.TestCase;
 
 public class PurgeCommandTest extends TestCase {
     private static final Logger LOG = LoggerFactory
@@ -69,7 +69,7 @@ public class PurgeCommandTest extends TestCase {
 
     // complex message selector query using XTestProperty and JMSPriority
     protected static final String MSG_SEL_COMPLEX = PROPERTY_NAME + "='" +
-            "1:1" + "',JMSPriority>3";
+            "1:1" + "' AND JMSPriority>3";
 
     // complex message selector query using XTestProperty AND JMSPriority
     // but in SQL-92 syntax

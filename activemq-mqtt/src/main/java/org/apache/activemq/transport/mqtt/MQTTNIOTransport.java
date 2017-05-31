@@ -56,17 +56,24 @@ public class MQTTNIOTransport extends TcpTransport {
         super(wireFormat, socket);
     }
 
+    public MQTTNIOTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
+        super(wireFormat, socket, initBuffer);
+    }
+
+    @Override
     protected void initializeStreams() throws IOException {
         channel = socket.getChannel();
         channel.configureBlocking(false);
         // listen for events telling us when the socket is readable.
         selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
+            @Override
             public void onSelect(SelectorSelection selection) {
                 if (!isStopped()) {
                     serviceRead();
                 }
             }
 
+            @Override
             public void onError(SelectorSelection selection, Throwable error) {
                 if (error instanceof IOException) {
                     onException((IOException) error);
@@ -78,9 +85,19 @@ public class MQTTNIOTransport extends TcpTransport {
 
         inputBuffer = ByteBuffer.allocate(8 * 1024);
         NIOOutputStream outPutStream = new NIOOutputStream(channel, 8 * 1024);
-        this.dataOut = new DataOutputStream(outPutStream);
-        this.buffOut = outPutStream;
-        codec = new MQTTCodec(this);
+        dataOut = new DataOutputStream(outPutStream);
+        buffOut = outPutStream;
+        codec = new MQTTCodec(this, (MQTTWireFormat) getWireFormat());
+
+        try {
+            if (initBuffer != null) {
+                processBuffer(initBuffer.buffer, initBuffer.readSize);
+            }
+        } catch (IOException e) {
+            onException(e);
+        } catch (Throwable e) {
+            onException(IOExceptionSupport.create(e));
+        }
     }
 
     private void serviceRead() {
@@ -100,14 +117,7 @@ public class MQTTNIOTransport extends TcpTransport {
                     break;
                 }
 
-                inputBuffer.flip();
-                DataByteArrayInputStream dis = new DataByteArrayInputStream(inputBuffer.array());
-                codec.parse(dis, readSize);
-
-                receiveCounter += readSize;
-
-                // clear the buffer
-                inputBuffer.clear();
+                processBuffer(inputBuffer, readSize);
             }
         } catch (IOException e) {
             onException(e);
@@ -116,12 +126,25 @@ public class MQTTNIOTransport extends TcpTransport {
         }
     }
 
+    protected void processBuffer(ByteBuffer buffer, int readSize) throws Exception {
+        buffer.flip();
+        DataByteArrayInputStream dis = new DataByteArrayInputStream(buffer.array());
+        codec.parse(dis, readSize);
+
+        receiveCounter += readSize;
+
+        // clear the buffer
+        buffer.clear();
+    }
+
+    @Override
     protected void doStart() throws Exception {
         connect();
         selection.setInterestOps(SelectionKey.OP_READ);
         selection.enable();
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         try {
             if (selection != null) {

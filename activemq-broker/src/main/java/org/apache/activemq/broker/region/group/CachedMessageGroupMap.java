@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.memory.LRUMap;
 
@@ -31,8 +33,26 @@ import org.apache.activemq.memory.LRUMap;
 public class CachedMessageGroupMap implements MessageGroupMap {
     private final LRUMap<String, ConsumerId> cache;
     private final int maximumCacheSize;
+    Destination destination;
+
     CachedMessageGroupMap(int size){
-      cache = new LRUMap<String, ConsumerId>(size);
+      cache = new LRUMap<String, ConsumerId>(size) {
+          @Override
+          public boolean removeEldestEntry(final Map.Entry eldest) {
+              boolean remove = super.removeEldestEntry(eldest);
+              if (remove) {
+                  if (destination != null) {
+                      for (Subscription s : destination.getConsumers()) {
+                        if (s.getConsumerInfo().getConsumerId().equals(eldest.getValue())) {
+                            s.getConsumerInfo().decrementAssignedGroupCount(destination.getActiveMQDestination());
+                            break;
+                          }
+                      }
+                  }
+              }
+              return remove;
+          }
+      };
       maximumCacheSize = size;
     }
     public synchronized void put(String groupId, ConsumerId consumerId) {
@@ -68,6 +88,11 @@ public class CachedMessageGroupMap implements MessageGroupMap {
     @Override
     public synchronized void removeAll(){
         cache.clear();
+        if (destination != null) {
+            for (Subscription s : destination.getConsumers()) {
+                s.getConsumerInfo().clearAssignedGroupCount(destination.getActiveMQDestination());
+            }
+        }
     }
 
     @Override
@@ -92,4 +117,7 @@ public class CachedMessageGroupMap implements MessageGroupMap {
         return "message groups: " + cache.size();
     }
 
+    public void setDestination(Destination destination) {
+        this.destination = destination;
+    }
 }

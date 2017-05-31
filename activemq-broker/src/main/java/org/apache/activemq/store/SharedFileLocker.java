@@ -16,14 +16,15 @@
  */
 package org.apache.activemq.store;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.util.LockFile;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Represents an exclusive lock on a database to avoid multiple brokers running
@@ -44,25 +45,42 @@ public class SharedFileLocker extends AbstractLocker {
     public void doStart() throws Exception {
         if (lockFile == null) {
             File lockFileName = new File(directory, "lock");
-            lockFile = new LockFile(lockFileName, true);
+            lockFile = new LockFile(lockFileName, false);
             if (failIfLocked) {
                 lockFile.lock();
             } else {
+                // Print a warning only once
+                boolean warned = false;
                 boolean locked = false;
                 while ((!isStopped()) && (!isStopping())) {
                     try {
                         lockFile.lock();
-                        locked = true;
+                        if (warned) {
+                            // ensure lockHolder has released; wait for one keepAlive iteration
+                            try {
+                                TimeUnit.MILLISECONDS.sleep(lockable != null ? lockable.getLockKeepAlivePeriod() : 0l);
+                            } catch (InterruptedException e1) {
+                            }
+                        }
+                        locked = keepAlive();
                         break;
                     } catch (IOException e) {
-                        LOG.info("Database "
-                                + lockFileName
-                                + " is locked... waiting "
-                                + (lockAcquireSleepInterval / 1000)
-                                + " seconds for the database to be unlocked. Reason: "
-                                + e);
+                        if (!warned)
+                        {
+                            LOG.info("Database "
+                                         + lockFileName
+                                         + " is locked by another server. This broker is now in slave mode waiting a lock to be acquired");
+                            warned = true;
+                        }
+
+                        LOG.debug("Database "
+                                    + lockFileName
+                                    + " is locked... waiting "
+                                    + (lockAcquireSleepInterval / 1000)
+                                    + " seconds for the database to be unlocked. Reason: "
+                                    + e);
                         try {
-                            Thread.sleep(lockAcquireSleepInterval);
+                            TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
                         } catch (InterruptedException e1) {
                         }
                     }
@@ -76,13 +94,17 @@ public class SharedFileLocker extends AbstractLocker {
 
     @Override
     public boolean keepAlive() {
-        return lockFile != null && lockFile.keepAlive();
+        boolean result = lockFile != null && lockFile.keepAlive();
+        LOG.trace("keepAlive result: " + result + (name != null ? ", name: " + name : ""));
+        return result;
     }
 
     @Override
     public void doStop(ServiceStopper stopper) throws Exception {
-        lockFile.unlock();
-        lockFile=null;
+        if (lockFile != null) {
+            lockFile.unlock();
+            lockFile = null;
+        }
     }
 
     public File getDirectory() {
@@ -96,5 +118,8 @@ public class SharedFileLocker extends AbstractLocker {
     @Override
     public void configure(PersistenceAdapter persistenceAdapter) throws IOException {
         this.setDirectory(persistenceAdapter.getDirectory());
+        if (name == null) {
+            name = getDirectory().toString();
+        }
     }
 }

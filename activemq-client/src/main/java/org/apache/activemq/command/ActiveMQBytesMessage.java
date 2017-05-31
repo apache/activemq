@@ -19,15 +19,12 @@ package org.apache.activemq.command;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
-import java.util.zip.InflaterInputStream;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -131,7 +128,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
                 dataOut.close();
                 ByteSequence bs = bytesOut.toByteSequence();
                 setContent(bs);
-                if (compressed) {
+
+                ActiveMQConnection connection = getConnection();
+                if (connection != null && connection.isUseCompression()) {
                     doCompress();
                 }
             } catch (IOException ioe) {
@@ -834,11 +833,6 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
             this.dataOut = new DataOutputStream(os);
         }
 
-        ActiveMQConnection connection = getConnection();
-        if (connection != null && connection.isUseCompression()) {
-            compressed = true;
-        }
-
         restoreOldContent();
     }
 
@@ -848,8 +842,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         if (this.content != null && this.content.length > 0) {
             try {
                 ByteSequence toRestore = this.content;
-                if (compressed) {
+                if (isCompressed()) {
                     toRestore = new ByteSequence(decompress(this.content));
+                    compressed = false;
                 }
 
                 this.dataOut.write(toRestore.getData(), toRestore.getOffset(), toRestore.getLength());
@@ -872,20 +867,20 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         checkWriteOnlyBody();
         if (dataIn == null) {
             try {
-            ByteSequence data = getContent();
-            if (data == null) {
-                data = new ByteSequence(new byte[] {}, 0, 0);
-            }
-            InputStream is = new ByteArrayInputStream(data);
-            if (isCompressed()) {
-                if (data.length != 0) {
-                    is = new ByteArrayInputStream(decompress(data));
+                ByteSequence data = getContent();
+                if (data == null) {
+                    data = new ByteSequence(new byte[] {}, 0, 0);
                 }
-            } else {
-                length = data.getLength();
-            }
+                InputStream is = new ByteArrayInputStream(data);
+                if (isCompressed()) {
+                    if (data.length != 0) {
+                        is = new ByteArrayInputStream(decompress(data));
+                    }
+                } else {
+                    length = data.getLength();
+                }
 
-            dataIn = new DataInputStream(is);
+                dataIn = new DataInputStream(is);
             } catch (IOException ioe) {
                 throw JMSExceptionSupport.create(ioe);
             }

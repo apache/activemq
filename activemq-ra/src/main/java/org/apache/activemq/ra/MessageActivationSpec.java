@@ -131,4 +131,14 @@ public interface MessageActivationSpec extends ActivationSpec {
 
     boolean isUseJndi();
 
+    String getTrustStore();
+
+    String getTrustStorePassword();
+
+    String getKeyStore();
+
+    String getKeyStorePassword();
+
+    String getKeyStoreKeyPassword();
+
 }

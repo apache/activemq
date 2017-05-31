@@ -82,6 +82,7 @@ public abstract class DestinationBridge implements Service, MessageListener {
         return jmsConnector.createReplyToBridge(destination, getConnnectionForConsumer(), getConnectionForProducer());
     }
 
+    @Override
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
             createConsumer();
@@ -89,16 +90,18 @@ public abstract class DestinationBridge implements Service, MessageListener {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         started.set(false);
     }
 
+    @Override
     public void onMessage(Message message) {
 
         int attempt = 0;
         final int maxRetries = jmsConnector.getReconnectionPolicy().getMaxSendRetries();
 
-        while (started.get() && message != null && attempt <= maxRetries) {
+        while (started.get() && message != null && (maxRetries == ReconnectionPolicy.INFINITE || attempt <= maxRetries)) {
 
             try {
 
@@ -154,14 +157,14 @@ public abstract class DestinationBridge implements Service, MessageListener {
     /**
      * @return Returns the doHandleReplyTo.
      */
-    protected boolean isDoHandleReplyTo() {
+    public boolean isDoHandleReplyTo() {
         return doHandleReplyTo;
     }
 
     /**
      * @param doHandleReplyTo The doHandleReplyTo to set.
      */
-    protected void setDoHandleReplyTo(boolean doHandleReplyTo) {
+    public void setDoHandleReplyTo(boolean doHandleReplyTo) {
         this.doHandleReplyTo = doHandleReplyTo;
     }
 

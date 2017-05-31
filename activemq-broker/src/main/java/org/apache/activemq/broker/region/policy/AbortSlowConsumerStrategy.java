@@ -57,6 +57,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     private long maxSlowDuration = 30*1000;
     private long checkPeriod = 30*1000;
     private boolean abortConnection = false;
+    private boolean ignoreNetworkConsumers = true;
 
     @Override
     public void setBrokerService(Broker broker) {
@@ -94,6 +95,14 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
 
         HashMap<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
         for (Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
+            Subscription subscription = entry.getKey();
+            if (isIgnoreNetworkSubscriptions() && subscription.getConsumerInfo().isNetworkSubscription()) {
+                if (slowConsumers.remove(subscription) != null) {
+                    LOG.info("network sub: {} is no longer slow", subscription.getConsumerInfo().getConsumerId());
+                }
+                continue;
+            }
+
             if (entry.getKey().isSlowConsumer()) {
                 if (maxSlowDuration > 0 && (entry.getValue().markCount * checkPeriod >= maxSlowDuration)
                         || maxSlowCount > 0 && entry.getValue().slowCount >= maxSlowCount) {
@@ -267,6 +276,35 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
      */
     public void setAbortConnection(boolean abortConnection) {
         this.abortConnection = abortConnection;
+    }
+
+    /**
+     * Returns whether the strategy is configured to ignore subscriptions that are from a network
+     * connection.
+     *
+     * @return true if the strategy will ignore network connection subscriptions when looking
+     *         for slow consumers.
+     */
+    public boolean isIgnoreNetworkSubscriptions() {
+        return ignoreNetworkConsumers;
+    }
+
+    /**
+     * Sets whether the strategy is configured to ignore consumers that are part of a network
+     * connection to another broker.
+     *
+     * When configured to not ignore idle consumers this strategy acts not only on consumers
+     * that are actually slow but also on any consumer that has not received any messages for
+     * the maxTimeSinceLastAck.  This allows for a way to evict idle consumers while also
+     * aborting slow consumers however for a network subscription this can create a lot of
+     * unnecessary churn and if the abort connection option is also enabled this can result
+     * in the entire network connection being torn down and rebuilt for no reason.
+     *
+     * @param ignoreNetworkConsumers
+     *      Should this strategy ignore subscriptions made by a network connector.
+     */
+    public void setIgnoreNetworkConsumers(boolean ignoreNetworkConsumers) {
+        this.ignoreNetworkConsumers = ignoreNetworkConsumers;
     }
 
     public void setName(String name) {

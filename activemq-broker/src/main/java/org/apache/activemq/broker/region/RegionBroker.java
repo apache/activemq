@@ -66,6 +66,7 @@ import org.apache.activemq.state.ConnectionState;
 import org.apache.activemq.store.PListStore;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.transport.TransmitCallback;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.IdGenerator;
@@ -160,15 +161,6 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
-    @Override
-    @SuppressWarnings("rawtypes")
-    public Broker getAdaptor(Class type) {
-        if (type.isInstance(this)) {
-            return this;
-        }
-        return null;
-    }
-
     public Region getQueueRegion() {
         return queueRegion;
     }
@@ -242,29 +234,35 @@ public class RegionBroker extends EmptyBroker {
         if (clientId == null) {
             throw new InvalidClientIDException("No clientID specified for connection request");
         }
+
+        ConnectionContext oldContext = null;
+
         synchronized (clientIdSet) {
-            ConnectionContext oldContext = clientIdSet.get(clientId);
+            oldContext = clientIdSet.get(clientId);
             if (oldContext != null) {
-                if (context.isAllowLinkStealing()){
-                     clientIdSet.remove(clientId);
-                     if (oldContext.getConnection() != null) {
-                         Connection connection = oldContext.getConnection();
-                         LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
-                         if (connection instanceof TransportConnection){
-                            TransportConnection transportConnection = (TransportConnection) connection;
-                             transportConnection.stopAsync();
-                         }else{
-                             connection.stop();
-                         }
-                     }else{
-                         LOG.error("Not Connection for {}", oldContext);
-                     }
-                }else{
+                if (context.isAllowLinkStealing()) {
+                    clientIdSet.put(clientId, context);
+                } else {
                     throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
-                            + oldContext.getConnection().getRemoteAddress());
+                        + oldContext.getConnection().getRemoteAddress());
                 }
             } else {
                 clientIdSet.put(clientId, context);
+            }
+        }
+
+        if (oldContext != null) {
+            if (oldContext.getConnection() != null) {
+                Connection connection = oldContext.getConnection();
+                LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
+                if (connection instanceof TransportConnection) {
+                    TransportConnection transportConnection = (TransportConnection) connection;
+                    transportConnection.stopAsync(new IOException("Stealing link for clientId " + clientId + " From Connection " + oldContext.getConnection().getConnectionId()));
+                } else {
+                    connection.stop();
+                }
+            } else {
+                LOG.error("No Connection found for {}", oldContext);
             }
         }
 
@@ -279,8 +277,7 @@ public class RegionBroker extends EmptyBroker {
         }
         synchronized (clientIdSet) {
             ConnectionContext oldValue = clientIdSet.get(clientId);
-            // we may be removing the duplicate connection, not the first
-            // connection to be created
+            // we may be removing the duplicate connection, not the first connection to be created
             // so lets check that their connection IDs are the same
             if (oldValue == context) {
                 if (isEqual(oldValue.getConnectionId(), info.getConnectionId())) {
@@ -478,7 +475,7 @@ public class RegionBroker extends EmptyBroker {
         consumerExchange.getRegion().acknowledge(consumerExchange, ack);
     }
 
-    protected Region getRegion(ActiveMQDestination destination) throws JMSException {
+    public Region getRegion(ActiveMQDestination destination) throws JMSException {
         switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 return queueRegion;
@@ -608,8 +605,8 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
-    public void preProcessDispatch(MessageDispatch messageDispatch) {
-        Message message = messageDispatch.getMessage();
+    public void preProcessDispatch(final MessageDispatch messageDispatch) {
+        final Message message = messageDispatch.getMessage();
         if (message != null) {
             long endTime = System.currentTimeMillis();
             message.setBrokerOutTime(endTime);
@@ -617,13 +614,36 @@ public class RegionBroker extends EmptyBroker {
                 long totalTime = endTime - message.getBrokerInTime();
                 ((Destination) message.getRegionDestination()).getDestinationStatistics().getProcessTime().addTime(totalTime);
             }
-            if (((BaseDestination) message.getRegionDestination()).isPersistJMSRedelivered() && !message.isRedelivered() && message.isPersistent()) {
+            if (((BaseDestination) message.getRegionDestination()).isPersistJMSRedelivered() && !message.isRedelivered()) {
                 final int originalValue = message.getRedeliveryCounter();
                 message.incrementRedeliveryCounter();
                 try {
-                    ((BaseDestination) message.getRegionDestination()).getMessageStore().updateMessage(message);
+                    if (message.isPersistent()) {
+                        ((BaseDestination) message.getRegionDestination()).getMessageStore().updateMessage(message);
+                    }
+                    messageDispatch.setTransmitCallback(new TransmitCallback() {
+                        // dispatch is considered a delivery, so update sub state post dispatch otherwise
+                        // on a disconnect/reconnect cached messages will not reflect initial delivery attempt
+                        final TransmitCallback delegate = messageDispatch.getTransmitCallback();
+                        @Override
+                        public void onSuccess() {
+                            message.incrementRedeliveryCounter();
+                            if (delegate != null) {
+                                delegate.onSuccess();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure() {
+                            if (delegate != null) {
+                                delegate.onFailure();
+                            }
+                        }
+                    });
                 } catch (IOException error) {
-                    LOG.error("Failed to persist JMSRedeliveryFlag on {} in {}", message.getMessageId(), message.getDestination(), error);
+                    RuntimeException runtimeException = new RuntimeException("Failed to persist JMSRedeliveryFlag on " + message.getMessageId() + " in " + message.getDestination(), error);
+                    LOG.warn(runtimeException.getLocalizedMessage(), runtimeException);
+                    throw runtimeException;
                 } finally {
                     message.setRedeliveryCounter(originalValue);
                 }
@@ -706,19 +726,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public boolean isExpired(MessageReference messageReference) {
-        boolean expired = false;
-        if (messageReference.isExpired()) {
-            try {
-                // prevent duplicate expiry processing
-                Message message = messageReference.getMessage();
-                synchronized (message) {
-                    expired = stampAsExpired(message);
-                }
-            } catch (IOException e) {
-                LOG.warn("unexpected exception on message expiry determination for: {}", messageReference, e);
-            }
-        }
-        return expired;
+        return messageReference.canProcessAsExpired();
     }
 
     private boolean stampAsExpired(Message message) throws IOException {
@@ -746,10 +754,22 @@ public class RegionBroker extends EmptyBroker {
                     DeadLetterStrategy deadLetterStrategy = ((Destination) node.getRegionDestination()).getDeadLetterStrategy();
                     if (deadLetterStrategy != null) {
                         if (deadLetterStrategy.isSendToDeadLetterQueue(message)) {
+                            ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message, subscription);
+                            // Prevent a DLQ loop where same message is sent from a DLQ back to itself
+                            if (deadLetterDestination.equals(message.getDestination())) {
+                                LOG.debug("Not re-adding to DLQ: {}, dest: {}", message.getMessageId(), message.getDestination());
+                                return false;
+                            }
+
                             // message may be inflight to other subscriptions so do not modify
                             message = message.copy();
-                            stampAsExpired(message);
-                            message.setExpiration(0);
+                            long dlqExpiration = deadLetterStrategy.getExpiration();
+                            if (dlqExpiration > 0) {
+                                dlqExpiration += System.currentTimeMillis();
+                            } else {
+                                stampAsExpired(message);
+                            }
+                            message.setExpiration(dlqExpiration);
                             if (!message.isPersistent()) {
                                 message.setPersistent(true);
                                 message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
@@ -762,11 +782,11 @@ public class RegionBroker extends EmptyBroker {
                             // not get filled when the message is first sent,
                             // it is only populated if the message is routed to
                             // another destination like the DLQ
-                            ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message, subscription);
                             ConnectionContext adminContext = context;
                             if (context.getSecurityContext() == null || !context.getSecurityContext().isBrokerContext()) {
                                 adminContext = BrokerSupport.getConnectionContext(this);
                             }
+                            addDestination(adminContext, deadLetterDestination, false).getActiveMQDestination().setDLQ(true);
                             BrokerSupport.resendNoCopy(adminContext, message, deadLetterDestination);
                             return true;
                         }

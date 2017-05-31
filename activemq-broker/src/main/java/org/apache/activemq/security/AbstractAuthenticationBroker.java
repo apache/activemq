@@ -24,7 +24,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
 
-public class AbstractAuthenticationBroker extends BrokerFilter {
+public abstract class AbstractAuthenticationBroker extends BrokerFilter implements AuthenticationBroker {
 
     protected final CopyOnWriteArrayList<SecurityContext> securityContexts =
         new CopyOnWriteArrayList<SecurityContext>();
@@ -38,7 +38,6 @@ public class AbstractAuthenticationBroker extends BrokerFilter {
         next.removeDestination(context, destination, timeout);
 
         for (SecurityContext sc : securityContexts) {
-            sc.getAuthorizedReadDests().remove(destination);
             sc.getAuthorizedWriteDests().remove(destination);
         }
     }
@@ -51,13 +50,8 @@ public class AbstractAuthenticationBroker extends BrokerFilter {
         }
     }
 
-    /**
-     * Previously logged in users may no longer have the same access anymore.
-     * Refresh all the logged into users.
-     */
     public void refresh() {
         for (SecurityContext sc : securityContexts) {
-            sc.getAuthorizedReadDests().clear();
             sc.getAuthorizedWriteDests().clear();
         }
     }

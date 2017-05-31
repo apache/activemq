@@ -44,10 +44,14 @@ public class FailoverClusterTest extends TestCase {
 
     private final List<ActiveMQConnection> connections = new ArrayList<ActiveMQConnection>();
 
+    protected String getBindAddress() {
+        return BROKER_BIND_ADDRESS;
+    }
+
     public void testClusterConnectedAfterClients() throws Exception {
         createClients();
         if (brokerB == null) {
-            brokerB = createBrokerB(BROKER_BIND_ADDRESS);
+            brokerB = createBrokerB(getBindAddress());
         }
         Thread.sleep(3000);
         Set<String> set = new HashSet<String>();
@@ -61,7 +65,7 @@ public class FailoverClusterTest extends TestCase {
         createClients();
         if (brokerB == null) {
             // add in server side only url param, should not be propagated
-            brokerB = createBrokerB(BROKER_BIND_ADDRESS + "?transport.closeAsync=false");
+            brokerB = createBrokerB(getBindAddress() + "?transport.closeAsync=false");
         }
         Thread.sleep(3000);
         Set<String> set = new HashSet<String>();
@@ -74,7 +78,7 @@ public class FailoverClusterTest extends TestCase {
     public void testClusterConnectedBeforeClients() throws Exception {
 
         if (brokerB == null) {
-            brokerB = createBrokerB(BROKER_BIND_ADDRESS);
+            brokerB = createBrokerB(getBindAddress());
         }
         Thread.sleep(5000);
         createClients();
@@ -92,7 +96,7 @@ public class FailoverClusterTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         if (brokerA == null) {
-            brokerA = createBrokerA(BROKER_BIND_ADDRESS + "?transport.closeAsync=false");
+            brokerA = createBrokerA(getBindAddress() + "?transport.closeAsync=false");
             clientUrl = "failover://(" + brokerA.getTransportConnectors().get(0).getPublishableConnectString() + ")";
         }
     }

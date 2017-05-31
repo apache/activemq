@@ -266,7 +266,7 @@ public class AMQ1925Test extends TestCase implements ExceptionListener {
 
 		boolean restartDone = false;
 		for (int i = 0; i < MESSAGE_COUNT; i++) {
-			Message message = consumer.receive(500);
+			Message message = consumer.receive(5000);
 			assertNotNull(message);
 
 			if (i == 222 && !restartDone) {
@@ -307,7 +307,7 @@ public class AMQ1925Test extends TestCase implements ExceptionListener {
 				.createQueue(QUEUE_NAME));
 
 		for (int i = 0; i < MESSAGE_COUNT; i++) {
-			Message message = consumer.receive(500);
+			Message message = consumer.receive(5000);
 			assertNotNull(message);
 
 			assertEquals(i, message.getIntProperty(PROPERTY_MSG_NUMBER));

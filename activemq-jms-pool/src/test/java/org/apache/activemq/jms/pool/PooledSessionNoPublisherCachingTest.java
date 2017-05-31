@@ -32,20 +32,25 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PooledSessionNoPublisherCachingTest {
+public class PooledSessionNoPublisherCachingTest extends JmsPoolTestSupport {
 
-    private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private PooledConnectionFactory pooledFactory;
     private String connectionUri;
 
+    @Override
     @Before
     public void setUp() throws Exception {
-        broker = new BrokerService();
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
-        TransportConnector connector = broker.addConnector("tcp://localhost:0");
-        broker.start();
+        super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.setUseJmx(false);
+        brokerService.setAdvisorySupport(false);
+        brokerService.setSchedulerSupport(false);
+        TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+
         connectionUri = connector.getPublishableConnectString();
         factory = new ActiveMQConnectionFactory(connectionUri);
         pooledFactory = new PooledConnectionFactory();
@@ -55,14 +60,19 @@ public class PooledSessionNoPublisherCachingTest {
         pooledFactory.setUseAnonymousProducers(false);
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
-        broker = null;
-    }
+        try {
+            pooledFactory.stop();
+        } catch (Exception ex) {
+            // ignored
+        }
 
-    @Test
+        super.tearDown();
+    }
+        
+    @Test(timeout = 60000)
     public void testMessageProducersAreUnique() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -76,7 +86,7 @@ public class PooledSessionNoPublisherCachingTest {
         assertNotSame(producer1.getMessageProducer(), producer2.getMessageProducer());
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testThrowsWhenDestinationGiven() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -99,7 +109,7 @@ public class PooledSessionNoPublisherCachingTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testCreateTopicPublisher() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -113,7 +123,7 @@ public class PooledSessionNoPublisherCachingTest {
         assertNotSame(publisher1.getMessageProducer(), publisher2.getMessageProducer());
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQueueSender() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);

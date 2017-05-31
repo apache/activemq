@@ -324,7 +324,7 @@ public class CronParser {
         CronEntry hours = new CronEntry("Hours", tokens.get(HOURS), 0, 24);
         hours.currentWhen = calculateValues(hours);
         result.add(hours);
-        CronEntry dayOfMonth = new CronEntry("DayOfMonth", tokens.get(DAY_OF_MONTH), 1, 31);
+        CronEntry dayOfMonth = new CronEntry("DayOfMonth", tokens.get(DAY_OF_MONTH), 1, 32);
         dayOfMonth.currentWhen = calculateValues(dayOfMonth);
         result.add(dayOfMonth);
         CronEntry month = new CronEntry("Month", tokens.get(MONTH), 1, 12);

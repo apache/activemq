@@ -16,6 +16,9 @@
  */
 package org.apache.activemq;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -32,41 +35,51 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
-
-public class JmsConsumerResetActiveListenerTest extends TestCase {
+public class JmsConsumerResetActiveListenerTest {
 
     private Connection connection;
     private ActiveMQConnectionFactory factory;
-   
-    protected void setUp() throws Exception {
-        factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+
+    @Rule
+    public final TestName name = new TestName();
+
+    @Before
+    public void setUp() throws Exception {
+        factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&broker.useJmx=false");
         connection = factory.createConnection();
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
             connection = null;
         }
     }
-    
+
     /**
      * verify the (undefined by spec) behaviour of setting a listener while receiving a message.
-     * 
+     *
      * @throws Exception
      */
+    @Test(timeout = 60000)
     public void testSetListenerFromListener() throws Exception {
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Destination dest = session.createQueue("Queue-" + getName());
+        Destination dest = session.createQueue("Queue-" + name.getMethodName());
         final MessageConsumer consumer = session.createConsumer(dest);
-       
+
         final CountDownLatch latch = new CountDownLatch(2);
         final AtomicBoolean first = new AtomicBoolean(true);
         final Vector<Object> results = new Vector<Object>();
         consumer.setMessageListener(new MessageListener() {
 
+            @Override
             public void onMessage(Message message) {
                 if (first.compareAndSet(true, false)) {
                     try {
@@ -83,14 +96,14 @@ public class JmsConsumerResetActiveListenerTest extends TestCase {
         });
 
         connection.start();
-        
+
         MessageProducer producer = session.createProducer(dest);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         producer.send(session.createTextMessage("First"));
         producer.send(session.createTextMessage("Second"));
-        
+
         assertTrue("we did not timeout", latch.await(5, TimeUnit.SECONDS));
-        
+
         assertEquals("we have a result", 2, results.size());
         Object result = results.get(0);
         assertTrue(result instanceof TextMessage);
@@ -99,22 +112,24 @@ public class JmsConsumerResetActiveListenerTest extends TestCase {
         assertTrue(result instanceof TextMessage);
         assertEquals("result is first", "Second", ((TextMessage)result).getText());
     }
-    
+
     /**
      * and a listener on a new consumer, just in case.
       *
      * @throws Exception
      */
+    @Test(timeout = 60000)
     public void testNewConsumerSetListenerFromListener() throws Exception {
         final Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        final Destination dest = session.createQueue("Queue-" + getName());
+        final Destination dest = session.createQueue("Queue-" + name.getMethodName());
         final MessageConsumer consumer = session.createConsumer(dest);
-       
+
         final CountDownLatch latch = new CountDownLatch(2);
         final AtomicBoolean first = new AtomicBoolean(true);
         final Vector<Object> results = new Vector<Object>();
         consumer.setMessageListener(new MessageListener() {
 
+            @Override
             public void onMessage(Message message) {
                 if (first.compareAndSet(true, false)) {
                     try {
@@ -132,14 +147,14 @@ public class JmsConsumerResetActiveListenerTest extends TestCase {
         });
 
         connection.start();
-        
+
         MessageProducer producer = session.createProducer(dest);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         producer.send(session.createTextMessage("First"));
         producer.send(session.createTextMessage("Second"));
-        
+
         assertTrue("we did not timeout", latch.await(5, TimeUnit.SECONDS));
-        
+
         assertEquals("we have a result", 2, results.size());
         Object result = results.get(0);
         assertTrue(result instanceof TextMessage);

@@ -81,7 +81,7 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
     @Test(timeout = 120000)
     public void testSize() throws Exception {
         int messages = 1000;
-        CountDownLatch redeliveryConsumerLatch = new CountDownLatch((messages*3) -1);
+        CountDownLatch redeliveryConsumerLatch = new CountDownLatch((messages*3));
         openConsumer(redeliveryConsumerLatch);
 
         assertEquals(0, broker.getAdminView().getStorePercentUsage());
@@ -101,7 +101,7 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
         closeConsumer();
 
         // consume from DLQ
-        final CountDownLatch received = new CountDownLatch(messages -1);
+        final CountDownLatch received = new CountDownLatch(messages);
         consumerConnection = (ActiveMQConnection) createConnection();
         Session dlqSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer dlqConsumer = dlqSession.createConsumer(new ActiveMQQueue("ActiveMQ.DLQ"));

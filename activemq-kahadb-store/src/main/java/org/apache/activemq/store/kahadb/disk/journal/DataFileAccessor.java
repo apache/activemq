@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -21,15 +21,16 @@ import java.util.Map;
 
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Optimized Store reader and updater. Single threaded and synchronous. Use in
  * conjunction with the DataFileAccessorPool of concurrent use.
- *
- *
  */
 final class DataFileAccessor {
 
+    private static final Logger LOG = LoggerFactory.getLogger(DataFileAccessor.class);
     private final DataFile dataFile;
     private final Map<Journal.WriteKey, Journal.WriteCommand> inflightWrites;
     private final RecoverableRandomAccessFile file;
@@ -38,7 +39,6 @@ final class DataFileAccessor {
     /**
      * Construct a Store reader
      *
-     * @param fileId
      * @throws IOException
      */
     public DataFileAccessor(Journal dataManager, DataFile dataFile) throws IOException {
@@ -59,7 +59,7 @@ final class DataFileAccessor {
         try {
             dataFile.closeRandomAccessFile(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("Failed to close file", e);
         }
     }
 
@@ -89,7 +89,7 @@ final class DataFileAccessor {
             return new ByteSequence(data, 0, data.length);
 
         } catch (RuntimeException e) {
-            throw new IOException("Invalid location: " + location + ", : " + e, e);
+            throw new IOException("Invalid location: " + location + " : " + e, e);
         }
     }
 

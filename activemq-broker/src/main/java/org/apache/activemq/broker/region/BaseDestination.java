@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.ResourceAllocationException;
 
@@ -57,8 +58,9 @@ public abstract class BaseDestination implements Destination {
     public static final long EXPIRE_MESSAGE_PERIOD = 30 * 1000;
     public static final long DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC = 60 * 1000;
     public static final int MAX_PRODUCERS_TO_AUDIT = 64;
-    public static final int MAX_AUDIT_DEPTH = 2048;
+    public static final int MAX_AUDIT_DEPTH = 10000;
 
+    protected final AtomicBoolean started = new AtomicBoolean();
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
@@ -66,7 +68,7 @@ public abstract class BaseDestination implements Destination {
     protected MemoryUsage memoryUsage;
     private boolean producerFlowControl = true;
     private boolean alwaysRetroactive = false;
-    protected boolean warnOnProducerFlowControl = true;
+    protected long lastBlockedProducerWarnTime = 0l;
     protected long blockedProducerWarningInterval = DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL;
 
     private int maxProducersToAudit = 1024;
@@ -84,6 +86,7 @@ public abstract class BaseDestination implements Destination {
     private boolean advisoryForDelivery;
     private boolean advisoryForConsumed;
     private boolean sendAdvisoryIfNoConsumers;
+    private boolean includeBodyForAdvisory;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
     protected final Broker regionBroker;
@@ -260,6 +263,7 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception{
         destinationStatistics.getConsumers().decrement();
+        this.lastActiveTime=0l;
     }
 
 
@@ -295,9 +299,9 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public boolean isActive() {
-        boolean isActive = destinationStatistics.getConsumers().getCount() != 0 ||
-                           destinationStatistics.getProducers().getCount() != 0;
-        if (isActive && isGcWithNetworkConsumers() && destinationStatistics.getConsumers().getCount() != 0) {
+        boolean isActive = destinationStatistics.getConsumers().getCount() > 0 ||
+                           destinationStatistics.getProducers().getCount() > 0;
+        if (isActive && isGcWithNetworkConsumers() && destinationStatistics.getConsumers().getCount() > 0) {
             isActive = hasRegularConsumers(getConsumers());
         }
         return isActive;
@@ -315,7 +319,7 @@ public abstract class BaseDestination implements Destination {
 
     @Override
     public int getMaxBrowsePageSize() {
-        return this.maxBrowsePageSize > 0 ? this.maxBrowsePageSize : getMaxPageSize();
+        return this.maxBrowsePageSize;
     }
 
     @Override
@@ -466,6 +470,14 @@ public abstract class BaseDestination implements Destination {
         this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
     }
 
+    public boolean isIncludeBodyForAdvisory() {
+        return includeBodyForAdvisory;
+    }
+
+    public void setIncludeBodyForAdvisory(boolean includeBodyForAdvisory) {
+        this.includeBodyForAdvisory = includeBodyForAdvisory;
+    }
+
     /**
      * @return the dead letter strategy
      */
@@ -514,6 +526,7 @@ public abstract class BaseDestination implements Destination {
      */
     @Override
     public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
+        this.lastActiveTime = 0L;
         if (advisoryForDelivery) {
             broker.messageDelivered(context, messageReference);
         }
@@ -670,7 +683,6 @@ public abstract class BaseDestination implements Destination {
             }
         } else {
             long start = System.currentTimeMillis();
-            long nextWarn = start;
             producerBrokerExchange.blockingOnFlowControl(true);
             destinationStatistics.getBlockedSends().increment();
             while (!usage.waitForSpace(1000, highWaterMark)) {
@@ -678,10 +690,8 @@ public abstract class BaseDestination implements Destination {
                     throw new IOException("Connection closed, send aborted.");
                 }
 
-                long now = System.currentTimeMillis();
-                if (now >= nextWarn) {
-                    getLog().info("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((now - start) / 1000))});
-                    nextWarn = now + blockedProducerWarningInterval;
+                if (isFlowControlLogRequired()) {
+                    getLog().info("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
                 }
             }
             long finish = System.currentTimeMillis();
@@ -690,6 +700,18 @@ public abstract class BaseDestination implements Destination {
             producerBrokerExchange.incrementTimeBlocked(this,totalTimeBlocked);
             producerBrokerExchange.blockingOnFlowControl(false);
         }
+    }
+
+    protected boolean isFlowControlLogRequired() {
+        boolean answer = false;
+        if (blockedProducerWarningInterval > 0) {
+            long now = System.currentTimeMillis();
+            if (lastBlockedProducerWarnTime + blockedProducerWarningInterval <= now) {
+                lastBlockedProducerWarnTime = now;
+                answer = true;
+            }
+        }
+        return answer;
     }
 
     protected abstract Logger getLog();
@@ -768,8 +790,9 @@ public abstract class BaseDestination implements Destination {
     @Override
     public boolean canGC() {
         boolean result = false;
-        if (isGcIfInactive()&& this.lastActiveTime != 0l) {
-            if ((System.currentTimeMillis() - this.lastActiveTime) >= getInactiveTimeoutBeforeGC()) {
+        final long currentLastActiveTime = this.lastActiveTime;
+        if (isGcIfInactive() && currentLastActiveTime != 0l && destinationStatistics.messages.getCount() == 0L ) {
+            if ((System.currentTimeMillis() - currentLastActiveTime) >= getInactiveTimeoutBeforeGC()) {
                 result = true;
             }
         }
@@ -780,7 +803,7 @@ public abstract class BaseDestination implements Destination {
         this.reduceMemoryFootprint = reduceMemoryFootprint;
     }
 
-    protected boolean isReduceMemoryFootprint() {
+    public boolean isReduceMemoryFootprint() {
         return this.reduceMemoryFootprint;
     }
 
@@ -843,9 +866,8 @@ public abstract class BaseDestination implements Destination {
         return ack;
     }
 
-    @Override
-    public boolean isDLQ() {
-        return getDeadLetterStrategy().isDLQ(this.getActiveMQDestination());
+    protected boolean isDLQ() {
+        return destination.isDLQ();
     }
 
     @Override
@@ -870,5 +892,9 @@ public abstract class BaseDestination implements Destination {
 
     public boolean isPersistJMSRedelivered() {
         return persistJMSRedelivered;
+    }
+
+    public SystemUsage getSystemUsage() {
+        return systemUsage;
     }
 }

@@ -20,15 +20,15 @@ import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.activemq.broker.BrokerContext;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.qpid.proton.jms.InboundTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,20 +41,29 @@ import org.slf4j.LoggerFactory;
 public class AmqpTransportFilter extends TransportFilter implements AmqpTransport {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpTransportFilter.class);
     static final Logger TRACE_BYTES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".BYTES");
-    static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".FRAMES");
-    private IAmqpProtocolConverter protocolConverter;
+    public static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".FRAMES");
+    private AmqpProtocolConverter protocolConverter;
     private AmqpWireFormat wireFormat;
+    private AmqpInactivityMonitor monitor;
 
     private boolean trace;
-    private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
     private final ReentrantLock lock = new ReentrantLock();
 
-    public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
+    public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
         super(next);
-        this.protocolConverter = new AMQPProtocolDiscriminator(this);
+        this.protocolConverter = new AmqpProtocolDiscriminator(this, brokerService);
         if (wireFormat instanceof AmqpWireFormat) {
             this.wireFormat = (AmqpWireFormat) wireFormat;
         }
+    }
+
+    @Override
+    public void start() throws Exception {
+        if (monitor != null) {
+            monitor.setAmqpTransport(this);
+            monitor.startConnectionTimeoutChecker(getConnectAttemptTimeout());
+        }
+        super.start();
     }
 
     @Override
@@ -128,15 +137,37 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
     @Override
-    public X509Certificate[] getPeerCertificates() {
-        if (next instanceof SslTransport) {
-            X509Certificate[] peerCerts = ((SslTransport) next).getPeerCertificates();
-            if (trace && peerCerts != null) {
-                LOG.debug("Peer Identity has been verified\n");
+    public long keepAlive() {
+        long nextKeepAliveDelay = 0l;
+
+        try {
+            lock.lock();
+            try {
+                nextKeepAliveDelay = protocolConverter.keepAlive();
+            } finally {
+                lock.unlock();
             }
-            return peerCerts;
+        } catch (IOException e) {
+            handleException(e);
+        } catch (Exception e) {
+            onException(IOExceptionSupport.create(e));
         }
-        return null;
+
+        return nextKeepAliveDelay;
+    }
+
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        X509Certificate[] peerCerts = null;
+        if (next instanceof SslTransport) {
+            peerCerts = ((SslTransport) next).getPeerCertificates();
+        } else if (next instanceof NIOSSLTransport) {
+            peerCerts = ((NIOSSLTransport) next).getPeerCertificates();
+        }
+        if (trace && peerCerts != null) {
+            LOG.debug("Peer Identity has been verified\n");
+        }
+        return peerCerts;
     }
 
     @Override
@@ -160,20 +191,59 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public String getTransformer() {
-        return transformer;
+        return wireFormat.getTransformer();
     }
 
     public void setTransformer(String transformer) {
-        this.transformer = transformer;
+        wireFormat.setTransformer(transformer);
     }
 
     @Override
-    public IAmqpProtocolConverter getProtocolConverter() {
+    public AmqpProtocolConverter getProtocolConverter() {
         return protocolConverter;
     }
 
     @Override
-    public void setProtocolConverter(IAmqpProtocolConverter protocolConverter) {
+    public void setProtocolConverter(AmqpProtocolConverter protocolConverter) {
         this.protocolConverter = protocolConverter;
+    }
+
+    public void setProducerCredit(int producerCredit) {
+        wireFormat.setProducerCredit(producerCredit);
+    }
+
+    public int getProducerCredit() {
+        return wireFormat.getProducerCredit();
+    }
+
+    @Override
+    public void setInactivityMonitor(AmqpInactivityMonitor monitor) {
+        this.monitor = monitor;
+    }
+
+    @Override
+    public AmqpInactivityMonitor getInactivityMonitor() {
+        return monitor;
+    }
+
+    @Override
+    public boolean isUseInactivityMonitor() {
+        return monitor != null;
+    }
+
+    public int getConnectAttemptTimeout() {
+        return wireFormat.getConnectAttemptTimeout();
+    }
+
+    public void setConnectAttemptTimeout(int connectAttemptTimeout) {
+        wireFormat.setConnectAttemptTimeout(connectAttemptTimeout);
+    }
+
+    public long getMaxFrameSize() {
+        return wireFormat.getMaxFrameSize();
+    }
+
+    public void setMaxFrameSize(long maxFrameSize) {
+        wireFormat.setMaxFrameSize(maxFrameSize);
     }
 }

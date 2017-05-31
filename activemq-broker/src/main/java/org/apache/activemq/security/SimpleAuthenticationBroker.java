@@ -17,6 +17,7 @@
 package org.apache.activemq.security;
 
 import java.security.Principal;
+import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -65,46 +66,52 @@ public class SimpleAuthenticationBroker extends AbstractAuthenticationBroker {
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-
-        SecurityContext s = context.getSecurityContext();
-        if (s == null) {
-            // Check the username and password.
-            if (anonymousAccessAllowed && info.getUserName() == null && info.getPassword() == null) {
-                info.setUserName(anonymousUser);
-                s = new SecurityContext(info.getUserName()) {
-                    @Override
-                    public Set<Principal> getPrincipals() {
-                        Set<Principal> groups = new HashSet<Principal>();
-                        groups.add(new GroupPrincipal(anonymousGroup));
-                        return groups;
-                    }
-                };
-            } else {
-                String pw = userPasswords.get(info.getUserName());
-                if (pw == null || !pw.equals(info.getPassword())) {
-                    throw new SecurityException(
-                            "User name [" + info.getUserName() + "] or password is invalid.");
-                }
-
-                final Set<Principal> groups = userGroups.get(info.getUserName());
-                s = new SecurityContext(info.getUserName()) {
-                    @Override
-                    public Set<Principal> getPrincipals() {
-                        return groups;
-                    }
-                };
-            }
-
-            context.setSecurityContext(s);
-            securityContexts.add(s);
+        SecurityContext securityContext = context.getSecurityContext();
+        if (securityContext == null) {
+            securityContext = authenticate(info.getUserName(), info.getPassword(), null);
+            context.setSecurityContext(securityContext);
+            securityContexts.add(securityContext);
         }
 
         try {
             super.addConnection(context, info);
         } catch (Exception e) {
-            securityContexts.remove(s);
+            securityContexts.remove(securityContext);
             context.setSecurityContext(null);
             throw e;
         }
+    }
+
+    @Override
+    public SecurityContext authenticate(String username, String password, X509Certificate[] certificates) throws SecurityException {
+        SecurityContext securityContext = null;
+
+        // Check the username and password.
+        if (anonymousAccessAllowed && username == null && password == null) {
+            username = anonymousUser;
+            securityContext = new SecurityContext(username) {
+                @Override
+                public Set<Principal> getPrincipals() {
+                    Set<Principal> groups = new HashSet<Principal>();
+                    groups.add(new GroupPrincipal(anonymousGroup));
+                    return groups;
+                }
+            };
+        } else {
+            String pw = userPasswords.get(username);
+            if (pw == null || !pw.equals(password)) {
+                throw new SecurityException("User name [" + username + "] or password is invalid.");
+            }
+
+            final Set<Principal> groups = userGroups.get(username);
+            securityContext = new SecurityContext(username) {
+                @Override
+                public Set<Principal> getPrincipals() {
+                    return groups;
+                }
+            };
+        }
+
+        return securityContext;
     }
 }

@@ -46,7 +46,7 @@ abstract class ProxyLevelDBStore extends LockableServiceSupport with BrokerServi
   }
 
   def createJobSchedulerStore():JobSchedulerStore = {
-    return proxy_target.createJobSchedulerStore()
+    throw new UnsupportedOperationException();
   }
 
   def setDirectory(dir: File) {

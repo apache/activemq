@@ -105,8 +105,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
 
         this.info.setDestination(destination);
 
-        // Enable producer window flow control if protocol > 3 and the window
-        // size > 0
+        // Enable producer window flow control if protocol >= 3 and the window size > 0
         if (session.connection.getProtocolVersion() >= 3 && this.info.getWindowSize() > 0) {
             producerWindow = new MemoryUsage("Producer Window: " + producerId);
             producerWindow.setExecutor(session.getConnectionExecutor());

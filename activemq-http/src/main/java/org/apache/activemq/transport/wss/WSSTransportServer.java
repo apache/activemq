@@ -21,24 +21,16 @@ import java.net.URI;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.SecureSocketConnectorFactory;
 import org.apache.activemq.transport.ws.WSTransportServer;
-import org.eclipse.jetty.server.Connector;
 
 public class WSSTransportServer extends WSTransportServer {
-    private SslContext context;
 
     public WSSTransportServer(URI location, SslContext context) {
         super(location);
-        this.context = context;
         this.socketConnectorFactory = new SecureSocketConnectorFactory(context);
     }
 
     @Override
-    protected void doStart() throws Exception {
-
-        Connector sslConnector = socketConnectorFactory.createConnector();
-
-        setConnector(sslConnector);
-
-        super.doStart();
+    public boolean isSslServer() {
+        return true;
     }
 }

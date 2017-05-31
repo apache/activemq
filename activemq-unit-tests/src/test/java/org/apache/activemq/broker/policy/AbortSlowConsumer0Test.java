@@ -16,11 +16,17 @@
  */
 package org.apache.activemq.broker.policy;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -30,6 +36,7 @@ import javax.management.InstanceNotFoundException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
@@ -44,14 +51,9 @@ import org.apache.activemq.util.SocketProxy;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import static org.junit.Assert.*;
-
 
 @RunWith(value = Parameterized.class)
 public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {

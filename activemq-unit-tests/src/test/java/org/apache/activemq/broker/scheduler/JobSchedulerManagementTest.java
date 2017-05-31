@@ -78,6 +78,8 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // Now wait and see if any get delivered, none should.
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), COUNT);
+
+        connection.close();
     }
 
     @Test
@@ -144,6 +146,8 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // Now wait and see if any get delivered, none should.
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(2, latch.getCount());
+
+        connection.close();
     }
 
     @Test
@@ -203,6 +207,8 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // now check that they all got delivered
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), 0);
+
+        connection.close();
     }
 
     @Test
@@ -270,6 +276,8 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // destination.
         latch.await(20, TimeUnit.SECONDS);
         assertEquals(0, latch.getCount());
+
+        connection.close();
     }
 
     @Test
@@ -327,6 +335,8 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // now check that they all got removed and are not delivered.
         latch.await(11, TimeUnit.SECONDS);
         assertEquals(COUNT, latch.getCount());
+
+        connection.close();
     }
 
     @Test
@@ -341,7 +351,6 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         MessageProducer producer = session.createProducer(management);
 
         try {
-
             // Send the remove request
             Message remove = session.createMessage();
             remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION, ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
@@ -349,6 +358,8 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
             producer.send(remove);
         } catch (Exception e) {
             fail("Caught unexpected exception during remove of unscheduled message.");
+        } finally {
+            connection.close();
         }
     }
 
@@ -388,6 +399,8 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // Now check if there are anymore, there shouldn't be
         message = browser.receive(5000);
         assertNull(message);
+
+        connection.close();
     }
 
     protected void scheduleMessage(Connection connection, long delay) throws Exception {

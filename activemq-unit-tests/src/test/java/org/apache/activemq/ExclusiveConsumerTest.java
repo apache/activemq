@@ -16,6 +16,9 @@
  */
 package org.apache.activemq;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -24,26 +27,35 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import junit.framework.TestCase;
-
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public class ExclusiveConsumerTest extends TestCase {
+public class ExclusiveConsumerTest {
 
-    private static final String VM_BROKER_URL = "vm://localhost?broker.persistent=false&broker.useJmx=true";
+    private static final String VM_BROKER_URL = "vm://localhost";
 
-    public ExclusiveConsumerTest(String name) {
-        super(name);
+    private BrokerService brokerService;
+
+    @Before
+    public void setUp() throws Exception {
+        brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.setUseJmx(false);
+        brokerService.setSchedulerSupport(false);
+        brokerService.setAdvisorySupport(false);
+
+        brokerService.start();
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
+        if (brokerService != null) {
+            brokerService.stop();
+            brokerService = null;
+        }
     }
 
     private Connection createConnection(final boolean start) throws JMSException {
@@ -55,6 +67,7 @@ public class ExclusiveConsumerTest extends TestCase {
         return conn;
     }
 
+    @Test(timeout = 60000)
     public void testExclusiveConsumerSelectedCreatedFirst() throws JMSException, InterruptedException {
         Connection conn = createConnection(true);
 
@@ -63,7 +76,6 @@ public class ExclusiveConsumerTest extends TestCase {
         Session senderSession = null;
 
         try {
-
             exclusiveSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fallbackSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             senderSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -87,15 +99,14 @@ public class ExclusiveConsumerTest extends TestCase {
             // Verify exclusive consumer receives the message.
             assertNotNull(exclusiveConsumer.receive(100));
             assertNull(fallbackConsumer.receive(100));
-
         } finally {
             fallbackSession.close();
             senderSession.close();
             conn.close();
         }
-
     }
 
+    @Test(timeout = 60000)
     public void testExclusiveConsumerSelectedCreatedAfter() throws JMSException, InterruptedException {
         Connection conn = createConnection(true);
 
@@ -104,7 +115,6 @@ public class ExclusiveConsumerTest extends TestCase {
         Session senderSession = null;
 
         try {
-
             exclusiveSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fallbackSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             senderSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -132,11 +142,10 @@ public class ExclusiveConsumerTest extends TestCase {
             senderSession.close();
             conn.close();
         }
-
     }
 
-    public void testFailoverToAnotherExclusiveConsumerCreatedFirst() throws JMSException,
-        InterruptedException {
+    @Test(timeout = 60000)
+    public void testFailoverToAnotherExclusiveConsumerCreatedFirst() throws JMSException, InterruptedException {
         Connection conn = createConnection(true);
 
         Session exclusiveSession1 = null;
@@ -145,14 +154,12 @@ public class ExclusiveConsumerTest extends TestCase {
         Session senderSession = null;
 
         try {
-
             exclusiveSession1 = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             exclusiveSession2 = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fallbackSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             senderSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            // This creates the exclusive consumer first which avoids AMQ-1024
-            // bug.
+            // This creates the exclusive consumer first which avoids AMQ-1024 bug.
             ActiveMQQueue exclusiveQueue = new ActiveMQQueue("TEST.QUEUE2?consumer.exclusive=true");
             MessageConsumer exclusiveConsumer1 = exclusiveSession1.createConsumer(exclusiveQueue);
             MessageConsumer exclusiveConsumer2 = exclusiveSession2.createConsumer(exclusiveQueue);
@@ -173,8 +180,7 @@ public class ExclusiveConsumerTest extends TestCase {
             assertNull(exclusiveConsumer2.receive(100));
             assertNull(fallbackConsumer.receive(100));
 
-            // Close the exclusive consumer to verify the non-exclusive consumer
-            // takes over
+            // Close the exclusive consumer to verify the non-exclusive consumer takes over
             exclusiveConsumer1.close();
 
             producer.send(msg);
@@ -188,11 +194,10 @@ public class ExclusiveConsumerTest extends TestCase {
             senderSession.close();
             conn.close();
         }
-
     }
 
-    public void testFailoverToAnotherExclusiveConsumerCreatedAfter() throws JMSException,
-        InterruptedException {
+    @Test(timeout = 60000)
+    public void testFailoverToAnotherExclusiveConsumerCreatedAfter() throws JMSException, InterruptedException {
         Connection conn = createConnection(true);
 
         Session exclusiveSession1 = null;
@@ -201,14 +206,12 @@ public class ExclusiveConsumerTest extends TestCase {
         Session senderSession = null;
 
         try {
-
             exclusiveSession1 = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             exclusiveSession2 = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fallbackSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             senderSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            // This creates the exclusive consumer first which avoids AMQ-1024
-            // bug.
+            // This creates the exclusive consumer first which avoids AMQ-1024 bug.
             ActiveMQQueue exclusiveQueue = new ActiveMQQueue("TEST.QUEUE6?consumer.exclusive=true");
             MessageConsumer exclusiveConsumer1 = exclusiveSession1.createConsumer(exclusiveQueue);
 
@@ -230,8 +233,7 @@ public class ExclusiveConsumerTest extends TestCase {
             assertNull(exclusiveConsumer2.receive(100));
             assertNull(fallbackConsumer.receive(100));
 
-            // Close the exclusive consumer to verify the non-exclusive consumer
-            // takes over
+            // Close the exclusive consumer to verify the non-exclusive consumer takes over
             exclusiveConsumer1.close();
 
             producer.send(msg);
@@ -239,15 +241,14 @@ public class ExclusiveConsumerTest extends TestCase {
 
             assertNotNull(exclusiveConsumer2.receive(1000));
             assertNull(fallbackConsumer.receive(100));
-
         } finally {
             fallbackSession.close();
             senderSession.close();
             conn.close();
         }
-
     }
 
+    @Test(timeout = 60000)
     public void testFailoverToNonExclusiveConsumer() throws JMSException, InterruptedException {
         Connection conn = createConnection(true);
 
@@ -261,8 +262,7 @@ public class ExclusiveConsumerTest extends TestCase {
             fallbackSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             senderSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            // This creates the exclusive consumer first which avoids AMQ-1024
-            // bug.
+            // This creates the exclusive consumer first which avoids AMQ-1024 bug.
             ActiveMQQueue exclusiveQueue = new ActiveMQQueue("TEST.QUEUE3?consumer.exclusive=true");
             MessageConsumer exclusiveConsumer = exclusiveSession.createConsumer(exclusiveQueue);
 
@@ -281,22 +281,20 @@ public class ExclusiveConsumerTest extends TestCase {
             assertNotNull(exclusiveConsumer.receive(100));
             assertNull(fallbackConsumer.receive(100));
 
-            // Close the exclusive consumer to verify the non-exclusive consumer
-            // takes over
+            // Close the exclusive consumer to verify the non-exclusive consumer takes over
             exclusiveConsumer.close();
 
             producer.send(msg);
 
             assertNotNull(fallbackConsumer.receive(100));
-
         } finally {
             fallbackSession.close();
             senderSession.close();
             conn.close();
         }
-
     }
 
+    @Test(timeout = 60000)
     public void testFallbackToExclusiveConsumer() throws JMSException, InterruptedException {
         Connection conn = createConnection(true);
 
@@ -310,8 +308,7 @@ public class ExclusiveConsumerTest extends TestCase {
             fallbackSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             senderSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            // This creates the exclusive consumer first which avoids AMQ-1024
-            // bug.
+            // This creates the exclusive consumer first which avoids AMQ-1024 bug.
             ActiveMQQueue exclusiveQueue = new ActiveMQQueue("TEST.QUEUE4?consumer.exclusive=true");
             MessageConsumer exclusiveConsumer = exclusiveSession.createConsumer(exclusiveQueue);
 
@@ -330,8 +327,7 @@ public class ExclusiveConsumerTest extends TestCase {
             assertNotNull(exclusiveConsumer.receive(100));
             assertNull(fallbackConsumer.receive(100));
 
-            // Close the exclusive consumer to verify the non-exclusive consumer
-            // takes over
+            // Close the exclusive consumer to verify the non-exclusive consumer takes over
             exclusiveConsumer.close();
 
             producer.send(msg);
@@ -339,19 +335,16 @@ public class ExclusiveConsumerTest extends TestCase {
             // Verify other non-exclusive consumer receices the message.
             assertNotNull(fallbackConsumer.receive(100));
 
-            // Create exclusive consumer to determine if it will start receiving
-            // the messages.
+            // Create exclusive consumer to determine if it will start receiving the messages.
             exclusiveConsumer = exclusiveSession.createConsumer(exclusiveQueue);
 
             producer.send(msg);
             assertNotNull(exclusiveConsumer.receive(100));
             assertNull(fallbackConsumer.receive(100));
-
         } finally {
             fallbackSession.close();
             senderSession.close();
             conn.close();
         }
-
     }
 }

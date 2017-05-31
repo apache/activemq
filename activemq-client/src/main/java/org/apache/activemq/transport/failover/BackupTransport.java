@@ -18,6 +18,7 @@
 
 package org.apache.activemq.transport.failover;
 
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 
@@ -29,16 +30,29 @@ class BackupTransport extends DefaultTransportListener{
 	private Transport transport;
 	private URI uri;
 	private boolean disposed;
-	
+	private BrokerInfo brokerInfo;
+
 	BackupTransport(FailoverTransport ft){
 		this.failoverTransport=ft;
 	}
+
 	@Override
     public void onException(IOException error) {
 		this.disposed=true;
 		if (failoverTransport!=null) {
 			this.failoverTransport.reconnect(false);
 		}
+	}
+
+	@Override
+	public void onCommand(Object command) {
+		if (command instanceof BrokerInfo) {
+			brokerInfo = (BrokerInfo) command;
+		}
+	}
+
+	public BrokerInfo getBrokerInfo() {
+		return brokerInfo;
 	}
 
 	public Transport getTransport() {

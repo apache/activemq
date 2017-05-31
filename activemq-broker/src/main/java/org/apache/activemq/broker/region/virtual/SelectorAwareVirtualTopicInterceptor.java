@@ -17,10 +17,9 @@
 package org.apache.activemq.broker.region.virtual;
 
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
@@ -38,10 +37,12 @@ import java.util.Set;
 public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicInterceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SelectorAwareVirtualTopicInterceptor.class);
     LRUCache<String,BooleanExpression> expressionCache = new LRUCache<String,BooleanExpression>();
-    private SubQueueSelectorCacheBroker selectorCachePlugin;
+    private final SubQueueSelectorCacheBroker selectorCachePlugin;
 
-    public SelectorAwareVirtualTopicInterceptor(Destination next, String prefix, String postfix, boolean local) {
-        super(next, prefix, postfix, local);
+    public SelectorAwareVirtualTopicInterceptor(Destination next, VirtualTopic virtualTopic) {
+        super(next, virtualTopic);
+        selectorCachePlugin = (SubQueueSelectorCacheBroker)
+                ((Topic)next).createConnectionContext().getBroker().getAdaptor(SubQueueSelectorCacheBroker.class);
     }
 
     /**
@@ -49,53 +50,45 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
      * the virtual queues, hence there is no build up of unmatched messages on these destinations
      */
     @Override
-    protected void send(ProducerBrokerExchange context, Message message, ActiveMQDestination destination) throws Exception {
-        Broker broker = context.getConnectionContext().getBroker();
-        Set<Destination> destinations = broker.getDestinations(destination);
-
-        for (Destination dest : destinations) {
-            if (matchesSomeConsumer(broker, message, dest)) {
-                dest.send(context, message.copy());
+    protected boolean shouldDispatch(final Broker broker, Message message, Destination dest) throws IOException {
+        //first validate that the prefix matches in the super class
+        if (super.shouldDispatch(broker, message, dest)) {
+            boolean matches = false;
+            MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
+            msgContext.setDestination(dest.getActiveMQDestination());
+            msgContext.setMessageReference(message);
+            List<Subscription> subs = dest.getConsumers();
+            for (Subscription sub : subs) {
+                if (sub.matches(message, msgContext)) {
+                    matches = true;
+                    break;
+                }
             }
-        }
-    }
-
-    private boolean matchesSomeConsumer(final Broker broker, Message message, Destination dest) throws IOException {
-        boolean matches = false;
-        MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
-        msgContext.setDestination(dest.getActiveMQDestination());
-        msgContext.setMessageReference(message);
-        List<Subscription> subs = dest.getConsumers();
-        for (Subscription sub : subs) {
-            if (sub.matches(message, msgContext)) {
-                matches = true;
-                break;
+            if (matches == false) {
+                matches = tryMatchingCachedSubs(broker, dest, msgContext);
             }
+            return matches;
         }
-        if (matches == false) {
-            matches = tryMatchingCachedSubs(broker, dest, msgContext);
-        }
-        return matches;
+        return false;
     }
 
     private boolean tryMatchingCachedSubs(final Broker broker, Destination dest, MessageEvaluationContext msgContext) {
         boolean matches = false;
         LOG.debug("No active consumer match found. Will try cache if configured...");
 
-        //retrieve the specific plugin class and lookup the selector for the destination.
-        final SubQueueSelectorCacheBroker cache = getSubQueueSelectorCacheBrokerPlugin(broker);
-
-        if (cache != null) {
-            final Set<String> selectors = cache.getSelector(dest.getActiveMQDestination().getQualifiedName());
-            for (String selector : selectors) {
-                try {
-                    final BooleanExpression expression = getExpression(selector);
-                    matches = expression.matches(msgContext);
-                    if (matches) {
-                        return true;
+        if (selectorCachePlugin != null) {
+            final Set<String> selectors = selectorCachePlugin.getSelector(dest.getActiveMQDestination().getQualifiedName());
+            if (selectors != null) {
+                for (String selector : selectors) {
+                    try {
+                        final BooleanExpression expression = getExpression(selector);
+                        matches = expression.matches(msgContext);
+                        if (matches) {
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        LOG.error(e.getMessage(), e);
                     }
-                } catch (Exception e) {
-                    LOG.error(e.getMessage(), e);
                 }
             }
         }
@@ -112,17 +105,6 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
             }
         }
         return result;
-    }
-
-    /**
-     * @return The SubQueueSelectorCacheBroker instance or null if no such broker is available.
-     */
-    private SubQueueSelectorCacheBroker getSubQueueSelectorCacheBrokerPlugin(final Broker broker) {
-        if (selectorCachePlugin == null) {
-            selectorCachePlugin = (SubQueueSelectorCacheBroker) broker.getAdaptor(SubQueueSelectorCacheBroker.class);
-        } //if
-
-        return selectorCachePlugin;
     }
 
     /**

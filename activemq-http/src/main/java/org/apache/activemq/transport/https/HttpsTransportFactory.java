@@ -41,18 +41,22 @@ public class HttpsTransportFactory extends HttpTransportFactory {
         return doBind(location);
     }
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             HttpsTransportServer result = new HttpsTransportServer(location, this, SslContext.getCurrentSslContext());
+            Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
             result.setTransportOption(transportOptions);
+            result.setHttpOptions(httpOptions);
             return result;
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
     }
 
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {
         // need to remove options from uri
         URI uri;

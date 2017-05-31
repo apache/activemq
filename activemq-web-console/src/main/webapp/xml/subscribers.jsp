@@ -15,35 +15,37 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%-- Workaround for https://ops4j1.jira.com/browse/PAXWEB-1070 --%>
+<%@include file="../WEB-INF/jspf/headertags.jspf" %>
 <subscribers>
 <c:forEach items="${requestContext.brokerQuery.durableTopicSubscribers}" var="row">
-<subscriber clientId="${row.clientId}" 
-            subscriptionName="${row.subscriptionName}" 
-            connectionId="${row.connectionId}"
-            destinationName="${row.destinationName}" 
+<subscriber clientId="<c:out value="${row.clientId}"/>" 
+            subscriptionName="<c:out value="${row.subscriptionName}"/>" 
+            connectionId="<c:out value="${row.connectionId}"/>"
+            destinationName="<c:out value="${row.destinationName}"/>" 
             selector="<c:out value="${row.selector}"/>" 
             active="yes" >
-  <stats pendingQueueSize="${row.pendingQueueSize}"
-         dispatchedQueueSize="${row.dispatchedQueueSize}"
-         dispatchedCounter="${row.dispatchedCounter}"
-         enqueueCounter="${row.enqueueCounter}"
-         dequeueCounter="${row.dequeueCounter}"/>
+  <stats pendingQueueSize="<c:out value="${row.pendingQueueSize}"/>"
+         dispatchedQueueSize="<c:out value="${row.dispatchedQueueSize}"/>"
+         dispatchedCounter="<c:out value="${row.dispatchedCounter}"/>"
+         enqueueCounter="<c:out value="${row.enqueueCounter}"/>"
+         dequeueCounter="<c:out value="${row.dequeueCounter}"/>" />
 
 </subscriber>
 </c:forEach>
 
 <c:forEach items="${requestContext.brokerQuery.inactiveDurableTopicSubscribers}" var="row">
-<subscriber clientId="${row.clientId}" 
-            subscriptionName="${row.subscriptionName}" 
-            connectionId="${row.connectionId}"
-            destinationName="${row.destinationName}" 
+<subscriber clientId="<c:out value="${row.clientId}"/>" 
+            subscriptionName="<c:out value="${row.subscriptionName}"/>" 
+            connectionId="<c:out value="${row.connectionId}"/>"
+            destinationName="<c:out value="${row.destinationName}"/>" 
             selector="<c:out value="${row.selector}"/>" 
             active="no" >
-  <stats pendingQueueSize="${row.pendingQueueSize}"
-         dispatchedQueueSize="${row.dispatchedQueueSize}"
-         dispatchedCounter="${row.dispatchedCounter}"
-         enqueueCounter="${row.enqueueCounter}"
-         dequeueCounter="${row.dequeueCounter}"/>
+  <stats pendingQueueSize="<c:out value="${row.pendingQueueSize}"/>"
+         dispatchedQueueSize="<c:out value="${row.dispatchedQueueSize}"/>"
+         dispatchedCounter="<c:out value="${row.dispatchedCounter}"/>"
+         enqueueCounter="<c:out value="${row.enqueueCounter}"/>"
+         dequeueCounter="<c:out value="${row.dequeueCounter}"/>"/>
 
 </subscriber>
 </c:forEach>

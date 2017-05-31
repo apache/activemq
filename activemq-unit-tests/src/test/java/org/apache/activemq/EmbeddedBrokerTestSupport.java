@@ -16,14 +16,15 @@
  */
 package org.apache.activemq;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.springframework.jms.core.JmsTemplate;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
 
 /**
  * A useful base class which creates and closes an embedded broker
@@ -40,6 +41,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
     protected ActiveMQDestination destination;
     protected JmsTemplate template;
 
+    @Override
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
@@ -56,9 +58,13 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
         template.afterPropertiesSet();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (broker != null) {
-            broker.stop();
+            try {
+                broker.stop();
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -116,6 +122,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
         answer.setPersistent(isPersistent());
+        answer.getManagementContext().setCreateConnector(false);
         answer.addConnector(bindAddress);
         return answer;
     }

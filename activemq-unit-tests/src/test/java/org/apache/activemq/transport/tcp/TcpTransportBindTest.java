@@ -25,6 +25,7 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerService;
 
 public class TcpTransportBindTest extends EmbeddedBrokerTestSupport {
     String addr = "tcp://localhost:0";
@@ -39,6 +40,16 @@ public class TcpTransportBindTest extends EmbeddedBrokerTestSupport {
         super.setUp();
 
         addr = broker.getTransportConnectors().get(0).getPublishableConnectString();
+    }
+
+    @Override
+    protected BrokerService createBroker() throws Exception {
+        BrokerService answer = new BrokerService();
+        answer.setBrokerName("TcpTransportBindTest");
+        answer.setPersistent(false);
+        answer.setUseJmx(false);
+        answer.addConnector(bindAddress);
+        return answer;
     }
 
     public void testConnect() throws Exception {

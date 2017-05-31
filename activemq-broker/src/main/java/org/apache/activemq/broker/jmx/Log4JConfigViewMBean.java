@@ -48,7 +48,7 @@ public interface Log4JConfigViewMBean {
     /**
      * list of all the logger names and their levels
      *
-     * @returns a List of all known loggers names.
+     * @return a List of all known loggers names.
      *
      * @throws Exception if an error occurs while getting the loggers.
      */
@@ -61,7 +61,7 @@ public interface Log4JConfigViewMBean {
      * @param loggerName
      *        the name of the logger whose level should be queried.
      *
-     * @returns the current log level of the given logger.
+     * @return the current log level of the given logger.
      *
      * @throws Exception if an error occurs while getting the log level.
      */

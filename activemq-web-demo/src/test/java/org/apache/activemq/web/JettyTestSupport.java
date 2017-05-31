@@ -16,12 +16,18 @@
  */
 package org.apache.activemq.web;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
+
 import javax.jms.Connection;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -29,27 +35,26 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.*;
-
 public class JettyTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JettyTestSupport.class);
 
-    BrokerService broker;
-    Server server;
-    ActiveMQConnectionFactory factory;
-    Connection connection;
-    Session session;
-    MessageProducer producer;
+    protected BrokerService broker;
+    protected Session session;
+    protected MessageProducer producer;
+    protected URI tcpUri;
+    protected URI stompUri;
 
-    URI tcpUri;
-    URI stompUri;
+    private Server server;
+    private ActiveMQConnectionFactory factory;
+    private Connection connection;
+    private int proxyPort = 0;
 
     protected boolean isPersistent() {
         return false;
@@ -67,10 +72,10 @@ public class JettyTestSupport {
         broker.start();
         broker.waitUntilStarted();
 
+        int port = getPort();
         server = new Server();
-        SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(8080);
-        connector.setServer(server);
+        ServerConnector connector = new ServerConnector(server);
+        connector.setPort(port);
         WebAppContext context = new WebAppContext();
 
         context.setResourceBase("src/main/webapp");
@@ -81,7 +86,7 @@ public class JettyTestSupport {
             connector
         });
         server.start();
-        waitForJettySocketToAccept("http://localhost:8080");
+        waitForJettySocketToAccept("http://localhost:" + port);
 
         factory = new ActiveMQConnectionFactory(tcpUri);
         connection = factory.createConnection();
@@ -100,10 +105,30 @@ public class JettyTestSupport {
         broker.waitUntilStopped();
     }
 
+    protected int getPort() {
+        if (proxyPort == 0) {
+            ServerSocket ss = null;
+            try {
+                ss = ServerSocketFactory.getDefault().createServerSocket(0);
+                proxyPort = ss.getLocalPort();
+            } catch (IOException e) { // ignore
+            } finally {
+                try {
+                    if (ss != null ) {
+                        ss.close();
+                    }
+                } catch (IOException e) { // ignore
+                }
+            }
+        }
+        return proxyPort;
+    }
+
     public void waitForJettySocketToAccept(String bindLocation) throws Exception {
         final URL url = new URL(bindLocation);
         assertTrue("Jetty endpoint is available", Wait.waitFor(new Wait.Condition() {
 
+            @Override
             public boolean isSatisified() throws Exception {
                 boolean canConnect = false;
                 try {

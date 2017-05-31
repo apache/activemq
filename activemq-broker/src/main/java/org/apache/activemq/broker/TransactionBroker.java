@@ -64,7 +64,6 @@ public class TransactionBroker extends BrokerFilter {
     // The prepared XA transactions.
     private TransactionStore transactionStore;
     private Map<TransactionId, XATransaction> xaTransactions = new LinkedHashMap<TransactionId, XATransaction>();
-    private ActiveMQMessageAudit audit;
 
     public TransactionBroker(Broker next, TransactionStore transactionStore) {
         super(next);
@@ -286,33 +285,14 @@ public class TransactionBroker extends BrokerFilter {
         final ConnectionContext context = producerExchange.getConnectionContext();
         Transaction originalTx = context.getTransaction();
         Transaction transaction = null;
-        Synchronization sync = null;
         if (message.getTransactionId() != null) {
             transaction = getTransaction(context, message.getTransactionId(), false);
-            if (transaction != null) {
-                sync = new Synchronization() {
-
-                    public void afterRollback() {
-                        if (audit != null) {
-                            audit.rollback(message);
-                        }
-                    }
-                };
-                transaction.addSynchronization(sync);
-            }
         }
-        if (audit == null || !audit.isDuplicate(message)) {
-            context.setTransaction(transaction);
-            try {
-                next.send(producerExchange, message);
-            } finally {
-                context.setTransaction(originalTx);
-            }
-        } else {
-            if (sync != null && transaction != null) {
-                transaction.removeSynchronization(sync);
-            }
-            LOG.debug("IGNORING duplicate message {}", message);
+        context.setTransaction(transaction);
+        try {
+            next.send(producerExchange, message);
+        } finally {
+            context.setTransaction(originalTx);
         }
     }
 
@@ -356,11 +336,14 @@ public class TransactionBroker extends BrokerFilter {
     //
     // ////////////////////////////////////////////////////////////////////////////
     public Transaction getTransaction(ConnectionContext context, TransactionId xid, boolean mightBePrepared) throws JMSException, XAException {
-        Map transactionMap = null;
-        synchronized (xaTransactions) {
-            transactionMap = xid.isXATransaction() ? xaTransactions : context.getTransactions();
+        Transaction transaction = null;
+        if (xid.isXATransaction()) {
+            synchronized (xaTransactions) {
+                transaction = xaTransactions.get(xid);
+            }
+        } else {
+            transaction = context.getTransactions().get(xid);
         }
-        Transaction transaction = (Transaction)transactionMap.get(xid);
         if (transaction != null) {
             return transaction;
         }
@@ -375,13 +358,6 @@ public class TransactionBroker extends BrokerFilter {
     public void removeTransaction(XATransactionId xid) {
         synchronized (xaTransactions) {
             xaTransactions.remove(xid);
-        }
-    }
-
-    public synchronized void brokerServiceStarted() {
-        super.brokerServiceStarted();
-        if (getBrokerService().isSupportFailOver() && audit == null) {
-            audit = new ActiveMQMessageAudit();
         }
     }
 

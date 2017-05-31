@@ -38,8 +38,12 @@ import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JmsSchedulerTest extends JobSchedulerTestSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JmsSchedulerTest.class);
 
     @Test
     public void testCron() throws Exception {
@@ -55,8 +59,9 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         consumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
-                latch.countDown();
                 count.incrementAndGet();
+                latch.countDown();
+                LOG.info("Received scheduled message, waiting for {} more", latch.getCount());
             }
         });
 
@@ -79,6 +84,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         assertEquals(1, list.size());
         latch.await(240, TimeUnit.SECONDS);
         assertEquals(COUNT, count.get());
+        connection.close();
     }
 
     @Test
@@ -112,6 +118,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         assertEquals(latch.getCount(), COUNT);
         latch.await(5, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), 0);
+        connection.close();
     }
 
     @Test
@@ -151,6 +158,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         assertEquals(latch.getCount(), COUNT);
         latch.await(5, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), 0);
+        connection.close();
     }
 
     @Test
@@ -167,8 +175,9 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         consumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
-                latch.countDown();
                 count.incrementAndGet();
+                latch.countDown();
+                LOG.info("Received scheduled message, waiting for {} more", latch.getCount());
             }
         });
 
@@ -187,6 +196,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         // wait a little longer - make sure we only get NUMBER of replays
         Thread.sleep(1000);
         assertEquals(NUMBER, count.get());
+        connection.close();
     }
 
     @Test
@@ -210,7 +220,6 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         broker.start();
         broker.waitUntilStarted();
 
-
         // consume the message
         connection = createConnection();
         connection.start();
@@ -224,6 +233,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         producer.send(message);
         producer.close();
+        connection.close();
     }
 
     @Test
@@ -233,9 +243,9 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         broker.getSystemUsage().getJobSchedulerUsage().setLimit(10 * 1024);
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
-        Connection conn = factory.createConnection();
-        conn.start();
-        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Connection connection = factory.createConnection();
+        connection.start();
+        Session sess = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final long time = 5000;
         final ProducerThread producer = new ProducerThread(sess, destination) {
             @Override
@@ -284,5 +294,6 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         latch.await(20000l, TimeUnit.MILLISECONDS);
 
         assertEquals("Consumer did not receive all messages.", 0, latch.getCount());
+        connection.close();
     }
 }

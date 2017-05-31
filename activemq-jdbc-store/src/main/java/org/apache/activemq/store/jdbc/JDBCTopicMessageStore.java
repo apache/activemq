@@ -36,6 +36,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.MessageRecoveryListener;
+import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -44,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMessageStore {
 
@@ -57,7 +58,8 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                PROPERTY_SEQUENCE_ID_CACHE_SIZE, "1000"), 10);
     private final ReentrantReadWriteLock sequenceIdCacheSizeLock = new ReentrantReadWriteLock();
     private Map<MessageId, long[]> sequenceIdCache = new LinkedHashMap<MessageId, long[]>() {
-         protected boolean removeEldestEntry(Map.Entry<MessageId, long[]> eldest) {
+         @Override
+        protected boolean removeEldestEntry(Map.Entry<MessageId, long[]> eldest) {
            return size() > SEQUENCE_ID_CACHE_SIZE;
         }
     };
@@ -67,6 +69,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         super(persistenceAdapter, adapter, wireFormat, topic, audit);
     }
 
+    @Override
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId, MessageAck ack) throws IOException {
         if (ack != null && ack.isUnmatchedAck()) {
             if (LOG.isTraceEnabled()) {
@@ -110,16 +113,19 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     /**
      * @throws Exception
      */
+    @Override
     public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener) throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             adapter.doRecoverSubscription(c, destination, clientId, subscriptionName, new JDBCMessageRecoveryListener() {
+                @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                     Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                     msg.getMessageId().setBrokerSequenceId(sequenceId);
                     return listener.recoverMessage(msg);
                 }
 
+                @Override
                 public boolean recoverMessageReference(String reference) throws Exception {
                     return listener.recoverMessageReference(new MessageId(reference));
                 }
@@ -149,16 +155,19 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             return perPriority[javax.jms.Message.DEFAULT_PRIORITY];
         }
 
+        @Override
         public String toString() {
             return Arrays.deepToString(perPriority);
         }
 
+        @Override
         public Iterator<LastRecoveredEntry> iterator() {
             return new PriorityIterator();
         }
 
         class PriorityIterator implements Iterator<LastRecoveredEntry> {
             int current = 9;
+            @Override
             public boolean hasNext() {
                 for (int i=current; i>=0; i--) {
                     if (perPriority[i].hasMessages()) {
@@ -169,10 +178,12 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                 return false;
             }
 
+            @Override
             public LastRecoveredEntry next() {
                 return perPriority[current];
             }
 
+            @Override
             public void remove() {
                 throw new RuntimeException("not implemented");
             }
@@ -188,6 +199,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             this.priority = priority;
         }
 
+        @Override
         public String toString() {
             return priority + "-" + stored + ":" + recovered;
         }
@@ -213,6 +225,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             this.maxMessages = maxMessages;
         }
 
+        @Override
         public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
             if (delegate.hasSpace() && recoveredCount < maxMessages) {
                 Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
@@ -226,6 +239,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             return false;
         }
 
+        @Override
         public boolean recoverMessageReference(String reference) throws Exception {
             return delegate.recoverMessageReference(new MessageId(reference));
         }
@@ -244,6 +258,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
+    @Override
     public synchronized void recoverNextMessages(final String clientId, final String subscriptionName, final int maxReturned, final MessageRecoveryListener listener)
             throws Exception {
         //Duration duration = new Duration("recoverNextMessages");
@@ -253,7 +268,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         if (!subscriberLastRecoveredMap.containsKey(key)) {
            subscriberLastRecoveredMap.put(key, new LastRecovered());
         }
-        final LastRecovered lastRecovered = subscriberLastRecoveredMap.get(key);        
+        final LastRecovered lastRecovered = subscriberLastRecoveredMap.get(key);
         LastRecoveredAwareListener recoveredAwareListener = new LastRecoveredAwareListener(listener, maxReturned);
         try {
             if (LOG.isTraceEnabled()) {
@@ -293,6 +308,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
+    @Override
     public void resetBatching(String clientId, String subscriptionName) {
         String key = getSubscriptionKey(clientId, subscriptionName);
         if (!pendingCompletion.contains(key))  {
@@ -316,6 +332,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         LOG.trace(this + ", completion for: " + getSubscriptionKey(clientId, subscriptionName));
     }
 
+    @Override
     protected void onAdd(Message message, long sequenceId, byte priority) {
         // update last recovered state
         for (LastRecovered last : subscriberLastRecoveredMap.values()) {
@@ -329,7 +346,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
-
+    @Override
     public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -347,6 +364,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
      * @see org.apache.activemq.store.TopicMessageStore#lookupSubscription(String,
      *      String)
      */
+    @Override
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -359,6 +377,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
+    @Override
     public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -372,6 +391,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
+    @Override
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -384,6 +404,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
+    @Override
     public int getMessageCount(String clientId, String subscriberName) throws IOException {
         //Duration duration = new Duration("getMessageCount");
         int result = 0;
@@ -403,10 +424,22 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         return result;
     }
 
+    @Override
+    public long getMessageSize(String clientId, String subscriberName) throws IOException {
+        return 0;
+    }
+
     protected String getSubscriptionKey(String clientId, String subscriberName) {
         String result = clientId + ":";
         result += subscriberName != null ? subscriberName : "NOT_SET";
         return result;
+    }
+
+    private final MessageStoreSubscriptionStatistics stats = new MessageStoreSubscriptionStatistics(false);
+
+    @Override
+    public MessageStoreSubscriptionStatistics getMessageStoreSubStatistics() {
+        return stats;
     }
 
 }

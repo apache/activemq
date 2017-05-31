@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -238,7 +238,7 @@ public class CompressionOverNetworkTest {
                 if (bridges.length > 0) {
                     LOG.info(brokerService + " bridges "  + Arrays.toString(bridges));
                     DemandForwardingBridgeSupport demandForwardingBridgeSupport = (DemandForwardingBridgeSupport) bridges[0];
-                    ConcurrentHashMap<ConsumerId, DemandSubscription> forwardingBridges = demandForwardingBridgeSupport.getLocalSubscriptionMap();
+                    ConcurrentMap<ConsumerId, DemandSubscription> forwardingBridges = demandForwardingBridgeSupport.getLocalSubscriptionMap();
                     LOG.info(brokerService + " bridge "  + demandForwardingBridgeSupport + ", localSubs: " + forwardingBridges);
                     if (!forwardingBridges.isEmpty()) {
                         for (DemandSubscription demandSubscription : forwardingBridges.values()) {
@@ -265,10 +265,15 @@ public class CompressionOverNetworkTest {
     }
 
     protected void doTearDown() throws Exception {
-        localConnection.close();
-        remoteConnection.close();
-        localBroker.stop();
-        remoteBroker.stop();
+        try {
+            localConnection.close();
+            remoteConnection.close();
+        } catch (Exception ignored) {}
+        try {
+            localBroker.stop();
+        } finally {
+            remoteBroker.stop();
+        }
     }
 
     protected void doSetUp(boolean deleteAllMessages) throws Exception {

@@ -20,6 +20,8 @@ package org.apache.activemq.security;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -37,14 +39,20 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.transport.stomp.StompConnection;
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.log4j.Appender;
+import org.apache.log4j.spi.LoggingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SecurityJMXTest extends TestCase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleAuthenticationPluginTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityJMXTest.class);
     private BrokerService broker;
 
     @Override
@@ -57,6 +65,45 @@ public class SecurityJMXTest extends TestCase {
     public void tearDown() throws Exception {
         broker.stop();
     }
+
+    public void testDeniedViaStompNoStackTrace() throws Exception {
+        final AtomicBoolean gotExpected = new AtomicBoolean(false);
+        final AtomicReference<Object> stackTrace = new AtomicReference<Object>();
+
+        final Appender appender = new DefaultTestAppender() {
+            public void doAppend(LoggingEvent event) {
+                String message =  event.getMessage().toString();
+                if (message.contains("Async error occurred")) {
+                    gotExpected.set(true);
+                    stackTrace.set(event.getThrowableInformation());
+                }
+            }
+        };
+
+        final org.apache.log4j.Logger toVerify = org.apache.log4j.Logger.getLogger(TransportConnection.class.getName() + ".Service");
+
+        toVerify.addAppender(appender);
+
+        try {
+
+            TransportConnector stomp = broker.addConnector("stomp://localhost:0");
+            broker.startTransportConnector(stomp);
+            StompConnection stompConnection = new StompConnection();
+            stompConnection.open(stomp.getConnectUri().getHost(), stomp.getConnectUri().getPort());
+            stompConnection.connect("guest", "password");
+            // async sub
+            stompConnection.subscribe("/queue/USERS.Q");
+            stompConnection.receive(1000);
+            stompConnection.close();
+
+        } finally {
+            toVerify.removeAppender(appender);
+        }
+
+        assertTrue("Got async error:", gotExpected.get());
+        assertNull("No stack trace", stackTrace.get());
+    }
+
 
     public void testMoveMessages() throws Exception {
         JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1199/jmxrmi");

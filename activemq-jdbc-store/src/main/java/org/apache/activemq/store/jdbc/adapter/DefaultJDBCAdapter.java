@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
+import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
+import static javax.xml.bind.DatatypeConverter.printBase64Binary;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -45,9 +48,6 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
-import static javax.xml.bind.DatatypeConverter.printBase64Binary;
-
 /**
  * Implements all the default JDBC operations that are used by the JDBCPersistenceAdapter. <p/> sub-classing is
  * encouraged to override the default implementation of methods to account for differences in JDBC Driver
@@ -56,20 +56,20 @@ import static javax.xml.bind.DatatypeConverter.printBase64Binary;
  * <ul>
  * <li></li>
  * </ul>
- * 
+ *
  * @org.apache.xbean.XBean element="defaultJDBCAdapter"
- * 
- * 
+ *
+ *
  */
 public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultJDBCAdapter.class);
     public static final int MAX_ROWS = org.apache.activemq.ActiveMQPrefetchPolicy.MAX_PREFETCH_SIZE;
+    private static final String FAILURE_MESSAGE = "Failure was: %s Message: %s SQLState: %s Vendor code: %s";
     protected Statements statements;
     private boolean batchStatements = true;
     //This is deprecated and should be removed in a future release
     protected boolean batchStatments = true;
     protected boolean prioritizedMessages;
-    protected ReadWriteLock cleanupExclusiveLock = new ReentrantReadWriteLock();
     protected int maxRows = MAX_ROWS;
 
     protected void setBinaryData(PreparedStatement s, int index, byte data[]) throws SQLException {
@@ -80,59 +80,69 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return rs.getBytes(index);
     }
 
-    public void doCreateTables(TransactionContext c) throws SQLException, IOException {
-        Statement s = null;
-        cleanupExclusiveLock.writeLock().lock();
-        try {
-            // Check to see if the table already exists. If it does, then don't
-            // log warnings during startup.
-            // Need to run the scripts anyways since they may contain ALTER
-            // statements that upgrade a previous version
-            // of the table
-            boolean alreadyExists = false;
-            ResultSet rs = null;
-            try {
-                rs = c.getConnection().getMetaData().getTables(null, null, this.statements.getFullMessageTableName(),
-                        new String[] { "TABLE" });
-                alreadyExists = rs.next();
-            } catch (Throwable ignore) {
-            } finally {
-                close(rs);
-            }
-            s = c.getConnection().createStatement();
-            String[] createStatments = this.statements.getCreateSchemaStatements();
-            for (int i = 0; i < createStatments.length; i++) {
-                // This will fail usually since the tables will be
-                // created already.
-                try {
-                    LOG.debug("Executing SQL: " + createStatments[i]);
-                    s.execute(createStatments[i]);
-                } catch (SQLException e) {
-                    if (alreadyExists) {
-                        LOG.debug("Could not create JDBC tables; The message table already existed." + " Failure was: "
-                                + createStatments[i] + " Message: " + e.getMessage() + " SQLState: " + e.getSQLState()
-                                + " Vendor code: " + e.getErrorCode());
-                    } else {
-                        LOG.warn("Could not create JDBC tables; they could already exist." + " Failure was: "
-                                + createStatments[i] + " Message: " + e.getMessage() + " SQLState: " + e.getSQLState()
-                                + " Vendor code: " + e.getErrorCode());
-                        JDBCPersistenceAdapter.log("Failure details: ", e);
-                    }
-                }
-            }
-            c.getConnection().commit();
-        } finally {
-            cleanupExclusiveLock.writeLock().unlock();
-            try {
-                s.close();
-            } catch (Throwable e) {
-            }
+    @Override
+    public void doCreateTables(TransactionContext transactionContext) throws SQLException, IOException {
+        // Check to see if the table already exists. If it does, then don't log warnings during startup.
+        // Need to run the scripts anyways since they may contain ALTER statements that upgrade a previous version of the table
+        boolean messageTableAlreadyExists = messageTableAlreadyExists(transactionContext);
+
+        for (String createStatement : this.statements.getCreateSchemaStatements()) {
+            // This will fail usually since the tables will be
+            // created already.
+            executeStatement(transactionContext, createStatement, messageTableAlreadyExists);
         }
     }
 
+    private boolean messageTableAlreadyExists(TransactionContext transactionContext) {
+        boolean alreadyExists = false;
+        ResultSet rs = null;
+        try {
+            rs = transactionContext.getConnection().getMetaData().getTables(null, null, this.statements.getFullMessageTableName(), new String[] { "TABLE" });
+            alreadyExists = rs.next();
+        } catch (Throwable ignore) {
+        } finally {
+            close(rs);
+        }
+        return alreadyExists;
+    }
+
+    private void executeStatement(TransactionContext transactionContext, String createStatement, boolean ignoreStatementExecutionFailure) throws IOException {
+        Statement statement = null;
+        try {
+            LOG.debug("Executing SQL: " + createStatement);
+            statement = transactionContext.getConnection().createStatement();
+            statement.execute(createStatement);
+
+            commitIfAutoCommitIsDisabled(transactionContext);
+        } catch (SQLException e) {
+            if (ignoreStatementExecutionFailure) {
+                LOG.debug("Could not create JDBC tables; The message table already existed. " + String.format(FAILURE_MESSAGE, createStatement, e.getMessage(), e.getSQLState(), e.getErrorCode()));
+            } else {
+                LOG.warn("Could not create JDBC tables; they could already exist. " + String.format(FAILURE_MESSAGE, createStatement, e.getMessage(), e.getSQLState(), e.getErrorCode()));
+                JDBCPersistenceAdapter.log("Failure details: ", e);
+            }
+        } finally {
+            closeStatement(statement);
+        }
+    }
+
+    private void closeStatement(Statement statement) {
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException ignored) {}
+    }
+
+    private void commitIfAutoCommitIsDisabled(TransactionContext c) throws SQLException, IOException {
+        if (!c.getConnection().getAutoCommit()) {
+            c.getConnection().commit();
+        }
+    }
+
+    @Override
     public void doDropTables(TransactionContext c) throws SQLException, IOException {
         Statement s = null;
-        cleanupExclusiveLock.writeLock().lock();
         try {
             s = c.getConnection().createStatement();
             String[] dropStatments = this.statements.getDropSchemaStatements();
@@ -149,9 +159,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     JDBCPersistenceAdapter.log("Failure details: ", e);
                 }
             }
-            c.getConnection().commit();
+            commitIfAutoCommitIsDisabled(c);
         } finally {
-            cleanupExclusiveLock.writeLock().unlock();
             try {
                 s.close();
             } catch (Throwable e) {
@@ -159,10 +168,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public long doGetLastMessageStoreSequenceId(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindLastSequenceIdInMsgsStatement());
             rs = s.executeQuery();
@@ -181,16 +190,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             long seq = Math.max(seq1, seq2);
             return seq;
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
-    
+
+    @Override
     public byte[] doGetMessageById(TransactionContext c, long storeSequenceId) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(
                     this.statements.getFindMessageByIdStatement());
@@ -201,7 +209,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return getBinaryData(rs, 1);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -211,10 +218,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     /**
      * A non null xid indicated the op is part of 2pc prepare, so ops are flagged pending outcome
      */
+    @Override
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
                              long expiration, byte priority, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(this.statements.getAddMessageStatement());
@@ -243,7 +250,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new SQLException("Failed add a message");
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 if (s != null) {
                     s.close();
@@ -255,7 +261,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doUpdateMessage(TransactionContext c, ActiveMQDestination destination, MessageId id, byte[] data) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getUpdateMessageStatement());
             setBinaryData(s, 1, data);
@@ -266,16 +271,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new IOException("Could not update message: " + id + " in " + destination);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
 
 
+    @Override
     public void doAddMessageReference(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination,
             long expirationTime, String messageRef) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(this.statements.getAddMessageStatement());
@@ -295,17 +299,16 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new SQLException("Failed add a message");
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 s.close();
             }
         }
     }
 
+    @Override
     public long[] getStoreSequenceId(TransactionContext c, ActiveMQDestination destination, MessageId messageID) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindMessageSequenceIdStatement());
             s.setString(1, messageID.getProducerId().toString());
@@ -317,16 +320,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return new long[]{rs.getLong(1), rs.getLong(2)};
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
+    @Override
     public byte[] doGetMessage(TransactionContext c, MessageId id) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindMessageStatement());
             s.setString(1, id.getProducerId().toString());
@@ -337,16 +339,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return getBinaryData(rs, 1);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
+    @Override
     public String doGetMessageReference(TransactionContext c, long seq) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindMessageStatement());
             s.setLong(1, seq);
@@ -356,7 +357,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return rs.getString(1);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -365,9 +365,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     /**
      * A non null xid indicated the op is part of 2pc prepare, so ops are flagged pending outcome
      */
+    @Override
     public void doRemoveMessage(TransactionContext c, long seq, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getRemovedMessageStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(xid == null ?
@@ -388,21 +388,20 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
-                throw new SQLException("Failed to remove message");
+                throw new SQLException("Failed to remove message seq: " + seq);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements && s != null) {
                 s.close();
             }
         }
     }
 
+    @Override
     public void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener)
             throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllMessagesStatement());
             s.setString(1, destination.getQualifiedName());
@@ -421,17 +420,16 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
-    public void doMessageIdScan(TransactionContext c, int limit, 
+    @Override
+    public void doMessageIdScan(TransactionContext c, int limit,
             JDBCMessageIdScanListener listener) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIdsStatement());
             s.setMaxRows(limit);
@@ -448,16 +446,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 listener.messageId(id);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
-    
+
+    @Override
     public void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
                                          String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(xid == null ?
@@ -484,7 +481,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new SQLException("Failed update last ack with priority: " + priority + ", for sub: " + subscriptionName);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 close(s);
             }
@@ -492,10 +488,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
 
+    @Override
     public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
                              String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(xid == null ?
@@ -523,10 +519,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                             + seq + ", for sub: " + subscriptionName);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatements) {
                 close(s);
-            }            
+            }
         }
     }
 
@@ -543,7 +538,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doClearLastAck(TransactionContext c, ActiveMQDestination destination, byte priority, String clientId, String subName) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getClearDurableLastAckInTxStatement());
             s.setString(1, destination.getQualifiedName());
@@ -554,18 +548,17 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new IOException("Could not remove prepared transaction state from message ack for: " + clientId + ":" + subName);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
 
+    @Override
     public void doRecoverSubscription(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, JDBCMessageRecoveryListener listener) throws Exception {
         // dumpTables(c,
         // destination.getQualifiedName(),clientId,subscriptionName);
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllDurableSubMessagesStatement());
             s.setString(1, destination.getQualifiedName());
@@ -586,18 +579,17 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
+    @Override
     public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, long seq, long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
-        
+
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
@@ -621,18 +613,17 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
+    @Override
     public void doRecoverNextMessagesWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, long seq, long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
 
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
@@ -657,23 +648,22 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
+    @Override
     public int doGetDurableSubscriberMessageCount(TransactionContext c, ActiveMQDestination destination,
             String clientId, String subscriptionName, boolean isPrioritizedMessages) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         int result = 0;
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (isPrioritizedMessages) {
                 s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatementWithPriority());
             } else {
-                s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatement());    
+                s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatement());
             }
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
@@ -683,7 +673,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 result = rs.getInt(1);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -691,18 +680,18 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     /**
-     * @param c 
-     * @param info 
-     * @param retroactive 
-     * @throws SQLException 
-     * @throws IOException 
+     * @param c
+     * @param info
+     * @param retroactive
+     * @throws SQLException
+     * @throws IOException
      */
+    @Override
     public void doSetSubscriberEntry(TransactionContext c, SubscriptionInfo info, boolean retroactive, boolean isPrioritizedMessages)
             throws SQLException, IOException {
         // dumpTables(c, destination.getQualifiedName(), clientId,
         // subscriptionName);
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             long lastMessageId = -1;
             if (!retroactive) {
@@ -739,16 +728,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
 
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
 
+    @Override
     public SubscriptionInfo doGetSubscriberEntry(TransactionContext c, ActiveMQDestination destination,
             String clientId, String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubStatement());
             s.setString(1, destination.getQualifiedName());
@@ -767,17 +755,16 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     ActiveMQDestination.QUEUE_TYPE));
             return subscription;
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
+    @Override
     public SubscriptionInfo[] doGetAllSubscriptions(TransactionContext c, ActiveMQDestination destination)
             throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllDurableSubsStatement());
             s.setString(1, destination.getQualifiedName());
@@ -795,16 +782,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return rc.toArray(new SubscriptionInfo[rc.size()]);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
+    @Override
     public void doRemoveAllMessages(TransactionContext c, ActiveMQDestination destinationName) throws SQLException,
             IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getRemoveAllMessagesStatement());
             s.setString(1, destinationName.getQualifiedName());
@@ -814,15 +800,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(1, destinationName.getQualifiedName());
             s.executeUpdate();
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
 
+    @Override
     public void doDeleteSubscription(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getDeleteSubscriptionStatement());
             s.setString(1, destination.getQualifiedName());
@@ -830,35 +815,33 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, subscriptionName);
             s.executeUpdate();
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
 
     char priorityIterator = 0; // unsigned
+    @Override
     public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.writeLock().lock();
         try {
             LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatementWithPriority());
-            s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
+            s = c.getExclusiveConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
             int priority = priorityIterator++%10;
             s.setInt(1, priority);
             s.setInt(2, priority);
             int i = s.executeUpdate();
             LOG.debug("Deleted " + i + " old message(s) at priority: " + priority);
         } finally {
-            cleanupExclusiveLock.writeLock().unlock();
             close(s);
         }
     }
 
+    @Override
     public long doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination,
             String clientId, String subscriberName) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         long result = -1;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getLastAckedDurableSubscriberMessageStatement());
             s.setString(1, destination.getQualifiedName());
@@ -872,7 +855,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -893,11 +875,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
     public Set<ActiveMQDestination> doGetDestinations(TransactionContext c) throws SQLException, IOException {
         HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllDestinationsStatement());
             rs = s.executeQuery();
@@ -905,7 +887,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 rc.add(ActiveMQDestination.createDestination(rs.getString(1), ActiveMQDestination.QUEUE_TYPE));
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
@@ -927,7 +908,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         this.batchStatements = batchStatements;
         // The next lines are deprecated and should be removed in a future release
         // and is here in case someone created their own
-        this.batchStatments = batchStatements;
+       // this.batchStatments = batchStatements;
     }
 
     // Note - remove batchStatment in future distributions.  Here for backward compatibility
@@ -949,6 +930,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         this.batchStatments = batchStatments;
     }
 
+    @Override
     public void setUseExternalMessageReferences(boolean useExternalMessageReferences) {
         this.statements.setUseExternalMessageReferences(useExternalMessageReferences);
     }
@@ -960,10 +942,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return this.statements;
     }
 
+    @Override
     public void setStatements(Statements statements) {
         this.statements = statements;
     }
 
+    @Override
     public int getMaxRows() {
         return maxRows;
     }
@@ -971,6 +955,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     /**
      * the max value for statement maxRows, used to limit jdbc queries
      */
+    @Override
     public void setMaxRows(int maxRows) {
         this.maxRows = maxRows;
     }
@@ -978,7 +963,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doRecordDestination(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getCreateDurableSubStatement());
             s.setString(1, destination.getQualifiedName());
@@ -993,7 +977,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new IOException("Could not create ack record for destination: " + destination);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
@@ -1002,7 +985,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doRecoverPreparedOps(TransactionContext c, JdbcMemoryTransactionStore jdbcMemoryTransactionStore) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindOpsPendingOutcomeStatement());
             rs = s.executeQuery();
@@ -1034,34 +1016,32 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
         } finally {
             close(rs);
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
 
     @Override
-    public void doCommitAddOp(TransactionContext c, long sequence) throws SQLException, IOException {
+    public void doCommitAddOp(TransactionContext c, long preparedSequence, long sequence) throws SQLException, IOException {
         PreparedStatement s = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getClearXidFlagStatement());
             s.setLong(1, sequence);
+            s.setLong(2, preparedSequence);
             if (s.executeUpdate() != 1) {
                 throw new IOException("Could not remove prepared transaction state from message add for sequenceId: " + sequence);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
 
 
+    @Override
     public int doGetMessageCount(TransactionContext c, ActiveMQDestination destination) throws SQLException,
             IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         int result = 0;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getDestinationMessageCountStatement());
             s.setString(1, destination.getQualifiedName());
@@ -1070,31 +1050,33 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 result = rs.getInt(1);
             }
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
         return result;
     }
 
-    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long maxSeq, long lastRecoveredSeq,
-            long priority, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
+    @Override
+    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long[] lastRecoveredEntries,
+            long maxSeq, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             if (isPrioritizedMessages) {
-                s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesByPriorityStatement());
+                s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesByPriorityStatement()));
             } else {
-                s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
+                s = c.getConnection().prepareStatement(limitQuery(this.statements.getFindNextMessagesStatement()));
             }
-            s.setMaxRows(Math.min(maxReturned * 2, maxRows));
+            s.setMaxRows(Math.min(maxReturned, maxRows));
             s.setString(1, destination.getQualifiedName());
-            s.setLong(2, lastRecoveredSeq);
-            s.setLong(3, maxSeq);
+            s.setLong(2, maxSeq);
+            int paramId = 3;
             if (isPrioritizedMessages) {
-                s.setLong(4, priority);
-                s.setLong(5, priority);
+                for (int i=9;i>=0;i--) {
+                    s.setLong(paramId++, lastRecoveredEntries[i]);
+                }
+            } else {
+                s.setLong(paramId, lastRecoveredEntries[0]);
             }
             rs = s.executeQuery();
             int count = 0;
@@ -1118,19 +1100,18 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.warn("Exception recovering next messages", e);
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
+    @Override
     public long doGetLastProducerSequenceId(TransactionContext c, ProducerId id)
             throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getLastProducerSequenceIdStatement());
             s.setString(1, id.toString());
@@ -1141,27 +1122,30 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             return seq;
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }
     }
 
     public static void dumpTables(Connection c, String destinationName, String clientId, String
-      subscriptionName) throws SQLException { 
-        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out); 
-        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out); 
-        PreparedStatement s = c.prepareStatement("SELECT M.ID, D.LAST_ACKED_ID FROM " 
-                + "ACTIVEMQ_MSGS M, " +"ACTIVEMQ_ACKS D " 
-                + "WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?" 
-                + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID" 
+      subscriptionName) throws SQLException {
+        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out);
+        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
+        PreparedStatement s = c.prepareStatement("SELECT M.ID, D.LAST_ACKED_ID FROM "
+                + "ACTIVEMQ_MSGS M, " +"ACTIVEMQ_ACKS D "
+                + "WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
                 + " ORDER BY M.ID");
       s.setString(1,destinationName); s.setString(2,clientId); s.setString(3,subscriptionName);
       printQuery(s,System.out); }
 
     public static void dumpTables(java.sql.Connection c) throws SQLException {
-        printQuery(c, "Select * from ACTIVEMQ_MSGS ORDER BY ID", System.out);
-        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
+        printQuery(c, "SELECT COUNT(*) from ACTIVEMQ_MSGS", System.out);
+
+        //printQuery(c, "SELECT COUNT(*) from ACTIVEMQ_ACKS", System.out);
+
+        //printQuery(c, "Select * from ACTIVEMQ_MSGS ORDER BY ID", System.out);
+        //printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
     }
 
     public static void printQuery(java.sql.Connection c, String query, java.io.PrintStream out)
@@ -1202,4 +1186,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
+    public String limitQuery(String query) {
+        return query;
+    }
 }

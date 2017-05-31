@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-karaf-itest</artifactId>
@@ -40,15 +40,25 @@
       <artifactId>activemq-karaf</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- xbean gets lost in the pax exam container
+       these are here for versionFromProject manual install for broker feature pax-war dependency-->
     <dependency>
-      <groupId>org.ops4j.pax.logging</groupId>
-      <artifactId>pax-logging-api</artifactId>
-      <version>1.6.2</version>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-finder</artifactId>
+      <version>${xbean-version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.ops4j.pax.logging</groupId>
-      <artifactId>pax-logging-service</artifactId>
-      <version>1.6.2</version>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-asm-util</artifactId>
+      <version>${xbean-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-bundleutils</artifactId>
+      <version>${xbean-version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -57,61 +67,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>3.1</version>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-junit4</artifactId>
-      <version>${pax-exam-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.runner</groupId>
-      <artifactId>pax-runner-no-jcl</artifactId>
-      <version>${pax-runner-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.swissbox</groupId>
-      <artifactId>pax-swissbox-tinybundles</artifactId>
-      <version>${pax-tiny-bundle-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-container-remote</artifactId>
-      <version>${pax-exam-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-container-rbc</artifactId>
-      <version>${pax-exam-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-container-rbc-client</artifactId>
-      <version>${pax-exam-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-invoker-junit</artifactId>
-      <version>${pax-exam-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-inject</artifactId>
-      <version>${pax-exam-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-extender-service</artifactId>
       <version>${pax-exam-version}</version>
       <scope>test</scope>
     </dependency>
@@ -127,42 +88,27 @@
       <version>${karaf-version}</version>
       <type>tar.gz</type>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.karaf.shell</groupId>
-          <artifactId>org.apache.karaf.shell.dev</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse</groupId>
-          <artifactId>osgi</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.xerces</groupId>
-          <artifactId>xercesImpl</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.configadmin</artifactId>
-      <version>${felix-configadmin-version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>${org.osgi.core-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.qpid</groupId>
-      <artifactId>proton-jms</artifactId>
+      <artifactId>proton-j</artifactId>
       <version>${qpid-proton-version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.qpid</groupId>
-      <artifactId>qpid-amqp-1-0-client-jms</artifactId>
+      <artifactId>qpid-jms-client</artifactId>
       <version>${qpid-jms-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>${netty-all-version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -174,7 +120,7 @@
       <classifier>features</classifier>
       <scope>test</scope>
     </dependency>
-
+    
     <!-- test and logging -->
     <dependency>
       <groupId>junit</groupId>
@@ -220,7 +166,7 @@
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <redirectTestOutputToFile>false</redirectTestOutputToFile>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <argLine>-Xmx256m</argLine>
           <excludes>
           </excludes>
@@ -232,39 +178,39 @@
       </plugin>
     </plugins>
     <pluginManagement>
-    	<plugins>
-    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-    		<plugin>
-    			<groupId>org.eclipse.m2e</groupId>
-    			<artifactId>lifecycle-mapping</artifactId>
-    			<version>1.0.0</version>
-    			<configuration>
-    				<lifecycleMappingMetadata>
-    					<pluginExecutions>
-    						<pluginExecution>
-    							<pluginExecutionFilter>
-    								<groupId>
-    									org.apache.servicemix.tooling
-    								</groupId>
-    								<artifactId>
-    									depends-maven-plugin
-    								</artifactId>
-    								<versionRange>[1.2,)</versionRange>
-    								<goals>
-    									<goal>
-    										generate-depends-file
-    									</goal>
-    								</goals>
-    							</pluginExecutionFilter>
-    							<action>
-    								<ignore></ignore>
-    							</action>
-    						</pluginExecution>
-    					</pluginExecutions>
-    				</lifecycleMappingMetadata>
-    			</configuration>
-    		</plugin>
-    	</plugins>
+        <plugins>
+            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+            <plugin>
+                <groupId>org.eclipse.m2e</groupId>
+                <artifactId>lifecycle-mapping</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <lifecycleMappingMetadata>
+                        <pluginExecutions>
+                            <pluginExecution>
+                                <pluginExecutionFilter>
+                                    <groupId>
+                                        org.apache.servicemix.tooling
+                                    </groupId>
+                                    <artifactId>
+                                        depends-maven-plugin
+                                    </artifactId>
+                                    <versionRange>[1.2,)</versionRange>
+                                    <goals>
+                                        <goal>
+                                            generate-depends-file
+                                        </goal>
+                                    </goals>
+                                </pluginExecutionFilter>
+                                <action>
+                                    <ignore />
+                                </action>
+                            </pluginExecution>
+                        </pluginExecutions>
+                    </lifecycleMappingMetadata>
+                </configuration>
+            </plugin>
+        </plugins>
     </pluginManagement>
   </build>
 
@@ -288,14 +234,53 @@
                   on this information to PAX mvn url
               -->
               <argLine>-Dorg.ops4j.pax.url.mvn.localRepository=${maven.repo.local}</argLine>
-              <excludes>
-                <exclude>**/*Test.*</exclude>
-              </excludes>
               <systemPropertyVariables>
                 <activemqVersion>${project.version}</activemqVersion>
                 <karafVersion>${karaf-version}</karafVersion>
                 <felixFrameworkVersion>${felix-framework-version}</felixFrameworkVersion>
               </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/ActiveMQBrokerNdCamelFeatureTest.*</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+	<profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**</exclude>
+              </excludes>
             </configuration>
           </plugin>
         </plugins>

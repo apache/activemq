@@ -27,13 +27,13 @@ import java.util.Map;
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 
-import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.nio.NIOTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -43,7 +43,7 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class AmqpNioTransportFactory extends NIOTransportFactory implements BrokerServiceAware {
 
-    private BrokerContext brokerContext = null;
+    private BrokerService brokerService = null;
 
     @Override
     protected String getDefaultWireFormatType() {
@@ -65,6 +65,12 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
         return new AmqpNioTransport(wf, socketFactory, location, localLocation);
     }
 
+    @Override
+    public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+            InitBuffer initBuffer) throws IOException {
+        return new AmqpNioTransport(wireFormat, socket, initBuffer);
+    }
+
     @SuppressWarnings("rawtypes")
     @Override
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
@@ -81,19 +87,27 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
     @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new AmqpTransportFilter(transport, format, brokerContext);
-        IntrospectionSupport.setProperties(transport, options);
-        return super.compositeConfigure(transport, format, options);
+        AmqpTransportFilter amqpTransport = new AmqpTransportFilter(transport, format, brokerService);
+
+        Map<String, Object> wireFormatOptions = IntrospectionSupport.extractProperties(options, "wireFormat.");
+
+        IntrospectionSupport.setProperties(amqpTransport, options);
+        IntrospectionSupport.setProperties(amqpTransport.getWireFormat(), wireFormatOptions);
+
+        return super.compositeConfigure(amqpTransport, format, options);
+    }
+
+    @Override
+    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+        AmqpInactivityMonitor monitor = new AmqpInactivityMonitor(transport, format);
+        AmqpTransportFilter filter = transport.narrow(AmqpTransportFilter.class);
+        filter.setInactivityMonitor(monitor);
+        return monitor;
     }
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
-        this.brokerContext = brokerService.getBrokerContext();
-    }
-
-    @Override
-    protected boolean isUseInactivityMonitor(Transport transport) {
-        return false;
+        this.brokerService = brokerService;
     }
 }
 

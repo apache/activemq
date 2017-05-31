@@ -32,9 +32,11 @@ import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.After;
 import org.junit.Test;
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VMTransportWaitForTest {
+    static final Logger LOG = LoggerFactory.getLogger(VMTransportWaitForTest.class);
 
     private static final int WAIT_TIME = 20000;
     private static final int SHORT_WAIT_TIME = 5000;
@@ -107,7 +109,7 @@ public class VMTransportWaitForTest {
 
         long endTime = System.currentTimeMillis();
 
-        Log.info("Total wait time was: {}", endTime - startTime);
+        LOG.info("Total wait time was: {}", endTime - startTime);
         assertTrue(endTime - startTime >= SHORT_WAIT_TIME - 100);
     }
 
@@ -129,7 +131,7 @@ public class VMTransportWaitForTest {
 
         long endTime = System.currentTimeMillis();
 
-        Log.info("Total wait time was: {}", endTime - startTime);
+        LOG.info("Total wait time was: {}", endTime - startTime);
         assertTrue(endTime - startTime >= SHORT_WAIT_TIME - 100);
     }
 }

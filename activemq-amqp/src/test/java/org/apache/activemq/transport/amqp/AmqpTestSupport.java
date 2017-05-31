@@ -17,15 +17,16 @@
 package org.apache.activemq.transport.amqp;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.URI;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -35,16 +36,23 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.net.ServerSocketFactory;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.spring.SpringSslContext;
+import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.transport.amqp.protocol.AmqpConnection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,61 +62,78 @@ import org.slf4j.LoggerFactory;
 
 public class AmqpTestSupport {
 
+    public static final String MESSAGE_NUMBER = "MessageNumber";
+    public static final String KAHADB_DIRECTORY = "target/activemq-data/";
+
     @Rule public TestName name = new TestName();
 
     protected static final Logger LOG = LoggerFactory.getLogger(AmqpTestSupport.class);
-    protected BrokerService brokerService;
-    protected Vector<Throwable> exceptions = new Vector<Throwable>();
-    protected int numberOfMessages;
-    protected int port;
-    protected int sslPort;
-    protected int nioPort;
-    protected int nioPlusSslPort;
-    protected int openwirePort;
 
-    public static void main(String[] args) throws Exception {
-        final AmqpTestSupport s = new AmqpTestSupport();
-        s.sslPort = 5671;
-        s.port = 5672;
-        s.startBroker();
-        while (true) {
-            Thread.sleep(100000);
-        }
-    }
+    protected ExecutorService testService = Executors.newSingleThreadExecutor();
+
+    protected BrokerService brokerService;
+    protected Vector<Throwable> exceptions = new Vector<>();
+    protected int numberOfMessages;
+
+    protected URI amqpURI;
+    protected int amqpPort;
+    protected URI amqpSslURI;
+    protected int amqpSslPort;
+    protected URI amqpNioURI;
+    protected int amqpNioPort;
+    protected URI amqpNioPlusSslURI;
+    protected int amqpNioPlusSslPort;
+
+    protected URI amqpWsURI;
+    protected int amqpWsPort;
+    protected URI amqpWssURI;
+    protected int amqpWssPort;
+
+    protected URI autoURI;
+    protected int autoPort;
+    protected URI autoSslURI;
+    protected int autoSslPort;
+    protected URI autoNioURI;
+    protected int autoNioPort;
+    protected URI autoNioPlusSslURI;
+    protected int autoNioPlusSslPort;
+
+    protected URI openwireURI;
+    protected int openwirePort;
 
     @Before
     public void setUp() throws Exception {
+        LOG.info("========== start " + getTestName() + " ==========");
         exceptions.clear();
-        if (killHungThreads("setUp")) {
-            LOG.warn("HUNG THREADS in setUp");
-        }
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = executor.submit(new SetUpTask());
-        try {
-            LOG.debug("SetUpTask started.");
-            future.get(60, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw new Exception("startBroker timed out");
-        }
-        executor.shutdownNow();
+        startBroker();
 
         this.numberOfMessages = 2000;
     }
 
     protected void createBroker(boolean deleteAllMessages) throws Exception {
         brokerService = new BrokerService();
-        brokerService.setPersistent(false);
-        brokerService.setAdvisorySupport(false);
+
+        brokerService.setPersistent(isPersistent());
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
-        brokerService.setUseJmx(true);
+        if (isPersistent()) {
+            KahaDBStore kaha = new KahaDBStore();
+            kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
+            brokerService.setPersistenceAdapter(kaha);
+        }
+        brokerService.setSchedulerSupport(isSchedulerEnabled());
+        brokerService.setAdvisorySupport(false);
+        brokerService.setUseJmx(isUseJmx());
+        brokerService.getManagementContext().setCreateConnector(false);
+
+        performAdditionalConfiguration(brokerService);
 
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
         SSLContext.setDefault(ctx);
 
         // Setup SSL context...
-        final File classesDir = new File(AmqpProtocolConverter.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+        final File classesDir = new File(AmqpConnection.class.getProtectionDomain().getCodeSource().getLocation().getFile());
         File keystore = new File(classesDir, "../../src/test/resources/keystore");
         final SpringSslContext sslContext = new SpringSslContext();
         sslContext.setKeyStore(keystore.getCanonicalPath());
@@ -118,42 +143,125 @@ public class AmqpTestSupport {
         sslContext.afterPropertiesSet();
         brokerService.setSslContext(sslContext);
 
-        addAMQPConnector();
+        System.setProperty("javax.net.ssl.trustStore", keystore.getCanonicalPath());
+        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+        System.setProperty("javax.net.ssl.trustStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStore", keystore.getCanonicalPath());
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");
+
+        ArrayList<BrokerPlugin> plugins = new ArrayList<>();
+
+        addAdditionalPlugins(plugins);
+
+        if (!plugins.isEmpty()) {
+            BrokerPlugin[] array = new BrokerPlugin[plugins.size()];
+            brokerService.setPlugins(plugins.toArray(array));
+        }
+
+        addTranportConnectors();
     }
 
-    protected void addAMQPConnector() throws Exception {
+    protected void performAdditionalConfiguration(BrokerService brokerService) throws Exception {
+
+    }
+
+    protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
+
+    }
+
+    protected void addTranportConnectors() throws Exception {
         TransportConnector connector = null;
 
         if (isUseOpenWireConnector()) {
             connector = brokerService.addConnector(
                 "tcp://0.0.0.0:" + openwirePort);
             openwirePort = connector.getConnectUri().getPort();
+            openwireURI = connector.getPublishableConnectURI();
             LOG.debug("Using openwire port " + openwirePort);
         }
         if (isUseTcpConnector()) {
             connector = brokerService.addConnector(
-                "amqp://0.0.0.0:" + port + "?transport.transformer=" + getAmqpTransformer());
-            port = connector.getConnectUri().getPort();
-            LOG.debug("Using amqp port " + port);
+                "amqp://0.0.0.0:" + amqpPort + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
+            amqpPort = connector.getConnectUri().getPort();
+            amqpURI = connector.getPublishableConnectURI();
+            LOG.debug("Using amqp port " + amqpPort);
         }
         if (isUseSslConnector()) {
             connector = brokerService.addConnector(
-                "amqp+ssl://0.0.0.0:" + sslPort + "?transport.transformer=" + getAmqpTransformer());
-            sslPort = connector.getConnectUri().getPort();
-            LOG.debug("Using amqp+ssl port " + sslPort);
+                "amqp+ssl://0.0.0.0:" + amqpSslPort + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
+            amqpSslPort = connector.getConnectUri().getPort();
+            amqpSslURI = connector.getPublishableConnectURI();
+            LOG.debug("Using amqp+ssl port " + amqpSslPort);
         }
         if (isUseNioConnector()) {
             connector = brokerService.addConnector(
-                "amqp+nio://0.0.0.0:" + nioPort + "?transport.transformer=" + getAmqpTransformer());
-            nioPort = connector.getConnectUri().getPort();
-            LOG.debug("Using amqp+nio port " + nioPort);
+                "amqp+nio://0.0.0.0:" + amqpNioPort + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
+            amqpNioPort = connector.getConnectUri().getPort();
+            amqpNioURI = connector.getPublishableConnectURI();
+            LOG.debug("Using amqp+nio port " + amqpNioPort);
         }
         if (isUseNioPlusSslConnector()) {
             connector = brokerService.addConnector(
-                "amqp+nio+ssl://0.0.0.0:" + nioPlusSslPort + "?transport.transformer=" + getAmqpTransformer());
-            nioPlusSslPort = connector.getConnectUri().getPort();
-            LOG.debug("Using amqp+nio+ssl port " + nioPlusSslPort);
+                "amqp+nio+ssl://0.0.0.0:" + amqpNioPlusSslPort + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
+            amqpNioPlusSslPort = connector.getConnectUri().getPort();
+            amqpNioPlusSslURI = connector.getPublishableConnectURI();
+            LOG.debug("Using amqp+nio+ssl port " + amqpNioPlusSslPort);
         }
+        if (isUseAutoConnector()) {
+            connector = brokerService.addConnector(
+                "auto://0.0.0.0:" + autoPort + getAdditionalConfig());
+            autoPort = connector.getConnectUri().getPort();
+            autoURI = connector.getPublishableConnectURI();
+            LOG.debug("Using auto port " + autoPort);
+        }
+        if (isUseAutoSslConnector()) {
+            connector = brokerService.addConnector(
+                "auto+ssl://0.0.0.0:" + autoSslPort + getAdditionalConfig());
+            autoSslPort = connector.getConnectUri().getPort();
+            autoSslURI = connector.getPublishableConnectURI();
+            LOG.debug("Using auto+ssl port " + autoSslPort);
+        }
+        if (isUseAutoNioConnector()) {
+            connector = brokerService.addConnector(
+                "auto+nio://0.0.0.0:" + autoNioPort + getAdditionalConfig());
+            autoNioPort = connector.getConnectUri().getPort();
+            autoNioURI = connector.getPublishableConnectURI();
+            LOG.debug("Using auto+nio port " + autoNioPort);
+        }
+        if (isUseAutoNioPlusSslConnector()) {
+            connector = brokerService.addConnector(
+                "auto+nio+ssl://0.0.0.0:" + autoNioPlusSslPort + getAdditionalConfig());
+            autoNioPlusSslPort = connector.getConnectUri().getPort();
+            autoNioPlusSslURI = connector.getPublishableConnectURI();
+            LOG.debug("Using auto+nio+ssl port " + autoNioPlusSslPort);
+        }
+        if (isUseWsConnector()) {
+            connector = brokerService.addConnector(
+                "ws://0.0.0.0:" + getProxyPort(amqpWsPort) + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
+            amqpWsPort = connector.getConnectUri().getPort();
+            amqpWsURI = connector.getPublishableConnectURI();
+            LOG.debug("Using amqp+ws port " + amqpWsPort);
+        }
+        if (isUseWssConnector()) {
+            connector = brokerService.addConnector(
+                "wss://0.0.0.0:" + getProxyPort(amqpWssPort) + "?transport.tcpNoDelay=true&transport.transformer=" + getAmqpTransformer() + getAdditionalConfig());
+            amqpWssPort = connector.getConnectUri().getPort();
+            amqpWssURI = connector.getPublishableConnectURI();
+            LOG.debug("Using amqp+wss port " + amqpWssPort);
+        }
+    }
+
+    protected boolean isPersistent() {
+        return false;
+    }
+
+    protected boolean isUseJmx() {
+        return true;
+    }
+
+    protected boolean isSchedulerEnabled() {
+        return false;
     }
 
     protected boolean isUseOpenWireConnector() {
@@ -176,8 +284,36 @@ public class AmqpTestSupport {
         return false;
     }
 
+    protected boolean isUseAutoConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoNioConnector() {
+        return false;
+    }
+
+    protected boolean isUseAutoNioPlusSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseWsConnector() {
+        return false;
+    }
+
+    protected boolean isUseWssConnector() {
+        return false;
+    }
+
     protected String getAmqpTransformer() {
         return "jms";
+    }
+
+    protected String getAdditionalConfig() {
+        return "";
     }
 
     public void startBroker() throws Exception {
@@ -191,8 +327,12 @@ public class AmqpTestSupport {
     }
 
     public void restartBroker() throws Exception {
+        restartBroker(false);
+    }
+
+    public void restartBroker(boolean deleteAllOnStartup) throws Exception {
         stopBroker();
-        createBroker(false);
+        createBroker(deleteAllOnStartup);
         brokerService.start();
         brokerService.waitUntilStarted();
     }
@@ -209,53 +349,75 @@ public class AmqpTestSupport {
 
     @After
     public void tearDown() throws Exception {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = executor.submit(new TearDownTask());
-        try {
-            LOG.debug("tearDown started.");
-            future.get(60, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw new Exception("startBroker timed out");
-        }
-        executor.shutdownNow();
-
-        if (killHungThreads("tearDown")) {
-            LOG.warn("HUNG THREADS in setUp");
-        }
+        stopBroker();
+        LOG.info("========== tearDown " + getTestName() + " ==========");
     }
 
-    private boolean killHungThreads(String stage) throws Exception{
-        Thread.sleep(500);
-        if (Thread.activeCount() == 1) {
-            return false;
+    public Connection createJMSConnection() throws JMSException {
+        if (!isUseOpenWireConnector()) {
+            throw new javax.jms.IllegalStateException("OpenWire TransportConnector was not configured.");
         }
-        LOG.warn("Hung Thread(s) on {} entry threadCount {} ", stage, Thread.activeCount());
 
-        Thread[] threads = new Thread[Thread.activeCount()];
-        Thread.enumerate(threads);
-        for (int i=0; i < threads.length; i++) {
-            Thread t = threads[i];
-            if (!t.getName().equals("main")) {
-                LOG.warn("KillHungThreads: Interrupting thread {}", t.getName());
-                t.interrupt();
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireURI);
+
+        return factory.createConnection();
+    }
+
+    public void sendMessages(String destinationName, int count, boolean topic) throws Exception {
+        Connection connection = createJMSConnection();
+        try {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Destination destination = null;
+            if (topic) {
+                destination = session.createTopic(destinationName);
+            } else {
+                destination = session.createQueue(destinationName);
             }
-        }
 
-        LOG.warn("Hung Thread on {} exit threadCount {} ", stage, Thread.activeCount());
-        return true;
+            sendMessages(connection, destination, count);
+        } finally {
+            connection.close();
+        }
     }
 
     public void sendMessages(Connection connection, Destination destination, int count) throws Exception {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer p = session.createProducer(destination);
+        try {
+            MessageProducer p = session.createProducer(destination);
 
-        for (int i = 0; i < count; i++) {
-            TextMessage message = session.createTextMessage();
-            message.setText("TextMessage: " + i);
-            p.send(message);
+            for (int i = 1; i <= count; i++) {
+                TextMessage message = session.createTextMessage();
+                message.setText("TextMessage: " + i);
+                message.setIntProperty(MESSAGE_NUMBER, i);
+                p.send(message);
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    public String getTestName() {
+        return name.getMethodName();
+    }
+
+    protected int getProxyPort(int proxyPort) {
+        if (proxyPort == 0) {
+            ServerSocket ss = null;
+            try {
+                ss = ServerSocketFactory.getDefault().createServerSocket(0);
+                proxyPort = ss.getLocalPort();
+            } catch (IOException e) { // ignore
+            } finally {
+                try {
+                    if (ss != null ) {
+                        ss.close();
+                    }
+                } catch (IOException e) { // ignore
+                }
+            }
         }
 
-        session.close();
+        return proxyPort;
     }
 
     protected BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {
@@ -288,36 +450,23 @@ public class AmqpTestSupport {
         return proxy;
     }
 
-    protected QueueViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
+    protected SubscriptionViewMBean getProxyToQueueSubscriber(String name) throws MalformedObjectNameException, JMSException, IOException {
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+name);
         QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+        SubscriptionViewMBean subscription = null;
+        for (ObjectName subscriber : proxy.getSubscriptions()) {
+            subscription = (SubscriptionViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(subscriber, SubscriptionViewMBean.class, true);
+        }
+
+        return subscription;
+    }
+
+    protected TopicViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
+        TopicViewMBean proxy = (TopicViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(queueViewMBeanName, TopicViewMBean.class, true);
         return proxy;
-    }
-
-    public class SetUpTask implements Callable<Boolean> {
-        @SuppressWarnings("unused")
-        private String testName;
-
-        @Override
-        public Boolean call() throws Exception {
-            LOG.debug("in SetUpTask.call, calling startBroker");
-            startBroker();
-
-            return Boolean.TRUE;
-        }
-    }
-
-    public class TearDownTask implements Callable<Boolean> {
-        @SuppressWarnings("unused")
-        private String testName;
-
-        @Override
-        public Boolean call() throws Exception {
-            LOG.debug("in TearDownTask.call(), calling stopBroker");
-            stopBroker();
-
-            return Boolean.TRUE;
-        }
     }
 }

@@ -22,29 +22,40 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class PListTestSupport {
     static final Logger LOG = LoggerFactory.getLogger(PListTestSupport.class);
-    private PListStore store;
+    protected PListStore store;
     private PList plist;
     final ByteSequence payload = new ByteSequence(new byte[400]);
     final String idSeed = new String("Seed" + new byte[1024]);
     final Vector<Throwable> exceptions = new Vector<Throwable>();
     ExecutorService executor;
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
     public void testAddLast() throws Exception {
@@ -247,7 +258,7 @@ public abstract class PListTestSupport {
                          synchronized (plistLocks(candidate)) {
                              Object last = candidate.addLast(String.valueOf(i), payload);
                              getFirst(candidate);
-                            assertTrue(candidate.remove(last));
+                             assertTrue(candidate.remove(last));
                          }
                     }
                 } catch (Exception error) {
@@ -267,7 +278,8 @@ public abstract class PListTestSupport {
         executor.execute(new B());
 
         executor.shutdown();
-        boolean finishedInTime = executor.awaitTermination(30, TimeUnit.SECONDS);
+        boolean finishedInTime = executor.awaitTermination(5, TimeUnit.MINUTES);
+        LOG.info("Tested completion finished in time? -> {}", finishedInTime ? "YES" : "NO");
 
         assertTrue("no exceptions", exceptions.isEmpty());
         assertTrue("finished ok", finishedInTime);
@@ -500,7 +512,7 @@ public abstract class PListTestSupport {
     abstract protected PListStore createConcurrentAddIteratePListStore();
 
     enum TaskType {CREATE, DELETE, ADD, REMOVE, ITERATE, ITERATE_REMOVE}
-    ConcurrentHashMap<String, Object> entries = new ConcurrentHashMap<String, Object>();
+    ConcurrentMap<String, Object> entries = new ConcurrentHashMap<String, Object>();
 
     class Job implements Runnable {
 
@@ -638,11 +650,8 @@ public abstract class PListTestSupport {
 
     @Before
     public void setUp() throws Exception {
-        File directory = new File("target/test/PlistDB");
-        IOHelper.mkdirs(directory);
-        IOHelper.deleteChildren(directory);
+        File directory = tempFolder.newFolder();
         startStore(directory);
-
     }
 
     protected void startStore(File directory) throws Exception {

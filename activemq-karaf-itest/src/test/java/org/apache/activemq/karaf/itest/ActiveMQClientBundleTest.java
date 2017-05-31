@@ -19,19 +19,22 @@ package org.apache.activemq.karaf.itest;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 
 @RunWith(PaxExam.class)
 public class ActiveMQClientBundleTest extends AbstractFeatureTest {
 
-    @Configuration
-    public static Option[] configure() {
-        return configure("activemq-client");
-    }
+	@Configuration
+	public static Option[] configure() {
+		return new Option[] //
+		{ //
+				configure("activemq-client") //
+		};
+	}
 
-    @Test
+    @Test(timeout = 2 * 60 * 1000)
     public void test() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         factory.getBrokerURL();

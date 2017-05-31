@@ -69,7 +69,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   @BeanProperty
   var zkPath = "/default"
   @BeanProperty
-  var zkSessionTmeout = "2s"
+  var zkSessionTimeout = "2s"
 
   var brokerName: String = _
 
@@ -78,6 +78,10 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   @BeanProperty
   var hostname: String = _
+
+  @BeanProperty
+  var connectUrl: String = _
+
   @BeanProperty
   var bind = "tcp://0.0.0.0:61619"
 
@@ -177,7 +181,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
       log.close
     }
 
-    zk_client = new ZKClient(zkAddress, Timespan.parse(zkSessionTmeout), null)
+    zk_client = new ZKClient(zkAddress, Timespan.parse(zkSessionTimeout), null)
     if( zkPassword!=null ) {
       zk_client.setPassword(zkPassword)
     }
@@ -224,6 +228,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     master_started.set(true)
     master.blocking_executor.execute(^{
       master.start();
+      master_stopped.set(false)
       master_started_latch.countDown()
     })
     master.blocking_executor.execute(^{
@@ -273,9 +278,14 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
-    zk_group.close
-    zk_client.close()
-    zk_client = null
+    if (zk_group != null) {
+      zk_group.close
+      zk_group = null
+    }
+    if (zk_client != null) {
+      zk_client.close()
+      zk_client = null
+    }
 
     if( master!=null ) {
       val latch = new CountDownLatch(1)
@@ -371,10 +381,14 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   }
 
   def address(port: Int) = {
-    if (hostname == null) {
-      hostname = machine_hostname
+    if( connectUrl==null ) {
+      if (hostname == null) {
+        hostname = machine_hostname
+      }
+      "tcp://" + hostname + ":" + port
+    } else {
+      connectUrl;
     }
-    "tcp://" + hostname + ":" + port
   }
 
   override def size: Long = {
@@ -402,7 +416,7 @@ class ReplicatedLevelDBStoreView(val store:ElectingLevelDBStore) extends Replica
 
   def getZkAddress = zkAddress
   def getZkPath = zkPath
-  def getZkSessionTmeout = zkSessionTmeout
+  def getZkSessionTimeout = zkSessionTimeout
   def getBind = bind
   def getReplicas = replicas
 

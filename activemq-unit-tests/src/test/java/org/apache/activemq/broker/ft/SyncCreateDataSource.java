@@ -30,7 +30,7 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 public class SyncCreateDataSource implements DataSource {
     final EmbeddedDataSource delegate;
 
-    SyncCreateDataSource(EmbeddedDataSource dataSource) {
+    public SyncCreateDataSource(EmbeddedDataSource dataSource) {
         this.delegate = dataSource;
     }
 
@@ -76,7 +76,7 @@ public class SyncCreateDataSource implements DataSource {
         return false;
     }
 
-    EmbeddedDataSource getDelegate() {
+    public EmbeddedDataSource getDelegate() {
         return delegate;
     }
 

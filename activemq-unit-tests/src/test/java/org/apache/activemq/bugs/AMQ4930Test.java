@@ -117,7 +117,7 @@ public class AMQ4930Test extends TestCase {
             assertEquals("maxBrowsePageSize", maxBrowsePageSize, browsed.length);
             Runtime.getRuntime().gc();
             Runtime.getRuntime().gc();
-            assertTrue("No growth: " + Runtime.getRuntime().freeMemory()/1024, Runtime.getRuntime().freeMemory()/1024 >= (free - (free * 0.1)));
+            assertTrue("No growth: " + Runtime.getRuntime().freeMemory()/1024 + " >= " + (free - (free * 0.2)), Runtime.getRuntime().freeMemory()/1024 >= (free - (free * 0.2)));
         }
     }
 

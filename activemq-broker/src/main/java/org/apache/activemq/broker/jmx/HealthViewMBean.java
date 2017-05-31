@@ -16,8 +16,9 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.management.openmbean.TabularData;
 import java.util.List;
+
+import javax.management.openmbean.TabularData;
 
 /**
  * Returns the status events of the broker to indicate any warnings.
@@ -31,14 +32,27 @@ public interface HealthViewMBean {
      * of {@link HealthStatus} on your classpath or you use something
      * like <a href="http://jolokia.org/">jolokia</a> to access JMX.
      *
-     * If in doubt, please use the {@link #status()} method instead!
+     * If in doubt, please use the {@link #getCurrentStatus()} method instead!
+     *
+     * @return a list of HealthStatus objects that describe the health of the Broker.
      */
     @MBeanInfo("List of warnings and errors about the current health of the Broker - empty list is Good!")
     List<HealthStatus> healthList() throws Exception;
 
     /**
-     * @return  String representation of the current Broker state
+     * @return a String representation of current Broker health state.
+     */
+    @MBeanInfo("String representation of current Broker state")
+    String healthStatus() throws Exception;
+
+    /**
+     * Warning, this method only return a value if the health or healthList method has previously
+     * been called.  The value is not updated on its own and requires periodic calls to the health
+     * or healthList methods to refresh its value.
+     *
+     * @return String representation of the current Broker state
      */
     @MBeanInfo("String representation of current Broker state")
     String getCurrentStatus();
+
 }

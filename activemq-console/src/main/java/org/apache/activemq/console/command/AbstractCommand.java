@@ -16,10 +16,16 @@
  */
 package org.apache.activemq.console.command;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.util.List;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.console.CommandContext;
+import org.apache.activemq.util.IntrospectionSupport;
 
 public abstract class AbstractCommand implements Command {
     public static final String COMMAND_OPTION_DELIMETER = ",";
@@ -110,6 +116,14 @@ public abstract class AbstractCommand implements Command {
             }
             System.setProperty(key, value);
         } else {
+            if (token.startsWith("--")) {
+                String prop = token.substring(2);
+                if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
+                    context.print("Property '" + prop + "' is not specified!");
+                } else if (IntrospectionSupport.setProperty(this, prop, tokens.remove(0))) {
+                    return;
+                }
+            }
             // Token is unrecognized
             context.printInfo("Unrecognized option: " + token);
             isPrintHelp = true;
@@ -128,4 +142,39 @@ public abstract class AbstractCommand implements Command {
      * Print the help messages for the specific task
      */
     protected abstract void printHelp();
+
+    protected void printHelpFromFile() {
+        BufferedReader reader = null;
+        try {
+            InputStream is = getClass().getResourceAsStream(getName() + ".txt");
+            reader = new BufferedReader(new InputStreamReader(is));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                context.print(line);
+            }
+        } catch (Exception e) {} finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {}
+            }
+        }
+    }
+
+    protected void handleException(Exception exception, String serviceUrl) throws Exception {
+        Throwable cause = exception.getCause();
+        while (true) {
+            Throwable next = cause.getCause();
+            if (next == null) {
+                break;
+            }
+            cause = next;
+        }
+        if (cause instanceof ConnectException) {
+            context.printInfo("Broker not available at: " + serviceUrl);
+        } else {
+            context.printInfo("Failed to execute " + getName() + " task.");
+            throw exception;
+        }
+    }
 }

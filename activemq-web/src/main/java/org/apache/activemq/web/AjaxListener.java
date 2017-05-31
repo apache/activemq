@@ -65,7 +65,7 @@ public class AjaxListener implements MessageAvailableListener {
                 Message message = consumer.receive(10);
                 LOG.debug("message is " + message);
                 if (message != null) {
-                    if (!continuation.isResumed() && !continuation.isInitial()) {
+                    if (!continuation.isResumed()) {
                         LOG.debug("Resuming suspended continuation {}", continuation);
                         continuation.setAttribute("undelivered_message", new UndeliveredAjaxMessage(message, consumer));
                         continuation.resume();

@@ -16,24 +16,29 @@
  */
 package org.apache.activemq.thread;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TaskRunnerTest extends TestCase {
+public class TaskRunnerTest {
+
     private static final Logger LOG = LoggerFactory.getLogger(TaskRunnerTest.class);
 
+    @Test
     public void testWakeupPooled() throws InterruptedException, BrokenBarrierException {
         System.setProperty("org.apache.activemq.UseDedicatedTaskRunner", "false");
         doTestWakeup();
     }
 
+    @Test
     public void testWakeupDedicated() throws InterruptedException, BrokenBarrierException {
         System.setProperty("org.apache.activemq.UseDedicatedTaskRunner", "true");
         doTestWakeup();
@@ -42,7 +47,7 @@ public class TaskRunnerTest extends TestCase {
     /**
      * Simulate multiple threads queuing work for the TaskRunner. The Task
      * Runner dequeues the work.
-     * 
+     *
      * @throws InterruptedException
      * @throws BrokenBarrierException
      */
@@ -56,6 +61,7 @@ public class TaskRunnerTest extends TestCase {
 
         TaskRunnerFactory factory = new TaskRunnerFactory();
         final TaskRunner runner = factory.createTaskRunner(new Task() {
+            @Override
             public boolean iterate() {
                 if (queue.get() == 0) {
                     return false;
@@ -78,6 +84,7 @@ public class TaskRunnerTest extends TestCase {
         final CyclicBarrier barrier = new CyclicBarrier(workerCount + 1);
         for (int i = 0; i < workerCount; i++) {
             new Thread() {
+                @Override
                 public void run() {
                     try {
                         barrier.await();
@@ -104,9 +111,4 @@ public class TaskRunnerTest extends TestCase {
 
         runner.shutdown();
     }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(TaskRunnerTest.class);
-    }
-
 }

@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------
 //Licensed under the Apache License, Version 2.0 (the "License");
 //you may not use this file except in compliance with the License.
-//You may obtain a copy of the License at 
+//You may obtain a copy of the License at
 //http://www.apache.org/licenses/LICENSE-2.0
 //Unless required by applicable law or agreed to in writing, software
 //distributed under the License is distributed on an "AS IS" BASIS,
@@ -64,19 +64,19 @@ public class AjaxServlet extends MessageListenerServlet {
 
             byte[] data = jsCache.get(resource);
             if (data == null) {
-                InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
-                if (in != null) {
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    byte[] buf = new byte[4096];
-                    int len = in.read(buf);
-                    while (len >= 0) {
-                        out.write(buf, 0, len);
-                        len = in.read(buf);
+                try(InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource)) {
+                    if (in != null) {
+                        try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                            byte[] buf = new byte[4096];
+                            int len = in.read(buf);
+                            while (len >= 0) {
+                                out.write(buf, 0, len);
+                                len = in.read(buf);
+                            }
+                            data = out.toByteArray();
+                            jsCache.put(resource, data);
+                        }
                     }
-                    in.close();
-                    out.close();
-                    data = out.toByteArray();
-                    jsCache.put(resource, data);
                 }
             }
 

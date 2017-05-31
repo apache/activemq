@@ -17,7 +17,6 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -146,6 +145,11 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     }
 
     @Override
+    public long getMessageSize() throws IOException {
+        return delegate.getMessageSize();
+    }
+
+    @Override
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
         delegate.recoverNextMessages(maxReturned, listener);
     }
@@ -205,7 +209,32 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         return delegate.isPrioritizedMessages();
     }
 
+    @Override
     public void updateMessage(Message message) throws IOException {
         delegate.updateMessage(message);
+    }
+
+    @Override
+    public void registerIndexListener(IndexListener indexListener) {
+        delegate.registerIndexListener(indexListener);
+    }
+
+    @Override
+    public MessageStoreStatistics getMessageStoreStatistics() {
+        return delegate.getMessageStoreStatistics();
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.TopicMessageStore#getMessageSize(java.lang.String, java.lang.String)
+     */
+    @Override
+    public long getMessageSize(String clientId, String subscriberName)
+            throws IOException {
+        return delegate.getMessageSize(clientId, subscriberName);
+    }
+
+    @Override
+    public MessageStoreSubscriptionStatistics getMessageStoreSubStatistics() {
+        return delegate.getMessageStoreSubStatistics();
     }
 }

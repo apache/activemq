@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -61,27 +62,23 @@ public class ErrorBroker implements Broker {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
 
     @Override
-    public Set getDestinations(ActiveMQDestination destination) {
-        return Collections.EMPTY_SET;
+    public Set<Destination> getDestinations(ActiveMQDestination destination) {
+        return Collections.emptySet();
     }
 
     @Override
-    public Broker getAdaptor(Class type) {
-        if (type.isInstance(this)) {
-            return this;
-        }
-        return null;
+    public Broker getAdaptor(Class<?> type) {
+        return type.isInstance(this) ? this : null;
     }
 
     @Override
@@ -337,7 +334,7 @@ public class ErrorBroker implements Broker {
     }
 
     @Override
-    public void isFull(ConnectionContext context,Destination destination, Usage usage) {
+    public void isFull(ConnectionContext context,Destination destination, Usage<?> usage) {
         throw new BrokerStoppedException(this.message);
     }
 
@@ -358,6 +355,18 @@ public class ErrorBroker implements Broker {
 
     @Override
     public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    @Override
+    public void virtualDestinationAdded(ConnectionContext context,
+            VirtualDestination virtualDestination) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    @Override
+    public void virtualDestinationRemoved(ConnectionContext context,
+            VirtualDestination virtualDestination) {
         throw new BrokerStoppedException(this.message);
     }
 

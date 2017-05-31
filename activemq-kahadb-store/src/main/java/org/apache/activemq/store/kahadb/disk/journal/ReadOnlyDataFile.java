@@ -26,8 +26,8 @@ import java.io.RandomAccessFile;
  */
 public class ReadOnlyDataFile extends DataFile {
 
-    ReadOnlyDataFile(File file, int number, int preferedSize) {
-        super(file, number, preferedSize);
+    ReadOnlyDataFile(File file, int number) {
+        super(file, number);
     }
     
     public RandomAccessFile openRandomAccessFile(boolean appender) throws IOException {

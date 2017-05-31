@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.jms.pool;
 
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
@@ -24,48 +28,69 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.test.TestSupport;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
+public class ConnectionExpiryEvictsFromPoolTest extends JmsPoolTestSupport {
 
-    private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private PooledConnectionFactory pooledFactory;
 
     @Override
-    protected void setUp() throws Exception {
-        broker = new BrokerService();
-        broker.setUseJmx(false);
-        broker.setPersistent(false);
-        TransportConnector connector = broker.addConnector("tcp://localhost:0");
-        broker.start();
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setUseJmx(false);
+        brokerService.setPersistent(false);
+        brokerService.setSchedulerSupport(false);
+        brokerService.setAdvisorySupport(false);
+        TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
         factory = new ActiveMQConnectionFactory("mock:" + connector.getConnectUri());
         pooledFactory = new PooledConnectionFactory();
         pooledFactory.setConnectionFactory(factory);
         pooledFactory.setMaxConnections(1);
     }
 
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        try {
+            pooledFactory.stop();
+        } catch (Exception ex) {
+            // ignored
+        }
+
+        super.tearDown();
+    }
+
+    @Test(timeout = 60000)
     public void testEvictionOfIdle() throws Exception {
         pooledFactory.setIdleTimeout(10);
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Connection amq1 = connection.getConnection();
 
         connection.close();
+
         // let it idle timeout
-        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.MILLISECONDS.sleep(500);
 
         PooledConnection connection2 = (PooledConnection) pooledFactory.createConnection();
         Connection amq2 = connection2.getConnection();
         assertTrue("not equal", !amq1.equals(amq2));
     }
 
+    @Test(timeout = 60000)
     public void testEvictionOfExpired() throws Exception {
         pooledFactory.setExpiryTimeout(10);
         Connection connection = pooledFactory.createConnection();
         Connection amq1 = ((PooledConnection) connection).getConnection();
 
         // let it expire while in use
-        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.MILLISECONDS.sleep(500);
         connection.close();
 
         Connection connection2 = pooledFactory.createConnection();
@@ -73,13 +98,14 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
         assertTrue("not equal", !amq1.equals(amq2));
     }
 
+    @Test(timeout = 60000)
     public void testNotIdledWhenInUse() throws Exception {
         pooledFactory.setIdleTimeout(10);
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         // let connection to get idle
-        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.MILLISECONDS.sleep(500);
 
         // get a connection from pool again, it should be the same underlying connection
         // as before and should not be idled out since an open session exists.
@@ -100,16 +126,11 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
         connection2.close();
 
         // let connection to get idle
-        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.MILLISECONDS.sleep(500);
 
         // get a connection from pool again, it should be a new Connection instance as the
         // old one should have been inactive and idled out.
         PooledConnection connection3 = (PooledConnection) pooledFactory.createConnection();
         assertNotSame(original, connection3.getConnection());
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        broker.stop();
     }
 }

@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
 import javax.management.openmbean.CompositeData;
@@ -37,10 +38,11 @@ import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
+import org.apache.activemq.broker.jmx.ProducerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.ProducerViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
+import org.apache.activemq.web.util.ExceptionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -127,9 +129,16 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
             String name) {
         Iterator<? extends DestinationViewMBean> iter = collection.iterator();
         while (iter.hasNext()) {
-            DestinationViewMBean destinationViewMBean = iter.next();
-            if (name.equals(destinationViewMBean.getName())) {
-                return destinationViewMBean;
+            try {
+                DestinationViewMBean destinationViewMBean = iter.next();
+                if (name.equals(destinationViewMBean.getName())) {
+                    return destinationViewMBean;
+                }
+            } catch (Exception ex) {
+                if (!ExceptionUtils.isRootCause(ex, InstanceNotFoundException.class)) {
+                    // Only throw if not an expected InstanceNotFoundException exception
+                    throw ex;
+                }
             }
         }
         return null;

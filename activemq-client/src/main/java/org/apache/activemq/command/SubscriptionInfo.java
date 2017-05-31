@@ -20,9 +20,9 @@ import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * Used to represent a durable subscription.
- * 
+ *
  * @openwire:marshaller code="55"
- * 
+ *
  */
 public class SubscriptionInfo implements DataStructure {
 
@@ -33,6 +33,7 @@ public class SubscriptionInfo implements DataStructure {
     protected String clientId;
     protected String subscriptionName;
     protected String selector;
+    protected boolean noLocal;
 
     public SubscriptionInfo() {}
 
@@ -41,6 +42,7 @@ public class SubscriptionInfo implements DataStructure {
         this.subscriptionName = subscriptionName;
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
@@ -59,7 +61,7 @@ public class SubscriptionInfo implements DataStructure {
     /**
      * This is the a resolved destination that the subscription is receiving
      * messages from. This will never be a pattern or a composite destination.
-     * 
+     *
      * @openwire:property version=1 cache=true
      */
     public ActiveMQDestination getDestination() {
@@ -103,6 +105,7 @@ public class SubscriptionInfo implements DataStructure {
         this.subscriptionName = subscriptionName;
     }
 
+    @Override
     public boolean isMarshallAware() {
         return false;
     }
@@ -139,10 +142,10 @@ public class SubscriptionInfo implements DataStructure {
      * The destination the client originally subscribed to.. This may not match
      * the {@see getDestination} method if the subscribed destination uses
      * patterns or composites.
-     * 
+     *
      * If the subscribed destinationis not set, this just ruturns the
      * desitination.
-     * 
+     *
      * @openwire:property version=3
      */
     public ActiveMQDestination getSubscribedDestination() {
@@ -156,4 +159,14 @@ public class SubscriptionInfo implements DataStructure {
         this.subscribedDestination = subscribedDestination;
     }
 
+    /**
+     * @openwire:property version=11
+     */
+    public boolean isNoLocal() {
+        return noLocal;
+    }
+
+    public void setNoLocal(boolean noLocal) {
+        this.noLocal = noLocal;
+    }
 }

@@ -125,15 +125,6 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the id of the Subscription
      */
-    @Deprecated
-    @Override
-    public long getSubcriptionId() {
-        return getSubscriptionId();
-    }
-
-    /**
-     * @return the id of the Subscription
-     */
     @Override
     public long getSubscriptionId() {
         ConsumerInfo info = getConsumerInfo();
@@ -276,6 +267,15 @@ public class SubscriptionView implements SubscriptionViewMBean {
     }
 
     /**
+     * @return whether or not the subscriber is configured for async dispatch
+     */
+    @Override
+    public boolean isDispatchAsync() {
+        ConsumerInfo info = getConsumerInfo();
+        return info != null ? info.isDispatchAsync() : false;
+    }
+
+    /**
      * @return the maximum number of pending messages allowed in addition to the
      *         prefetch size. If enabled to a non-zero value then this will
      *         perform eviction of messages for slow consumers on non-durable
@@ -294,16 +294,6 @@ public class SubscriptionView implements SubscriptionViewMBean {
     public byte getPriority() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.getPriority() : 0;
-    }
-
-    /**
-     * @return the name of the consumer which is only used for durable
-     *         consumers.
-     */
-    @Deprecated
-    @Override
-    public String getSubcriptionName() {
-        return getSubscriptionName();
     }
 
     /**
@@ -420,8 +410,8 @@ public class SubscriptionView implements SubscriptionViewMBean {
 
     @Override
     public void resetStatistics() {
-        if (subscription != null){
-            subscription.resetConsumedCount();
+        if (subscription != null && subscription.getSubscriptionStatistics() != null){
+            subscription.getSubscriptionStatistics().reset();
         }
     }
 

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -33,7 +34,7 @@ import org.fusesource.hawtbuf.UTF8Buffer;
 
 /**
  * @openwire:marshaller code="1"
- * 
+ *
  */
 public class WireFormatInfo implements Command, MarshallAware {
 
@@ -49,14 +50,17 @@ public class WireFormatInfo implements Command, MarshallAware {
     private transient Endpoint from;
     private transient Endpoint to;
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public boolean isWireFormatInfo() {
         return true;
     }
 
+    @Override
     public boolean isMarshallAware() {
         return true;
     }
@@ -97,10 +101,12 @@ public class WireFormatInfo implements Command, MarshallAware {
     /**
      * The endpoint within the transport where this message came from.
      */
+    @Override
     public Endpoint getFrom() {
         return from;
     }
 
+    @Override
     public void setFrom(Endpoint from) {
         this.from = from;
     }
@@ -109,16 +115,18 @@ public class WireFormatInfo implements Command, MarshallAware {
      * The endpoint within the transport where this message is going to - null
      * means all endpoints.
      */
+    @Override
     public Endpoint getTo() {
         return to;
     }
 
+    @Override
     public void setTo(Endpoint to) {
         this.to = to;
     }
 
     // ////////////////////
-    // 
+    //
     // Implementation Methods.
     //
     // ////////////////////
@@ -169,6 +177,7 @@ public class WireFormatInfo implements Command, MarshallAware {
         return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)), MAX_PROPERTY_SIZE);
     }
 
+    @Override
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
         // Need to marshal the properties.
         if (marshalledProperties == null && properties != null) {
@@ -180,12 +189,15 @@ public class WireFormatInfo implements Command, MarshallAware {
         }
     }
 
+    @Override
     public void afterMarshall(WireFormat wireFormat) throws IOException {
     }
 
+    @Override
     public void beforeUnmarshall(WireFormat wireFormat) throws IOException {
     }
 
+    @Override
     public void afterUnmarshall(WireFormat wireFormat) throws IOException {
     }
 
@@ -193,6 +205,7 @@ public class WireFormatInfo implements Command, MarshallAware {
         return magic != null && Arrays.equals(magic, MAGIC);
     }
 
+    @Override
     public void setResponseRequired(boolean responseRequired) {
     }
 
@@ -256,7 +269,7 @@ public class WireFormatInfo implements Command, MarshallAware {
         if( buff == null ) {
             return null;
         }
-        return (String) buff.toString();
+        return buff.toString();
     }
 
     public void setHost(String hostname) throws IOException {
@@ -274,7 +287,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     public void setMaxInactivityDuration(long maxInactivityDuration) throws IOException {
         setProperty("MaxInactivityDuration", new Long(maxInactivityDuration));
     }
-    
+
     public long getMaxInactivityDurationInitalDelay() throws IOException {
         Long l = (Long)getProperty("MaxInactivityDurationInitalDelay");
         return l == null ? 0 : l.longValue();
@@ -292,8 +305,6 @@ public class WireFormatInfo implements Command, MarshallAware {
     public void setMaxFrameSize(long maxFrameSize) throws IOException {
         setProperty("MaxFrameSize", new Long(maxFrameSize));
     }
-    
-   
 
     /**
      * @throws IOException
@@ -307,6 +318,43 @@ public class WireFormatInfo implements Command, MarshallAware {
         setProperty("CacheSize", new Integer(cacheSize));
     }
 
+    /**
+     * @throws IOException
+     */
+    public String getProviderName() throws IOException {
+        Object o = getProperty("ProviderName");
+        return o == null ? null : o.toString();
+    }
+
+    public void setProviderName(String providerName) throws IOException {
+        setProperty("ProviderName", providerName);
+    }
+
+    /**
+     * @throws IOException
+     */
+    public String getProviderVersion() throws IOException {
+        Object o = getProperty("ProviderVersion");
+        return o == null ? null : o.toString();
+    }
+
+    public void setProviderVersion(String providerVersion) throws IOException {
+        setProperty("ProviderVersion", providerVersion);
+    }
+
+    /**
+     * @throws IOException
+     */
+    public String getPlatformDetails() throws IOException {
+        Object o = getProperty("PlatformDetails");
+        return o == null ? null : o.toString();
+    }
+
+    public void setPlatformDetails(String platformDetails) throws IOException {
+        setProperty("PlatformDetails", platformDetails);
+    }
+
+    @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processWireFormat(this);
     }
@@ -340,46 +388,62 @@ public class WireFormatInfo implements Command, MarshallAware {
     //
     // /////////////////////////////////////////////////////////////
 
+    @Override
     public void setCommandId(int value) {
     }
 
+    @Override
     public int getCommandId() {
         return 0;
     }
 
+    @Override
     public boolean isResponseRequired() {
         return false;
     }
 
+    @Override
     public boolean isResponse() {
         return false;
     }
 
+    @Override
     public boolean isBrokerInfo() {
         return false;
     }
 
+    @Override
     public boolean isMessageDispatch() {
         return false;
     }
 
+    @Override
     public boolean isMessage() {
         return false;
     }
 
+    @Override
     public boolean isMessageAck() {
         return false;
     }
 
+    @Override
     public boolean isMessageDispatchNotification() {
         return false;
     }
 
+    @Override
     public boolean isShutdownInfo() {
         return false;
     }
-    
+
+    @Override
     public boolean isConnectionControl() {
+        return false;
+    }
+
+    @Override
+    public boolean isConsumerControl() {
         return false;
     }
 
@@ -389,5 +453,4 @@ public class WireFormatInfo implements Command, MarshallAware {
     public ByteSequence getCachedMarshalledForm(WireFormat wireFormat) {
         return null;
     }
-
 }

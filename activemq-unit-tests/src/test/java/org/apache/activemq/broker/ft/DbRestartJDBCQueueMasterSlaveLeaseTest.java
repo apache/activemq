@@ -17,14 +17,11 @@
 package org.apache.activemq.broker.ft;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.jdbc.JDBCIOExceptionHandler;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
-import org.apache.activemq.util.DefaultIOExceptionHandler;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,11 +40,11 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
     protected void configureBroker(BrokerService brokerService) {
         //let the brokers die on exception and master should have lease on restart
         // which will delay slave start till it expires
-        JDBCIOExceptionHandler trapSQLExceptions = new JDBCIOExceptionHandler();
-        trapSQLExceptions.setIgnoreSQLExceptions(false);
-        trapSQLExceptions.setStopStartConnectors(false);
-        trapSQLExceptions.setResumeCheckSleepPeriod(500l);
-        brokerService.setIoExceptionHandler(trapSQLExceptions);
+        LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+        ioExceptionHandler.setIgnoreSQLExceptions(false);
+        ioExceptionHandler.setStopStartConnectors(false);
+        ioExceptionHandler.setResumeCheckSleepPeriod(500l);
+        brokerService.setIoExceptionHandler(ioExceptionHandler);
     }
 
     private long getLockKeepAlivePeriod() {

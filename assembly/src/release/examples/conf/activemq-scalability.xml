@@ -17,7 +17,7 @@
 <!--
     Tune ActiveMQ broker so it can handle large number of queues (tens of thousands)
     For more information, see:
-    http://activemq.apache.org/how-do-i-configure-10s-of-1000s-of-queues-in-a-single-broker-.html
+    http://activemq.apache.org/scaling-queues.html
 
     Be sure to make necessary changes in your startup script, to
 

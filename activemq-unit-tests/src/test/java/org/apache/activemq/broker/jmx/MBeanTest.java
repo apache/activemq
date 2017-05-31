@@ -20,16 +20,20 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
@@ -44,7 +48,9 @@ import javax.management.openmbean.TabularData;
 
 import junit.textui.TestRunner;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
@@ -58,6 +64,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +74,7 @@ import org.slf4j.LoggerFactory;
  * command line application.
  */
 public class MBeanTest extends EmbeddedBrokerTestSupport {
+
     private static final Logger LOG = LoggerFactory.getLogger(MBeanTest.class);
 
     private static boolean waitForKeyPress;
@@ -170,6 +178,78 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue("use cache", queueNew.isUseCache());
         assertTrue("cache enabled", queueNew.isCacheEnabled());
         assertEquals("no forwards", 0, queueNew.getForwardCount());
+    }
+
+    //Show broken behaviour https://issues.apache.org/jira/browse/AMQ-5752"
+    // points to the need to except on a duplicate or have store.addMessage return boolean
+    // need some thought on how best to resolve this
+    public void Broken_testMoveDuplicateDoesNotDelete() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        CompositeData cdata = compdatalist[0];
+        String messageID = (String) cdata.get("JMSMessageID");
+
+        String newDestination = getSecondDestinationString();
+        queue.copyMessageTo(messageID, newDestination);
+
+        compdatalist = queue.browse();
+        int actualCount = compdatalist.length;
+        echo("Current queue size: " + actualCount);
+        assertEquals("no change", initialQueueSize, actualCount);
+
+        echo("Now browsing the second queue");
+
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + newDestination );
+        QueueViewMBean queueNew = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        long newQueuesize = queueNew.getQueueSize();
+        assertEquals("Expect one", 1, newQueuesize);
+
+        // try move of same message - should fail on duplicate send
+        boolean moveResult = queue.moveMessageTo(messageID, newDestination);
+        assertFalse("move of duplicate should fail", moveResult);
+
+        newQueuesize = queueNew.getQueueSize();
+        assertEquals("Expect one", 1, newQueuesize);
+
+        compdatalist = queue.browse();
+        actualCount = compdatalist.length;
+        echo("Current queue size: " + actualCount);
+        assertEquals("no change", initialQueueSize, actualCount);
+    }
+
+    public void testMoveCopyToSameDestFails() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        CompositeData cdata = compdatalist[0];
+        String messageID = (String) cdata.get("JMSMessageID");
+
+        assertFalse("fail to copy to self", queue.copyMessageTo(messageID, getDestinationString()));
+        assertEquals("fail to copy to self", 0, queue.copyMatchingMessagesTo("", getDestinationString()));
+        assertEquals("fail to copy x to self", 0, queue.copyMatchingMessagesTo("", getDestinationString(), initialQueueSize));
+
+        assertFalse("fail to move to self", queue.moveMessageTo(messageID, getDestinationString()));
+        assertEquals("fail to move to self", 0, queue.moveMatchingMessagesTo("", getDestinationString()));
+        assertEquals("fail to move x to self", 0, queue.moveMatchingMessagesTo("", getDestinationString(), initialQueueSize));
+
+        compdatalist = queue.browse();
+        int actualCount = compdatalist.length;
+        echo("Current queue size: " + actualCount);
+        assertEquals("no change", initialQueueSize, actualCount);
     }
 
     public void testRemoveMessages() throws Exception {
@@ -733,13 +813,20 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("broker Topic Producer count", 0, broker.getTopicProducers().length);
     }
 
-    protected ObjectName assertRegisteredObjectName(String name) throws MalformedObjectNameException, NullPointerException {
-        ObjectName objectName = new ObjectName(name);
-        if (mbeanServer.isRegistered(objectName)) {
-            echo("Bean Registered: " + objectName);
-        } else {
-            fail("Could not find MBean!: " + objectName);
-        }
+    protected ObjectName assertRegisteredObjectName(String name) throws MalformedObjectNameException, Exception {
+        final ObjectName objectName = new ObjectName(name);
+        final AtomicBoolean result = new AtomicBoolean(false);
+        assertTrue("Bean registered: " + objectName, Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                try {
+                    result.set(mbeanServer.isRegistered(objectName));
+                } catch (Exception ignored) {
+                    LOG.debug(ignored.toString());
+                }
+                return result.get();
+            }
+        }));
         return objectName;
     }
 
@@ -760,6 +847,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         super.setUp();
         ManagementContext managementContext = broker.getManagementContext();
         mbeanServer = managementContext.getMBeanServer();
+
+        broker.getTransportConnectorByScheme("tcp").setUpdateClusterClientsOnRemove(true);
     }
 
     @Override
@@ -807,13 +896,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         return answer;
     }
 
-    protected void useConnection(Connection connection) throws Exception {
+    protected void useConnection(Connection connection, int numToSend) throws Exception {
         connection.setClientID(clientID);
         connection.start();
         Session session = connection.createSession(transacted, authMode);
         destination = createDestination();
         MessageProducer producer = session.createProducer(destination);
-        for (int i = 0; i < MESSAGE_COUNT; i++) {
+        for (int i = 0; i < numToSend; i++) {
             Message message = session.createTextMessage("Message: " + i);
             message.setIntProperty("counter", i);
             message.setJMSCorrelationID("MyCorrelationID");
@@ -823,6 +912,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             producer.send(message);
         }
         Thread.sleep(1000);
+    }
+
+    protected void useConnection(Connection connection) throws Exception {
+        useConnection(connection, MESSAGE_COUNT);
     }
 
     protected void useConnectionWithBlobMessage(Connection connection) throws Exception {
@@ -1362,12 +1455,69 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         session.close();
     }
 
+    public void testBrowseOrder() throws Exception {
+        connection = connectionFactory.createConnection();
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setAll(20);
+        ((ActiveMQConnection) connection).setPrefetchPolicy(prefetchPolicy);
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        assertEquals("expected", MESSAGE_COUNT, initialQueueSize);
+
+        int messageCount = initialQueueSize;
+        for (int i = 0; i < messageCount; i++) {
+            CompositeData cdata = compdatalist[i];
+            String messageID = (String) cdata.get("JMSMessageID");
+            assertNotNull("Should have a message ID for message " + i, messageID);
+
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
+            assertTrue("not empty", intProperties.size() > 0);
+            assertEquals("counter in order", i, intProperties.get("counter"));
+        }
+
+        echo("Attempting to consume 5 bytes messages from: " + destination);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(destination);
+        for (int i=0; i<5; i++) {
+            Message message = consumer.receive(5000);
+            assertNotNull(message);
+            assertEquals("ordered", i, message.getIntProperty("counter"));
+            echo("Consumed: " + message.getIntProperty("counter"));
+        }
+        consumer.close();
+        session.close();
+        connection.close();
+
+        // browse again and verify order
+        compdatalist = queue.browse();
+        initialQueueSize = compdatalist.length;
+        assertEquals("5 gone", MESSAGE_COUNT - 5, initialQueueSize);
+
+        messageCount = initialQueueSize;
+        for (int i = 0; i < messageCount - 4; i++) {
+            CompositeData cdata = compdatalist[i];
+
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
+            assertTrue("not empty", intProperties.size() > 0);
+            assertEquals("counter in order", i + 5, intProperties.get("counter"));
+            echo("Got: " + intProperties.get("counter"));
+        }
+    }
+
     public void testAddRemoveConnectorBrokerView() throws Exception {
 
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean brokerView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
-        Map connectors = brokerView.getTransportConnectors();
+        Map<String, String> connectors = brokerView.getTransportConnectors();
         LOG.info("Connectors: " + connectors);
         assertEquals("one connector", 1, connectors.size());
 
@@ -1397,7 +1547,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertNotNull(connector);
 
         assertFalse(connector.isRebalanceClusterClients());
-        assertFalse(connector.isUpdateClusterClientsOnRemove());
+        assertTrue(connector.isUpdateClusterClientsOnRemove());
         assertFalse(connector.isUpdateClusterClients());
         assertFalse(connector.isAllowLinkStealingEnabled());
     }
@@ -1438,5 +1588,282 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         Set<ObjectInstance> mbeans = mbeanServer.queryMBeans(query, null);
         assertEquals(mbeans.size(), 1);
         sub.close();
+    }
+
+    public void testQueuePauseResume() throws Exception {
+        connection = connectionFactory.createConnection();
+        final int numToSend = 20;
+        final int numToConsume = 5;
+        useConnection(connection, numToSend);
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        final QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        assertEquals("expected", numToSend, initialQueueSize);
+
+
+        echo("Attempting to consume 5 bytes messages from: " + destination);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(destination);
+        for (int i=0; i<numToConsume; i++) {
+            assertNotNull("Message: " + i, consumer.receive(5000));
+        }
+        consumer.close();
+        session.close();
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return  numToSend - numToConsume == queue.browse().length;
+            }
+        });
+        compdatalist = queue.browse();
+        assertEquals("expected", numToSend - numToConsume, compdatalist.length);
+
+        echo("pause");
+        queue.pause();
+
+        assertTrue("queue is paused", queue.isPaused());
+
+        // verify no consume  while paused
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session.createConsumer(destination);
+        assertNull("cannot get message while paused", consumer.receive(2000));
+        consumer.close();
+        session.close();
+        connection.close();
+
+        // verify send while paused
+        connection = connectionFactory.createConnection();
+        useConnection(connection, numToSend);
+
+        // verify browse
+        compdatalist = queue.browse();
+        assertEquals("expected browse", (2*numToSend)-numToConsume, compdatalist.length);
+        assertEquals("expected message count", compdatalist.length, queue.getQueueSize());
+
+        echo("resume");
+        queue.resume();
+
+        assertFalse("queue is not paused", queue.isPaused());
+
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session.createConsumer(destination);
+        for (int i = 0; i < compdatalist.length; i++) {
+            assertNotNull("Message: " + i, consumer.receive(5000));
+        }
+    }
+
+    public void testTopicView() throws Exception {
+        connection = connectionFactory.createConnection();
+        connection.setClientID("test");
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        connection.start();
+
+        Topic singleTopic = session.createTopic("test.topic");
+        Topic wildcardTopic = session.createTopic("test.>");
+
+        TopicSubscriber durable1 = session.createDurableSubscriber(singleTopic, "single");
+        TopicSubscriber durable2 = session.createDurableSubscriber(wildcardTopic, "wildcard");
+
+        MessageConsumer consumer1 = session.createConsumer(singleTopic);
+        MessageConsumer consumer2 = session.createConsumer(wildcardTopic);
+
+        final ArrayList<Message> messages = new ArrayList<>();
+
+        MessageListener listener = new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                messages.add(message);
+            }
+        };
+
+        durable1.setMessageListener(listener);
+        durable2.setMessageListener(listener);
+        consumer1.setMessageListener(listener);
+        consumer2.setMessageListener(listener);
+
+        MessageProducer producer = session.createProducer(singleTopic);
+        producer.send(session.createTextMessage("test"));
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return messages.size() == 4;
+            }
+        });
+
+        ObjectName topicObjName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test.topic");
+        final TopicViewMBean topicView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+        ArrayList<SubscriptionViewMBean> subscriberViews = new ArrayList<SubscriptionViewMBean>();
+        for (ObjectName name : topicView.getSubscriptions()) {
+            subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
+        }
+
+        assertEquals(4, subscriberViews.size());
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(1, subscriberView.getEnqueueCounter());
+            assertEquals(1, subscriberView.getDispatchedCounter());
+            assertEquals(0, subscriberView.getDequeueCounter());
+        }
+
+        for (Message message : messages) {
+            try {
+                message.acknowledge();
+            } catch (JMSException ignore) {}
+        }
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return topicView.getDequeueCount() == 4;
+            }
+        });
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(1, subscriberView.getEnqueueCounter());
+            assertEquals(1, subscriberView.getDispatchedCounter());
+            assertEquals(1, subscriberView.getDequeueCounter());
+        }
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            subscriberView.resetStatistics();
+        }
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(0, subscriberView.getEnqueueCounter());
+            assertEquals(0, subscriberView.getDispatchedCounter());
+            assertEquals(0, subscriberView.getDequeueCounter());
+        }
+    }
+
+    public void testSubscriptionView() throws Exception {
+        connection = connectionFactory.createConnection();
+        connection.setClientID("test");
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        connection.start();
+
+        Topic singleTopic = session.createTopic("test.topic");
+        Topic wildcardTopic = session.createTopic("test.>");
+
+        TopicSubscriber durable1 = session.createDurableSubscriber(singleTopic, "single");
+        TopicSubscriber durable2 = session.createDurableSubscriber(wildcardTopic, "wildcard");
+
+        MessageConsumer consumer1 = session.createConsumer(singleTopic);
+        MessageConsumer consumer2 = session.createConsumer(wildcardTopic);
+
+        final ArrayList<Message> messages = new ArrayList<>();
+
+        MessageListener listener = new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                messages.add(message);
+            }
+        };
+
+        durable1.setMessageListener(listener);
+        durable2.setMessageListener(listener);
+        consumer1.setMessageListener(listener);
+        consumer2.setMessageListener(listener);
+
+        MessageProducer producer = session.createProducer(singleTopic);
+        producer.send(session.createTextMessage("test"));
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return messages.size() == 4;
+            }
+        });
+
+        ObjectName topicObjName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test.topic");
+        final TopicViewMBean topicView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+        ArrayList<SubscriptionViewMBean> subscriberViews = new ArrayList<SubscriptionViewMBean>();
+        for (ObjectName name : topicView.getSubscriptions()) {
+            subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
+        }
+
+        assertEquals(4, subscriberViews.size());
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(1, subscriberView.getEnqueueCounter());
+            assertEquals(1, subscriberView.getDispatchedCounter());
+            assertEquals(0, subscriberView.getDequeueCounter());
+        }
+
+        for (Message message : messages) {
+            try {
+                message.acknowledge();
+            } catch (JMSException ignore) {}
+        }
+
+        // Wait so that each subscription gets updated
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return topicView.getDequeueCount() == 4;
+            }
+        });
+
+        assertEquals(1, topicView.getEnqueueCount());
+        assertEquals(4, topicView.getDispatchCount());
+        assertEquals(0, topicView.getInFlightCount());
+        assertEquals(4, topicView.getDequeueCount());
+
+        for (SubscriptionViewMBean subscriberView : subscriberViews) {
+            assertEquals(1, subscriberView.getEnqueueCounter());
+            assertEquals(1, subscriberView.getDispatchedCounter());
+            assertEquals(1, subscriberView.getDequeueCounter());
+        }
+    }
+
+    public void testSubscriptionViewProperties() throws Exception {
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Topic topic1 = session.createTopic("test.topic1?consumer.dispatchAsync=false&consumer.retroactive=true");
+        Topic topic2 = session.createTopic("test.topic2?consumer.dispatchAsync=true&consumer.retroactive=false&consumer.exclusive=true");
+        MessageConsumer consumer1 = session.createConsumer(topic1);
+        MessageConsumer consumer2 = session.createConsumer(topic2);
+
+        assertNotNull(consumer1);
+        assertNotNull(consumer2);
+
+        ObjectName topicObjName = assertRegisteredObjectName(
+            domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=" + topic1.getTopicName());
+        final TopicViewMBean topic1View = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+        ArrayList<SubscriptionViewMBean> subscriberViews = new ArrayList<SubscriptionViewMBean>();
+        for (ObjectName name : topic1View.getSubscriptions()) {
+            subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
+        }
+
+        assertEquals(1, subscriberViews.size());
+
+        SubscriptionViewMBean subscription = subscriberViews.get(0);
+
+        assertFalse(subscription.isDispatchAsync());
+        assertTrue(subscription.isRetroactive());
+        assertFalse(subscription.isExclusive());
+
+        topicObjName = assertRegisteredObjectName(
+            domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=" + topic2.getTopicName());
+        final TopicViewMBean topic2View = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName, TopicViewMBean.class, true);
+        subscriberViews = new ArrayList<SubscriptionViewMBean>();
+        for (ObjectName name : topic2View.getSubscriptions()) {
+            subscriberViews.add(MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true));
+        }
+
+        assertEquals(1, subscriberViews.size());
+
+        subscription = subscriberViews.get(0);
+
+        assertTrue(subscription.isDispatchAsync());
+        assertFalse(subscription.isRetroactive());
+        assertTrue(subscription.isExclusive());
     }
 }

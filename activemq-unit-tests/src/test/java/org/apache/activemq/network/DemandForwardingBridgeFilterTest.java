@@ -117,6 +117,24 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
         assertReceiveNoMessageOn("OTHER.T2", ActiveMQDestination.TOPIC_TYPE);
     }
 
+    public void testExcludeStaticDestinations() throws Exception {
+
+        NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
+
+        configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination("TEST.X1", ActiveMQDestination.QUEUE_TYPE), ActiveMQDestination.createDestination("OTHER.X1", ActiveMQDestination.QUEUE_TYPE)));
+        configuration.setStaticallyIncludedDestinations(Arrays.asList(ActiveMQDestination.createDestination(
+                "TEST.>", ActiveMQDestination.QUEUE_TYPE), ActiveMQDestination.createDestination(
+                "OTHER.X1", ActiveMQDestination.QUEUE_TYPE), ActiveMQDestination.createDestination(
+                "OTHER.X2", ActiveMQDestination.QUEUE_TYPE)));
+
+        configureAndStartBridge(configuration);
+
+        assertReceiveNoMessageOn("TEST.X1", ActiveMQDestination.QUEUE_TYPE);
+        assertReceiveMessageOn("TEST.X2", ActiveMQDestination.QUEUE_TYPE);
+        assertReceiveNoMessageOn("OTHER.X1", ActiveMQDestination.QUEUE_TYPE);
+        assertReceiveMessageOn("OTHER.X2", ActiveMQDestination.QUEUE_TYPE);
+    }
+
     private void assertReceiveMessageOn(String destinationName, byte destinationType) throws Exception,
             InterruptedException {
 

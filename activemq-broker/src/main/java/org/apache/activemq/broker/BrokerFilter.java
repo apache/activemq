@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -59,339 +60,352 @@ public class BrokerFilter implements Broker {
         this.next = next;
     }
 
+    public Broker getNext() {
+        return next;
+    }
+
     @Override
-    public Broker getAdaptor(Class type) {
-        if (type.isInstance(this)) {
-            return this;
-        }
-        return next.getAdaptor(type);
+    public Broker getAdaptor(Class<?> type) {
+        return type.isInstance(this) ? this : getNext().getAdaptor(type);
     }
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
-        return next.getDestinationMap();
+        return getNext().getDestinationMap();
     }
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
-        return next.getDestinationMap(destination);
+        return getNext().getDestinationMap(destination);
     }
 
     @Override
-    public Set <Destination>getDestinations(ActiveMQDestination destination) {
-        return next.getDestinations(destination);
+    public Set<Destination> getDestinations(ActiveMQDestination destination) {
+        return getNext().getDestinations(destination);
     }
 
     @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
-        next.acknowledge(consumerExchange, ack);
+        getNext().acknowledge(consumerExchange, ack);
     }
 
     @Override
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
-        return next.messagePull(context, pull);
+        return getNext().messagePull(context, pull);
     }
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-        next.addConnection(context, info);
+        getNext().addConnection(context, info);
     }
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        return next.addConsumer(context, info);
+        return getNext().addConsumer(context, info);
     }
 
     @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-        next.addProducer(context, info);
+        getNext().addProducer(context, info);
     }
 
     @Override
     public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
-        next.commitTransaction(context, xid, onePhase);
+        getNext().commitTransaction(context, xid, onePhase);
     }
 
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
-        next.removeSubscription(context, info);
+        getNext().removeSubscription(context, info);
     }
 
     @Override
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
-        return next.getPreparedTransactions(context);
+        return getNext().getPreparedTransactions(context);
     }
 
     @Override
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-        return next.prepareTransaction(context, xid);
+        return getNext().prepareTransaction(context, xid);
     }
 
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-        next.removeConnection(context, info, error);
+        getNext().removeConnection(context, info, error);
     }
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        next.removeConsumer(context, info);
+        getNext().removeConsumer(context, info);
     }
 
     @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-        next.removeProducer(context, info);
+        getNext().removeProducer(context, info);
     }
 
     @Override
     public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-        next.rollbackTransaction(context, xid);
+        getNext().rollbackTransaction(context, xid);
     }
 
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
-        next.send(producerExchange, messageSend);
+        getNext().send(producerExchange, messageSend);
     }
 
     @Override
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-        next.beginTransaction(context, xid);
+        getNext().beginTransaction(context, xid);
     }
 
     @Override
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
-        next.forgetTransaction(context, transactionId);
+        getNext().forgetTransaction(context, transactionId);
     }
 
     @Override
     public Connection[] getClients() throws Exception {
-        return next.getClients();
+        return getNext().getClients();
     }
 
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean createIfTemporary) throws Exception {
-        return next.addDestination(context, destination,createIfTemporary);
+        return getNext().addDestination(context, destination,createIfTemporary);
     }
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        next.removeDestination(context, destination, timeout);
+        getNext().removeDestination(context, destination, timeout);
     }
 
     @Override
     public ActiveMQDestination[] getDestinations() throws Exception {
-        return next.getDestinations();
+        return getNext().getDestinations();
     }
 
     @Override
     public void start() throws Exception {
-        next.start();
+        getNext().start();
     }
 
     @Override
     public void stop() throws Exception {
-        next.stop();
+        getNext().stop();
     }
 
     @Override
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
-        next.addSession(context, info);
+        getNext().addSession(context, info);
     }
 
     @Override
     public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
-        next.removeSession(context, info);
+        getNext().removeSession(context, info);
     }
 
     @Override
     public BrokerId getBrokerId() {
-        return next.getBrokerId();
+        return getNext().getBrokerId();
     }
 
     @Override
     public String getBrokerName() {
-        return next.getBrokerName();
+        return getNext().getBrokerName();
     }
 
     @Override
     public void gc() {
-        next.gc();
+        getNext().gc();
     }
 
     @Override
     public void addBroker(Connection connection, BrokerInfo info) {
-        next.addBroker(connection, info);
+        getNext().addBroker(connection, info);
     }
 
     @Override
     public void removeBroker(Connection connection, BrokerInfo info) {
-        next.removeBroker(connection, info);
+        getNext().removeBroker(connection, info);
     }
 
     @Override
     public BrokerInfo[] getPeerBrokerInfos() {
-        return next.getPeerBrokerInfos();
+        return getNext().getPeerBrokerInfos();
     }
 
     @Override
     public void preProcessDispatch(MessageDispatch messageDispatch) {
-        next.preProcessDispatch(messageDispatch);
+        getNext().preProcessDispatch(messageDispatch);
     }
 
     @Override
     public void postProcessDispatch(MessageDispatch messageDispatch) {
-        next.postProcessDispatch(messageDispatch);
+        getNext().postProcessDispatch(messageDispatch);
     }
 
     @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
-        next.processDispatchNotification(messageDispatchNotification);
+        getNext().processDispatchNotification(messageDispatchNotification);
     }
 
     @Override
     public boolean isStopped() {
-        return next.isStopped();
+        return getNext().isStopped();
     }
 
     @Override
     public Set<ActiveMQDestination> getDurableDestinations() {
-        return next.getDurableDestinations();
+        return getNext().getDurableDestinations();
     }
 
     @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
-        next.addDestinationInfo(context, info);
+        getNext().addDestinationInfo(context, info);
     }
 
     @Override
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
-        next.removeDestinationInfo(context, info);
+        getNext().removeDestinationInfo(context, info);
     }
 
     @Override
     public boolean isFaultTolerantConfiguration() {
-        return next.isFaultTolerantConfiguration();
+        return getNext().isFaultTolerantConfiguration();
     }
 
     @Override
     public ConnectionContext getAdminConnectionContext() {
-        return next.getAdminConnectionContext();
+        return getNext().getAdminConnectionContext();
     }
 
     @Override
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
-        next.setAdminConnectionContext(adminConnectionContext);
+        getNext().setAdminConnectionContext(adminConnectionContext);
     }
 
     @Override
     public PListStore getTempDataStore() {
-        return next.getTempDataStore();
+        return getNext().getTempDataStore();
     }
 
     @Override
     public URI getVmConnectorURI() {
-        return next.getVmConnectorURI();
+        return getNext().getVmConnectorURI();
     }
 
     @Override
     public void brokerServiceStarted() {
-        next.brokerServiceStarted();
+        getNext().brokerServiceStarted();
     }
 
     @Override
     public BrokerService getBrokerService() {
-        return next.getBrokerService();
+        return getNext().getBrokerService();
     }
 
     @Override
     public boolean isExpired(MessageReference messageReference) {
-        return next.isExpired(messageReference);
+        return getNext().isExpired(messageReference);
     }
 
     @Override
     public void messageExpired(ConnectionContext context, MessageReference message, Subscription subscription) {
-        next.messageExpired(context, message, subscription);
+        getNext().messageExpired(context, message, subscription);
     }
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
                                          Subscription subscription, Throwable poisonCause) {
-        return next.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
+        return getNext().sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
     }
 
     @Override
     public Broker getRoot() {
-        return next.getRoot();
+        return getNext().getRoot();
     }
 
     @Override
     public long getBrokerSequenceId() {
-        return next.getBrokerSequenceId();
+        return getNext().getBrokerSequenceId();
     }
 
 
     @Override
     public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
-        next.fastProducer(context, producerInfo, destination);
+        getNext().fastProducer(context, producerInfo, destination);
     }
 
     @Override
-    public void isFull(ConnectionContext context,Destination destination, Usage usage) {
-        next.isFull(context,destination, usage);
+    public void isFull(ConnectionContext context,Destination destination, Usage<?> usage) {
+        getNext().isFull(context,destination, usage);
     }
 
     @Override
     public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
-        next.messageConsumed(context, messageReference);
+        getNext().messageConsumed(context, messageReference);
     }
 
     @Override
     public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
-        next.messageDelivered(context, messageReference);
+        getNext().messageDelivered(context, messageReference);
     }
 
     @Override
     public void messageDiscarded(ConnectionContext context,Subscription sub, MessageReference messageReference) {
-        next.messageDiscarded(context, sub, messageReference);
+        getNext().messageDiscarded(context, sub, messageReference);
     }
 
     @Override
     public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
-        next.slowConsumer(context, destination,subs);
+        getNext().slowConsumer(context, destination,subs);
+    }
+
+    @Override
+    public void virtualDestinationAdded(ConnectionContext context,
+            VirtualDestination virtualDestination) {
+        getNext().virtualDestinationAdded(context, virtualDestination);
+    }
+
+    @Override
+    public void virtualDestinationRemoved(ConnectionContext context,
+            VirtualDestination virtualDestination) {
+        getNext().virtualDestinationRemoved(context, virtualDestination);
     }
 
     @Override
     public void nowMasterBroker() {
-        next.nowMasterBroker();
+        getNext().nowMasterBroker();
     }
 
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
             ConsumerControl control) {
-        next.processConsumerControl(consumerExchange, control);
+        getNext().processConsumerControl(consumerExchange, control);
     }
 
     @Override
     public void reapplyInterceptor() {
-        next.reapplyInterceptor();
+        getNext().reapplyInterceptor();
     }
 
     @Override
     public Scheduler getScheduler() {
-       return next.getScheduler();
+       return getNext().getScheduler();
     }
 
     @Override
     public ThreadPoolExecutor getExecutor() {
-       return next.getExecutor();
+       return getNext().getExecutor();
     }
 
     @Override
     public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp) {
-        next.networkBridgeStarted(brokerInfo, createdByDuplex, remoteIp);
+        getNext().networkBridgeStarted(brokerInfo, createdByDuplex, remoteIp);
     }
 
     @Override
     public void networkBridgeStopped(BrokerInfo brokerInfo) {
-        next.networkBridgeStopped(brokerInfo);
+        getNext().networkBridgeStopped(brokerInfo);
     }
 }

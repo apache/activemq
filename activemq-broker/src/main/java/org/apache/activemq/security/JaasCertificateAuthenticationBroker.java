@@ -37,17 +37,15 @@ import org.apache.activemq.jaas.UserPrincipal;
  * grant JAAS access to incoming connections' SSL certificate chains. NOTE:
  * There is a chance that the incoming connection does not have a valid
  * certificate (has null).
- * 
- * @author sepandm@gmail.com (Sepand)
  */
-public class JaasCertificateAuthenticationBroker extends BrokerFilter {
+public class JaasCertificateAuthenticationBroker extends BrokerFilter implements AuthenticationBroker {
     private final String jaasConfiguration;
 
     /**
      * Simple constructor. Leaves everything to superclass.
-     * 
+     *
      * @param next The Broker that does the actual work for this Filter.
-     * @param jassConfiguration The JAAS domain configuration name (refere to
+     * @param jaasConfiguration The JAAS domain configuration name (refere to
      *                JAAS documentation).
      */
     public JaasCertificateAuthenticationBroker(Broker next, String jaasConfiguration) {
@@ -62,11 +60,12 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter {
      * chain and the JAAS module specified through the JAAS framework. NOTE: The
      * security context's username will be set to the first UserPrincipal
      * created by the login module.
-     * 
+     *
      * @param context The context for the incoming Connection.
      * @param info The ConnectionInfo Command representing the incoming
      *                connection.
      */
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
         if (context.getSecurityContext() == null) {
@@ -79,26 +78,8 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter {
             ClassLoader original = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(JaasAuthenticationBroker.class.getClassLoader());
             try {
-                // Do the login.
-                try {
-                    CallbackHandler callback = new JaasCertificateCallbackHandler((X509Certificate[])info.getTransportContext());
-                    LoginContext lc = new LoginContext(jaasConfiguration, callback);
-                    lc.login();
-                    Subject subject = lc.getSubject();
-
-                    String dnName = "";
-
-                    for (Principal principal : subject.getPrincipals()) {
-                        if (principal instanceof UserPrincipal) {
-                            dnName = ((UserPrincipal)principal).getName();
-                            break;
-                        }
-                    }
-                    SecurityContext s = new JaasCertificateSecurityContext(dnName, subject, (X509Certificate[])info.getTransportContext());
-                    context.setSecurityContext(s);
-                } catch (Exception e) {
-                    throw new SecurityException("User name [" + info.getUserName() + "] or password is invalid. " + e.getMessage(), e);
-                }
+                SecurityContext s = authenticate(info.getUserName(), info.getPassword(), (X509Certificate[]) info.getTransportContext());
+                context.setSecurityContext(s);
             } finally {
                 Thread.currentThread().setContextClassLoader(original);
             }
@@ -109,9 +90,33 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter {
     /**
      * Overriding removeConnection to make sure the security context is cleaned.
      */
+    @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
 
         context.setSecurityContext(null);
+    }
+
+    @Override
+    public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
+        try {
+            CallbackHandler callback = new JaasCertificateCallbackHandler(peerCertificates);
+            LoginContext lc = new LoginContext(jaasConfiguration, callback);
+            lc.login();
+            Subject subject = lc.getSubject();
+
+            String dnName = "";
+
+            for (Principal principal : subject.getPrincipals()) {
+                if (principal instanceof UserPrincipal) {
+                    dnName = ((UserPrincipal)principal).getName();
+                    break;
+                }
+            }
+
+            return new JaasCertificateSecurityContext(dnName, subject, peerCertificates);
+        } catch (Exception e) {
+            throw new SecurityException("User name [" + username + "] or password is invalid. " + e.getMessage(), e);
+        }
     }
 }

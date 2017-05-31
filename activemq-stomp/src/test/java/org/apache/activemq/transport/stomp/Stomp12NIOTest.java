@@ -19,14 +19,16 @@ package org.apache.activemq.transport.stomp;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.apache.activemq.broker.TransportConnector;
-
 public class Stomp12NIOTest extends Stomp12Test {
 
     @Override
-	protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("stomp+nio://0.0.0.0:"+nioPort);
-        nioPort = connector.getConnectUri().getPort();
+    protected boolean isUseTcpConnector() {
+        return false;
+    }
+
+    @Override
+    protected boolean isUseNioConnector() {
+        return true;
     }
 
     @Override

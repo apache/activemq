@@ -44,6 +44,7 @@ public class KahaDBFilePendingMessageCursorTest extends FilePendingMessageCursor
         String body = new String(new byte[1024]);
         Destination destination = new Queue(brokerService, new ActiveMQQueue("Q"), null, new DestinationStatistics(), null);
 
+        brokerService.start();
         underTest = new FilePendingMessageCursor(brokerService.getBroker(), "test", false);
         underTest.setSystemUsage(usage);
 

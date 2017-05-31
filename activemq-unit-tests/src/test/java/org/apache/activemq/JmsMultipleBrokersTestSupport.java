@@ -514,6 +514,23 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         brokers.clear();
     }
 
+    public String buildFailoverUriToAllBrokers() {
+        StringBuilder uriBuilder = new StringBuilder("failover:(");
+
+        int index = 1, size = brokers.size();
+
+        for (BrokerItem b : brokers.values()) {
+            uriBuilder.append(b.getConnectionUri());
+            if (index < size) {
+                uriBuilder.append(",");
+                index++;
+            }
+
+        }
+        uriBuilder.append(")");
+        return uriBuilder.toString();
+    }
+
     // Class to group broker components together
     public class BrokerItem {
         public BrokerService broker;
@@ -533,6 +550,10 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             connections = Collections.synchronizedList(new ArrayList<Connection>());
             allMessages.setVerbose(verbose);
             id = new IdGenerator(broker.getBrokerName() + ":");
+        }
+
+        public String getConnectionUri(){
+            return broker.getVmConnectorURI().toString();
         }
 
         public Connection createConnection() throws Exception {

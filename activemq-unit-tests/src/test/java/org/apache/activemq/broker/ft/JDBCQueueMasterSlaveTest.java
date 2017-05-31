@@ -35,14 +35,21 @@ import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
-    protected DataSource sharedDs;
+    protected SyncCreateDataSource sharedDs;
     protected String MASTER_URL = "tcp://localhost:62001";
     protected String SLAVE_URL  = "tcp://localhost:62002";
+    protected String findStatement;
 
     protected void setUp() throws Exception {
         // startup db
         sharedDs = new SyncCreateDataSource((EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory()));
         super.setUp();
+        findStatement = ((JDBCPersistenceAdapter) master.getPersistenceAdapter()).getStatements().getFindMessageStatement();
+    }
+
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        DataSourceServiceSupport.shutdownDefaultDataSource(sharedDs.delegate);
     }
 
     protected void createMaster() throws Exception {

@@ -16,31 +16,45 @@
  */
 package org.apache.activemq.transport.wss;
 
+import org.apache.activemq.transport.SecureSocketConnectorFactory;
 import org.apache.activemq.transport.ws.WSTransportTest;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.ssl.SslSocketConnector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.junit.Test;
 
 public class WSSTransportTest extends WSTransportTest {
     @Override
-    protected Connector createJettyConnector() {
-        SslSocketConnector sslConnector = new SslSocketConnector();
-        SslContextFactory contextFactory = sslConnector.getSslContextFactory();
-        contextFactory.setKeyStorePath("src/test/resources/server.keystore");
-        contextFactory.setKeyStorePassword("password");
-        contextFactory.setTrustStore("src/test/resources/client.keystore");
-        contextFactory.setTrustStorePassword("password");
-        sslConnector.setPort(8080);
-        return sslConnector;
+    protected Connector createJettyConnector(Server server) throws Exception {
+        SecureSocketConnectorFactory sscf = new SecureSocketConnectorFactory();
+        sscf.setKeyStore("src/test/resources/server.keystore");
+        sscf.setKeyStorePassword("password");
+        sscf.setTrustStore("src/test/resources/client.keystore");
+        sscf.setTrustStorePassword("password");
+
+        ServerConnector c = (ServerConnector) sscf.createConnector(server);
+        c.setPort(getProxyPort());
+        return c;
     }
 
     @Override
     protected String getWSConnectorURI() {
-        return "wss://localhost:61623";
+        return "wss://localhost:" + port;
+    }
+
+    @Override
+    @Test(timeout=10000)
+    public void testGet() throws Exception {
+        SslContextFactory factory = new SslContextFactory();
+        factory.setSslContext(broker.getSslContext().getSSLContext());
+
+        testGet("https://127.0.0.1:" + port, factory);
     }
 
     @Override
     protected String getTestURI() {
-        return "https://localhost:8080/websocket.html#wss://localhost:61623";
+        int proxyPort = getProxyPort();
+        return "https://localhost:" + proxyPort + "/websocket.html#wss://localhost:" + port;
     }
 }

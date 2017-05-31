@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.jdbc;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -24,14 +25,22 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ft.SyncCreateDataSource;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test to see if the JDBCExceptionIOHandler will restart the transport connectors correctly after
@@ -39,7 +48,7 @@ import org.slf4j.LoggerFactory;
  *
  * see AMQ-4575
  */
-public class JDBCIOExceptionHandlerTest extends TestCase {
+public class JDBCIOExceptionHandlerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandlerTest.class);
     private static final String TRANSPORT_URL = "tcp://0.0.0.0:0";
@@ -47,6 +56,13 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
     private ActiveMQConnectionFactory factory;
     private ReconnectingEmbeddedDataSource dataSource;
     private BrokerService broker;
+
+    @After
+    public void stopDB() {
+        if (dataSource != null) {
+            dataSource.stopDB();
+        }
+    }
 
     protected BrokerService createBroker(boolean withJMX) throws Exception {
         return createBroker("localhost", withJMX, true, true);
@@ -58,15 +74,11 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
 
         broker.setUseJmx(withJMX);
 
-        EmbeddedDataSource embeddedDataSource = new EmbeddedDataSource();
-        embeddedDataSource.setDatabaseName("derbydb_15");
-        embeddedDataSource.setCreateDatabase("create");
-
+        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        EmbeddedDataSource embeddedDataSource = (EmbeddedDataSource) jdbc.getDataSource();
         // create a wrapper to EmbeddedDataSource to allow the connection be
         // reestablished to derby db
-        dataSource = new ReconnectingEmbeddedDataSource(embeddedDataSource);
-
-        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        dataSource = new ReconnectingEmbeddedDataSource(new SyncCreateDataSource(embeddedDataSource));
         jdbc.setDataSource(dataSource);
 
         jdbc.setLockKeepAlivePeriod(1000l);
@@ -78,10 +90,10 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
         }
 
         broker.setPersistenceAdapter(jdbc);
-        JDBCIOExceptionHandler jdbcioExceptionHandler = new JDBCIOExceptionHandler();
-        jdbcioExceptionHandler.setResumeCheckSleepPeriod(1000l);
-        jdbcioExceptionHandler.setStopStartConnectors(startStopConnectors);
-        broker.setIoExceptionHandler(jdbcioExceptionHandler);
+        LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+        ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+        ioExceptionHandler.setStopStartConnectors(startStopConnectors);
+        broker.setIoExceptionHandler(ioExceptionHandler);
         String connectionUri = broker.addConnector(TRANSPORT_URL).getPublishableConnectString();
 
         factory = new ActiveMQConnectionFactory(connectionUri);
@@ -92,6 +104,7 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
     /*
      * run test without JMX enabled
      */
+    @Test
     public void testRecoverWithOutJMX() throws Exception {
         recoverFromDisconnectDB(false);
     }
@@ -99,14 +112,17 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
     /*
      * run test with JMX enabled
      */
+    @Test
     public void testRecoverWithJMX() throws Exception {
         recoverFromDisconnectDB(true);
     }
 
+    @Test
     public void testSlaveStoppedLease() throws Exception {
         testSlaveStopped(true);
     }
 
+    @Test
     public void testSlaveStoppedDefault() throws Exception {
         testSlaveStopped(false);
     }
@@ -137,10 +153,10 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
                     }
 
                     broker.setPersistenceAdapter(jdbc);
-                    JDBCIOExceptionHandler jdbcioExceptionHandler = new JDBCIOExceptionHandler();
-                    jdbcioExceptionHandler.setResumeCheckSleepPeriod(1000l);
-                    jdbcioExceptionHandler.setStopStartConnectors(false);
-                    broker.setIoExceptionHandler(jdbcioExceptionHandler);
+                    LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+                    ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+                    ioExceptionHandler.setStopStartConnectors(false);
+                    broker.setIoExceptionHandler(ioExceptionHandler);
                     slave.set(broker);
                     broker.start();
                 } catch (Exception e) {
@@ -189,13 +205,20 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
             // restart db underneath
             dataSource.restartDB();
 
-            // give the transport connector a moment to start
-            LOG.debug("*** Waiting for connector to start...");
-            TimeUnit.SECONDS.sleep(3);
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    LOG.debug("*** checking connector to start...");
+                    try {
+                        checkTransportConnectorStarted();
+                        return true;
+                    } catch (Throwable t) {
+                        LOG.debug(t.toString());
+                    }
+                    return false;
+                }
+            });
 
-            LOG.debug("*** checking connector to start...");
-            // check the connector has restarted
-            checkTransportConnectorStarted();
 
         } finally {
             LOG.debug("*** broker is stopping...");
@@ -229,13 +252,12 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
      * Wrapped the derby datasource object to get DB reconnect functionality as I not
      * manage to get that working directly on the EmbeddedDataSource
      *
-     * NOTE: Not a thread Safe but for this unit test it should be fine
      */
     public class ReconnectingEmbeddedDataSource implements javax.sql.DataSource {
 
-        private EmbeddedDataSource realDatasource;
+        private SyncCreateDataSource realDatasource;
 
-        public ReconnectingEmbeddedDataSource(EmbeddedDataSource datasource) {
+        public ReconnectingEmbeddedDataSource(SyncCreateDataSource datasource) {
             this.realDatasource = datasource;
         }
 
@@ -286,22 +308,21 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
          *
          * @throws SQLException
          */
-        public void restartDB() throws SQLException {
-            EmbeddedDataSource newDatasource = new EmbeddedDataSource();
-            newDatasource.setDatabaseName(this.realDatasource.getDatabaseName());
+        public void restartDB() throws Exception {
+            EmbeddedDataSource newDatasource =
+                    (EmbeddedDataSource) DataSourceServiceSupport.createDataSource(broker.getDataDirectoryFile().getCanonicalPath());
             newDatasource.getConnection();
             LOG.info("*** DB restarted now...");
-            this.realDatasource = newDatasource;
+            Object existingDataSource = realDatasource;
+            synchronized (existingDataSource) {
+                this.realDatasource = new SyncCreateDataSource(newDatasource);
+            }
         }
 
         public void stopDB() {
-            try {
-                realDatasource.setShutdownDatabase("shutdown");
-                LOG.info("***DB is being shutdown...");
-                dataSource.getConnection();
-                fail("should have thrown a db closed exception");
-            } catch (Exception ex) {
-                ex.printStackTrace(System.out);
+            LOG.info("***DB is being shutdown...");
+            synchronized (realDatasource) {
+                DataSourceServiceSupport.shutdownDefaultDataSource(realDatasource.getDelegate());
             }
         }
 

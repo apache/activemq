@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.ra;
 
+import static org.junit.Assert.assertNotNull;
+
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -26,15 +28,14 @@ import javax.jms.TopicSubscriber;
 import javax.resource.ResourceException;
 import javax.transaction.xa.XAException;
 
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * 
- */
-public class UnsubscribeResubscribeTest extends TestCase {
+public class UnsubscribeResubscribeTest {
 
-    private static final String DEFAULT_HOST = "vm://localhost";
+    private static final String DEFAULT_HOST = "vm://localhost?broker.persistent=false";
 
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
@@ -42,17 +43,20 @@ public class UnsubscribeResubscribeTest extends TestCase {
     private ManagedConnectionProxy connection;
     private ActiveMQManagedConnection managedConnection;
 
-    /**
-     * @see junit.framework.TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
-
+    @Before
+    public void setUp() throws Exception {
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
         managedConnectionFactory.setServerUrl(DEFAULT_HOST);
         managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
         managedConnectionFactory.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
         managedConnectionFactory.setClientid("clientId");
+    }
 
+    @After
+    public void tearDown() throws Exception {
+        if (connection != null) {
+            connection.close();
+        }
     }
 
     private void getConnection() throws ResourceException, JMSException {
@@ -61,8 +65,10 @@ public class UnsubscribeResubscribeTest extends TestCase {
         managedConnection = connection.getManagedConnection();
     }
 
+    @Test(timeout = 60000)
     public void testUnsubscribeResubscribe() throws ResourceException, JMSException, XAException {
         getConnection();
+        assertNotNull(managedConnection);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("topic");
         TopicSubscriber sub = session.createDurableSubscriber(topic, "sub");
@@ -73,5 +79,4 @@ public class UnsubscribeResubscribeTest extends TestCase {
         session.unsubscribe("sub");
         sub = session.createDurableSubscriber(topic, "sub");
     }
-
 }

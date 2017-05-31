@@ -20,12 +20,14 @@ import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -59,13 +61,8 @@ public class AMQ4351Test extends BrokerTestSupport {
         broker.setOfflineDurableSubscriberTimeout(2000); // lets delete durable subs much faster.
 
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
-
-        jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
+        broker.setDeleteAllMessagesOnStartup(true);
         return broker;
     }
 

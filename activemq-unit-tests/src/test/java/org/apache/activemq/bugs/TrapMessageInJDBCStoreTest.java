@@ -16,30 +16,34 @@
  */
 package org.apache.activemq.bugs;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.*;
-import org.apache.activemq.store.jdbc.*;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.IOHelper;
-import org.apache.derby.jdbc.EmbeddedDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import javax.jms.Message;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
+import org.apache.activemq.store.jdbc.TransactionContext;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
+import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.apache.log4j.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test to demostrate a message trapped in the JDBC store and not
@@ -61,6 +65,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
     private BrokerService broker;
     private TestTransactionContext testTransactionContext;
     private TestJDBCPersistenceAdapter jdbc;
+    private java.sql.Connection checkOnStoreConnection;
 
     protected BrokerService createBroker(boolean withJMX) throws Exception {
         BrokerService broker = new BrokerService();
@@ -68,12 +73,14 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
         broker.setUseJmx(withJMX);
 
         EmbeddedDataSource embeddedDataSource = (EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory());
-        embeddedDataSource.setCreateDatabase("create");
+        checkOnStoreConnection = embeddedDataSource.getConnection();
+
 
         //wire in a TestTransactionContext (wrapper to TransactionContext) that has an executeBatch()
         // method that can be configured to throw a SQL exception on demand
         jdbc = new TestJDBCPersistenceAdapter();
         jdbc.setDataSource(embeddedDataSource);
+        jdbc.setCleanupPeriod(0);
         testTransactionContext = new TestTransactionContext(jdbc);
 
         jdbc.setLockKeepAlivePeriod(1000l);
@@ -83,7 +90,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
 
         broker.setPersistenceAdapter(jdbc);
 
-        broker.setIoExceptionHandler(new JDBCIOExceptionHandler());
+        broker.setIoExceptionHandler(new LeaseLockerIOExceptionHandler());
 
         transportUrl = broker.addConnector(transportUrl).getPublishableConnectString();
         return broker;
@@ -102,32 +109,45 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
 
     public void testDBCommitException() throws Exception {
 
+        org.apache.log4j.Logger serviceLogger = org.apache.log4j.Logger.getLogger(TransportConnection.class.getName() + ".Service");
+        serviceLogger.setLevel (Level.TRACE);
+
         broker = this.createBroker(false);
         broker.deleteAllMessages();
         broker.start();
         broker.waitUntilStarted();
 
-        LOG.info("***Broker started...");
+        try {
+            LOG.info("***Broker started...");
 
-        // failover but timeout in 5 seconds so the test does not hang
-        String failoverTransportURL = "failover:(" + transportUrl
-                + ")?timeout=5000";
+            // failover but timeout in 5 seconds so the test does not hang
+            String failoverTransportURL = "failover:(" + transportUrl
+                    + ")?timeout=5000";
 
 
-        sendMessage(MY_TEST_Q, failoverTransportURL);
+            sendMessage(MY_TEST_Q, failoverTransportURL);
 
-        List<TextMessage> consumedMessages = consumeMessages(MY_TEST_Q,failoverTransportURL);
+            //check db contents
+            ArrayList<Long> dbSeq = dbMessageCount(checkOnStoreConnection);
+            LOG.info("*** after send: db contains message seq " + dbSeq);
 
-        //check db contents
-        ArrayList<Long> dbSeq = dbMessageCount();
+            List<TextMessage> consumedMessages = consumeMessages(MY_TEST_Q, failoverTransportURL);
 
-        LOG.debug("*** db contains message seq " +dbSeq );
+            assertEquals("number of consumed messages", 3, consumedMessages.size());
 
-        assertEquals("number of messages in DB after test",0,dbSeq.size());
-        assertEquals("number of consumed messages",3,consumedMessages.size());
+            //check db contents
+            dbSeq = dbMessageCount(checkOnStoreConnection);
+            LOG.info("*** after consume - db contains message seq " + dbSeq);
 
-        broker.stop();
-        broker.waitUntilStopped();
+            assertEquals("number of messages in DB after test", 0, dbSeq.size());
+
+        } finally {
+            try {
+                checkOnStoreConnection.close();
+            } catch (Exception ignored) {}
+            broker.stop();
+            broker.waitUntilStopped();
+        }
     }
 
 
@@ -153,7 +173,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
             MessageConsumer messageConsumer = session.createConsumer(destination);
 
             while(true){
-                TextMessage textMessage= (TextMessage) messageConsumer.receive(100);
+                TextMessage textMessage= (TextMessage) messageConsumer.receive(4000);
                 LOG.debug("*** consumed Messages :"+textMessage);
 
                 if(textMessage==null){
@@ -171,7 +191,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
     }
 
     public void sendMessage(String queue, String transportURL)
-            throws JMSException {
+            throws Exception {
         Connection connection = null;
 
         try {
@@ -188,32 +208,18 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
 
             TextMessage m = session.createTextMessage("1");
 
-            testTransactionContext.throwSQLException = false;
-            jdbc.throwSQLException = false;
-
-
             LOG.debug("*** send message 1 to broker...");
             producer.send(m);
-
-            testTransactionContext.throwSQLException = true;
-            jdbc.throwSQLException = true;
 
             // trigger SQL exception in transactionContext
             LOG.debug("***  send message 2 to broker");
             m.setText("2");
+            producer.send(m);
 
-            // need to reset the flag in a seperate thread during the send
-            ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-            executor.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    testTransactionContext.throwSQLException = false;
-                    jdbc.throwSQLException = false;
-                }
-            }, 2 , TimeUnit.SECONDS);
-
-             producer.send(m);
-
+            //check db contents
+            ArrayList<Long> dbSeq = dbMessageCount(checkOnStoreConnection);
+            LOG.info("*** after send 2 - db contains message seq " + dbSeq);
+            assertEquals("number of messages in DB after send 2",2,dbSeq.size());
 
             LOG.debug("***  send  message 3 to broker");
             m.setText("3");
@@ -232,10 +238,10 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
      * @return
      * @throws SQLException
      * @throws IOException
+     * @param checkOnStoreConnection
      */
-    private ArrayList<Long> dbMessageCount() throws SQLException, IOException {
-        java.sql.Connection conn = ((JDBCPersistenceAdapter) broker.getPersistenceAdapter()).getDataSource().getConnection();
-        PreparedStatement statement = conn.prepareStatement("SELECT MSGID_SEQ FROM ACTIVEMQ_MSGS");
+    private ArrayList<Long> dbMessageCount(java.sql.Connection checkOnStoreConnection) throws SQLException, IOException {
+        PreparedStatement statement = checkOnStoreConnection.prepareStatement("SELECT MSGID_SEQ FROM ACTIVEMQ_MSGS");
 
         try{
 
@@ -250,8 +256,6 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
 
         }finally{
             statement.close();
-            conn.close();
-
         }
 
     }
@@ -261,25 +265,14 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
 	 */
 
     public class TestJDBCPersistenceAdapter extends JDBCPersistenceAdapter {
-
-        public boolean throwSQLException;
-
         public TransactionContext getTransactionContext() throws IOException {
             return testTransactionContext;
-        }
-
-        @Override
-        public void checkpoint(boolean sync) throws IOException {
-            if (throwSQLException) {
-                throw new IOException("checkpoint failed");
-            }
-            super.checkpoint(sync);
         }
     }
 
     public class TestTransactionContext extends TransactionContext {
 
-        public boolean throwSQLException;
+        private int count;
 
         public TestTransactionContext(
                 JDBCPersistenceAdapter jdbcPersistenceAdapter)
@@ -288,14 +281,14 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
         }
 
         public void executeBatch() throws SQLException {
-            //call
             super.executeBatch();
+            count++;
+            LOG.debug("ExecuteBatchOverride: count:" + count, new RuntimeException("executeBatch"));
 
-            if (throwSQLException){
-                throw new SQLException("TEST SQL EXCEPTION from executeBatch after super. execution");
+            // throw on second add message
+            if (count == 16){
+                throw new SQLException("TEST SQL EXCEPTION from executeBatch after super.execution: count:" + count);
             }
-
-
         }
 
 

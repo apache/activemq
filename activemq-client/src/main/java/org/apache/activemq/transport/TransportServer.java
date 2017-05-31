@@ -69,7 +69,8 @@ public interface TransportServer extends Service {
     /**
      * Some protocols allow link stealing by default (if 2 connections have the same clientID - the youngest wins).
      * This is the default for AMQP and MQTT. However, JMS 1.1 spec requires the opposite
-     * @return
+     *
+     * @return true if allow link stealing is enabled.
      */
     boolean isAllowLinkStealing();
 }

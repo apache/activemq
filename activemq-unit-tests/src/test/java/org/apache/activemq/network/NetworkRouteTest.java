@@ -37,6 +37,7 @@ import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.tcp.TcpTransport;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.easymock.IMocksControl;
@@ -62,7 +63,7 @@ public class NetworkRouteTest {
 
     @Test
     public void verifyNoRemoveOnOneConduitRemove() throws Exception {
-        EasyMock.expect(localBroker.request(EasyMock.isA(ConsumerInfo.class))).andReturn(null);
+        localBroker.oneway(EasyMock.isA(ConsumerInfo.class));
         control.replay();
 
         remoteListener.onCommand(path2Msg);
@@ -75,7 +76,7 @@ public class NetworkRouteTest {
     @Test
     public void addAndRemoveOppositeOrder() throws Exception {
         // from (1)
-        localBroker.request(EasyMock.isA(ConsumerInfo.class));
+        localBroker.oneway(EasyMock.isA(ConsumerInfo.class));
         ArgHolder localConsumer = ArgHolder.holdArgsForLastObjectCall();
         // from (2a)
         remoteBroker.asyncRequest(EasyMock.isA(ActiveMQMessage.class), EasyMock.isA(ResponseCallback.class));
@@ -122,7 +123,7 @@ public class NetworkRouteTest {
     @Test
     public void addAndRemoveSameOrder() throws Exception {
         // from (1)
-        localBroker.request(EasyMock.isA(ConsumerInfo.class));
+        localBroker.oneway(EasyMock.isA(ConsumerInfo.class));
         ArgHolder localConsumer = ArgHolder.holdArgsForLastObjectCall();
 
         // from (2a)
@@ -206,6 +207,7 @@ public class NetworkRouteTest {
         localBroker.oneway(remoteBrokerInfo);
         EasyMock.expect(localBroker.request(EasyMock.isA(Object.class)))
                 .andReturn(null);
+        EasyMock.expect(remoteBroker.narrow(TcpTransport.class)).andReturn(null);
         localBroker.oneway(EasyMock.isA(Object.class));
         ExpectationWaiter localInitWaiter = ExpectationWaiter.waiterForLastVoidCall();
 
@@ -232,6 +234,7 @@ public class NetworkRouteTest {
         msg.setDestination(new ActiveMQTopic("test"));
         msgDispatch = new MessageDispatch();
         msgDispatch.setMessage(msg);
+        msgDispatch.setDestination(msg.getDestination());
 
         ConsumerInfo path1 = new ConsumerInfo();
         path1.setDestination(msg.getDestination());

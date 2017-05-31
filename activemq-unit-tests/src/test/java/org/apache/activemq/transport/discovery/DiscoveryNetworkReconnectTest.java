@@ -128,6 +128,9 @@ public class DiscoveryNetworkReconnectTest {
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.MasterBroker"))));
             allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=jobScheduler,jobSchedulerName=JMS"))));
+            allowing(managementContext).getObjectInstance(with(equal(
+                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
+
 
             atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(new NetworkBridgeObjectNameMatcher<ObjectName>(
                         new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"

@@ -16,10 +16,13 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.File;
 import junit.framework.Test;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.apache.derby.jdbc.EmbeddedXADataSource;
 
@@ -29,6 +32,7 @@ public class JdbcXARecoveryBrokerTest extends XARecoveryBrokerTest {
 
     @Override
     protected void setUp() throws Exception {
+        System.setProperty("derby.system.home", new File(IOHelper.getDefaultDataDirectory()).getCanonicalPath());
         dataSource = new EmbeddedXADataSource();
         dataSource.setDatabaseName("derbyDb");
         dataSource.setCreateDatabase("create");
@@ -64,13 +68,7 @@ public class JdbcXARecoveryBrokerTest extends XARecoveryBrokerTest {
 
     private void stopDerby() {
         LOG.info("STOPPING DB!@!!!!");
-        final EmbeddedDataSource ds = dataSource;
-        try {
-            ds.setShutdownDatabase("shutdown");
-            ds.getConnection();
-        } catch (Exception ignored) {
-        }
-
+        DataSourceServiceSupport.shutdownDefaultDataSource(dataSource);
     }
 
     public static Test suite() {

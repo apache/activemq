@@ -16,29 +16,51 @@
  */
 package org.apache.activemq.network;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeNotNull;
-
-import java.net.MalformedURLException;
-import java.util.Set;
-
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.util.TestUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.management.MBeanServer;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import java.net.MalformedURLException;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeNotNull;
 
 public class DuplexNetworkMBeanTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(DuplexNetworkMBeanTest.class);
     protected final int numRestarts = 3;
 
+    private int primaryBrokerPort;
+    private int secondaryBrokerPort;
+    private MBeanServer mBeanServer = new ManagementContext().getMBeanServer();
+
+    @Before
+    public void setUp() throws Exception {
+        List<Integer> ports = TestUtils.findOpenPorts(2);
+
+        primaryBrokerPort = ports.get(0);
+        secondaryBrokerPort = ports.get(1);
+    }
+
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("broker");
-        broker.addConnector("tcp://localhost:61617?transport.reuseAddress=true");
+        broker.getManagementContext().setCreateConnector(false);
+        broker.addConnector("tcp://localhost:" + primaryBrokerPort + "?transport.reuseAddress=true");
 
         return broker;
     }
@@ -46,8 +68,10 @@ public class DuplexNetworkMBeanTest {
     protected BrokerService createNetworkedBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("networkedBroker");
-        broker.addConnector("tcp://localhost:62617?transport.reuseAddress=true");
-        NetworkConnector networkConnector = broker.addNetworkConnector("static:(tcp://localhost:61617?wireFormat.maxInactivityDuration=500)?useExponentialBackOff=false");
+        broker.addConnector("tcp://localhost:" + secondaryBrokerPort + "?transport.reuseAddress=true");
+        broker.getManagementContext().setCreateConnector(false);
+        NetworkConnector networkConnector =
+            broker.addNetworkConnector("static:(tcp://localhost:" + primaryBrokerPort + "?wireFormat.maxInactivityDuration=500)?useExponentialBackOff=false");
         networkConnector.setDuplex(true);
         return broker;
     }
@@ -117,6 +141,74 @@ public class DuplexNetworkMBeanTest {
         }
     }
 
+    @Test
+    public void testMBeansNotOverwrittenOnCleanup() throws Exception {
+        BrokerService broker = createBroker();
+
+        BrokerService networkedBroker = createNetworkedBroker();
+        MessageProducer producerBroker = null;
+        MessageConsumer consumerBroker = null;
+        Session sessionNetworkBroker = null;
+        Session sessionBroker = null;
+        MessageProducer producerNetworkBroker = null;
+        MessageConsumer consumerNetworkBroker = null;
+        try {
+            broker.start();
+            broker.waitUntilStarted();
+            networkedBroker.start();
+            try {
+                assertEquals(2, countMbeans(networkedBroker, "connector=networkConnectors", 10000));
+                assertEquals(1, countMbeans(broker, "connector=duplexNetworkConnectors", 10000));
+
+                Connection brokerConnection = new ActiveMQConnectionFactory(broker.getVmConnectorURI()).createConnection();
+                brokerConnection.start();
+
+                sessionBroker = brokerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                producerBroker = sessionBroker.createProducer(sessionBroker.createTopic("testTopic"));
+                consumerBroker = sessionBroker.createConsumer(sessionBroker.createTopic("testTopic"));
+                Connection netWorkBrokerConnection = new ActiveMQConnectionFactory(networkedBroker.getVmConnectorURI()).createConnection();
+                netWorkBrokerConnection.start();
+                sessionNetworkBroker = netWorkBrokerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                producerNetworkBroker = sessionNetworkBroker.createProducer(sessionBroker.createTopic("testTopic"));
+                consumerNetworkBroker = sessionNetworkBroker.createConsumer(sessionBroker.createTopic("testTopic"));
+
+                assertEquals(4, countMbeans(broker, "destinationType=Topic,destinationName=testTopic", 15000));
+                assertEquals(4, countMbeans(networkedBroker, "destinationType=Topic,destinationName=testTopic", 15000));
+
+                producerBroker.send(sessionBroker.createTextMessage("test1"));
+                producerNetworkBroker.send(sessionNetworkBroker.createTextMessage("test2"));
+
+                assertEquals(2, countMbeans(networkedBroker, "destinationName=testTopic,direction=*", 10000));
+                assertEquals(2, countMbeans(broker, "destinationName=testTopic,direction=*", 10000));
+            } finally {
+                if (producerBroker != null) {
+                    producerBroker.close();
+                }
+                if (consumerBroker != null) {
+                    consumerBroker.close();
+                }
+                if (sessionBroker != null) {
+                    sessionBroker.close();
+                }
+                if (sessionNetworkBroker != null) {
+                    sessionNetworkBroker.close();
+                }
+                if (producerNetworkBroker != null) {
+                    producerNetworkBroker.close();
+                }
+                if (consumerNetworkBroker != null) {
+                    consumerNetworkBroker.close();
+                }
+                networkedBroker.stop();
+                networkedBroker.waitUntilStopped();
+            }
+            assertEquals(0, countMbeans(broker, "destinationName=testTopic,direction=*", 1500));
+        } finally {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
+    }
+
     private int countMbeans(BrokerService broker, String type) throws Exception {
         return countMbeans(broker, type, 0);
     }
@@ -138,7 +230,7 @@ public class DuplexNetworkMBeanTest {
             }
 
             LOG.info("Query name: " + beanName);
-            mbeans = broker.getManagementContext().queryNames(beanName, null);
+            mbeans = mBeanServer.queryNames(beanName, null);
             if (mbeans != null) {
                 count = mbeans.size();
             } else {
@@ -158,7 +250,7 @@ public class DuplexNetworkMBeanTest {
     private void logAllMbeans(BrokerService broker) throws MalformedURLException {
         try {
             // trace all existing MBeans
-            Set<?> all = broker.getManagementContext().queryNames(null, null);
+            Set<?> all = mBeanServer.queryNames(null, null);
             LOG.info("Total MBean count=" + all.size());
             for (Object o : all) {
                 ObjectInstance bean = (ObjectInstance)o;

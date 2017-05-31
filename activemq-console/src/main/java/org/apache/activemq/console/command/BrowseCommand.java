@@ -97,25 +97,20 @@ public class BrowseCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     protected void runTask(List<String> tokens) throws Exception {
-        try {
-            // If there is no queue name specified, let's select all
-            if (tokens.isEmpty()) {
-                tokens.add("*");
-            }
+        // If there is no queue name specified, let's select all
+        if (tokens.isEmpty()) {
+            tokens.add("*");
+        }
 
-            // Iterate through the queue names
-            for (Iterator<String> i = tokens.iterator(); i.hasNext();) {
-                List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "Type=Queue,Destination=" + i.next() + ",*");
+        // Iterate through the queue names
+        for (Iterator<String> i = tokens.iterator(); i.hasNext(); ) {
+            List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "Type=Queue,Destination=" + i.next() + ",*");
 
-                // Iterate through the queue result
-                for (Iterator j = queueList.iterator(); j.hasNext();) {
-                    List messages = JmxMBeansUtil.createMessageQueryFilter(createJmxConnection(), ((ObjectInstance)j.next()).getObjectName()).query(queryAddObjects);
-                    context.printMessage(JmxMBeansUtil.filterMessagesView(messages, groupViews, queryViews));
-                }
+            // Iterate through the queue result
+            for (Iterator j = queueList.iterator(); j.hasNext(); ) {
+                List messages = JmxMBeansUtil.createMessageQueryFilter(createJmxConnection(), ((ObjectInstance) j.next()).getObjectName()).query(queryAddObjects);
+                context.printMessage(JmxMBeansUtil.filterMessagesView(messages, groupViews, queryViews));
             }
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute browse task. Reason: " + e));
-            throw new Exception(e);
         }
     }
 

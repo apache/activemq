@@ -52,7 +52,7 @@ public class BacklogNetworkCrossTalkTest extends JmsMultipleBrokersTestSupport {
 
         waitForBridgeFormation();
 
-        final int numMessages = 10000;
+        final int numMessages = 1000;
         // Create queue
         ActiveMQDestination destA = createDestination("AAA", false);
         sendMessages("A", destA, numMessages);

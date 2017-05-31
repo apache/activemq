@@ -53,11 +53,6 @@ public class JDBCTestMemory extends TestCase {
         BrokerService broker = new BrokerService();
         broker.setUseJmx(true);
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
-        
         jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
         broker.addConnector("tcp://0.0.0.0:61616");
@@ -68,10 +63,6 @@ public class JDBCTestMemory extends TestCase {
         BrokerService broker = new BrokerService();
         broker.setUseJmx(true);
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
         broker.setPersistenceAdapter(jdbc);
         broker.addConnector("tcp://0.0.0.0:61616");
         return broker;

@@ -21,7 +21,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.demo.DefaultQueueSender;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
@@ -46,7 +46,7 @@ public final class JettyServer {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(true);
-        broker.addConnector("tcp://localhost:0");
+        broker.addConnector("tcp://localhost:61616");
         broker.addConnector("stomp://localhost:0");
         broker.start();
 
@@ -63,9 +63,8 @@ public final class JettyServer {
         }
         System.out.println("Starting Web Server on port: " + port);
         Server server = new Server();
-        SelectChannelConnector connector = new SelectChannelConnector();
+        ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
-        connector.setServer(server);
         WebAppContext context = new WebAppContext();
 
         context.setResourceBase(WEBAPP_DIR);

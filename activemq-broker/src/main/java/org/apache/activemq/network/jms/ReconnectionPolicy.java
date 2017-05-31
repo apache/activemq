@@ -25,11 +25,13 @@ package org.apache.activemq.network.jms;
  */
 public class ReconnectionPolicy {
 
+    public static final int INFINITE = -1;
+
     private int maxSendRetries = 10;
     private long sendRetryDelay = 1000L;
 
-    private int maxReconnectAttempts = -1;
-    private int maxInitialConnectAttempts = -1;
+    private int maxReconnectAttempts = INFINITE;
+    private int maxInitialConnectAttempts = INFINITE;
     private long maximumReconnectDelay = 30000;
     private long initialReconnectDelay = 1000L;
     private boolean useExponentialBackOff = false;
@@ -49,7 +51,7 @@ public class ReconnectionPolicy {
      * Sets the maximum number of a times a Message send should be retried before
      * a JMSExeception is thrown indicating that the operation failed.
      *
-     * @param maxRetries
+     * @param maxSendRetries
      * 			number of send retries that will be performed.
      */
     public void setMaxSendRetries(int maxSendRetries) {
@@ -232,7 +234,7 @@ public class ReconnectionPolicy {
         long nextDelay = initialReconnectDelay;
 
         if (useExponentialBackOff) {
-            nextDelay = nextDelay * (long)(attempt * backOffMultiplier);
+            nextDelay = Math.max(initialReconnectDelay, nextDelay * (long)((attempt - 1) * backOffMultiplier));
         }
 
         if (maximumReconnectDelay > 0 && nextDelay > maximumReconnectDelay) {

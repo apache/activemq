@@ -33,10 +33,15 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,16 +75,10 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         tpe.setMemoryLimit(destinationMemLimit);
         tpe.setProducerFlowControl(true);
         tpe.setAdvisoryWhenFull(true);
+        tpe.setBlockedProducerWarningInterval(2000);
 
-        // Setup the topic destination policy
-        PolicyEntry qpe = new PolicyEntry();
-        qpe.setQueue(">");
-        qpe.setMemoryLimit(destinationMemLimit);
-        qpe.setProducerFlowControl(true);
-        qpe.setQueuePrefetch(1);
-        qpe.setAdvisoryWhenFull(true);
 
-        pm.setPolicyEntries(Arrays.asList(new PolicyEntry[]{tpe, qpe}));
+        pm.setPolicyEntries(Arrays.asList(new PolicyEntry[]{tpe}));
 
         setDestinationPolicy(broker, pm);
 
@@ -118,54 +117,89 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         listenerSession.createConsumer(new ActiveMQTopic(AdvisorySupport.FULL_TOPIC_PREFIX + ">")).setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
-                LOG.info("Got full advisory, blockedCounter: " + blockedCounter.get());
-                blockedCounter.incrementAndGet();
+                try {
+                    if (blockedCounter.get() % 100 == 0) {
+                        LOG.info("Got full advisory, usageName: " +
+                                message.getStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME) +
+                                ", usageCount: " +
+                                message.getLongProperty(AdvisorySupport.MSG_PROPERTY_USAGE_COUNT)
+                                + ", blockedCounter: " + blockedCounter.get());
+                    }
+                    blockedCounter.incrementAndGet();
+
+                } catch (Exception error) {
+                    error.printStackTrace();
+                    LOG.error("missing advisory property", error);
+                }
             }
         });
 
-        // Start producing the test messages
-        final Session session = connectionFactory.createConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
-        final MessageProducer producer = session.createProducer(destination);
-
-        Thread producingThread = new Thread("Producing Thread") {
-            public void run() {
-                try {
-                    for (long i = 0; i < numMessagesToSend; i++) {
-                        producer.send(session.createTextMessage("test"));
-
-                        long count = produced.incrementAndGet();
-                        if (count % 10000 == 0) {
-                            LOG.info("Produced " + count + " messages");
-                        }
-                    }
-                } catch (Throwable ex) {
-                    ex.printStackTrace();
-                } finally {
-                    try {
-                        producer.close();
-                        session.close();
-                    } catch (Exception e) {
-                    }
+        final AtomicInteger warnings = new AtomicInteger();
+        Appender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Usage Manager memory limit reached")) {
+                    LOG.info("received  log message: " + event.getMessage());
+                    warnings.incrementAndGet();
                 }
             }
         };
+        org.apache.log4j.Logger log4jLogger =
+                org.apache.log4j.Logger.getLogger(Topic.class);
+        log4jLogger.addAppender(appender);
+        try {
 
-        producingThread.start();
+            // Start producing the test messages
+            final Session session = connectionFactory.createConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
+            final MessageProducer producer = session.createProducer(destination);
 
-        Wait.waitFor(new Wait.Condition() {
-            public boolean isSatisified() throws Exception {
-                return consumed.get() == numMessagesToSend;
-            }
-        }, 5 * 60 * 1000); // give it plenty of time before failing
+            Thread producingThread = new Thread("Producing Thread") {
+                public void run() {
+                    try {
+                        for (long i = 0; i < numMessagesToSend; i++) {
+                            producer.send(session.createTextMessage("test"));
 
-        assertEquals("Didn't produce all messages", numMessagesToSend, produced.get());
-        assertEquals("Didn't consume all messages", numMessagesToSend, consumed.get());
+                            long count = produced.incrementAndGet();
+                            if (count % 10000 == 0) {
+                                LOG.info("Produced " + count + " messages");
+                            }
+                        }
+                    } catch (Throwable ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        try {
+                            producer.close();
+                            session.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            };
 
-         assertTrue("Producer got blocked", Wait.waitFor(new Wait.Condition() {
-             public boolean isSatisified() throws Exception {
-                 return blockedCounter.get() > 0;
-             }
-         }, 5 * 1000));
+            producingThread.start();
+
+            Wait.waitFor(new Wait.Condition() {
+                public boolean isSatisified() throws Exception {
+                    return consumed.get() == numMessagesToSend;
+                }
+            }, 5 * 60 * 1000); // give it plenty of time before failing
+
+            assertEquals("Didn't produce all messages", numMessagesToSend, produced.get());
+            assertEquals("Didn't consume all messages", numMessagesToSend, consumed.get());
+
+            assertTrue("Producer got blocked", Wait.waitFor(new Wait.Condition() {
+                public boolean isSatisified() throws Exception {
+                    return blockedCounter.get() > 0;
+                }
+            }, 5 * 1000));
+
+            LOG.info("BlockedCount: " + blockedCounter.get() + ", Warnings:" + warnings.get());
+            assertTrue("got a few warnings", warnings.get() > 1);
+            assertTrue("warning limited", warnings.get() < blockedCounter.get());
+
+        } finally {
+            log4jLogger.removeAppender(appender);
+        }
     }
 
     protected Destination createDestination(Session listenerSession) throws Exception {

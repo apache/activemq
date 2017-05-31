@@ -21,17 +21,19 @@ import java.net.MalformedURLException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
 import javax.annotation.PostConstruct;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.*;
 
 import org.apache.activemq.broker.SslContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
 
 /**
  * Extends the SslContext so that it's easier to configure from spring.
@@ -41,6 +43,8 @@ import org.apache.activemq.broker.SslContext;
  *
  */
 public class SpringSslContext extends SslContext {
+
+    private static final transient Logger LOG = LoggerFactory.getLogger(SpringSslContext.class);
 
     private String keyStoreType="jks";
     private String trustStoreType="jks";
@@ -55,6 +59,8 @@ public class SpringSslContext extends SslContext {
     private String keyStoreKeyPassword;
     private String keyStorePassword;
     private String trustStorePassword;
+
+    private String crlPath;
 
     /**
      * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
@@ -88,13 +94,31 @@ public class SpringSslContext extends SslContext {
     }
 
     private Collection<TrustManager> createTrustManagers() throws Exception {
+        boolean ocsp = Boolean.valueOf(Security.getProperty("ocsp.enable"));
+
         KeyStore ks = createTrustManagerKeyStore();
         if( ks ==null ) {
             return new ArrayList<TrustManager>(0);
         }
-
         TrustManagerFactory tmf  = TrustManagerFactory.getInstance(trustStoreAlgorithm);
-        tmf.init(ks);
+        boolean initialized = false;
+        if ((ocsp || crlPath != null) && trustStoreAlgorithm.equalsIgnoreCase("PKIX")) {
+            PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(ks, new X509CertSelector());
+            if (crlPath != null) {
+                pkixParams.setRevocationEnabled(true);
+                Collection<? extends CRL> crlList = loadCRL();
+                if (crlList != null) {
+                    pkixParams.addCertStore(CertStore.getInstance("Collection", new CollectionCertStoreParameters(crlList)));
+                }
+            }
+            tmf.init(new CertPathTrustManagerParameters(pkixParams));
+            initialized = true;
+        }
+
+        if (!initialized) {
+            tmf.init(ks);
+        }
+
         return Arrays.asList(tmf.getTrustManagers());
     }
 
@@ -217,6 +241,27 @@ public class SpringSslContext extends SslContext {
 
     public void setSecureRandomAlgorithm(String secureRandomAlgorithm) {
         this.secureRandomAlgorithm = secureRandomAlgorithm;
+    }
+
+    public String getCrlPath() {
+        return crlPath;
+    }
+
+    public void setCrlPath(String crlPath) {
+        this.crlPath = crlPath;
+    }
+
+    private Collection<? extends CRL> loadCRL() throws Exception {
+        if (crlPath == null) {
+            return null;
+        }
+        Resource resource = Utils.resourceFromString(crlPath);
+        InputStream is = resource.getInputStream();
+        try {
+            return CertificateFactory.getInstance("X.509").generateCRLs(is);
+        } finally {
+            is.close();
+        }
     }
 
 }

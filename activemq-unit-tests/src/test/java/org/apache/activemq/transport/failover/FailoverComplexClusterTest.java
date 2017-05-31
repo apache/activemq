@@ -17,7 +17,8 @@
 package org.apache.activemq.transport.failover;
 
 import org.apache.activemq.broker.TransportConnector;
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -28,6 +29,7 @@ import org.mortbay.log.Log;
  * broker is removed and then show 3 after the 3rd broker is reintroduced.
  */
 public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
+    protected final Logger LOG = LoggerFactory.getLogger(FailoverComplexClusterTest.class);
 
     private static final String BROKER_A_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61616";
     private static final String BROKER_B_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61617";
@@ -145,7 +147,6 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
         createClients();
-        Thread.sleep(2000);
 
         assertClientsConnectedToThreeBrokers();
 
@@ -153,13 +154,10 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         getBroker(BROKER_A_NAME).waitUntilStopped();
         removeBroker(BROKER_A_NAME);
 
-        Thread.sleep(5000);
-
         assertClientsConnectedToTwoBrokers();
 
         createBrokerA(false, null, null, null);
         getBroker(BROKER_A_NAME).waitUntilStarted();
-        Thread.sleep(5000);
 
         assertClientsConnectedToThreeBrokers();
     }
@@ -229,7 +227,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         Thread.sleep(5000);
 
         // We stop broker A.
-        Log.info("Stopping broker A whose address is: {}", BROKER_A_CLIENT_TC_ADDRESS);
+        logger.info("Stopping broker A whose address is: {}", BROKER_A_CLIENT_TC_ADDRESS);
         getBroker(BROKER_A_NAME).stop();
         getBroker(BROKER_A_NAME).waitUntilStopped();
         Thread.sleep(5000);
@@ -257,17 +255,16 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     private void runTests(boolean multi, String tcParams, String clusterFilter, String destinationFilter) throws Exception, InterruptedException {
         assertClientsConnectedToThreeBrokers();
 
+        LOG.info("Stopping BrokerC in prep for restart");
         getBroker(BROKER_C_NAME).stop();
         getBroker(BROKER_C_NAME).waitUntilStopped();
         removeBroker(BROKER_C_NAME);
 
-        Thread.sleep(5000);
-
         assertClientsConnectedToTwoBrokers();
 
+        LOG.info("Recreating BrokerC after stop");
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
-        Thread.sleep(5000);
 
         assertClientsConnectedToThreeBrokers();
     }
@@ -288,14 +285,11 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         getBroker(BROKER_C_NAME).waitUntilStopped();
         removeBroker(BROKER_C_NAME);
 
-        Thread.sleep(5000);
-
         assertClientsConnectedToTwoBrokers();
         assertClientsConnectionsEvenlyDistributed(.35);
 
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
-        Thread.sleep(5000);
 
         assertClientsConnectedToThreeBrokers();
         assertClientsConnectionsEvenlyDistributed(.20);

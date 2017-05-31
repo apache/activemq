@@ -28,14 +28,10 @@ import java.net.URL;
 public class XBeanFileResolver {
     private static final String XBEAN_FILE = "xbean:file:";
 
-    private XBeanFileResolver() {
-        // Utility class, should not be instantiated.
-    }
-
     /**
      * Check if the provided path is an URL to a XBean file (xbean:file:<path/to/file>)
      */
-    public static boolean isXBeanFile(final String configUri) {
+    public boolean isXBeanFile(final String configUri) {
         return configUri.startsWith(XBEAN_FILE);
     }
 
@@ -43,7 +39,7 @@ public class XBeanFileResolver {
      * Convert provided path into a URL-style absolute path. See also:
      * http://maven.apache.org/plugin-developers/common-bugs.html# Converting_between_URLs_and_Filesystem_Paths
      */
-    public static String toUrlCompliantAbsolutePath(final String configUri) {
+    public String toUrlCompliantAbsolutePath(final String configUri) {
         if (!isXBeanFile(configUri))
             return configUri;
 
@@ -51,15 +47,15 @@ public class XBeanFileResolver {
         return XBEAN_FILE + toAbsolutePath(filePath);
     }
 
-    private static String extractFilePath(final String configUri) {
+    private String extractFilePath(final String configUri) {
         return configUri.substring(getIndexFilePath(configUri), configUri.length());
     }
 
-    private static int getIndexFilePath(final String configUri) {
+    private int getIndexFilePath(final String configUri) {
         return configUri.indexOf(XBEAN_FILE) + XBEAN_FILE.length();
     }
 
-    private static String toAbsolutePath(final String path) {
+    private String toAbsolutePath(final String path) {
         try {
             final URL url = new File(path).toURI().toURL();
             return toFilePath(url);
@@ -68,17 +64,17 @@ public class XBeanFileResolver {
         }
     }
 
-    private static String toFilePath(final URL url) {
+    private String toFilePath(final URL url) {
         String filePath = url.getFile();
         return underWindows() ? removePrependingSlash(filePath) : filePath;
     }
 
-    private static String removePrependingSlash(String filePath) {
+    private String removePrependingSlash(String filePath) {
         // Remove prepending '/' because path would be /C:/temp/file.txt, as URL would be file:/C:/temp/file.txt
         return filePath.substring(1, filePath.length());
     }
 
-    private static boolean underWindows() {
+    private boolean underWindows() {
         String os = System.getProperty("os.name").toLowerCase();
         return (os.indexOf("win") >= 0);
     }

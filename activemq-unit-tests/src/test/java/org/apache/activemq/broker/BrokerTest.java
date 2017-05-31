@@ -33,6 +33,7 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.SessionInfo;
 
 public class BrokerTest extends BrokerTestSupport {
@@ -264,7 +265,9 @@ public class BrokerTest extends BrokerTestSupport {
             messages.add(m1);
         }
 
-        for (int i = 0; i < 4; i++) {
+        // a browse is a snapshot - only guarantee to see messages produced before
+        // the browser
+        for (int i = 0; i < 1; i++) {
             Message m1 = messages.get(i);
             Message m2 = receiveMessage(connection2);
             assertNotNull("m2 is null for index: " + i, m2);
@@ -273,7 +276,11 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         assertNoMessagesLeft(connection1);
-        assertNoMessagesLeft(connection2);
+
+        connection1.request(closeConnectionInfo(connectionInfo1));
+        connection1.stop();
+        connection2.request(closeConnectionInfo(connectionInfo2));
+        connection2.stop();
     }
 
     
@@ -484,59 +491,6 @@ public class BrokerTest extends BrokerTestSupport {
 
         // The queue should now only have the remaining 2 messages
         assertEquals(2, countMessagesInQueue(connection1, connectionInfo1, destination));
-    }
-
-    public void initCombosForTestConsumerCloseCausesRedelivery() {
-        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT),
-                                                           Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST")});
-    }
-
-    public void testConsumerCloseCausesRedelivery() throws Exception {
-
-        // Setup a first connection
-        StubConnection connection1 = createConnection();
-        ConnectionInfo connectionInfo1 = createConnectionInfo();
-        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
-        ProducerInfo producerInfo1 = createProducerInfo(sessionInfo1);
-        connection1.send(connectionInfo1);
-        connection1.send(sessionInfo1);
-        connection1.send(producerInfo1);
-
-        ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
-        consumerInfo1.setPrefetchSize(100);
-        connection1.request(consumerInfo1);
-
-        // Send the messages
-        connection1.send(createMessage(producerInfo1, destination, deliveryMode));
-        connection1.send(createMessage(producerInfo1, destination, deliveryMode));
-        connection1.send(createMessage(producerInfo1, destination, deliveryMode));
-        connection1.send(createMessage(producerInfo1, destination, deliveryMode));
-
-        // Receive the messages.
-        for (int i = 0; i < 4; i++) {
-            Message m1 = receiveMessage(connection1);
-            assertNotNull("m1 is null for index: " + i, m1);
-            assertFalse(m1.isRedelivered());
-        }
-
-        // Close the consumer without acking.. this should cause re-delivery of
-        // the messages.
-        connection1.send(consumerInfo1.createRemoveCommand());
-
-        // Create another consumer that should get the messages again.
-        ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo1, destination);
-        consumerInfo2.setPrefetchSize(100);
-        connection1.request(consumerInfo2);
-
-        // Receive the messages.
-        for (int i = 0; i < 4; i++) {
-            Message m1 = receiveMessage(connection1);
-            assertNotNull("m1 is null for index: " + i, m1);
-            assertTrue(m1.isRedelivered());
-        }
-        assertNoMessagesLeft(connection1);
-
     }
 
     public void testTopicDurableSubscriptionCanBeRestored() throws Exception {
@@ -1396,14 +1350,18 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
 
+        long lastDeliveredSeq = -1;
         // Get the messages
         for (int i = 0; i < 4; i++) {
             Message m1 = receiveMessage(connection1);
             assertNotNull(m1);
             assertFalse(m1.isRedelivered());
+            lastDeliveredSeq = m1.getMessageId().getBrokerSequenceId();
         }
         // Close the consumer without sending any ACKS.
-        connection1.send(closeConsumerInfo(consumerInfo1));
+        RemoveInfo removeInfo = closeConsumerInfo(consumerInfo1);
+        removeInfo.setLastDeliveredSequenceId(lastDeliveredSeq);
+        connection1.send(removeInfo);
 
         // Drain any in flight messages..
         while (connection1.getDispatchQueue().poll(0, TimeUnit.MILLISECONDS) != null) {

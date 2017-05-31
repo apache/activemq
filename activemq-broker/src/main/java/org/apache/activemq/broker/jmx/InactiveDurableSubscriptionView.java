@@ -38,9 +38,10 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
      * Constructor
      *
      * @param broker
+     * @param brokerService
      * @param clientId
-     * @param userName
      * @param subInfo
+     * @param subscription
      */
     public InactiveDurableSubscriptionView(ManagedRegionBroker broker, BrokerService brokerService, String clientId, SubscriptionInfo subInfo, Subscription subscription) {
         super(broker, brokerService, clientId, null, subscription);
@@ -156,4 +157,10 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     public String getSelector() {
         return subscriptionInfo.getSelector();
     }
+
+    @Override
+    public void removeMessage(@MBeanInfo("messageId") String messageId) throws Exception {
+        broker.remove(this, messageId);
+    }
+
 }

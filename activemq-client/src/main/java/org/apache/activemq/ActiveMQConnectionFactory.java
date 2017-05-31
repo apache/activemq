@@ -16,13 +16,12 @@
  */
 package org.apache.activemq;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.RejectedExecutionHandler;
 
 import javax.jms.Connection;
@@ -34,6 +33,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
+
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.jndi.JNDIBaseStorable;
@@ -44,10 +44,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
-import org.apache.activemq.util.IdGenerator;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.JMSExceptionSupport;
-import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.*;
 import org.apache.activemq.util.URISupport.CompositeData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,6 +160,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
     private long warnAboutUnstartedConnectionTimeout = 500L;
     private int sendTimeout = 0;
+    private int connectResponseTimeout = 0;
     private boolean sendAcksAsync=true;
     private TransportListener transportListener;
     private ExceptionListener exceptionListener;
@@ -172,7 +170,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private long consumerFailoverRedeliveryWaitPeriod = 0;
     private boolean checkForDuplicates = true;
     private ClientInternalExceptionListener clientInternalExceptionListener;
-    private boolean messagePrioritySupported = true;
+    private boolean messagePrioritySupported = false;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
     private int maxThreadPoolSize = ActiveMQConnection.DEFAULT_THREAD_POOL_SIZE;
@@ -180,6 +178,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private RejectedExecutionHandler rejectedTaskHandler = null;
     protected int xaAckMode = -1; // ensure default init before setting via brokerUrl introspection in sub class
     private boolean rmIdFromConnectionId = false;
+    private boolean consumerExpiryCheckEnabled = true;
+    private List<String> trustedPackages = Arrays.asList(ClassLoadingAwareObjectInputStream.serializablePackages);
+    private boolean trustAllPackages = false;
 
     // /////////////////////////////////////////////
     //
@@ -286,7 +287,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * @returns the StatsImpl associated with this ConnectionFactory.
+     * @return the StatsImpl associated with this ConnectionFactory.
      */
     @Override
     public StatsImpl getStats() {
@@ -312,7 +313,22 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     protected Transport createTransport() throws JMSException {
         try {
-            return TransportFactory.connect(brokerURL);
+            URI connectBrokerUL = brokerURL;
+            String scheme = brokerURL.getScheme();
+            if (scheme == null) {
+                throw new IOException("Transport not scheme specified: [" + brokerURL + "]");
+            }
+            if (scheme.equals("auto")) {
+                connectBrokerUL = new URI(brokerURL.toString().replace("auto", "tcp"));
+            } else if (scheme.equals("auto+ssl")) {
+                connectBrokerUL = new URI(brokerURL.toString().replace("auto+ssl", "ssl"));
+            } else if (scheme.equals("auto+nio")) {
+                connectBrokerUL = new URI(brokerURL.toString().replace("auto+nio", "nio"));
+            } else if (scheme.equals("auto+nio+ssl")) {
+                connectBrokerUL = new URI(brokerURL.toString().replace("auto+nio+ssl", "nio+ssl"));
+            }
+
+            return TransportFactory.connect(connectBrokerUL);
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Could not create Transport. Reason: " + e, e);
         }
@@ -403,6 +419,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setRejectedTaskHandler(getRejectedTaskHandler());
         connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
         connection.setRmIdFromConnectionId(isRmIdFromConnectionId());
+        connection.setConsumerExpiryCheckEnabled(isConsumerExpiryCheckEnabled());
+        connection.setTrustedPackages(getTrustedPackages());
+        connection.setTrustAllPackages(isTrustAllPackages());
+        connection.setConnectResponseTimeout(getConnectResponseTimeout());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -420,7 +440,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     //
     // /////////////////////////////////////////////
 
-    public String getBrokerURL() {
+	public String getBrokerURL() {
         return brokerURL == null ? null : brokerURL.toString();
     }
 
@@ -813,6 +833,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("alwaysSyncSend", Boolean.toString(isAlwaysSyncSend()));
         props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
         props.setProperty("sendTimeout", Integer.toString(getSendTimeout()));
+        props.setProperty("connectResponseTimeout", Integer.toString(getConnectResponseTimeout()));
         props.setProperty("sendAcksAsync",Boolean.toString(isSendAcksAsync()));
         props.setProperty("auditDepth", Integer.toString(getAuditDepth()));
         props.setProperty("auditMaximumProducerNumber", Integer.toString(getAuditMaximumProducerNumber()));
@@ -824,6 +845,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("nestedMapAndListEnabled", Boolean.toString(isNestedMapAndListEnabled()));
         props.setProperty("consumerFailoverRedeliveryWaitPeriod", Long.toString(getConsumerFailoverRedeliveryWaitPeriod()));
         props.setProperty("rmIdFromConnectionId", Boolean.toString(isRmIdFromConnectionId()));
+        props.setProperty("consumerExpiryCheckEnabled", Boolean.toString(isConsumerExpiryCheckEnabled()));
     }
 
     public boolean isUseCompression() {
@@ -1222,4 +1244,46 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.rmIdFromConnectionId = rmIdFromConnectionId;
     }
 
+    /**
+     * @return true if MessageConsumer instance will check for expired messages before dispatch.
+     */
+    public boolean isConsumerExpiryCheckEnabled() {
+        return consumerExpiryCheckEnabled;
+    }
+
+    /**
+     * Controls whether message expiration checking is done in each MessageConsumer
+     * prior to dispatching a message.  Disabling this check can lead to consumption
+     * of expired messages.
+     *
+     * @param consumerExpiryCheckEnabled
+     *        controls whether expiration checking is done prior to dispatch.
+     */
+    public void setConsumerExpiryCheckEnabled(boolean consumerExpiryCheckEnabled) {
+        this.consumerExpiryCheckEnabled = consumerExpiryCheckEnabled;
+    }
+
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
+    public void setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+    }
+
+    public boolean isTrustAllPackages() {
+        return trustAllPackages;
+    }
+
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        this.trustAllPackages = trustAllPackages;
+    }
+
+	public int getConnectResponseTimeout() {
+		return connectResponseTimeout;
+	}
+
+	public void setConnectResponseTimeout(int connectResponseTimeout) {
+		this.connectResponseTimeout = connectResponseTimeout;
+	}
 }

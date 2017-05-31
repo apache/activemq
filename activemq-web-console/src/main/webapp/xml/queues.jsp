@@ -15,9 +15,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%-- Workaround for https://ops4j1.jira.com/browse/PAXWEB-1070 --%>
+<%@include file="../WEB-INF/jspf/headertags.jspf" %>
 <queues>
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
-<queue name="${row.name}">
+<queue name="<c:out value="${row.name}" />">
 
   <stats size="${row.queueSize}"
          consumerCount="${row.consumerCount}"
@@ -26,8 +28,8 @@
 
 
   <feed>
-    <atom><c:url value="queueBrowse/${row.name}?view=rss&amp;feedType=atom_1.0"/></atom>
-    <rss><c:url value="queueBrowse/${row.name}?view=rss&amp;feedType=rss_2.0"/></rss>
+    <atom><c:out value="queueBrowse/${row.name}?view=rss&amp;feedType=atom_1.0"/></atom>
+    <rss><c:out value="queueBrowse/${row.name}?view=rss&amp;feedType=rss_2.0"/></rss>
   </feed>
 </queue>
 </c:forEach>

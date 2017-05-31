@@ -22,15 +22,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
+import javax.jms.ExceptionListener;
 import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 
-import org.apache.commons.pool.KeyedPoolableObjectFactory;
-import org.apache.commons.pool.impl.GenericKeyedObjectPool;
-import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.pool2.KeyedPooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Holds a real JMS connection along with the session pools associated with it.
@@ -40,7 +45,8 @@ import org.apache.commons.pool.impl.GenericObjectPool;
  * that the temporary destinations of the managed Connection are purged when all references
  * to this ConnectionPool are released.
  */
-public class ConnectionPool {
+public class ConnectionPool implements ExceptionListener {
+    private static final transient Logger LOG = LoggerFactory.getLogger(ConnectionPool.class);
 
     protected Connection connection;
     private int referenceCount;
@@ -52,40 +58,48 @@ public class ConnectionPool {
     private boolean useAnonymousProducers = true;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
-    private final GenericKeyedObjectPool<SessionKey, Session> sessionPool;
+    private final GenericKeyedObjectPool<SessionKey, SessionHolder> sessionPool;
     private final List<PooledSession> loanedSessions = new CopyOnWriteArrayList<PooledSession>();
+    private boolean reconnectOnException;
+    private ExceptionListener parentExceptionListener;
 
     public ConnectionPool(Connection connection) {
-
+        final GenericKeyedObjectPoolConfig poolConfig = new GenericKeyedObjectPoolConfig();
+        poolConfig.setJmxEnabled(false);
         this.connection = wrap(connection);
+        try {
+            this.connection.setExceptionListener(this);
+        } catch (JMSException ex) {
+            LOG.warn("Could not set exception listener on create of ConnectionPool");
+        }
 
         // Create our internal Pool of session instances.
-        this.sessionPool = new GenericKeyedObjectPool<SessionKey, Session>(
-            new KeyedPoolableObjectFactory<SessionKey, Session>() {
-
+        this.sessionPool = new GenericKeyedObjectPool<SessionKey, SessionHolder>(
+            new KeyedPooledObjectFactory<SessionKey, SessionHolder>() {
                 @Override
-                public void activateObject(SessionKey key, Session session) throws Exception {
+                public PooledObject<SessionHolder> makeObject(SessionKey sessionKey) throws Exception {
+
+                    return new DefaultPooledObject<SessionHolder>(new SessionHolder(makeSession(sessionKey)));
                 }
 
                 @Override
-                public void destroyObject(SessionKey key, Session session) throws Exception {
-                    session.close();
+                public void destroyObject(SessionKey sessionKey, PooledObject<SessionHolder> pooledObject) throws Exception {
+                    pooledObject.getObject().close();
                 }
 
                 @Override
-                public Session makeObject(SessionKey key) throws Exception {
-                    return makeSession(key);
-                }
-
-                @Override
-                public void passivateObject(SessionKey key, Session session) throws Exception {
-                }
-
-                @Override
-                public boolean validateObject(SessionKey key, Session session) {
+                public boolean validateObject(SessionKey sessionKey, PooledObject<SessionHolder> pooledObject) {
                     return true;
                 }
-            }
+
+                @Override
+                public void activateObject(SessionKey sessionKey, PooledObject<SessionHolder> pooledObject) throws Exception {
+                }
+
+                @Override
+                public void passivateObject(SessionKey sessionKey, PooledObject<SessionHolder> pooledObject) throws Exception {
+                }
+            }, poolConfig
         );
     }
 
@@ -111,6 +125,9 @@ public class ConnectionPool {
                 connection.start();
             } catch (JMSException e) {
                 started.set(false);
+                if (isReconnectOnException()) {
+                    close();
+                }
                 throw(e);
             }
         }
@@ -252,11 +269,11 @@ public class ConnectionPool {
     }
 
     public int getMaximumActiveSessionPerConnection() {
-        return this.sessionPool.getMaxActive();
+        return this.sessionPool.getMaxTotalPerKey();
     }
 
     public void setMaximumActiveSessionPerConnection(int maximumActiveSessionPerConnection) {
-        this.sessionPool.setMaxActive(maximumActiveSessionPerConnection);
+        this.sessionPool.setMaxTotalPerKey(maximumActiveSessionPerConnection);
     }
 
     public boolean isUseAnonymousProducers() {
@@ -298,12 +315,11 @@ public class ConnectionPool {
      * 		Indicates whether blocking should be used to wait for more space to create a session.
      */
     public void setBlockIfSessionPoolIsFull(boolean block) {
-        this.sessionPool.setWhenExhaustedAction(
-                (block ? GenericObjectPool.WHEN_EXHAUSTED_BLOCK : GenericObjectPool.WHEN_EXHAUSTED_FAIL));
+        this.sessionPool.setBlockWhenExhausted(block);
     }
 
     public boolean isBlockIfSessionPoolIsFull() {
-        return this.sessionPool.getWhenExhaustedAction() == GenericObjectPool.WHEN_EXHAUSTED_BLOCK;
+        return this.sessionPool.getBlockWhenExhausted();
     }
 
     /**
@@ -313,7 +329,7 @@ public class ConnectionPool {
      * @see #setBlockIfSessionPoolIsFull(boolean)
      */
     public long getBlockIfSessionPoolIsFullTimeout() {
-        return this.sessionPool.getMaxWait();
+        return this.sessionPool.getMaxWaitMillis();
     }
 
     /**
@@ -331,7 +347,42 @@ public class ConnectionPool {
      *                                        then use this setting to configure how long to block before retry
      */
     public void setBlockIfSessionPoolIsFullTimeout(long blockIfSessionPoolIsFullTimeout) {
-        this.sessionPool.setMaxWait(blockIfSessionPoolIsFullTimeout);
+        this.sessionPool.setMaxWaitMillis(blockIfSessionPoolIsFullTimeout);
+    }
+
+    /**
+     * @return true if the underlying connection will be renewed on JMSException, false otherwise
+     */
+    public boolean isReconnectOnException() {
+        return reconnectOnException;
+    }
+
+    /**
+     * Controls weather the underlying connection should be reset (and renewed) on JMSException
+     *
+     * @param reconnectOnException
+     *          Boolean value that configures whether reconnect on exception should happen
+     */
+    public void setReconnectOnException(boolean reconnectOnException) {
+        this.reconnectOnException = reconnectOnException;
+    }
+
+    ExceptionListener getParentExceptionListener() {
+        return parentExceptionListener;
+    }
+
+    void setParentExceptionListener(ExceptionListener parentExceptionListener) {
+        this.parentExceptionListener = parentExceptionListener;
+    }
+
+    @Override
+    public void onException(JMSException exception) {
+        if (isReconnectOnException()) {
+            close();
+        }
+        if (parentExceptionListener != null) {
+            parentExceptionListener.onException(exception);
+        }
     }
 
     @Override

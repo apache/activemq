@@ -43,10 +43,11 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fusesource.hawtbuf.AsciiBuffer;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.fusesource.hawtbuf.UTF8Buffer;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -189,6 +190,7 @@ public class StoreExporter {
                     if (sub.getSelector() != null) {
                         jsonMap.put("selector", sub.getSelector());
                     }
+                    jsonMap.put("noLocal", sub.isNoLocal());
                     String json = mapper.writeValueAsString(jsonMap);
                     System.out.println(json);
 

@@ -112,10 +112,15 @@ public class DestinationMapNode implements DestinationNode {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected void removeDesendentValues(Set answer) {
+        ArrayList<DestinationNode> candidates = new ArrayList<>();
         for (Map.Entry<String, DestinationNode> child : childNodes.entrySet()) {
+            candidates.add(child.getValue());
+        }
+
+        for (DestinationNode node : candidates) {
             // remove all the values from the child
-            answer.addAll(child.getValue().removeValues());
-            answer.addAll(child.getValue().removeDesendentValues());
+            answer.addAll(node.removeValues());
+            answer.addAll(node.removeDesendentValues());
         }
     }
 
@@ -219,13 +224,18 @@ public class DestinationMapNode implements DestinationNode {
         }
     }
 
-    public void appendMatchingValues(Set<DestinationNode> answer, String[] paths, int startIndex) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void appendMatchingValues(Set answer, String[] paths, int idx) {
+        appendMatchingValues(answer, paths, idx, true);
+    }
+
+    public void appendMatchingValues(Set<DestinationNode> answer, String[] paths, int startIndex, boolean deep) {
         DestinationNode node = this;
         boolean couldMatchAny = true;
         int size = paths.length;
         for (int i = startIndex; i < size && node != null; i++) {
             String path = paths[i];
-            if (path.equals(ANY_DESCENDENT)) {
+            if (deep && path.equals(ANY_DESCENDENT)) {
                 answer.addAll(node.getDesendentValues());
                 couldMatchAny = false;
                 break;

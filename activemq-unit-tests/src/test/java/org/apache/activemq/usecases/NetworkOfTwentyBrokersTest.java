@@ -102,7 +102,7 @@ public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
 
         LOG.info("Waiting for complete formation");
         try {
-            Thread.sleep(10000);
+            Thread.sleep(20000);
         } catch (Exception e) {
         }
 
@@ -115,11 +115,11 @@ public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
 
         LOG.info("Waiting for complete stop");
         try {
-            Thread.sleep(10000);
+            Thread.sleep(20000);
         } catch (Exception e) {
         }
 
-        verifyPeerBrokerInfos((X/2) -1);
+        verifyPeerBrokerInfos((X/2) - 1);
 
         LOG.info("Recreating first half");
         for (i = 0; i < X/2; i++) {
@@ -132,7 +132,7 @@ public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
 
         LOG.info("Waiting for complete reformation");
         try {
-            Thread.sleep(10000);
+            Thread.sleep(20000);
         } catch (Exception e) {
         }
 
@@ -188,7 +188,7 @@ public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
                 LOG.info("verify infos " + broker.getBrokerName() + ", len: " + regionBroker.getPeerBrokerInfos().length);
                 return max == regionBroker.getPeerBrokerInfos().length;
             }
-         });
+         }, 120 * 1000);
         LOG.info("verify infos " + broker.getBrokerName() + ", len: " + regionBroker.getPeerBrokerInfos().length);
         for (BrokerInfo info : regionBroker.getPeerBrokerInfos()) {
             LOG.info(info.getBrokerName());

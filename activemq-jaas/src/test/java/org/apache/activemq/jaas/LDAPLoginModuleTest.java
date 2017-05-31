@@ -36,12 +36,15 @@ import javax.naming.directory.InitialDirContext;
 import javax.security.auth.callback.*;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Hashtable;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @RunWith ( FrameworkRunner.class )
 @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", port=1024)})
@@ -49,12 +52,12 @@ import static org.junit.Assert.assertTrue;
    "test.ldif"
 )
 public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
-    
+
     private static final String BASE = "o=ActiveMQ,ou=system";
     public static LdapServer ldapServer;
 
     private static final String FILTER = "(objectclass=*)";
-    
+
     private static final String PRINCIPAL = "uid=admin,ou=system";
     private static final String CREDENTIALS = "secret";
 
@@ -101,10 +104,11 @@ public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
         assertTrue(set.contains("prefNodeName=sysPrefRoot"));
 
     }
-    
+
     @Test
     public void testLogin() throws LoginException {
         LoginContext context = new LoginContext("LDAPLogin", new CallbackHandler() {
+            @Override
             public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
                 for (int i = 0; i < callbacks.length; i++) {
                     if (callbacks[i] instanceof NameCallback) {
@@ -120,5 +124,52 @@ public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
         context.login();
         context.logout();
     }
+
+    @Test
+    public void testEncryptedLogin() throws LoginException {
+
+        LoginContext context = new LoginContext("EncryptedLDAPLogin", new CallbackHandler() {
+            @Override
+            public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+                for (int i = 0; i < callbacks.length; i++) {
+                    if (callbacks[i] instanceof NameCallback) {
+                        ((NameCallback) callbacks[i]).setName("first");
+                    } else if (callbacks[i] instanceof PasswordCallback) {
+                        ((PasswordCallback) callbacks[i]).setPassword("secret".toCharArray());
+                    } else {
+                        throw new UnsupportedCallbackException(callbacks[i]);
+                    }
+                }
+            }
+        });
+        context.login();
+        context.logout();
+    }
+
+    @Test
+    public void testUnauthenticated() throws LoginException {
+        LoginContext context = new LoginContext("UnAuthenticatedLDAPLogin", new CallbackHandler() {
+            @Override
+            public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+                for (int i = 0; i < callbacks.length; i++) {
+                    if (callbacks[i] instanceof NameCallback) {
+                        ((NameCallback) callbacks[i]).setName("first");
+                    } else if (callbacks[i] instanceof PasswordCallback) {
+                        ((PasswordCallback) callbacks[i]).setPassword("secret".toCharArray());
+                    } else {
+                        throw new UnsupportedCallbackException(callbacks[i]);
+                    }
+                }
+            }
+        });
+        try {
+            context.login();
+        } catch (LoginException le) {
+            assertEquals(le.getCause().getMessage(), "Empty password is not allowed");
+            return;
+        }
+        fail("Should have failed authenticating");
+    }
+
 
 }

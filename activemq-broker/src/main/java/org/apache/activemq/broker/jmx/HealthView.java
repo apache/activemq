@@ -35,8 +35,8 @@ import org.apache.activemq.usage.SystemUsage;
 
 public class HealthView implements HealthViewMBean {
 
-    ManagedRegionBroker broker;
-    String currentState = "Good";
+    private ManagedRegionBroker broker;
+    private volatile String currentState = "Good";
 
     public HealthView(ManagedRegionBroker broker) {
         this.broker = broker;
@@ -87,6 +87,7 @@ public class HealthView implements HealthViewMBean {
                     while (dir != null && !dir.isDirectory()) {
                         dir = dir.getParentFile();
                     }
+
                     long storeSize = adapter.size();
                     long storeLimit = usage.getStoreUsage().getLimit();
                     long dirFreeSpace = dir.getUsableSpace();
@@ -166,16 +167,28 @@ public class HealthView implements HealthViewMBean {
             }
         }
 
+        StringBuilder currentState = new StringBuilder();
         if (answer != null && !answer.isEmpty()) {
-            this.currentState = "Getting Worried {";
+            currentState.append("Getting Worried {");
             for (HealthStatus hs : answer) {
-                currentState += hs + " , ";
+                currentState.append(hs).append(" , ");
             }
-            currentState += " }";
+            currentState.append(" }");
         } else {
-            this.currentState = "Good";
+            currentState.append("Good");
         }
+
+        this.currentState = currentState.toString();
+
         return answer;
+    }
+
+    @Override
+    public String healthStatus() throws Exception {
+        // Must invoke healthList in order to update state.
+        healthList();
+
+        return getCurrentStatus();
     }
 
     /**

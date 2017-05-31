@@ -143,7 +143,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
             try {
                 connection.rollback();
             } catch (SQLException sqle) {
-                LOG.warn("Exception while rollbacking the connection on shutdown. This exception is ignored.", sqle);
+                LOG.debug("Exception while rollbacking the connection on shutdown. This exception is ignored.", sqle);
             } finally {
                 try {
                     connection.close();

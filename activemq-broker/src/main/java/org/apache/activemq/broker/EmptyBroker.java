@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -64,112 +65,92 @@ public class EmptyBroker implements Broker {
     }
 
     @Override
-    public Broker getAdaptor(Class type) {
-        if (type.isInstance(this)) {
-            return this;
-        }
-        return null;
+    public Broker getAdaptor(Class<?> type) {
+        return type.isInstance(this) ? this : null;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
 
     @Override
-    public Set getDestinations(ActiveMQDestination destination) {
-        return Collections.EMPTY_SET;
+    public Set<Destination> getDestinations(ActiveMQDestination destination) {
+        return Collections.emptySet();
     }
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-
     }
 
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-
     }
 
     @Override
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
-
     }
 
     @Override
     public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
-
     }
 
     @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-
     }
 
     @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-
     }
 
     @Override
     public Connection[] getClients() throws Exception {
-
         return null;
     }
 
     @Override
     public ActiveMQDestination[] getDestinations() throws Exception {
-
         return null;
     }
 
     @Override
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
-
         return null;
     }
 
     @Override
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-
     }
 
     @Override
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-
         return 0;
     }
 
     @Override
     public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-
     }
 
     @Override
     public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
-
     }
 
     @Override
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
-
     }
 
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean flag) throws Exception {
-
         return null;
     }
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-
     }
 
     @Override
@@ -179,47 +160,38 @@ public class EmptyBroker implements Broker {
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-
     }
 
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
-
     }
 
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
-
     }
 
     @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
-
     }
 
     @Override
     public void gc() {
-
     }
 
     @Override
     public void start() throws Exception {
-
     }
 
     @Override
     public void stop() throws Exception {
-
     }
 
     @Override
     public void addBroker(Connection connection, BrokerInfo info) {
-
     }
 
     @Override
     public void removeBroker(Connection connection, BrokerInfo info) {
-
     }
 
     @Override
@@ -237,7 +209,6 @@ public class EmptyBroker implements Broker {
 
     @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
-
     }
 
     @Override
@@ -326,7 +297,7 @@ public class EmptyBroker implements Broker {
     }
 
     @Override
-    public void isFull(ConnectionContext context, Destination destination,Usage usage) {
+    public void isFull(ConnectionContext context, Destination destination,Usage<?> usage) {
     }
 
     @Override
@@ -346,6 +317,14 @@ public class EmptyBroker implements Broker {
     }
 
     @Override
+    public void virtualDestinationAdded(ConnectionContext context, VirtualDestination virtualDestination) {
+    }
+
+    @Override
+    public void virtualDestinationRemoved(ConnectionContext context, VirtualDestination virtualDestination) {
+    }
+
+    @Override
     public void nowMasterBroker() {
     }
 
@@ -358,13 +337,11 @@ public class EmptyBroker implements Broker {
     }
 
     @Override
-    public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
-            ConsumerControl control) {
+    public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
     }
 
     @Override
     public void reapplyInterceptor() {
-
     }
 
     @Override
@@ -376,4 +353,5 @@ public class EmptyBroker implements Broker {
     public ThreadPoolExecutor getExecutor() {
         return null;
     }
+
 }

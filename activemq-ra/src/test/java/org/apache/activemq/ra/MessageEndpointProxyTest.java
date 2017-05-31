@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.ra;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.lang.reflect.Method;
 
 import javax.jms.Message;
@@ -30,20 +33,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import junit.framework.TestCase;
-
-/**
- * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>
- */
 @RunWith(JMock.class)
-public class MessageEndpointProxyTest extends TestCase {
+public class MessageEndpointProxyTest {
 
     private MessageEndpoint mockEndpoint;
     private EndpointAndListener mockEndpointAndListener;
     private Message stubMessage;
     private MessageEndpointProxy endpointProxy;
     private Mockery context;
-    
+
     @Before
     public void setUp() {
         context = new Mockery();
@@ -54,7 +52,7 @@ public class MessageEndpointProxyTest extends TestCase {
         endpointProxy = new MessageEndpointProxy(mockEndpointAndListener);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testInvalidConstruction() {
         try {
             new MessageEndpointProxy(mockEndpoint);
@@ -64,7 +62,7 @@ public class MessageEndpointProxyTest extends TestCase {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testSuccessfulCallSequence() throws Exception {
         setupBeforeDeliverySuccessful();
         setupOnMessageSuccessful();
@@ -75,7 +73,7 @@ public class MessageEndpointProxyTest extends TestCase {
         doAfterDeliveryExpectSuccess();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testBeforeDeliveryFailure() throws Exception {
         context.checking(new Expectations() {{
             oneOf (mockEndpointAndListener).beforeDelivery(with(any(Method.class)));
@@ -85,7 +83,7 @@ public class MessageEndpointProxyTest extends TestCase {
             never (mockEndpointAndListener).onMessage(null);
             never (mockEndpointAndListener).afterDelivery();
         }});
-        
+
         setupExpectRelease();
 
         try {
@@ -96,19 +94,19 @@ public class MessageEndpointProxyTest extends TestCase {
         }
         doOnMessageExpectInvalidMessageEndpointException();
         doAfterDeliveryExpectInvalidMessageEndpointException();
-        
+
         doFullyDeadCheck();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testOnMessageFailure() throws Exception {
         setupBeforeDeliverySuccessful();
-     
+
         context.checking(new Expectations() {{
             oneOf (mockEndpointAndListener).onMessage(with(same(stubMessage)));
             will(throwException(new RuntimeException()));
         }});
-        
+
         setupAfterDeliverySuccessful();
 
         doBeforeDeliveryExpectSuccess();
@@ -122,11 +120,11 @@ public class MessageEndpointProxyTest extends TestCase {
 
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testAfterDeliveryFailure() throws Exception {
         setupBeforeDeliverySuccessful();
         setupOnMessageSuccessful();
-        
+
         context.checking(new Expectations() {{
             oneOf (mockEndpointAndListener).afterDelivery(); will(throwException(new ResourceException()));
         }});
@@ -175,7 +173,7 @@ public class MessageEndpointProxyTest extends TestCase {
             oneOf (mockEndpointAndListener).release();
         }});
     }
-    
+
     private void doBeforeDeliveryExpectSuccess() {
         try {
             endpointProxy.beforeDelivery(ActiveMQEndpointWorker.ON_MESSAGE_METHOD);

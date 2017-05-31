@@ -31,7 +31,7 @@ public class StompTelnetTest extends StompTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompTelnetTest.class);
 
-    @Test
+    @Test(timeout = 60000)
     public void testCRLF() throws Exception {
 
         for (TransportConnector connector : brokerService.getTransportConnectors()) {
@@ -50,7 +50,7 @@ public class StompTelnetTest extends StompTestSupport {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testCRLF11() throws Exception {
 
         for (TransportConnector connector : brokerService.getTransportConnectors()) {
@@ -79,20 +79,12 @@ public class StompTelnetTest extends StompTestSupport {
         return null;
     }
 
-    @Override
-    protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
-        port = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp+nio://0.0.0.0:"+nioPort);
-        nioPort = connector.getConnectUri().getPort();
-    }
-
     protected Socket createSocket(int port) throws IOException {
         return new Socket("127.0.0.1", port);
     }
 
     @Override
-	protected String getQueueName() {
+    protected String getQueueName() {
         return getClass().getName() + "." + getName();
     }
 }

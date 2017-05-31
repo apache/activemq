@@ -46,8 +46,16 @@ public interface AmqpTransport {
 
     public boolean isTrace();
 
-    public IAmqpProtocolConverter getProtocolConverter();
+    public AmqpProtocolConverter getProtocolConverter();
 
-    public void setProtocolConverter(IAmqpProtocolConverter protocolConverter);
+    public void setProtocolConverter(AmqpProtocolConverter protocolConverter);
+
+    public void setInactivityMonitor(AmqpInactivityMonitor monitor);
+
+    public AmqpInactivityMonitor getInactivityMonitor();
+
+    public boolean isUseInactivityMonitor();
+
+    public long keepAlive();
 
 }

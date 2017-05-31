@@ -19,6 +19,7 @@ package org.apache.activemq.transport.discovery;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -26,7 +27,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 public abstract class DiscoveryAgentFactory {
 
     private static final FactoryFinder DISCOVERY_AGENT_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/discoveryagent/");
-    private static final ConcurrentHashMap<String, DiscoveryAgentFactory> DISCOVERY_AGENT_FACTORYS = new ConcurrentHashMap<String, DiscoveryAgentFactory>();
+    private static final ConcurrentMap<String, DiscoveryAgentFactory> DISCOVERY_AGENT_FACTORYS = new ConcurrentHashMap<String, DiscoveryAgentFactory>();
 
     /**
      * @param uri

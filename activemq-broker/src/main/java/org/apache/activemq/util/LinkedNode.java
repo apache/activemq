@@ -19,7 +19,7 @@ package org.apache.activemq.util;
 /**
  * Provides a base class for you to extend when you want object to maintain a
  * doubly linked list to other objects without using a collection class.
- * 
+ *
  * @author chirino
  */
 public class LinkedNode {
@@ -103,7 +103,6 @@ public class LinkedNode {
 
     /**
      * @param leftHead the node to link after this node.
-     * @return
      * @return this
      */
     public LinkedNode linkBefore(LinkedNode leftHead) {
@@ -148,11 +147,10 @@ public class LinkedNode {
         // Update our links..
         reset();
     }
-    
+
     public void reset() {
         next = this;
         prev = this;
         tail = true;
     }
-
 }

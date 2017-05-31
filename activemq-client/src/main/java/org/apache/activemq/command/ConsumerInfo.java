@@ -18,6 +18,9 @@ package org.apache.activemq.command;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.state.CommandVisitor;
@@ -26,7 +29,7 @@ import org.apache.activemq.state.CommandVisitor;
  * @openwire:marshaller code="5"
  *
  */
-public class ConsumerInfo extends BaseCommand {
+public class ConsumerInfo extends BaseCommand implements TransientInitializer {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.CONSUMER_INFO;
 
@@ -62,9 +65,8 @@ public class ConsumerInfo extends BaseCommand {
 
     // not marshalled, populated from RemoveInfo, the last message delivered, used
     // to suppress redelivery on prefetched messages after close
-    // overload; also used at runtime to track assignment of message groups
-    private transient long lastDeliveredSequenceId;
-
+    private transient long lastDeliveredSequenceId = RemoveInfo.LAST_DELIVERED_UNSET;
+    private transient Map<ActiveMQDestination, AtomicLong> assignedGroupCount = new ConcurrentHashMap<>();
     // originated from a
     // network connection
 
@@ -493,6 +495,41 @@ public class ConsumerInfo extends BaseCommand {
 
     public long getLastDeliveredSequenceId() {
         return lastDeliveredSequenceId;
+    }
+
+    public void incrementAssignedGroupCount(final ActiveMQDestination dest) {
+        AtomicLong value = assignedGroupCount.get(dest);
+        if (value == null) {
+            value = new AtomicLong(0);
+            assignedGroupCount.put(dest, value);
+        }
+        value.incrementAndGet();
+    }
+
+    public void clearAssignedGroupCount(final ActiveMQDestination dest) {
+        assignedGroupCount.remove(dest);
+    }
+
+    public void decrementAssignedGroupCount(final ActiveMQDestination dest) {
+        AtomicLong value = assignedGroupCount.get(dest);
+        if (value != null) {
+            value.decrementAndGet();
+        }
+    }
+
+    public long getAssignedGroupCount(final ActiveMQDestination dest) {
+        long result = 0l;
+        AtomicLong value = assignedGroupCount.get(dest);
+        if (value != null) {
+            result = value.longValue();
+        }
+        return result;
+    }
+
+    @Override
+    public void initTransients() {
+        assignedGroupCount = new ConcurrentHashMap<>();
+        lastDeliveredSequenceId = RemoveInfo.LAST_DELIVERED_UNSET;
     }
 
 }

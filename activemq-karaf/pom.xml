@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-karaf</artifactId>
@@ -32,23 +32,23 @@
 
   <properties>
     <xpp3-bundle-version>1.1.4c_5</xpp3-bundle-version>
-    <jodatime-bundle-version>1.6.2</jodatime-bundle-version>
+    <jodatime-bundle-version>2.9</jodatime-bundle-version>
     <jdom-bundle-version>1.1_4</jdom-bundle-version>
     <dom4j-bundle-version>1.6.1_2</dom4j-bundle-version>
-    <xstream-bundle-version>1.4.7_1</xstream-bundle-version>
-    <servicemix.specs.version>1.9.0</servicemix.specs.version>
+    <xstream-bundle-version>1.4.8_1</xstream-bundle-version>
+    <servicemix.specs.version>2.4.0</servicemix.specs.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.ops4j.pax.logging</groupId>
       <artifactId>pax-logging-api</artifactId>
-      <version>1.6.2</version>
+      <version>1.8.3</version>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.logging</groupId>
       <artifactId>pax-logging-service</artifactId>
-      <version>1.6.2</version>
+      <version>1.8.3</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -60,15 +60,20 @@
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
+     <dependency>
+      <groupId>org.apache.aries.blueprint</groupId>
+      <artifactId>org.apache.aries.blueprint.core</artifactId>
+      <version>1.4.4</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
-      <version>1.0.0</version>
+      <version>5.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.bundlerepository</artifactId>
-      <version>1.2.1</version>
+      <version>2.0.4</version>
     </dependency>
     <dependency>
       <groupId>org.apache.karaf.shell</groupId>

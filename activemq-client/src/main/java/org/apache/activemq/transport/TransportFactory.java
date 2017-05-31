@@ -16,13 +16,6 @@
  */
 package org.apache.activemq.transport;
 
-import org.apache.activemq.util.FactoryFinder;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
-import org.apache.activemq.wireformat.WireFormat;
-import org.apache.activemq.wireformat.WireFormatFactory;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -31,13 +24,21 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
+
+import org.apache.activemq.util.FactoryFinder;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
+import org.apache.activemq.wireformat.WireFormat;
+import org.apache.activemq.wireformat.WireFormatFactory;
 
 public abstract class TransportFactory {
 
     private static final FactoryFinder TRANSPORT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
     private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
-    private static final ConcurrentHashMap<String, TransportFactory> TRANSPORT_FACTORYS = new ConcurrentHashMap<String, TransportFactory>();
+    private static final ConcurrentMap<String, TransportFactory> TRANSPORT_FACTORYS = new ConcurrentHashMap<String, TransportFactory>();
 
     private static final String WRITE_TIMEOUT_FILTER = "soWriteTimeout";
     private static final String THREAD_NAME_FILTER = "threadName";
@@ -118,6 +119,9 @@ public abstract class TransportFactory {
             WireFormat wf = createWireFormat(options);
             Transport transport = createTransport(location, wf);
             Transport rc = configure(transport, wf, options);
+            //remove auto
+            IntrospectionSupport.extractProperties(options, "auto.");
+
             if (!options.isEmpty()) {
                 throw new IllegalArgumentException("Invalid connect parameters: " + options);
             }
@@ -191,7 +195,7 @@ public abstract class TransportFactory {
     }
 
     protected WireFormatFactory createWireFormatFactory(Map<String, String> options) throws IOException {
-        String wireFormat = (String)options.remove("wireFormat");
+        String wireFormat = options.remove("wireFormat");
         if (wireFormat == null) {
             wireFormat = getDefaultWireFormatType();
         }

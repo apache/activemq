@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.command;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -50,14 +51,17 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         this.consumerInfo = consumerInfo;
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public boolean isMarshallAware() {
         return false;
     }
 
+    @Override
     public boolean matches(MessageEvaluationContext mec) throws JMSException {
         try {
             // for Queues - the message can be acknowledged and dropped whilst
@@ -71,6 +75,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         }
     }
 
+    @Override
     public Object evaluate(MessageEvaluationContext message) throws JMSException {
         return matches(message) ? Boolean.TRUE : Boolean.FALSE;
     }
@@ -96,7 +101,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         }
 
         if (message.isAdvisory()) {
-            if (consumerInfo != null && consumerInfo.isNetworkSubscription()) {
+            if (consumerInfo != null && consumerInfo.isNetworkSubscription() && isAdvisoryInterpretedByNetworkBridge(message)) {
                 // they will be interpreted by the bridge leading to dup commands
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("not propagating advisory to network sub: " + consumerInfo.getConsumerId() + ", message: "+ message);
@@ -121,6 +126,12 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             }
         }
         return true;
+    }
+
+    public static boolean isAdvisoryInterpretedByNetworkBridge(Message message) {
+        return AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination()) ||
+                AdvisorySupport.isVirtualDestinationConsumerAdvisoryTopic(message.getDestination()) ||
+                AdvisorySupport.isTempDestinationAdvisoryTopic(message.getDestination());
     }
 
     public static boolean contains(BrokerId[] brokerPath, BrokerId brokerId) {

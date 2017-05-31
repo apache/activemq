@@ -16,10 +16,13 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -29,9 +32,13 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.MessageDatabase;
+import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,9 +46,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import static org.junit.Assert.assertTrue;
-
+// https://issues.apache.org/jira/browse/AMQ-4262
 public class TransactedStoreUsageSuspendResumeTest {
     private static final Logger LOG = LoggerFactory.getLogger(TransactedStoreUsageSuspendResumeTest.class);
 
@@ -80,7 +85,7 @@ public class TransactedStoreUsageSuspendResumeTest {
                 MessageConsumer consumer = session.createConsumer(session.createQueue(QUEUE_NAME));
 
                 do {
-                    Message message = consumer.receive(1000);
+                    Message message = consumer.receive(5000);
                     if (message != null) {
                         session.commit();
                         messagesReceivedCountDown.countDown();
@@ -89,6 +94,7 @@ public class TransactedStoreUsageSuspendResumeTest {
                         LOG.info("remaining to receive: " + messagesReceivedCountDown.getCount());
                     }
                 } while (messagesReceivedCountDown.getCount() != 0);
+                session.commit();
                 consumer.close();
                 session.close();
                 connection.close();
@@ -101,13 +107,17 @@ public class TransactedStoreUsageSuspendResumeTest {
     @Before
     public void setup() throws Exception {
 
+        // investigate liner gc issue - store usage not getting released
+        org.apache.log4j.Logger.getLogger(MessageDatabase.class).setLevel(Level.TRACE);
+
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(true);
 
         KahaDBPersistenceAdapter kahaDB = new KahaDBPersistenceAdapter();
-        kahaDB.setJournalMaxFileLength(500 * 1024);
+        kahaDB.setJournalMaxFileLength(256 * 1024);
         kahaDB.setCleanupInterval(10*1000);
+        kahaDB.setCompactAcksAfterNoGC(5);
         broker.setPersistenceAdapter(kahaDB);
 
         broker.getSystemUsage().getStoreUsage().setLimit(7*1024*1024);
@@ -137,13 +147,21 @@ public class TransactedStoreUsageSuspendResumeTest {
             }
         });
         sendExecutor.shutdown();
-        sendExecutor.awaitTermination(5, TimeUnit.MINUTES);
+        sendExecutor.awaitTermination(10, TimeUnit.MINUTES);
 
-        boolean allMessagesReceived = messagesReceivedCountDown.await(120, TimeUnit.SECONDS);
+        boolean allMessagesReceived = messagesReceivedCountDown.await(10, TimeUnit.MINUTES);
+        if (!allMessagesReceived) {
+            LOG.info("Giving up - not all received on time...");
+            LOG.info("System Mem Usage: " + broker.getSystemUsage().getMemoryUsage());
+            LOG.info("System Store Usage: " +broker.getSystemUsage().getStoreUsage());
+            LOG.info("Producer sent: " + messagesSentCountDown.getCount());
+            LOG.info("Consumer remaining to receive: " + messagesReceivedCountDown.getCount());
+            TestSupport.dumpAllThreads("StuckConsumer!");
+        }
         assertTrue("Got all messages: " + messagesReceivedCountDown, allMessagesReceived);
 
         // give consumers a chance to exit gracefully
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(5);
     }
 
     private void sendMessages() throws Exception {
@@ -160,13 +178,30 @@ public class TransactedStoreUsageSuspendResumeTest {
         BytesMessage message = session.createBytesMessage();
         message.writeBytes(new byte[10]);
 
-        for (int i=0; i<4240; i++) {
+        for (int i=0; i<1240; i++) {
             // mostly fill the store with retained messages
             // so consumer only has a small bit of store usage to work with
             producer.send(retainQueue, message);
             session.commit();
         }
 
+        // issue with gc and linear store usage
+        // some daylight in needed between retainQ and regularQ to free up the store
+        // log4j.logger.org.apache.activemq.store.kahadb.MessageDatabase=TRACE
+        Destination shortRetainQueue = session.createQueue(QUEUE_NAME + "-retain-short");
+        for (int i=0; i<1240; i++) {
+            producer.send(shortRetainQueue, message);
+            session.commit();
+        }
+
+        MessageConsumer consumer = session.createConsumer(shortRetainQueue);
+        for (int i=0; i<1240; i++) {
+            consumer.receive(4000);
+            session.commit();
+        }
+
+        LOG.info("Done with retain q. Mem Usage: " + broker.getSystemUsage().getMemoryUsage());
+        LOG.info("Done with retain q. Store Usage: " +broker.getSystemUsage().getStoreUsage());
         consumerStartLatch.countDown();
         for (int i = 0; i < MAX_MESSAGES; i++) {
             producer.send(queue,  message);

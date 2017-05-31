@@ -14,6 +14,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%-- Workaround for https://ops4j1.jira.com/browse/PAXWEB-1070 --%>
+<%@include file="WEB-INF/jspf/headertags.jspf" %>
 <html>
 <head>
 <c:set var="pageTitle" value="Queues"/>
@@ -38,7 +40,7 @@ var options = {
    "padding": {left: 0, right: 0, top: 10, bottom: 30},
    "xTicks": [<c:forEach items="${requestContext.brokerQuery.queues}" var="row" varStatus="status"
          ><c:if 
-         test="${status.count > 1}">, </c:if>{v:${status.count}, label:"${row.name}"}</c:forEach>]
+         test="${status.count > 1}">, </c:if>{v:${status.count}, label:"<c:out value="${row.name}"/>"}</c:forEach>]
 };
 
 function drawGraph() {

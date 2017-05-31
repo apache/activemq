@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-rar</artifactId>
@@ -162,8 +162,8 @@
           <artifactId>commons-primitives</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>commons-pool</groupId>
-          <artifactId>commons-pool</artifactId>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-pool2</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -296,8 +296,8 @@
           <artifactId>commons-primitives</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>commons-pool</groupId>
-          <artifactId>commons-pool</artifactId>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-pool2</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -336,8 +336,8 @@
       <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-pool</groupId>
-      <artifactId>commons-pool</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-pool2</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>

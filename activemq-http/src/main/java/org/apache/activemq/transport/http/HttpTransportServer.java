@@ -26,17 +26,15 @@ import org.apache.activemq.transport.WebTransportServerSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.ServiceStopper;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.GzipHandler;
+import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HttpTransportServer extends WebTransportServerSupport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(HttpTransportServer.class);
 
     private TextWireFormat wireFormat;
     private final HttpTransportFactory transportFactory;
@@ -77,15 +75,15 @@ public class HttpTransportServer extends WebTransportServerSupport {
 
     @Override
     protected void doStart() throws Exception {
-        server = new Server();
+        createServer();
         if (connector == null) {
-            connector = socketConnectorFactory.createConnector();
+            connector = socketConnectorFactory.createConnector(server);
         }
 
         URI boundTo = bind();
 
         ServletContextHandler contextHandler =
-            new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
+            new ServletContextHandler(server, "/", ServletContextHandler.SECURITY);
 
         ServletHolder holder = new ServletHolder();
         holder.setServlet(new HttpTunnelServlet());
@@ -96,8 +94,11 @@ public class HttpTransportServer extends WebTransportServerSupport {
         contextHandler.setAttribute("transportFactory", transportFactory);
         contextHandler.setAttribute("transportOptions", transportOptions);
 
-        GzipHandler gzipHandler = new GzipHandler();
-        contextHandler.setHandler(gzipHandler);
+        //AMQ-6182 - disabling trace by default
+        configureTraceMethod((ConstraintSecurityHandler) contextHandler.getSecurityHandler(),
+                httpOptions.isEnableTrace());
+
+        addGzipHandler(contextHandler);
 
         server.start();
 
@@ -105,8 +106,9 @@ public class HttpTransportServer extends WebTransportServerSupport {
         // was set to zero so that we report the actual port we are listening on.
 
         int port = boundTo.getPort();
-        if (connector.getLocalPort() != -1) {
-            port = connector.getLocalPort();
+        int p2 = getConnectorLocalPort();
+        if (p2 != -1) {
+            port = p2;
         }
 
         setConnectURI(new URI(boundTo.getScheme(),
@@ -116,6 +118,37 @@ public class HttpTransportServer extends WebTransportServerSupport {
                               boundTo.getPath(),
                               boundTo.getQuery(),
                               boundTo.getFragment()));
+    }
+
+    private int getConnectorLocalPort() throws Exception {
+        return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
+    }
+
+    private void addGzipHandler(ServletContextHandler contextHandler) throws Exception {
+        HandlerWrapper handler = null;
+        try {
+            handler = (HandlerWrapper) forName("org.eclipse.jetty.servlets.gzip.GzipHandler").newInstance();
+        } catch (Throwable t) {
+            handler = (HandlerWrapper) forName("org.eclipse.jetty.server.handler.gzip.GzipHandler").newInstance();
+        }
+        contextHandler.insertHandler(handler);
+    }
+
+    private Class<?> forName(String name) throws ClassNotFoundException {
+        Class<?> clazz = null;
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader != null) {
+            try {
+                clazz = loader.loadClass(name);
+            } catch (ClassNotFoundException e) {
+                // ignore
+            }
+        }
+        if (clazz == null) {
+            clazz = HttpTransportServer.class.getClassLoader().loadClass(name);
+        }
+
+        return clazz;
     }
 
     @Override

@@ -16,16 +16,20 @@
  */
 package org.apache.activemq.util.osgi;
 
+import static org.osgi.framework.wiring.BundleRevision.PACKAGE_NAMESPACE;
+
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.BufferedReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
-import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.net.URL;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -33,14 +37,16 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.FactoryFinder.ObjectFactory;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An OSGi bundle activator for ActiveMQ which adapts the {@link org.apache.activemq.util.FactoryFinder}
@@ -51,14 +57,16 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
 
-    private final ConcurrentHashMap<String, Class> serviceCache = new ConcurrentHashMap<String, Class>();
+    private final ConcurrentMap<String, Class<?>> serviceCache = new ConcurrentHashMap<String, Class<?>>();
     private final ConcurrentMap<Long, BundleWrapper> bundleWrappers = new ConcurrentHashMap<Long, BundleWrapper>();
     private BundleContext bundleContext;
+    private Set<BundleCapability> packageCapabilities = new HashSet<BundleCapability>();
 
     // ================================================================
     // BundleActivator interface impl
     // ================================================================
 
+    @Override
     public synchronized void start(BundleContext bundleContext) throws Exception {
 
         // This is how we replace the default FactoryFinder strategy
@@ -67,6 +75,9 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
         debug("activating");
         this.bundleContext = bundleContext;
+
+        cachePackageCapabilities(Service.class, Transport.class, DiscoveryAgent.class, PersistenceAdapter.class);
+
         debug("checking existing bundles");
         bundleContext.addBundleListener(this);
         for (Bundle bundle : bundleContext.getBundles()) {
@@ -78,7 +89,29 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
         debug("activated");
     }
 
+    /**
+     * Caches the package capabilities that are needed for a set of interface classes
+     *
+     * @param classes interfaces we want to track
+     */
+    private void cachePackageCapabilities(Class<?> ... classes) {
+        BundleWiring ourWiring = bundleContext.getBundle().adapt(BundleWiring.class);
+        Set<String> packageNames = new HashSet<String>();
+        for (Class<?> clazz: classes) {
+            packageNames.add(clazz.getPackage().getName());
+        }
 
+        List<BundleCapability> ourExports = ourWiring.getCapabilities(PACKAGE_NAMESPACE);
+        for (BundleCapability ourExport : ourExports) {
+            String ourPkgName = (String) ourExport.getAttributes().get(PACKAGE_NAMESPACE);
+            if (packageNames.contains(ourPkgName)) {
+                packageCapabilities.add(ourExport);
+            }
+        }
+    }
+
+
+    @Override
     public synchronized void stop(BundleContext bundleContext) throws Exception {
         debug("deactivating");
         bundleContext.removeBundleListener(this);
@@ -93,6 +126,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     // SynchronousBundleListener interface impl
     // ================================================================
 
+    @Override
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.RESOLVED) {
             register(event.getBundle());
@@ -103,11 +137,14 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     protected void register(final Bundle bundle) {
         debug("checking bundle " + bundle.getBundleId());
-        if( !isImportingUs(bundle) ) {
-            debug("The bundle does not import us: "+ bundle.getBundleId());
-            return;
+        if (isOurBundle(bundle) || isImportingUs(bundle) ) {
+            debug("Registering bundle for extension resolution: "+ bundle.getBundleId());
+            bundleWrappers.put(bundle.getBundleId(), new BundleWrapper(bundle));
         }
-        bundleWrappers.put(bundle.getBundleId(), new BundleWrapper(bundle));
+    }
+
+    private boolean isOurBundle(final Bundle bundle) {
+        return bundle.getBundleId() == bundleContext.getBundle().getBundleId();
     }
 
     /**
@@ -133,8 +170,9 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     // ObjectFactory interface impl
     // ================================================================
 
+    @Override
     public Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
-        Class clazz = serviceCache.get(path);
+        Class<?> clazz = serviceCache.get(path);
         if (clazz == null) {
             StringBuffer warnings = new StringBuffer();
             // We need to look for a bundle that has that class.
@@ -202,19 +240,22 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
         }
     }
 
+    /**
+     * We consider a bundle to be a candidate for objects if it imports at least
+     * one of the packages of our interfaces
+     *
+     * @param bundle
+     * @return true if the bundle is improting.
+     */
     private boolean isImportingUs(Bundle bundle) {
-        return isImportingClass(bundle, Service.class)
-                || isImportingClass(bundle, Transport.class)
-                || isImportingClass(bundle, DiscoveryAgent.class)
-                || isImportingClass(bundle, PersistenceAdapter.class);
-    }
-
-    private boolean isImportingClass(Bundle bundle, Class clazz) {
-        try {
-            return bundle.loadClass(clazz.getName())==clazz;
-        } catch (ClassNotFoundException e) {
-            return false;
+        BundleWiring wiring = bundle.adapt(BundleWiring.class);
+        List<BundleWire> imports = wiring.getRequiredWires(PACKAGE_NAMESPACE);
+        for (BundleWire importWire : imports) {
+            if (packageCapabilities.contains(importWire.getCapability())) {
+                return true;
+            }
         }
+        return false;
     }
 
     private static class BundleWrapper {

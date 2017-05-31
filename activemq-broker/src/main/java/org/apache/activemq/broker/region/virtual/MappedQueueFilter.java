@@ -1,3 +1,19 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.broker.region.virtual;
 
 import java.util.Set;
@@ -32,8 +48,10 @@ public class MappedQueueFilter extends DestinationFilter {
         // recover messages for first consumer only
         boolean noSubs = getConsumers().isEmpty();
 
-        super.addSubscription(context, sub);
-
+        // for virtual consumer wildcard dests, only subscribe to exact match to ensure no duplicates
+        if (sub.getActiveMQDestination().compareTo(next.getActiveMQDestination()) == 0) {
+            super.addSubscription(context, sub);
+        }
         if (noSubs && !getConsumers().isEmpty()) {
             // new subscription added, recover retroactive messages
             final RegionBroker regionBroker = (RegionBroker) context.getBroker().getAdaptor(RegionBroker.class);
@@ -44,7 +62,7 @@ public class MappedQueueFilter extends DestinationFilter {
 
             for (Destination virtualDest : virtualDests) {
                 if (virtualDest.getActiveMQDestination().isTopic() &&
-                    (virtualDest.isAlwaysRetroactive() || sub.getConsumerInfo().isRetroactive())) {
+                        (virtualDest.isAlwaysRetroactive() || sub.getConsumerInfo().isRetroactive())) {
 
                     Topic topic = (Topic) getBaseDestination(virtualDest);
                     if (topic != null) {
@@ -82,5 +100,10 @@ public class MappedQueueFilter extends DestinationFilter {
     @Override
     public synchronized void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         super.deleteSubscription(context, key);
+    }
+
+    @Override
+    public String toString() {
+        return "MappedQueueFilter[" + virtualDestination + ", " + next + "]";
     }
 }

@@ -33,7 +33,6 @@ public class AMQ4671Test {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(AMQ4671Test.class);
     private static BrokerService brokerService;
-    private static String BROKER_ADDRESS = "tcp://localhost:0";
 
     private String connectionUri;
 
@@ -41,12 +40,12 @@ public class AMQ4671Test {
     public void setUp() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
-        brokerService.setUseJmx(true);
-        brokerService.setDeleteAllMessagesOnStartup(true);
-        connectionUri = brokerService.addConnector(BROKER_ADDRESS).getPublishableConnectString();
-        connectionUri = connectionUri + "?trace=true";
+        brokerService.setUseJmx(false);
+        brokerService.setAdvisorySupport(false);
         brokerService.start();
         brokerService.waitUntilStarted();
+
+        connectionUri = brokerService.getVmConnectorURI().toString();
     }
 
     @After
@@ -55,7 +54,7 @@ public class AMQ4671Test {
         brokerService.waitUntilStopped();
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testNonDurableSubscriberInvalidUnsubscribe() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(connectionUri);
 

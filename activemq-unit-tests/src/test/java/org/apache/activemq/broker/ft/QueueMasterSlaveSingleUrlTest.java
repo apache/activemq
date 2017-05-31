@@ -18,17 +18,19 @@ package org.apache.activemq.broker.ft;
 
 import java.io.File;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.leveldb.LevelDBStore;
+import org.apache.activemq.util.Wait;
 import org.junit.Ignore;
 
 
 public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
     private final String brokerUrl = "tcp://localhost:62001";
-    private final String singleUriString = "failover://(" + brokerUrl +")?randomize=false";
+    private final String singleUriString = "failover://(" + brokerUrl +")?randomize=false&useExponentialBackOff=false";
 
     @Override
     protected void setUp() throws Exception {
@@ -81,15 +83,36 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
         }).start();
     }
 
+    public void testNetworkMasterSlave() throws Exception {
 
-    // The @Ignore is just here for documentation, since this is a JUnit3 test
-    // I added the sleep because without it the two other test cases fail.  I haven't looked into it, but
-    // my guess whatever setUp does isn't really finished when the teardown runs.
-    @Ignore("See https://issues.apache.org/jira/browse/AMQ-5164")
-    @Override
-    public void testAdvisory() throws Exception {
-        Thread.sleep(5 * 1000);
-        //super.testAdvisory();
+        final BrokerService client = new BrokerService();
+        client.setBrokerName("client");
+        client.setPersistent(false);
+        client.getManagementContext().setCreateConnector(false);
+        client.addNetworkConnector("masterslave:(tcp://localhost:62001,tcp://localhost:62002)");
+        client.start();
+        try {
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return client.getRegionBroker().getPeerBrokerInfos().length == 1;
+                }
+            });
+
+            assertTrue(!master.isSlave());
+            master.stop();
+            assertTrue("slave started", slaveStarted.await(60, TimeUnit.SECONDS));
+            assertTrue(!slave.get().isSlave());
+
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return client.getRegionBroker().getPeerBrokerInfos().length == 1;
+                }
+            });
+        } finally {
+            client.stop();
+        }
+
     }
-
 }

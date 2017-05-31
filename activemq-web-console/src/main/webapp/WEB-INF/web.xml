@@ -16,11 +16,10 @@
     limitations under the License.
 -->
 
-<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
-         http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
-         version="2.4">
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+      version="3.0"> 
 
   <description>
     Apache ActiveMQ Web Console
@@ -125,12 +124,15 @@
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <!--         Factor out common headers in JSP pages            -->
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!-- Removing the auto prelude as long as the workaround is in place -->
+  <!-- 
   <jsp-config>
     <jsp-property-group>
       <url-pattern>*.jsp</url-pattern>
       <include-prelude>/WEB-INF/jspf/headertags.jspf</include-prelude>
     </jsp-property-group>
   </jsp-config>
+  -->
   
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <!--         Error pages       -->
@@ -151,5 +153,9 @@
      <exception-type>java.lang.Exception</exception-type>
      <location>/500.html</location>
   </error-page>
+  
+  <session-config>
+  	<session-timeout>30</session-timeout>
+  </session-config>
   
 </web-app>

@@ -55,6 +55,7 @@ import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +85,6 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     private Statements statements;
     private JDBCAdapter adapter;
     private MemoryTransactionStore transactionStore;
-    private ScheduledThreadPoolExecutor clockDaemon;
     private ScheduledFuture<?> cleanupTicket;
     private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
@@ -297,6 +297,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
         if (isCreateTablesOnStartup()) {
             TransactionContext transactionContext = getTransactionContext();
+            transactionContext.getExclusiveConnection();
             transactionContext.begin();
             try {
                 try {
@@ -336,6 +337,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             cleanupTicket.cancel(true);
             cleanupTicket = null;
         }
+        closeDataSource(getDataSource());
     }
 
     public void cleanup() {
@@ -343,6 +345,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         try {
             LOG.debug("Cleaning up old messages.");
             c = getTransactionContext();
+            c.getExclusiveConnection();
             getAdapter().doDeleteOldMessages(c);
         } catch (IOException e) {
             LOG.warn("Old message cleanup failed due to: " + e, e);
@@ -358,10 +361,6 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             }
             LOG.debug("Cleanup done.");
         }
-    }
-
-    public void setScheduledThreadPoolExecutor(ScheduledThreadPoolExecutor clockDaemon) {
-        this.clockDaemon = clockDaemon;
     }
 
     @Override
@@ -412,15 +411,14 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 throw new IllegalArgumentException(
                         "No dataSource property has been configured");
             }
-        } else {
-            LOG.info("Using a separate dataSource for locking: "
-                    + lockDataSource);
         }
         return lockDataSource;
     }
 
     public void setLockDataSource(DataSource dataSource) {
         this.lockDataSource = dataSource;
+        LOG.info("Using a separate dataSource for locking: "
+                            + lockDataSource);
     }
 
     @Override
@@ -553,6 +551,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     @Override
     public void deleteAllMessages() throws IOException {
         TransactionContext c = getTransactionContext();
+        c.getExclusiveConnection();
         try {
             getAdapter().doDropTables(c);
             getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());
@@ -770,11 +769,11 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         }
     }
 
-    public void commitAdd(ConnectionContext context, MessageId messageId) throws IOException {
+    public void commitAdd(ConnectionContext context, MessageId messageId, long preparedSequenceId) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
             long sequence = (Long)messageId.getEntryLocator();
-            getAdapter().doCommitAddOp(c, sequence);
+            getAdapter().doCommitAddOp(c, preparedSequenceId, sequence);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit add: " + messageId + ". Reason: " + e, e);
@@ -786,7 +785,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public void commitRemove(ConnectionContext context, MessageAck ack) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
-            getAdapter().doRemoveMessage(c, (Long)ack.getLastMessageId().getEntryLocator(), null);
+            getAdapter().doRemoveMessage(c, (Long)ack.getLastMessageId().getFutureOrSequenceLong(), null);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit last ack: " + ack + ". Reason: " + e,e);
@@ -833,9 +832,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         }
     }
 
-    long[] getStoreSequenceIdForMessageId(MessageId messageId, ActiveMQDestination destination) throws IOException {
+    long[] getStoreSequenceIdForMessageId(ConnectionContext context, MessageId messageId, ActiveMQDestination destination) throws IOException {
         long[] result = new long[]{-1, Byte.MAX_VALUE -1};
-        TransactionContext c = getTransactionContext();
+        TransactionContext c = getTransactionContext(context);
         try {
             result = adapter.getStoreSequenceId(c, destination, messageId);
         } catch (SQLException e) {

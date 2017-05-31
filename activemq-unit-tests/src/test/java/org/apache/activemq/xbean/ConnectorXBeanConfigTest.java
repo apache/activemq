@@ -67,6 +67,8 @@ public class ConnectorXBeanConfigTest extends TestCase {
 
         // redundant start is now ignored
         brokerService.start();
+
+        assertTrue("mapped address in published address", brokerService.getTransportConnectorByScheme("tcp").getPublishableConnectString().contains("Mapped"));
     }
 
     public void testForceBrokerRestart() throws Exception {

@@ -16,12 +16,9 @@
  */
 package org.apache.activemq.bugs;
 
-import static org.junit.Assert.assertEquals;
-
 import java.net.URI;
 import java.util.Date;
 import java.util.Enumeration;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -29,19 +26,19 @@ import javax.jms.MessageProducer;
 import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
+import static org.junit.Assert.assertEquals;
 
 public class AMQ4595Test {
 
@@ -112,6 +109,8 @@ public class AMQ4595Test {
         }
         producerConnection.close();
 
+        LOG.info("Mem usage after producer done: " + broker.getSystemUsage().getMemoryUsage().getPercentUsage() + "%");
+
         // Browse the queue.
         Connection connection = factory.createConnection();
         connection.start();
@@ -130,6 +129,8 @@ public class AMQ4595Test {
         browser.close();
         session.close();
         connection.close();
+
+        LOG.info("Mem usage after browser closed: " + broker.getSystemUsage().getMemoryUsage().getPercentUsage() + "%");
 
         // The number of messages browsed should be equal to the number of messages sent.
         assertEquals(messageToSend, browsed);

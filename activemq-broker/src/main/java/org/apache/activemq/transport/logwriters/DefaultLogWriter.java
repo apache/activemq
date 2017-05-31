@@ -30,6 +30,12 @@ import org.slf4j.Logger;
  */
 public class DefaultLogWriter implements LogWriter {
 
+    String prefix = "";
+    @Override
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
     // doc comment inherited from LogWriter
     public void initialMessage(Logger log) {
         // Default log writer does nothing here
@@ -37,32 +43,32 @@ public class DefaultLogWriter implements LogWriter {
 
     // doc comment inherited from LogWriter
     public void logRequest (Logger log, Object command) {
-        log.debug("SENDING REQUEST: "+command);
+        log.debug(prefix + "SENDING REQUEST: "+command);
     }
 
     // doc comment inherited from LogWriter
     public void logResponse (Logger log, Object response) {
-        log.debug("GOT RESPONSE: "+response);
+        log.debug(prefix + "GOT RESPONSE: "+response);
     }
 
     // doc comment inherited from LogWriter
     public void logAsyncRequest (Logger log, Object command) {
-        log.debug("SENDING ASNYC REQUEST: "+command);
+        log.debug(prefix + "SENDING ASNYC REQUEST: "+command);
     }
 
     // doc comment inherited from LogWriter
     public void logOneWay (Logger log, Object command) {
-        log.debug("SENDING: "+command);
+        log.debug(prefix + "SENDING: "+command);
     }
 
     // doc comment inherited from LogWriter
     public void logReceivedCommand (Logger log, Object command) {
-        log.debug("RECEIVED: " + command);
+        log.debug(prefix + "RECEIVED: " + command);
     }
 
     // doc comment inherited from LogWriter
     public void logReceivedException (Logger log, IOException error) {
-        log.debug("RECEIVED Exception: "+error, error);
+        log.debug(prefix + "RECEIVED Exception: "+error, error);
     }
 
 

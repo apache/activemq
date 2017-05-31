@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.store.PList;
+import org.apache.activemq.store.PList.PListIterator;
 import org.apache.activemq.store.PListEntry;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
@@ -74,6 +75,7 @@ public class PListTest {
             plist.addLast(test, bs);
         }
         assertEquals(plist.size(), COUNT);
+        assertTrue(plist.messageSize() > 0);
         int count = 0;
         for (ByteSequence bs : map.values()) {
             String origStr = new String(bs.getData(), bs.getOffset(), bs.getLength());
@@ -95,6 +97,7 @@ public class PListTest {
             plist.addFirst(test, bs);
         }
         assertEquals(plist.size(), COUNT);
+        assertTrue(plist.messageSize() > 0);
         long count = plist.size() - 1;
         for (ByteSequence bs : map.values()) {
             String origStr = new String(bs.getData(), bs.getOffset(), bs.getLength());
@@ -125,6 +128,7 @@ public class PListTest {
             entry = plist.getFirst();
         }
         assertEquals(0, plist.size());
+        assertEquals(0, plist.messageSize());
     }
 
     @Test
@@ -132,6 +136,7 @@ public class PListTest {
         doTestRemove(1);
         plist.destroy();
         assertEquals(0, plist.size());
+        assertEquals(0, plist.messageSize());
     }
 
     @Test
@@ -146,6 +151,7 @@ public class PListTest {
         }
         plist.destroy();
         assertEquals(0, plist.size());
+        assertEquals(0, plist.messageSize());
     }
 
     @Test
@@ -476,9 +482,9 @@ public class PListTest {
         // with overlapping seeks from the iterators so that we are likely to
         // seek into
         // some bad area in the page file.
-        executor = Executors.newFixedThreadPool(400);
-        final int numProducer = 300;
-        final int numConsumer = 100;
+        executor = Executors.newFixedThreadPool(100);
+        final int numProducer = 30;
+        final int numConsumer = 10;
         for (int i = 0; i < numLists; i++) {
             for (int j = 0; j < numProducer; j++) {
                 executor.execute(new Job(i, PListTest.TaskType.ADD, iterations));
@@ -490,7 +496,7 @@ public class PListTest {
 
         executor.shutdown();
         LOG.info("wait for parallel work to complete");
-        boolean shutdown = executor.awaitTermination(60 * 60, TimeUnit.SECONDS);
+        boolean shutdown = executor.awaitTermination(5 * 60, TimeUnit.SECONDS);
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
         assertTrue("test did not  timeout ", shutdown);
         LOG.info("Num dataFiles:" + store.getJournal().getFiles().size());

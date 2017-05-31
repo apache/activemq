@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-leveldb-store</artifactId>
@@ -120,6 +120,12 @@
       <artifactId>org.linkedin.zookeeper-impl</artifactId>
       <version>${linkedin-zookeeper-version}</version>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.linkedin</groupId>
@@ -137,7 +143,6 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>${org.osgi.core-version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -242,6 +247,26 @@
           <groupId>org.codehaus.jackson</groupId>
           <artifactId>jackson-mapper-asl</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty-util</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty-api-2.1</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jsp-2.1</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jsp-api-2.1</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
 
@@ -282,18 +307,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty</artifactId>
-      <version>6.1.26</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty-util</artifactId>
-      <version>6.1.26</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>tomcat</groupId>
       <artifactId>jasper-runtime</artifactId>
       <version>5.5.12</version>
@@ -303,18 +316,6 @@
       <groupId>tomcat</groupId>
       <artifactId>jasper-compiler</artifactId>
       <version>5.5.12</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jsp-api-2.1</artifactId>
-      <version>6.1.14</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jsp-2.1</artifactId>
-      <version>6.1.14</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -467,7 +468,21 @@
                   </pluginExecutionFilter>
                   <action>
                     <execute><runOnIncremental>true</runOnIncremental></execute>
-                    <!--<ignore/>-->
+                    <!--<ignore />-->
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <versionRange>[0.0.0,)</versionRange>
+                    <goals>
+                      <goal>compile</goal>
+                      <goal>testCompile</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -495,6 +510,49 @@
   </build>
 
     <profiles>
+      <profile>
+        <id>activemq.tests-sanity</id>
+        <activation>
+          <property>
+            <name>activemq.tests</name>
+            <value>smoke</value>
+          </property>
+        </activation>
+        <build>
+          <plugins>
+            <plugin>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                <includes>
+                  <include>**/LevelDBStoreTest.*</include>
+                </includes>
+              </configuration>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+	<profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
         <profile>
             <id>activemq.tests.windows.excludes</id>
             <activation>
@@ -543,26 +601,6 @@
                     <name>os.name</name>
                     <value>AIX</value>
                 </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes combine.children="append">
-                                <exclude>**/*.*</exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>activemq.tests.mac.excludes</id>
-            <activation>
-                <os>
-                    <family>mac</family>
-                </os>
             </activation>
             <build>
                 <plugins>

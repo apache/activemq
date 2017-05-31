@@ -17,6 +17,9 @@
 package org.apache.activemq.console.filter;
 
 import junit.framework.TestCase;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.console.util.AmqMessagesUtil;
 
 public class TestMapTransformFilter extends TestCase {
 
@@ -53,6 +56,13 @@ public class TestMapTransformFilter extends TestCase {
         for (Object[] objectArray : testData) {
             filter.getDisplayString(objectArray[0]);
         }
+    }
+
+    public void testOriginaDest() throws Exception {
+        MapTransformFilter filter = new MapTransformFilter(null);
+        ActiveMQMessage mqMessage = new ActiveMQMessage();
+        mqMessage.setOriginalDestination(new ActiveMQQueue("O"));
+        assertTrue(filter.transformToMap(mqMessage).containsKey(AmqMessagesUtil.JMS_MESSAGE_CUSTOM_PREFIX + "OriginalDestination"));
     }
 
 }

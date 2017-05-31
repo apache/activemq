@@ -14,6 +14,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%-- Workaround for https://ops4j1.jira.com/browse/PAXWEB-1070 --%>
+<%@include file="WEB-INF/jspf/headertags.jspf" %>
 <html>
 <head>
 <c:set var="row" value="${requestContext.messageQuery.message}"/>
@@ -132,33 +134,24 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="2"><a href="<c:url value='deleteMessage.action?JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&secret=${sessionScope["secret"]}' />" onclick="return confirm('Are you sure you want to delete the message?')" >Delete</a></td>
+                        <td colspan="2"><a href="<c:out value='deleteMessage.action?JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&secret=${sessionScope["secret"]}' />" onclick="return confirm('Are you sure you want to delete the message?')" >Delete</a></td>
                     </tr>
-                    <c:set var="queueName" value="${requestContext.messageQuery.JMSDestination}"/>
-                    <c:set var="queueNameSubStr" value="${fn:substring(queueName, 0, 4)}" />
-                    <c:if test="${queueNameSubStr eq 'DLQ.' || queueNameSubStr eq 'DLT.'}">
-                        <c:if test="${queueNameSubStr eq 'DLQ.'}">
-                            <c:set var="moveToQueue" value="${fn:replace(queueName, 'DLQ.', '')}" />
-                        </c:if>
-                        <c:if test="${queueNameSubStr eq 'DLT.'}">
-                            <c:set var="moveToQueue" value="${fn:replace(queueName, 'DLT.', '')}" />
-                        </c:if>
-                        <tr>
-                            <td colspan="2">
-                                <a href="<c:url value="moveMessage.action">
-                                             <c:param name="destination" value="${moveToQueue}" />
-                                             <c:param name="JMSDestination" value="${requestContext.messageQuery.JMSDestination}" />
-                                             <c:param name="messageId" value="${row.JMSMessageID}" />
-                                             <c:param name="JMSDestinationType" value="queue" />
-                                             <c:param name="secret" value='${sessionScope["secret"]}' />
-                                         </c:url>"
-                                         onclick="return confirm('Are you sure you want to retry this message on queue://<c:out value="${moveToQueue}"/>?')"
-                                         title="Move to <c:out value="$moveToQueue" /> to attempt reprocessing">Retry</a>
+                    <c:if test="${requestContext.messageQuery.isDLQ() || requestContext.messageQuery.JMSDestination eq 'ActiveMQ.DLQ'}">
+                    	<tr>
+                    		<td>
+                    	 		<a href="<c:url value="retryMessage.action">
+                                          <c:param name="JMSDestination" value="${requestContext.messageQuery.JMSDestination}" />
+                                          <c:param name="messageId" value="${row.JMSMessageID}" />
+                                          <c:param name="JMSDestinationType" value="queue" />
+                                          <c:param name="secret" value='${sessionScope["secret"]}' />
+                                      </c:url>"
+                                      onclick="return confirm('Are you sure you want to retry this message?')"
+                                     title="Retry - attempt reprocessing on original destination">Retry</a>
                             </td>
-                        </tr>
+                       </tr>
                     </c:if>
                     <tr class="odd">
-                    <td><a href="<c:url value="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')">Copy</a></td>
+                    <td><a href="<c:out value="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')">Copy</a></td>
                         <td rowspan="2">
                             <select id="queue">
                                 <option value=""> -- Please select --</option>
@@ -172,7 +165,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 
                     </tr>
                     <tr class="odd">
-                        <td><a href="<c:url value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')"
+                        <td><a href="<c:out value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')"
                             >Move</a></td>
                     </tr>
                 </tbody>

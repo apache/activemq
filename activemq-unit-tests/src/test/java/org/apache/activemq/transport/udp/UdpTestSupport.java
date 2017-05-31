@@ -182,7 +182,10 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
     protected void tearDown() throws Exception {
         if (producer != null) {
-            producer.stop();
+            try {
+                producer.stop();
+            } catch (Exception e) {
+            }
         }
         if (consumer != null) {
             consumer.stop();

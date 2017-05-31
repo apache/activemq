@@ -16,22 +16,10 @@
  */
 package org.apache.activemq.camel.component.broker;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import javax.jms.Connection;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.junit.After;
@@ -40,6 +28,14 @@ import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+
+import javax.jms.*;
+import java.util.Enumeration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BrokerComponentXMLConfigTest {
 
@@ -70,7 +66,6 @@ public class BrokerComponentXMLConfigTest {
         producerConnection = factory.createConnection();
         producerConnection.start();
         consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
         producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
@@ -133,7 +128,6 @@ public class BrokerComponentXMLConfigTest {
 
         latch.await(timeOutInSeconds, TimeUnit.SECONDS);
         assertEquals(0, latch.getCount());
-
     }
 
     @Test
@@ -179,4 +173,35 @@ public class BrokerComponentXMLConfigTest {
         assertEquals(0, divertLatch.getCount());
     }
 
+    @Test
+    public void testPreserveOriginalHeaders() throws Exception {
+        final ActiveMQQueue queue = new ActiveMQQueue(QUEUE_NAME);
+
+        Topic topic = consumerSession.createTopic(TOPIC_NAME);
+
+        final CountDownLatch latch = new CountDownLatch(messageCount);
+        MessageConsumer consumer = consumerSession.createConsumer(queue);
+        consumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(javax.jms.Message message) {
+                try {
+                    assertEquals("321", message.getStringProperty("JMSXGroupID"));
+                    assertEquals("custom", message.getStringProperty("CustomHeader"));
+                    latch.countDown();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        MessageProducer producer = producerSession.createProducer(topic);
+
+        for (int i = 0; i < messageCount; i++) {
+            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            message.setStringProperty("JMSXGroupID", "123");
+            producer.send(message);
+        }
+
+        latch.await(timeOutInSeconds, TimeUnit.SECONDS);
+        assertEquals(0, latch.getCount());
+    }
 }

@@ -105,8 +105,12 @@ public class ShellCommand extends AbstractCommand {
             return 0;
         } catch (Exception e) {
             context.printException(e);
-            return -1;
+            return 1;
         }
+    }
+
+    public static void main(String[] args) {
+        main(args, System.in, System.out);
     }
 
     public boolean isInteractive() {

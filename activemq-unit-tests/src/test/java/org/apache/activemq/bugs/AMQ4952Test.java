@@ -17,6 +17,7 @@
 
 package org.apache.activemq.bugs;
 
+import java.io.File;
 import java.net.URI;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -54,12 +55,15 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.ConditionalNetworkBridgeFilterFactory;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -111,9 +115,9 @@ public class AMQ4952Test {
 
     protected ActiveMQQueue QUEUE_NAME = new ActiveMQQueue("duptest.store");
 
-    private final CountDownLatch stopConsumerBroker = new CountDownLatch(1);
-    private final CountDownLatch consumerBrokerRestarted = new CountDownLatch(1);
-    private final CountDownLatch consumerRestartedAndMessageForwarded = new CountDownLatch(1);
+    private CountDownLatch stopConsumerBroker;
+    private CountDownLatch consumerBrokerRestarted;
+    private CountDownLatch consumerRestartedAndMessageForwarded;
 
     private EmbeddedDataSource localDataSource;
 
@@ -123,6 +127,20 @@ public class AMQ4952Test {
     @Parameterized.Parameters(name = "enableAudit={0}")
     public static Iterable<Object[]> getTestParameters() {
         return Arrays.asList(new Object[][] { { Boolean.TRUE }, { Boolean.FALSE } });
+    }
+
+    @BeforeClass
+    public static void dbHomeSysProp() throws Exception {
+        System.setProperty("derby.system.home", new File(IOHelper.getDefaultDataDirectory()).getCanonicalPath());
+    }
+
+    public void repeat() throws Exception {
+        for (int i=0; i<10; i++) {
+            LOG.info("Iteration: " + i);
+            testConsumerBrokerRestart();
+            tearDown();
+            setUp();
+        }
     }
 
     @Test
@@ -146,7 +164,11 @@ public class AMQ4952Test {
                     MessageConsumer messageConsumer = consumerSession.createConsumer(QUEUE_NAME);
 
                     while (true) {
-                        TextMessage textMsg = (TextMessage) messageConsumer.receive(5000);
+                        TextMessage textMsg = (TextMessage) messageConsumer.receive(1000);
+
+                        if (textMsg == null) {
+                            textMsg = (TextMessage) messageConsumer.receive(4000);
+                        }
 
                         if (textMsg == null) {
                             return receivedMessageCount;
@@ -257,6 +279,10 @@ public class AMQ4952Test {
     @Before
     public void setUp() throws Exception {
         LOG.debug("Running with enableCursorAudit set to {}", this.enableCursorAudit);
+        stopConsumerBroker = new CountDownLatch(1);
+        consumerBrokerRestarted = new CountDownLatch(1);
+        consumerRestartedAndMessageForwarded = new CountDownLatch(1);
+
         doSetUp();
     }
 
@@ -267,13 +293,19 @@ public class AMQ4952Test {
 
     protected void doTearDown() throws Exception {
 
+        DataSource dataSource = ((JDBCPersistenceAdapter)producerBroker.getPersistenceAdapter()).getDataSource();
         try {
             producerBroker.stop();
         } catch (Exception ex) {
+        } finally {
+            DataSourceServiceSupport.shutdownDefaultDataSource(dataSource);
         }
+        dataSource = ((JDBCPersistenceAdapter)consumerBroker.getPersistenceAdapter()).getDataSource();
         try {
             consumerBroker.stop();
         } catch (Exception ex) {
+        } finally {
+            DataSourceServiceSupport.shutdownDefaultDataSource(dataSource);
         }
     }
 

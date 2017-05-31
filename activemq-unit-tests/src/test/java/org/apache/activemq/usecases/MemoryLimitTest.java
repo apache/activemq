@@ -17,14 +17,18 @@
 package org.apache.activemq.usecases;
 
 import java.util.Arrays;
+
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Queue;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -44,7 +48,7 @@ import org.slf4j.LoggerFactory;
 @RunWith(value = Parameterized.class)
 public class MemoryLimitTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryLimitTest.class);
-    final String payload = new String(new byte[10 * 1024]); //10KB
+    final byte[] payload = new byte[10 * 1024]; //10KB
     protected BrokerService broker;
 
     @Parameterized.Parameter
@@ -62,6 +66,7 @@ public class MemoryLimitTest extends TestSupport {
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policyEntry = new PolicyEntry();
+        policyEntry.setExpireMessagesPeriod(0); // when this fires it will consume 2*pageSize mem which will throw the test
         policyEntry.setProducerFlowControl(false);
         policyMap.put(new ActiveMQQueue(">"), policyEntry);
         broker.setDestinationPolicy(policyMap);
@@ -92,7 +97,7 @@ public class MemoryLimitTest extends TestSupport {
         }
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = 640000)
     public void testCursorBatch() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?jms.prefetchPolicy.all=10");
@@ -104,7 +109,9 @@ public class MemoryLimitTest extends TestSupport {
         final ProducerThread producer = new ProducerThread(sess, queue) {
             @Override
             protected Message createMessage(int i) throws Exception {
-                return sess.createTextMessage(payload + "::" + i);
+                BytesMessage bytesMessage = session.createBytesMessage();
+                bytesMessage.writeBytes(payload);
+                return bytesMessage;
             }
         };
         producer.setMessageCount(2000);
@@ -123,7 +130,7 @@ public class MemoryLimitTest extends TestSupport {
 
         // consume one message
         MessageConsumer consumer = sess.createConsumer(queue);
-        Message msg = consumer.receive();
+        Message msg = consumer.receive(5000);
         msg.acknowledge();
 
         // this should free some space and allow us to get new batch of messages in the memory
@@ -132,22 +139,74 @@ public class MemoryLimitTest extends TestSupport {
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("Destination usage: " + dest.getMemoryUsage());
-                return dest.getMemoryUsage().getPercentUsage() >= 478;
+                return dest.getMemoryUsage().getPercentUsage() >= 200;
             }
         }));
 
         LOG.info("Broker usage: " + broker.getSystemUsage().getMemoryUsage());
-        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() >= 478);
+        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() >= 200);
 
         // let's make sure we can consume all messages
         for (int i = 1; i < 2000; i++) {
             msg = consumer.receive(5000);
             if (msg == null) {
-               dumpAllThreads("NoMessage");
+                dumpAllThreads("NoMessage");
             }
             assertNotNull("Didn't receive message " + i, msg);
             msg.acknowledge();
         }
+    }
+
+    @Test(timeout = 120000)
+    public void testMoveMessages() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?jms.prefetchPolicy.all=10");
+        factory.setOptimizeAcknowledge(true);
+        Connection conn = factory.createConnection();
+        conn.start();
+        Session sess = conn.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        Queue queue = sess.createQueue("IN");
+        final byte[] payload = new byte[200 * 1024]; //200KB
+        final int count = 4;
+        final ProducerThread producer = new ProducerThread(sess, queue) {
+            @Override
+            protected Message createMessage(int i) throws Exception {
+                BytesMessage bytesMessage = session.createBytesMessage();
+                bytesMessage.writeBytes(payload);
+                return bytesMessage;
+            }
+        };
+        producer.setMessageCount(count);
+        producer.start();
+        producer.join();
+
+        Thread.sleep(1000);
+
+        final QueueViewMBean in = getProxyToQueue("IN");
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return in.getQueueSize() == count;
+            }
+        });
+
+        assertEquals("Messages not sent" , count, in.getQueueSize());
+
+        int moved = in.moveMatchingMessagesTo("", "OUT");
+
+        assertEquals("Didn't move all messages", count, moved);
+
+
+        final QueueViewMBean out = getProxyToQueue("OUT");
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return out.getQueueSize() == count;
+            }
+        });
+
+        assertEquals("Messages not moved" , count, out.getQueueSize());
+
     }
 
     /**
@@ -165,7 +224,7 @@ public class MemoryLimitTest extends TestSupport {
         final ProducerThread producer = new ProducerThread(sess, sess.createQueue("STORE.1")) {
             @Override
             protected Message createMessage(int i) throws Exception {
-                return sess.createTextMessage(payload + "::" + i);
+                return session.createTextMessage(payload + "::" + i);
             }
         };
         producer.setMessageCount(1000);
@@ -173,7 +232,7 @@ public class MemoryLimitTest extends TestSupport {
         final ProducerThread producer2 = new ProducerThread(sess, sess.createQueue("STORE.2")) {
             @Override
             protected Message createMessage(int i) throws Exception {
-                return sess.createTextMessage(payload + "::" + i);
+                return session.createTextMessage(payload + "::" + i);
             }
         };
         producer2.setMessageCount(1000);
@@ -196,4 +255,5 @@ public class MemoryLimitTest extends TestSupport {
 
         assertEquals("consumer got all produced messages", producer.getMessageCount(), consumer.getReceived());
     }
+
 }

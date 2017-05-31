@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -40,8 +41,8 @@ import org.apache.activemq.command.TransactionId;
 public class ConnectionState {
 
     ConnectionInfo info;
-    private final ConcurrentHashMap<TransactionId, TransactionState> transactions = new ConcurrentHashMap<TransactionId, TransactionState>();
-    private final ConcurrentHashMap<SessionId, SessionState> sessions = new ConcurrentHashMap<SessionId, SessionState>();
+    private final ConcurrentMap<TransactionId, TransactionState> transactions = new ConcurrentHashMap<TransactionId, TransactionState>();
+    private final ConcurrentMap<SessionId, SessionState> sessions = new ConcurrentHashMap<SessionId, SessionState>();
     private final List<DestinationInfo> tempDestinations = Collections.synchronizedList(new ArrayList<DestinationInfo>());
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private boolean connectionInterruptProcessingComplete = true;
@@ -53,6 +54,7 @@ public class ConnectionState {
         addSession(new SessionInfo(info, -1));
     }
 
+    @Override
     public String toString() {
         return info.toString();
     }
@@ -152,7 +154,7 @@ public class ConnectionState {
     public void setConnectionInterruptProcessingComplete(boolean connectionInterruptProcessingComplete) {
         this.connectionInterruptProcessingComplete = connectionInterruptProcessingComplete;
     }
-    
+
     public boolean isConnectionInterruptProcessingComplete() {
         return connectionInterruptProcessingComplete;
     }

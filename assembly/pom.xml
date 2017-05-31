@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>apache-activemq</artifactId>
@@ -70,6 +70,10 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-partition</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.activemq.tooling</groupId>
+      <artifactId>activemq-junit</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.fusesource.hawtdispatch</groupId>
@@ -80,6 +84,12 @@
       <groupId>org.linkedin</groupId>
       <artifactId>org.linkedin.zookeeper-impl</artifactId>
       <version>${linkedin-zookeeper-version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.linkedin</groupId>
@@ -95,7 +105,6 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>${org.osgi.core-version}</version>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
@@ -135,11 +144,6 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-fileserver</artifactId>
-      <type>war</type>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -223,13 +227,13 @@
       <artifactId>commons-beanutils</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-dbcp</groupId>
-      <artifactId>commons-dbcp</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-dbcp2</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>commons-pool</groupId>
-      <artifactId>commons-pool</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-pool2</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -258,10 +262,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jsp_2.1_spec</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
     </dependency>
     <dependency>
@@ -272,10 +272,14 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-servlet_2.5_spec</artifactId>
-    </dependency>
+     <dependency>
+         <groupId>org.apache.tomcat</groupId>
+         <artifactId>tomcat-servlet-api</artifactId>
+     </dependency>
+     <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-websocket-api</artifactId>
+     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
@@ -324,7 +328,7 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
+      <artifactId>jetty-all</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jdt</groupId>
@@ -340,6 +344,11 @@
       <groupId>org.apache.derby</groupId>
       <artifactId>derbynet</artifactId>
       <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava-version}</version>
     </dependency>
 
     <!-- copied dependencies from activemq-web-console -->
@@ -357,16 +366,21 @@
         <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>jstl</artifactId>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-annotation_1.0_spec</artifactId>
     </dependency>
     <dependency>
-      <groupId>taglibs</groupId>
-      <artifactId>standard</artifactId>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>apache-jsp</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jsp-2.1-glassfish</artifactId>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>apache-jstl</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
@@ -374,7 +388,7 @@
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-spring3</artifactId>
+      <artifactId>jasypt-spring31</artifactId>
       <version>${jasypt-version}</version>
     </dependency>
     <dependency>
@@ -448,7 +462,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>${maven-dependency-plugin-version}</version>
         <executions>
           <execution>
             <id>unpack</id>
@@ -511,8 +524,6 @@
               <descriptors>
                  <descriptor>src/main/descriptors/unix-bin.xml</descriptor>
               </descriptors>
-              <!--<finalName>${pom.artifactId}-${project.version}</finalName>-->
-              <!--<appendAssemblyId>false</appendAssemblyId>-->
             </configuration>
           </execution>
           <execution>
@@ -525,21 +536,10 @@
               <descriptors>
                  <descriptor>src/main/descriptors/windows-bin.xml</descriptor>
               </descriptors>
-              <!--<finalName>${pom.artifactId}-${project.version}</finalName>-->
-              <!--<appendAssemblyId>false</appendAssemblyId>-->
             </configuration>
           </execution>
         </executions>
       </plugin>
-      <!-- plugin>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-maven-plugin</artifactId>
-        <version>${project.version}</version>
-        <configuration>
-          <configFile>${basedir}/src/release/conf/activemq.xml</configFile>
-          <url>broker:(tcp://localhost:61616)?useJmx=false</url>
-        </configuration>
-      </plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
@@ -566,4 +566,48 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/BrokerXmlConfigStartTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

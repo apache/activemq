@@ -37,6 +37,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     private transient AtomicReference<Object> dataLocator = new AtomicReference<Object>();
     private transient Object entryLocator;
     private transient Object plistLocator;
+    private transient Object futureOrSequenceLong;
 
     public MessageId() {
         this.producerId = new ProducerId();
@@ -186,6 +187,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         copy.brokerSequenceId = brokerSequenceId;
         copy.dataLocator = dataLocator;
         copy.entryLocator = entryLocator;
+        copy.futureOrSequenceLong = futureOrSequenceLong;
         copy.plistLocator = plistLocator;
         copy.textView = textView;
         return copy;
@@ -219,6 +221,14 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         this.dataLocator.set(value);
     }
 
+    public Object getFutureOrSequenceLong() {
+        return futureOrSequenceLong;
+    }
+
+    public void setFutureOrSequenceLong(Object futureOrSequenceLong) {
+        this.futureOrSequenceLong = futureOrSequenceLong;
+    }
+
     public Object getEntryLocator() {
         return entryLocator;
     }
@@ -233,5 +243,10 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
 
     public void setPlistLocator(Object plistLocator) {
         this.plistLocator = plistLocator;
+    }
+
+    private Object readResolve() {
+        dataLocator = new AtomicReference<Object>();
+        return this;
     }
 }

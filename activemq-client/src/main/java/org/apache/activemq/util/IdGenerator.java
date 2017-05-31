@@ -35,6 +35,8 @@ public class IdGenerator {
     private String seed;
     private final AtomicLong sequence = new AtomicLong(1);
     private int length;
+    public static final String PROPERTY_IDGENERATOR_HOSTNAME ="activemq.idgenerator.hostname";
+    public static final String PROPERTY_IDGENERATOR_LOCALPORT ="activemq.idgenerator.localport";
     public static final String PROPERTY_IDGENERATOR_PORT ="activemq.idgenerator.port";
 
     static {
@@ -50,15 +52,26 @@ public class IdGenerator {
         }
 
         if (canAccessSystemProps) {
+
+            hostName = System.getProperty(PROPERTY_IDGENERATOR_HOSTNAME);
+            int localPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_LOCALPORT, "0"));
+
             int idGeneratorPort = 0;
             ServerSocket ss = null;
             try {
-                idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
-                LOG.trace("Using port {}", idGeneratorPort);
-                hostName = InetAddressUtil.getLocalHostName();
-                ss = new ServerSocket(idGeneratorPort);
-                stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
-                Thread.sleep(100);
+                if( hostName==null ) {
+                    hostName = InetAddressUtil.getLocalHostName();
+                }
+                if( localPort==0 ) {
+                    idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
+                    LOG.trace("Using port {}", idGeneratorPort);
+                    ss = new ServerSocket(idGeneratorPort);
+                    localPort = ss.getLocalPort();
+                    stub = "-" + localPort + "-" + System.currentTimeMillis() + "-";
+                    Thread.sleep(100);
+                } else {
+                    stub = "-" + localPort + "-" + System.currentTimeMillis() + "-";
+                }
             } catch (Exception e) {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("could not generate unique stub by using DNS and binding to local port", e);

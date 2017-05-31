@@ -27,24 +27,14 @@ public class JDBCStoreBrokerTest extends BrokerTest {
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
-        
         jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
         return broker;
     }
     
-    protected BrokerService createRestartedBroker() throws Exception {
+    protected BrokerService x_createRestartedBroker() throws Exception {
         BrokerService broker = new BrokerService();
-        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
-        broker.setPersistenceAdapter(jdbc);
+        broker.setPersistenceAdapter(new JDBCPersistenceAdapter());
         return broker;
     }
     

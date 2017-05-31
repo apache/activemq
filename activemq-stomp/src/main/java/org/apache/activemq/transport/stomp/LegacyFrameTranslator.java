@@ -16,25 +16,31 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jms.Destination;
+import javax.jms.JMSException;
+
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
-
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements ActiveMQ 4.0 translations
  */
 public class LegacyFrameTranslator implements FrameTranslator {
 
+    private static final Logger LOG = LoggerFactory.getLogger(LegacyFrameTranslator.class);
+
+    @Override
     public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
         final Map<?, ?> headers = command.getHeaders();
         final ActiveMQMessage msg;
@@ -87,6 +93,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
         return msg;
     }
 
+    @Override
     public StompFrame convertMessage(ProtocolConverter converter, ActiveMQMessage message) throws IOException, JMSException {
         StompFrame command = new StompFrame();
         command.setAction(Stomp.Responses.MESSAGE);
@@ -126,6 +133,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
         return command;
     }
 
+    @Override
     public String convertDestination(ProtocolConverter converter, Destination d) {
         if (d == null) {
             return null;
@@ -156,6 +164,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
         return buffer.toString();
     }
 
+    @Override
     public ActiveMQDestination convertDestination(ProtocolConverter converter, String name, boolean forceFallback) throws ProtocolException {
         if (name == null) {
             return null;
@@ -166,38 +175,63 @@ public class LegacyFrameTranslator implements FrameTranslator {
         String originalName = name;
         name = name.trim();
 
-        if (name.startsWith("/queue/")) {
-            String qName = name.substring("/queue/".length(), name.length());
-            return ActiveMQDestination.createDestination(qName, ActiveMQDestination.QUEUE_TYPE);
-        } else if (name.startsWith("/topic/")) {
-            String tName = name.substring("/topic/".length(), name.length());
-            return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TOPIC_TYPE);
-        } else if (name.startsWith("/remote-temp-queue/")) {
-            String tName = name.substring("/remote-temp-queue/".length(), name.length());
-            return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TEMP_QUEUE_TYPE);
-        } else if (name.startsWith("/remote-temp-topic/")) {
-            String tName = name.substring("/remote-temp-topic/".length(), name.length());
-            return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TEMP_TOPIC_TYPE);
-        } else if (name.startsWith("/temp-queue/")) {
-            return converter.createTempDestination(name, false);
-        } else if (name.startsWith("/temp-topic/")) {
-            return converter.createTempDestination(name, true);
-        } else {
-            if (forceFallback) {
-                try {
-                    ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(originalName);
-                    if (fallback != null) {
-                        return fallback;
+        String[] destinations = name.split(",");
+        if (destinations == null || destinations.length == 0) {
+            destinations = new String[] { name };
+        }
+
+        StringBuilder destinationBuilder = new StringBuilder();
+        for (int i = 0; i < destinations.length; ++i) {
+            String destinationName = destinations[i];
+
+            if (destinationName.startsWith("/queue/")) {
+                destinationName = destinationName.substring("/queue/".length(), destinationName.length());
+                destinationBuilder.append(ActiveMQDestination.QUEUE_QUALIFIED_PREFIX + destinationName);
+            } else if (destinationName.startsWith("/topic/")) {
+                destinationName = destinationName.substring("/topic/".length(), destinationName.length());
+                destinationBuilder.append(ActiveMQDestination.TOPIC_QUALIFIED_PREFIX + destinationName);
+            } else if (destinationName.startsWith("/remote-temp-queue/")) {
+                destinationName = destinationName.substring("/remote-temp-queue/".length(), destinationName.length());
+                destinationBuilder.append(ActiveMQDestination.TEMP_QUEUE_QUALIFED_PREFIX + destinationName);
+            } else if (destinationName.startsWith("/remote-temp-topic/")) {
+                destinationName = destinationName.substring("/remote-temp-topic/".length(), destinationName.length());
+                destinationBuilder.append(ActiveMQDestination.TEMP_TOPIC_QUALIFED_PREFIX + destinationName);
+            } else if (destinationName.startsWith("/temp-queue/")) {
+                ActiveMQDestination converted = converter.createTempDestination(destinationName, false);
+                destinationBuilder.append(converted.getQualifiedName());
+            } else if (destinationName.startsWith("/temp-topic/")) {
+                ActiveMQDestination converted = converter.createTempDestination(destinationName, true);
+                destinationBuilder.append(converted.getQualifiedName());
+            } else {
+                if (forceFallback) {
+                    String fallbackName = destinationName;
+                    if (destinationName.length() == 1) {
+                        // Use the original non-trimmed name instead
+                        fallbackName = originalName;
                     }
-                } catch (JMSException e) {
+
+                    try {
+                        ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(fallbackName);
+                        if (fallback != null) {
+                            destinationBuilder.append(fallback.getQualifiedName());
+                        }
+                    } catch (JMSException e) {
+                        throw new ProtocolException("Illegal destination name: [" + fallbackName + "] -- ActiveMQ STOMP destinations "
+                                + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/", false, e);
+                    }
+                } else {
                     throw new ProtocolException("Illegal destination name: [" + originalName + "] -- ActiveMQ STOMP destinations "
-                            + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/", false, e);
+                                                + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
                 }
             }
-            throw new ProtocolException("Illegal destination name: [" + originalName + "] -- ActiveMQ STOMP destinations "
-                                        + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
+
+            if (i < destinations.length - 1) {
+                destinationBuilder.append(",");
+            }
         }
+
+        LOG.trace("New Composite Destination name: {}", destinationBuilder);
+
+        return ActiveMQDestination.createDestination(destinationBuilder.toString(), ActiveMQDestination.QUEUE_TYPE);
     }
-
-
 }

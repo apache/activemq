@@ -55,12 +55,13 @@ public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
     private static final int NUM_MESSAGES = 25;
 
     @Override
-    protected void createBroker() throws Exception {
-        brokerService = new BrokerService();
+    protected BrokerService createBroker(boolean deleteAllOnStart) throws Exception {
+        BrokerService brokerService = new BrokerService();
         brokerService.setPersistent(isPersistent());
         brokerService.setAdvisorySupport(false);
         brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
         brokerService.setPopulateJMSXUserID(true);
+        brokerService.setUseJmx(false);
 
         final CompositeTopic compositeTopic = new CompositeTopic();
         compositeTopic.setName(COMPOSITE_TOPIC);
@@ -74,6 +75,8 @@ public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
         final VirtualDestinationInterceptor destinationInterceptor = new VirtualDestinationInterceptor();
         destinationInterceptor.setVirtualDestinations(new VirtualDestination[] {compositeTopic} );
         brokerService.setDestinationInterceptors(new DestinationInterceptor[] { destinationInterceptor });
+
+        return brokerService;
     }
 
     @Test(timeout = 60 * 1000)

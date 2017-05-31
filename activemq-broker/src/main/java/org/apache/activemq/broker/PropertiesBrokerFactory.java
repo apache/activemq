@@ -31,14 +31,14 @@ import org.apache.activemq.util.IntrospectionSupport;
 /**
  * A {@link BrokerFactoryHandler} which uses a properties file to configure the
  * broker's various policies.
- * 
- * 
+ *
+ *
  */
 public class PropertiesBrokerFactory implements BrokerFactoryHandler {
 
     public BrokerService createBroker(URI brokerURI) throws Exception {
 
-        Map properties = loadProperties(brokerURI);
+        Map<Object, Object> properties = loadProperties(brokerURI);
         BrokerService brokerService = createBrokerService(brokerURI, properties);
 
         IntrospectionSupport.setProperties(brokerService, properties);
@@ -48,14 +48,31 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
     /**
      * Lets load the properties from some external URL or a relative file
      */
-    protected Map loadProperties(URI brokerURI) throws IOException {
+    protected Map<Object, Object> loadProperties(URI brokerURI) throws IOException {
         // lets load a URI
         String remaining = brokerURI.getSchemeSpecificPart();
         Properties properties = new Properties();
         File file = new File(remaining);
 
+        try (InputStream inputStream = loadStream(file, remaining)) {
+            if (inputStream != null) {
+                properties.load(inputStream);
+            }
+        }
+
+        // should we append any system properties?
+        try {
+            Properties systemProperties = System.getProperties();
+            properties.putAll(systemProperties);
+        } catch (Exception e) {
+            // ignore security exception
+        }
+        return properties;
+    }
+
+    protected InputStream loadStream(File file, String remaining) throws IOException {
         InputStream inputStream = null;
-        if (file.exists()) {
+        if (file != null && file.exists()) {
             inputStream = new FileInputStream(file);
         } else {
             URL url = null;
@@ -72,19 +89,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
                 inputStream = url.openStream();
             }
         }
-        if (inputStream != null) {
-            properties.load(inputStream);
-            inputStream.close();
-        }
-
-        // should we append any system properties?
-        try {
-            Properties systemProperties = System.getProperties();
-            properties.putAll(systemProperties);
-        } catch (Exception e) {
-            // ignore security exception
-        }
-        return properties;
+        return inputStream;
     }
 
     protected InputStream findResourceOnClassPath(String remaining) {
@@ -95,7 +100,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
         return answer;
     }
 
-    protected BrokerService createBrokerService(URI brokerURI, Map properties) {
+    protected BrokerService createBrokerService(URI brokerURI, Map<Object, Object> properties) {
         return new BrokerService();
     }
 }

@@ -16,18 +16,18 @@
  */
 package org.apache.activemq;
 
-import java.util.HashMap;
-import javax.management.ObjectName;
-import org.apache.activemq.plugin.RuntimeConfigurationBroker;
-import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
-import org.apache.activemq.plugin.jmx.RuntimeConfigurationViewMBean;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.junit.Test;
-
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.util.HashMap;
+
+import javax.management.ObjectName;
+
+import org.apache.activemq.plugin.RuntimeConfigurationBroker;
+import org.apache.activemq.plugin.jmx.RuntimeConfigurationViewMBean;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.junit.Test;
 
 public class MBeanTest extends RuntimeConfigTestSupport {
 

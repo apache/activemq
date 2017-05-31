@@ -19,6 +19,7 @@ package org.apache.activemq.transport.vm;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URI;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,8 @@ import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,16 +52,15 @@ public class VMTransport implements Transport, Task {
     protected VMTransport peer;
     protected TransportListener transportListener;
     protected boolean marshal;
-    protected boolean network;
     protected boolean async = true;
     protected int asyncQueueDepth = 2000;
     protected final URI location;
     protected final long id;
 
     // Implementation
-    private LinkedBlockingQueue<Object> messageQueue;
-    private TaskRunnerFactory taskRunnerFactory;
-    private TaskRunner taskRunner;
+    private volatile LinkedBlockingQueue<Object> messageQueue;
+    private volatile TaskRunnerFactory taskRunnerFactory;
+    private volatile TaskRunner taskRunner;
 
     // Transport State
     protected final AtomicBoolean started = new AtomicBoolean();
@@ -92,13 +94,38 @@ public class VMTransport implements Transport, Task {
                 throw new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed.");
             }
 
-            if (peer.async || !peer.started.get()) {
+            if (peer.async) {
                 peer.getMessageQueue().put(command);
                 peer.wakeup();
                 return;
             }
 
+            if (!peer.started.get()) {
+                LinkedBlockingQueue<Object> pending = peer.getMessageQueue();
+                int sleepTimeMillis;
+                boolean accepted = false;
+                do {
+                    sleepTimeMillis = 0;
+                    // the pending queue is drained on start so we need to ensure we add before
+                    // the drain commences, otherwise we never get the command dispatched!
+                    synchronized (peer.started) {
+                        if (!peer.started.get()) {
+                            accepted = pending.offer(command);
+                            if (!accepted) {
+                                sleepTimeMillis = 500;
+                            }
+                        }
+                    }
+                    // give start thread a chance if we will loop
+                    TimeUnit.MILLISECONDS.sleep(sleepTimeMillis);
+
+                } while (!accepted && !peer.started.get());
+                if (accepted) {
+                    return;
+                }
+            }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             InterruptedIOException iioe = new InterruptedIOException(e.getMessage());
             iioe.initCause(e);
             throw iioe;
@@ -183,28 +210,29 @@ public class VMTransport implements Transport, Task {
                 mq.clear();
             }
 
-            // Allow pending deliveries to finish up, but don't wait
-            // forever in case of an stalled onCommand.
+            // don't wait for completion
             if (tr != null) {
                 try {
-                    tr.shutdown(TimeUnit.SECONDS.toMillis(1));
+                    tr.shutdown(1);
                 } catch(Exception e) {
                 }
                 tr = null;
             }
 
-            // let the peer know that we are disconnecting after attempting
-            // to cleanly shutdown the async tasks so that this is the last
-            // command it see's.
-            try {
-                peer.transportListener.onCommand(new ShutdownInfo());
-            } catch (Exception ignore) {
-            }
+            if (peer.transportListener != null) {
+                // let the peer know that we are disconnecting after attempting
+                // to cleanly shutdown the async tasks so that this is the last
+                // command it see's.
+                try {
+                    peer.transportListener.onCommand(new ShutdownInfo());
+                } catch (Exception ignore) {
+                }
 
-            // let any requests pending a response see an exception
-            try {
-                peer.transportListener.onException(new TransportDisposedIOException("peer (" + this + ") stopped."));
-            } catch (Exception ignore) {
+                // let any requests pending a response see an exception
+                try {
+                    peer.transportListener.onException(new TransportDisposedIOException("peer (" + this + ") stopped."));
+                } catch (Exception ignore) {
+                }
             }
 
             // shutdown task runner factory
@@ -243,7 +271,14 @@ public class VMTransport implements Transport, Task {
 
         Object command = mq.poll();
         if (command != null && !disposed.get()) {
-            tl.onCommand(command);
+            try {
+                tl.onCommand(command);
+            } catch (Exception e) {
+                try {
+                    peer.transportListener.onException(IOExceptionSupport.create(e));
+                } catch (Exception ignore) {
+                }
+            }
             return !mq.isEmpty() && !disposed.get();
         } else {
             if(disposed.get()) {
@@ -256,14 +291,6 @@ public class VMTransport implements Transport, Task {
     @Override
     public void setTransportListener(TransportListener commandListener) {
         this.transportListener = commandListener;
-    }
-
-    public void setMessageQueue(LinkedBlockingQueue<Object> asyncQueue) {
-        synchronized (this) {
-            if (messageQueue == null) {
-                messageQueue = asyncQueue;
-            }
-        }
     }
 
     public LinkedBlockingQueue<Object> getMessageQueue() throws TransportDisposedIOException {
@@ -339,14 +366,6 @@ public class VMTransport implements Transport, Task {
 
     public void setMarshal(boolean marshal) {
         this.marshal = marshal;
-    }
-
-    public boolean isNetwork() {
-        return network;
-    }
-
-    public void setNetwork(boolean network) {
-        this.network = network;
     }
 
     @Override
@@ -428,5 +447,20 @@ public class VMTransport implements Transport, Task {
     @Override
     public int getReceiveCounter() {
         return receiveCounter;
+    }
+
+    @Override
+    public X509Certificate[] getPeerCertificates() {
+        return null;
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {
+
+    }
+
+    @Override
+    public WireFormat getWireFormat() {
+        return null;
     }
 }

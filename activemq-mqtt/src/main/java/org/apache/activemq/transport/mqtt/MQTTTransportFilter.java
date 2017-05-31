@@ -27,6 +27,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -143,28 +144,39 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
                 default: return frame.toString();
             }
         } catch (Throwable e) {
-            e.printStackTrace();
+            LOG.warn(e.getMessage(), e);
             return frame.toString();
         }
     }
 
     @Override
+    public void start() throws Exception {
+        if (monitor != null) {
+            monitor.startConnectChecker(getConnectAttemptTimeout());
+        }
+        super.start();
+    }
+
+    @Override
     public void stop() throws Exception {
-        if( stopped.compareAndSet(false, true) ) {
+        if (stopped.compareAndSet(false, true)) {
             super.stop();
         }
     }
 
     @Override
     public X509Certificate[] getPeerCertificates() {
+        X509Certificate[] peerCerts = null;
         if (next instanceof SslTransport) {
-            X509Certificate[] peerCerts = ((SslTransport) next).getPeerCertificates();
-            if (trace && peerCerts != null) {
-                LOG.debug("Peer Identity has been verified\n");
-            }
-            return peerCerts;
+            peerCerts = ((SslTransport) next).getPeerCertificates();
         }
-        return null;
+        if (next instanceof  NIOSSLTransport) {
+            peerCerts = ((NIOSSLTransport)next).getPeerCertificates();
+        }
+        if (trace && peerCerts != null) {
+            LOG.debug("Peer Identity has been verified\n");
+        }
+        return peerCerts;
     }
 
     public boolean isTrace() {
@@ -203,6 +215,24 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         protocolConverter.setDefaultKeepAlive(defaultHeartBeat);
     }
 
+    /**
+     * @return the timeout value used to fail a connection if no CONNECT frame read.
+     */
+    public long getConnectAttemptTimeout() {
+        return wireFormat.getConnectAttemptTimeout();
+    }
+
+    /**
+     * Sets the timeout value used to fail a connection if no CONNECT frame is read
+     * in the given interval.
+     *
+     * @param connectTimeout
+     *        the connection frame received timeout value.
+     */
+    public void setConnectAttemptTimeout(long connectTimeout) {
+        wireFormat.setConnectAttemptTimeout(connectTimeout);
+    }
+
     public boolean getPublishDollarTopics() {
         return protocolConverter != null && protocolConverter.getPublishDollarTopics();
     }
@@ -211,12 +241,12 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         protocolConverter.setPublishDollarTopics(publishDollarTopics);
     }
 
-    public String getSubscriptionStrategyName() {
-        return protocolConverter != null ? protocolConverter.getSubscriptionStrategyName() : "default";
+    public String getSubscriptionStrategy() {
+        return protocolConverter != null ? protocolConverter.getSubscriptionStrategy() : "default";
     }
 
-    public void setSubscriptionStrategyName(String name) {
-        protocolConverter.setSubscriptionStrategyName(name);
+    public void setSubscriptionStrategy(String name) {
+        protocolConverter.setSubscriptionStrategy(name);
     }
 
     public int getActiveMQSubscriptionPrefetch() {
@@ -231,4 +261,25 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     public void setActiveMQSubscriptionPrefetch(int activeMQSubscriptionPrefetch) {
         protocolConverter.setActiveMQSubscriptionPrefetch(activeMQSubscriptionPrefetch);
     }
+
+    /**
+     * @return the maximum number of bytes a single MQTT message frame is allowed to be.
+     */
+    public int getMaxFrameSize() {
+        return wireFormat.getMaxFrameSize();
+    }
+
+    /**
+     * Sets the maximum frame size for an incoming MQTT frame.  The protocl limit is
+     * 256 megabytes and this value cannot be set higher.
+     *
+     * @param maxFrameSize
+     *        the maximum allowed frame size for a single MQTT frame.
+     */
+    public void setMaxFrameSize(int maxFrameSize) {
+        wireFormat.setMaxFrameSize(maxFrameSize);
+    }
+
+    @Override
+    public void setPeerCertificates(X509Certificate[] certificates) {}
 }

@@ -18,6 +18,7 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
@@ -36,6 +37,7 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
     private String dataDirectory = IOHelper.getDefaultDataDirectory();
     private File dataDirectoryFile;
     private DataSource dataSource;
+    private DataSource createdDefaultDataSource;
 
     public DataSourceServiceSupport() {
     }
@@ -68,9 +70,18 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
             dataSource = createDataSource(getDataDirectoryFile().getCanonicalPath());
             if (dataSource == null) {
                 throw new IllegalArgumentException("No dataSource property has been configured");
+            } else {
+                createdDefaultDataSource = dataSource;
             }
         }
         return dataSource;
+    }
+
+    public void closeDataSource(DataSource dataSource) {
+        if (createdDefaultDataSource != null && createdDefaultDataSource.equals(dataSource)) {
+            shutdownDefaultDataSource(dataSource);
+            createdDefaultDataSource = this.dataSource = null;
+        }
     }
 
     public void setDataSource(DataSource dataSource) {
@@ -78,6 +89,10 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
     }
 
     public static DataSource createDataSource(String homeDir) throws IOException {
+        return createDataSource(homeDir, "derbydb");
+    }
+
+    public static DataSource createDataSource(String homeDir, String dbName) throws IOException {
 
         // Setup the Derby datasource.
         System.setProperty("derby.system.home", homeDir);
@@ -85,9 +100,19 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
         System.setProperty("derby.storage.pageCacheSize", "100");
 
         final EmbeddedDataSource ds = new EmbeddedDataSource();
-        ds.setDatabaseName("derbydb");
+        ds.setDatabaseName(dbName);
         ds.setCreateDatabase("create");
         return ds;
+    }
+
+    public static void shutdownDefaultDataSource(DataSource dataSource) {
+        final EmbeddedDataSource ds =  (EmbeddedDataSource) dataSource;
+        ds.setCreateDatabase("shutdown");
+        ds.setShutdownDatabase("shutdown");
+        try {
+            ds.getConnection();
+        } catch (SQLException expectedAndIgnored) {
+        }
     }
 
     public String toString() {

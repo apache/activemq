@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.jms.InvalidSelectorException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -66,7 +67,7 @@ public interface Subscription extends SubscriptionRecovery {
      * Is the subscription interested in the message?
      * @param node
      * @param context
-     * @return
+     * @return true if matching
      * @throws IOException
      */
     boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException;
@@ -74,7 +75,7 @@ public interface Subscription extends SubscriptionRecovery {
     /**
      * Is the subscription interested in messages in the destination?
      * @param destination
-     * @return
+     * @return true if matching
      */
     boolean matches(ActiveMQDestination destination);
 
@@ -118,6 +119,11 @@ public interface Subscription extends SubscriptionRecovery {
     int getPendingQueueSize();
 
     /**
+     * @return size of the messages pending delivery
+     */
+    long getPendingMessageSize();
+
+    /**
      * @return number of messages dispatched to the client
      */
     int getDispatchedQueueSize();
@@ -136,6 +142,8 @@ public interface Subscription extends SubscriptionRecovery {
      * @return number of messages queued by the client
      */
     long getDequeueCounter();
+
+    SubscriptionStatistics getSubscriptionStatistics();
 
     /**
      * @return the JMS selector on the current subscription
@@ -193,6 +201,11 @@ public interface Subscription extends SubscriptionRecovery {
      * @return the number of messages awaiting acknowledgement
      */
     int getInFlightSize();
+
+    /**
+     * @return the size in bytes of the messages awaiting acknowledgement
+     */
+    long getInFlightMessageSize();
 
     /**
      * @return the in flight messages as a percentage of the prefetch size

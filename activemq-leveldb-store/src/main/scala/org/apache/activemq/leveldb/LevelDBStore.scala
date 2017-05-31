@@ -35,7 +35,9 @@ import org.apache.activemq.leveldb.util.Log
 import org.apache.activemq.store.PList.PListIterator
 import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream}
 import org.fusesource.hawtdispatch;
-import org.apache.activemq.broker.scheduler.JobSchedulerStore;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore
+import org.apache.activemq.store.IndexListener.MessageContext
+import javax.management.ObjectName
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
@@ -79,6 +81,74 @@ case class DurableSubscription(subKey:Long, topicKey:Long, info: SubscriptionInf
   var gcPosition = 0L
   var lastAckPosition = 0L
   var cursorPosition = 0L
+}
+
+class LevelDBStoreTest(val store:LevelDBStore) extends LevelDBStoreTestMBean {
+
+  import store._
+  var suspendForce = false;
+
+  override def setSuspendForce(value: Boolean): Unit = this.synchronized {
+    if( suspendForce!=value ) {
+      suspendForce = value;
+      if( suspendForce ) {
+        db.client.log.recordLogTestSupport.forceCall.suspend
+      } else {
+        db.client.log.recordLogTestSupport.forceCall.resume
+      }
+    }
+  }
+
+  override def getSuspendForce: Boolean = this.synchronized {
+    suspendForce
+  }
+
+  override def getForceCalls = this.synchronized {
+    db.client.log.recordLogTestSupport.forceCall.threads.get()
+  }
+
+  var suspendWrite = false;
+
+  override def setSuspendWrite(value: Boolean): Unit = this.synchronized {
+    if( suspendWrite!=value ) {
+      suspendWrite = value;
+      if( suspendWrite ) {
+        db.client.log.recordLogTestSupport.writeCall.suspend
+      } else {
+        db.client.log.recordLogTestSupport.writeCall.resume
+      }
+    }
+  }
+
+  override def getSuspendWrite: Boolean = this.synchronized {
+    suspendWrite
+  }
+
+  override def getWriteCalls = this.synchronized {
+    db.client.log.recordLogTestSupport.writeCall.threads.get()
+  }
+
+  var suspendDelete = false;
+
+  override def setSuspendDelete(value: Boolean): Unit = this.synchronized {
+    if( suspendDelete!=value ) {
+      suspendDelete = value;
+      if( suspendDelete ) {
+        db.client.log.recordLogTestSupport.deleteCall.suspend
+      } else {
+        db.client.log.recordLogTestSupport.deleteCall.resume
+      }
+    }
+  }
+
+  override def getSuspendDelete: Boolean = this.synchronized {
+    suspendDelete
+  }
+
+  override def getDeleteCalls = this.synchronized {
+    db.client.log.recordLogTestSupport.deleteCall.threads.get()
+  }
+
 }
 
 class LevelDBStoreView(val store:LevelDBStore) extends LevelDBStoreViewMBean {
@@ -222,6 +292,10 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     if(brokerService!=null && brokerService.isUseJmx){
       try {
         AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreView(this), objectName)
+        if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") ) {
+          val name = new ObjectName(objectName.toString + ",view=Test")
+          AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreTest(this), name)
+        }
       } catch {
         case e: Throwable => {
           warn(e, "LevelDB Store could not be registered in JMX: " + e.getMessage)
@@ -245,7 +319,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       val (msgs, acks) = db.getXAActions(transaction.xacontainer_id)
       transaction.xarecovery = (msgs, acks.map(_.ack))
       for ( msg <- msgs ) {
-        transaction.add(createMessageStore(msg.getDestination), msg, false);
+        transaction.add(createMessageStore(msg.getDestination), null, msg, false);
       }
       for ( record <- acks ) {
         var ack = record.ack
@@ -278,6 +352,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     db.stop
     if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
+      if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") )
+        brokerService.getManagementContext().unregisterMBean(new ObjectName(objectName.toString+",view=Test"));
     }
     info("Stopped "+this)
   }
@@ -348,7 +424,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       }
     }
 
-    def add(store:LevelDBStore#LevelDBMessageStore, message: Message, delay:Boolean) = {
+  def add(store:LevelDBStore#LevelDBMessageStore, context: ConnectionContext, message: Message, delay:Boolean) = {
       commitActions += new TransactionAction() {
         def commit(uow:DelayableUOW) = {
           if( prepared ) {
@@ -357,7 +433,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
           var copy = message.getMessageId.copy()
           copy.setEntryLocator(null)
           message.setMessageId(copy)
-          store.doAdd(uow, message, delay)
+          store.doAdd(uow, context, message, delay)
         }
 
         def prepare(uow:DelayableUOW) = {
@@ -671,19 +747,30 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     val lastSeq: AtomicLong = new AtomicLong(0)
     protected var cursorPosition: Long = 0
     val preparedAcks = new HashSet[MessageId]()
-
+    val pendingCursorAdds = new LinkedList[Long]()
     lastSeq.set(db.getLastQueueEntrySeq(key))
 
     def cursorResetPosition = 0L
 
-    def doAdd(uow: DelayableUOW, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
+    def doAdd(uow: DelayableUOW, context: ConnectionContext, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
       check_running
-      val seq = lastSeq.incrementAndGet()
+      message.beforeMarshall(wireFormat);
       message.incrementReferenceCount()
       uow.addCompleteListener({
         message.decrementReferenceCount()
       })
-      uow.enqueue(key, seq, message, delay)
+      lastSeq.synchronized {
+        val seq = lastSeq.incrementAndGet()
+        message.getMessageId.setFutureOrSequenceLong(seq);
+        // null context on xa recovery, we want to bypass the cursor & pending adds as it will be reset
+        if (indexListener != null && context != null) {
+          pendingCursorAdds.synchronized { pendingCursorAdds.add(seq) }
+          indexListener.onAdd(new MessageContext(context, message, new Runnable {
+            def run(): Unit = pendingCursorAdds.synchronized { pendingCursorAdds.remove(seq) }
+          }))
+        }
+        uow.enqueue(key, seq, message, delay)
+      }
     }
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message) = asyncAddQueueMessage(context, message, false)
@@ -691,11 +778,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       check_running
       message.getMessageId.setEntryLocator(null)
       if(  message.getTransactionId!=null ) {
-        transaction(message.getTransactionId).add(this, message, delay)
+        transaction(message.getTransactionId).add(this, context, message, delay)
         DONE
       } else {
         withUow { uow=>
-          doAdd(uow, message, delay)
+          doAdd(uow, context, message, delay)
         }
       }
     }
@@ -747,7 +834,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       cursorPosition = cursorResetPosition
     }
 
-    def getMessageCount: Int = {
+    override def getMessageCount: Int = {
       return db.collectionSize(key).toInt
     }
 
@@ -755,9 +842,13 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       return db.collectionIsEmpty(key)
     }
 
+    def getCursorPendingLimit: Long = {
+      pendingCursorAdds.synchronized { Option(pendingCursorAdds.peek).getOrElse(Long.MaxValue) }
+    }
+
     def recover(listener: MessageRecoveryListener): Unit = {
       check_running
-      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorResetPosition)
+      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorResetPosition, getCursorPendingLimit)
     }
 
     def resetBatching: Unit = {
@@ -766,11 +857,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def recoverNextMessages(maxReturned: Int, listener: MessageRecoveryListener): Unit = {
       check_running
-      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorPosition, maxReturned)
+      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorPosition, getCursorPendingLimit, maxReturned)
     }
 
     override def setBatch(id: MessageId): Unit = {
-      cursorPosition = db.queuePosition(id) + 1
+      cursorPosition = Math.min(getCursorPendingLimit, db.queuePosition(id)) + 1
     }
 
   }
@@ -808,6 +899,12 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): ListenableFuture[AnyRef] = {
       super.asyncAddQueueMessage(context, message, false)
+    }
+
+    var stats = new MessageStoreSubscriptionStatistics(false)
+
+    def getMessageStoreSubStatistics: MessageStoreSubscriptionStatistics = {
+        stats;
     }
 
     def subscription_count = subscriptions.synchronized {
@@ -905,7 +1002,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     def recoverNextMessages(clientId: String, subscriptionName: String, maxReturned: Int, listener: MessageRecoveryListener): Unit = {
       check_running
       lookup(clientId, subscriptionName).foreach { sub =>
-        sub.cursorPosition = db.cursorMessages(preparedAcks, key, listener, sub.cursorPosition.max(sub.lastAckPosition+1), maxReturned)
+        sub.cursorPosition = db.cursorMessages(preparedAcks, key, listener, sub.cursorPosition.max(sub.lastAckPosition+1), Long.MaxValue, maxReturned)
       }
     }
 
@@ -916,6 +1013,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
           (lastSeq.get - sub.lastAckPosition).toInt
         case None => 0
       }
+    }
+
+    def getMessageSize(clientId: String, subscriptionName: String): Long = {
+      check_running
+      return 0
     }
 
   }
@@ -975,6 +1077,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def isEmpty = size()==0
     def size(): Long = listSize.get()
+    def messageSize(): Long = 0
 
     def iterator() = new PListIterator() {
       check_running

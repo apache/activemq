@@ -159,6 +159,18 @@ public interface MessageStore extends Service {
     int getMessageCount() throws IOException;
 
     /**
+     * @return the size of the messages ready to deliver
+     * @throws IOException
+     */
+    long getMessageSize() throws IOException;
+
+
+    /**
+     * @return The statistics bean for this message store
+     */
+    MessageStoreStatistics getMessageStoreStatistics();
+
+    /**
      * A hint to the Store to reset any batching state for the Destination
      *
      */
@@ -195,4 +207,6 @@ public interface MessageStore extends Service {
     public boolean isPrioritizedMessages();
 
     void updateMessage(Message message) throws IOException;
+
+    void registerIndexListener(IndexListener indexListener);
 }

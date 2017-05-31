@@ -26,18 +26,44 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 
+import org.apache.activemq.transport.amqp.message.InboundTransformer;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.Buffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AmqpWireFormat implements WireFormat {
 
-    public static final int DEFAULT_MAX_FRAME_SIZE = 1024 * 1024 * 1;
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpWireFormat.class);
+
+    public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
+    public static final int NO_AMQP_MAX_FRAME_SIZE = -1;
+    public static final int DEFAULT_CONNECTION_TIMEOUT = 30000;
+    public static final int DEFAULT_IDLE_TIMEOUT = 30000;
+    public static final int DEFAULT_PRODUCER_CREDIT = 1000;
+    public static final boolean DEFAULT_ALLOW_NON_SASL_CONNECTIONS = false;
+    public static final int DEFAULT_ANQP_FRAME_SIZE = NO_AMQP_MAX_FRAME_SIZE;
+
+    private static final int SASL_PROTOCOL = 3;
 
     private int version = 1;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
+    private int maxAmqpFrameSize = DEFAULT_ANQP_FRAME_SIZE;
+    private int connectAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
+    private int idelTimeout = DEFAULT_IDLE_TIMEOUT;
+    private int producerCredit = DEFAULT_PRODUCER_CREDIT;
+    private String transformer = InboundTransformer.TRANSFORMER_JMS;
+    private boolean allowNonSaslConnections = DEFAULT_ALLOW_NON_SASL_CONNECTIONS;
+
+    private boolean magicRead = false;
+    private ResetListener resetListener;
+
+    public interface ResetListener {
+        void onProtocolReset();
+    }
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -74,19 +100,19 @@ public class AmqpWireFormat implements WireFormat {
         }
     }
 
-    boolean magicRead = false;
-
     @Override
     public Object unmarshal(DataInput dataIn) throws IOException {
         if (!magicRead) {
             Buffer magic = new Buffer(8);
             magic.readFrom(dataIn);
             magicRead = true;
-            return new AmqpHeader(magic);
+            return new AmqpHeader(magic, false);
         } else {
             int size = dataIn.readInt();
             if (size > maxFrameSize) {
                 throw new AmqpProtocolException("Frame size exceeded max frame length.");
+            } else if (size <= 0) {
+                throw new AmqpProtocolException("Frame size value was invalid: " + size);
             }
             Buffer frame = new Buffer(size);
             frame.bigEndianEditor().writeInt(size);
@@ -96,17 +122,88 @@ public class AmqpWireFormat implements WireFormat {
         }
     }
 
+    /**
+     * Given an AMQP header validate that the AMQP magic is present and
+     * if so that the version and protocol values align with what we support.
+     *
+     * In the case where authentication occurs the client sends us two AMQP
+     * headers, the first being the SASL initial header which triggers the
+     * authentication process and then if that succeeds we should get a second
+     * AMQP header that does not contain the SASL protocol ID indicating the
+     * connection process should follow the normal path.  We validate that the
+     * header align with these expectations.
+     *
+     * @param header
+     *        the header instance received from the client.
+     * @param authenticated
+     *        has the client already authenticated already.
+     *
+     * @return true if the header is valid against the current WireFormat.
+     */
+    public boolean isHeaderValid(AmqpHeader header, boolean authenticated) {
+        if (!header.hasValidPrefix()) {
+            LOG.trace("AMQP Header arrived with invalid prefix: {}", header);
+            return false;
+        }
+
+        if (!(header.getProtocolId() == 0 || header.getProtocolId() == SASL_PROTOCOL)) {
+            LOG.trace("AMQP Header arrived with invalid protocol ID: {}", header);
+            return false;
+        }
+
+        if (!authenticated && !isAllowNonSaslConnections() && header.getProtocolId() != SASL_PROTOCOL) {
+            LOG.trace("AMQP Header arrived without SASL and server requires SASL: {}", header);
+            return false;
+        }
+
+        if (header.getMajor() != 1 || header.getMinor() != 0 || header.getRevision() != 0) {
+            LOG.trace("AMQP Header arrived invalid version: {}", header);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns an AMQP Header object that represents the minimally protocol
+     * versions supported by this transport.  A client that attempts to
+     * connect with an AMQP version that doesn't at least meat this value
+     * will receive this prior to the connection being closed.
+     *
+     * @return the minimal AMQP version needed from the client.
+     */
+    public AmqpHeader getMinimallySupportedHeader() {
+        AmqpHeader header = new AmqpHeader();
+        if (!isAllowNonSaslConnections()) {
+            header.setProtocolId(3);
+        }
+
+        return header;
+    }
+
     @Override
     public void setVersion(int version) {
         this.version = version;
     }
 
-    /**
-     * @return the version of the wire format
-     */
     @Override
     public int getVersion() {
         return this.version;
+    }
+
+    public void resetMagicRead() {
+        this.magicRead = false;
+        if (resetListener != null) {
+            resetListener.onProtocolReset();
+        }
+    }
+
+    public void setProtocolResetListener(ResetListener listener) {
+        this.resetListener = listener;
+    }
+
+    public boolean isMagicRead() {
+        return this.magicRead;
     }
 
     public long getMaxFrameSize() {
@@ -115,5 +212,53 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setMaxFrameSize(long maxFrameSize) {
         this.maxFrameSize = maxFrameSize;
+    }
+
+    public int getMaxAmqpFrameSize() {
+        return maxAmqpFrameSize;
+    }
+
+    public void setMaxAmqpFrameSize(int maxAmqpFrameSize) {
+        this.maxAmqpFrameSize = maxAmqpFrameSize;
+    }
+
+    public boolean isAllowNonSaslConnections() {
+        return allowNonSaslConnections;
+    }
+
+    public void setAllowNonSaslConnections(boolean allowNonSaslConnections) {
+        this.allowNonSaslConnections = allowNonSaslConnections;
+    }
+
+    public int getConnectAttemptTimeout() {
+        return connectAttemptTimeout;
+    }
+
+    public void setConnectAttemptTimeout(int connectAttemptTimeout) {
+        this.connectAttemptTimeout = connectAttemptTimeout;
+    }
+
+    public void setProducerCredit(int producerCredit) {
+        this.producerCredit = producerCredit;
+    }
+
+    public int getProducerCredit() {
+        return producerCredit;
+    }
+
+    public String getTransformer() {
+        return transformer;
+    }
+
+    public void setTransformer(String transformer) {
+        this.transformer = transformer;
+    }
+
+    public int getIdleTimeout() {
+        return idelTimeout;
+    }
+
+    public void setIdleTimeout(int idelTimeout) {
+        this.idelTimeout = idelTimeout;
     }
 }

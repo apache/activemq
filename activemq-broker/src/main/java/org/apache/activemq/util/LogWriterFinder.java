@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.activemq.transport.LogWriter;
 import org.apache.activemq.transport.TransportLoggerView;
@@ -34,22 +35,22 @@ import org.slf4j.LoggerFactory;
  * implementing LogWriter is specified by the files in the
  * resources/META-INF/services/org/apache/activemq/transport/logwriters
  * directory.
- * 
+ *
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
- * 
+ *
  */
 public class LogWriterFinder {
-    
+
     private static final Logger log = LoggerFactory.getLogger(TransportLoggerView.class);
 
     private final String path;
-    private final ConcurrentHashMap classMap = new ConcurrentHashMap();
+    private final ConcurrentMap classMap = new ConcurrentHashMap();
 
     /**
      * Builds a LogWriterFinder that will look for the mappings between
      * LogWriter names and classes in the directory "path".
      * @param path The directory where the files that map log writer names to
-     * LogWriter classes are. 
+     * LogWriter classes are.
      */
     public LogWriterFinder(String path) {
         this.path = path;
@@ -75,7 +76,7 @@ public class LogWriterFinder {
         }
         return (LogWriter)clazz.newInstance();
     }
-    
+
     /**
      * Loads and returns a class given a Properties object with a "class" property.
      * @param properties a Properties object with a "class" property.

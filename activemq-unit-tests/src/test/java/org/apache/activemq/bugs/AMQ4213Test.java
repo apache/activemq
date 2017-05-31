@@ -36,27 +36,23 @@ import org.junit.Test;
 public class AMQ4213Test {
 
     private static BrokerService brokerService;
-    private static String BROKER_ADDRESS = "tcp://localhost:0";
     private static String TEST_QUEUE = "testQueue";
     private static ActiveMQQueue queue = new ActiveMQQueue(TEST_QUEUE);
-
-    private String connectionUri;
 
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
-        brokerService.setUseJmx(true);
-        brokerService.setDeleteAllMessagesOnStartup(true);
-        connectionUri = brokerService.addConnector(BROKER_ADDRESS).getPublishableConnectString();
+        brokerService.setUseJmx(false);
+        brokerService.setAdvisorySupport(false);
 
         brokerService.setPlugins(new BrokerPlugin[]{
             new BrokerPluginSupport() {
 
                 @Override
                 public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-                    throw new javax.jms.JMSSecurityException(connectionUri);
+                    throw new javax.jms.JMSSecurityException(brokerService.getVmConnectorURI().toString());
                 }
             }
         });
@@ -71,9 +67,9 @@ public class AMQ4213Test {
         brokerService.waitUntilStopped();
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testExceptionOnProducerCreateThrows() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerService.getVmConnectorURI());
         ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection();
 
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);

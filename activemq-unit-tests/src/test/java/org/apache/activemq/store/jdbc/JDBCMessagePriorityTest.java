@@ -34,6 +34,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicSubscriber;
 
+import javax.sql.DataSource;
 import junit.framework.Test;
 
 import org.apache.activemq.command.ActiveMQMessage;
@@ -41,45 +42,24 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.MessagePriorityTest;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.Wait;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCMessagePriorityTest.class);
-    EmbeddedDataSource dataSource;
+    DataSource dataSource;
     JDBCPersistenceAdapter jdbc;
 
     @Override
     protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception {
         jdbc = new JDBCPersistenceAdapter();
-        dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-        dataSource.setShutdownDatabase(null);
-        jdbc.setDataSource(dataSource);
+        dataSource = jdbc.getDataSource();
         jdbc.deleteAllMessages();
         jdbc.setCleanupPeriod(2000);
         return jdbc;
     }
 
-
-    @Override
-    protected void tearDown() throws Exception {
-       super.tearDown();
-       try {
-            if (dataSource != null) {
-                // ref http://svn.apache.org/viewvc/db/derby/code/trunk/java/testing/org/apache/derbyTesting/junit/JDBCDataSource.java?view=markup
-                dataSource.setShutdownDatabase("shutdown");
-                dataSource.getConnection();
-           }
-       } catch (Exception ignored) {
-       } finally {
-            dataSource.setShutdownDatabase(null);
-       }
-
-    }
 
     // this cannot be a general test as kahaDB just has support for 3 priority levels
     public void testDurableSubsReconnectWithFourLevels() throws Exception {

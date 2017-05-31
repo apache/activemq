@@ -46,10 +46,13 @@ import org.slf4j.LoggerFactory;
     private String noSpaceMessage = "space";
     private String sqlExceptionMessage = ""; // match all
     private long resumeCheckSleepPeriod = 5*1000;
-    private AtomicBoolean handlingException = new AtomicBoolean(false);
+    private final AtomicBoolean handlingException = new AtomicBoolean(false);
+    private boolean systemExitOnShutdown = false;
 
+    @Override
     public void handle(IOException exception) {
         if (ignoreAllErrors) {
+            allowIOResumption();
             LOG.info("Ignoring IO exception, " + exception, exception);
             return;
         }
@@ -60,6 +63,7 @@ import org.slf4j.LoggerFactory;
                 String message = cause.getMessage();
                 if (message != null && message.contains(noSpaceMessage)) {
                     LOG.info("Ignoring no space left exception, " + exception, exception);
+                    allowIOResumption();
                     return;
                 }
                 cause = cause.getCause();
@@ -69,10 +73,17 @@ import org.slf4j.LoggerFactory;
         if (ignoreSQLExceptions) {
             Throwable cause = exception;
             while (cause != null) {
-                String message = cause.getMessage();
-                if (cause instanceof SQLException && message.contains(sqlExceptionMessage)) {
-                    LOG.info("Ignoring SQLException, " + exception, cause);
-                    return;
+                if (cause instanceof SQLException) {
+                    String message = cause.getMessage();
+
+                    if (message == null) {
+                        message = "";
+                    }
+
+                    if (message.contains(sqlExceptionMessage)) {
+                        LOG.info("Ignoring SQLException, " + exception, cause);
+                        return;
+                    }
                 }
                 cause = cause.getCause();
             }
@@ -83,6 +94,7 @@ import org.slf4j.LoggerFactory;
                 LOG.info("Initiating stop/restart of transports on " + broker + " due to IO exception, " + exception, exception);
 
                 new Thread("IOExceptionHandler: stop transports") {
+                    @Override
                     public void run() {
                         try {
                             ServiceStopper stopper = new ServiceStopper();
@@ -93,8 +105,10 @@ import org.slf4j.LoggerFactory;
                         } finally {
                             // resume again
                             new Thread("IOExceptionHandler: restart transports") {
+                                @Override
                                 public void run() {
                                     try {
+                                        allowIOResumption();
                                         while (hasLockOwnership() && isPersistenceAdapterDown()) {
                                             LOG.info("waiting for broker persistence adapter checkpoint to succeed before restarting transports");
                                             TimeUnit.MILLISECONDS.sleep(resumeCheckSleepPeriod);
@@ -151,14 +165,19 @@ import org.slf4j.LoggerFactory;
         throw new SuppressReplyException("ShutdownBrokerInitiated", exception);
     }
 
+    protected void allowIOResumption() {
+    }
+
     private void stopBroker(Exception exception) {
         LOG.info("Stopping " + broker + " due to exception, " + exception, exception);
         new Thread("IOExceptionHandler: stopping " + broker) {
+            @Override
             public void run() {
                 try {
                     if( broker.isRestartAllowed() ) {
                         broker.requestRestart();
                     }
+                    broker.setSystemExitOnShutdown(isSystemExitOnShutdown());
                     broker.stop();
                 } catch (Exception e) {
                     LOG.warn("Failure occurred while stopping broker", e);
@@ -171,6 +190,7 @@ import org.slf4j.LoggerFactory;
         return true;
     }
 
+    @Override
     public void setBrokerService(BrokerService broker) {
         this.broker = broker;
     }
@@ -229,5 +249,13 @@ import org.slf4j.LoggerFactory;
 
     public void setResumeCheckSleepPeriod(long resumeCheckSleepPeriod) {
         this.resumeCheckSleepPeriod = resumeCheckSleepPeriod;
+    }
+
+    public void setSystemExitOnShutdown(boolean systemExitOnShutdown) {
+        this.systemExitOnShutdown = systemExitOnShutdown;
+    }
+
+    public boolean isSystemExitOnShutdown() {
+        return systemExitOnShutdown;
     }
 }

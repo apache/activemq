@@ -14,6 +14,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%-- Workaround for https://ops4j1.jira.com/browse/PAXWEB-1070 --%>
+<%@include file="WEB-INF/jspf/headertags.jspf" %>
 <html>
 <head>
 <c:set var="pageTitle" value="Queues"/>
@@ -24,6 +26,9 @@
 
 <%@include file="decorators/header.jsp" %>
 
+<table>
+<tr>
+<td>
 <div>
 <form action="createDestination.action" method="post">
     <input type="hidden" name="JMSDestinationType" value="queue"/>
@@ -35,9 +40,21 @@
     <input type="submit" value="Create"/>
 </form>
 </div>
+</td>
 
+<td>
+<div>
+<form action="queues.jsp" method="get">
+    <label name="destination">Queue Name Filter</label>
+    <input type="text" name="QueueFilter" value="${param.QueueFilter}"/>
 
-<h2>Queues</h2>
+    <input type="submit" value="Filter"/>
+</form>
+</div>
+</tr>
+</table>
+
+<h2>Queues:<c:if test="${null != param.QueueFilter && param.QueueFilter != ''}"> (filter='${param.QueueFilter}')</c:if></h2>
 
 <table id="queues" class="sortable autostripe">
 <thead>
@@ -53,6 +70,7 @@
 </thead>
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
+<c:if test="${param.QueueFilter == '' || fn:containsIgnoreCase(row.name, param.QueueFilter)}">
 
 <tr>
 <td><a href="<c:url value="browse.jsp">
@@ -68,14 +86,8 @@
 	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Consumers</a><br/>
 	<a href="<c:url value="queueProducers.jsp">
 	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Producers</a><br/>
-    <a href="<c:url value="queueBrowse/${row.name}">
-                    <c:param name="view" value="rss" />
-                    <c:param name="feedType" value="atom_1.0" />
-                     </c:url>" title="Atom 1.0"><img src="<c:url value="images/feed_atom.png" />" /></a>
-    <a href="<c:url value="queueBrowse/${row.name}">
-                    <c:param name="view" value="rss" />
-                    <c:param name="feedType" value="rss_2.0" />
-                    </c:url>" title="RSS 2.0"><img src="<c:url value="images/feed_rss.png" />" /></a>
+    <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
+    <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
 </td>
 <td>
     <a href="<c:url value="send.jsp">
@@ -91,6 +103,8 @@
                     <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Delete</a>
 </td>
 </tr>
+
+</c:if>
 </c:forEach>
 </tbody>
 </table>

@@ -60,8 +60,6 @@ public interface DeadLetterStrategy {
      */
     public void setProcessNonPersistent(boolean processNonPersistent);
 
-    public boolean isDLQ(ActiveMQDestination destination);
-
     /**
      * Allows for a Message that was already processed by a DLQ to be rolled back in case
      * of a move or a retry of that message, otherwise the Message would be considered a
@@ -70,5 +68,13 @@ public interface DeadLetterStrategy {
      * @param message
      */
     public void rollback(Message message);
+
+    /**
+     * The expiration value to use on messages sent to the DLQ, default 0
+     * @return expiration in milli seconds
+     */
+    public void setExpiration(long expiration);
+
+    public long getExpiration();
 
 }

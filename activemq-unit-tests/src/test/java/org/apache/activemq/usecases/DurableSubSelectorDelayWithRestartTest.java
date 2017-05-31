@@ -88,7 +88,7 @@ public class DurableSubSelectorDelayWithRestartTest {
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("journal data file count - expected {} actual {}", 4, pa.getStore().getJournal().getFileMap().size());
-                return pa.getStore().getJournal().getFileMap().size() < 4;
+                return pa.getStore().getJournal().getFileMap().size() <= 4;
             }
         }, TimeUnit.MINUTES.toMillis(3)));
 

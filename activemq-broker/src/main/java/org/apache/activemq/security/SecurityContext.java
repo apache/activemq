@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.activemq.command.ActiveMQDestination;
 
@@ -38,6 +39,7 @@ public abstract class SecurityContext {
             return true;
         }
 
+        @Override
         public Set<Principal> getPrincipals() {
             return Collections.emptySet();
         }
@@ -45,8 +47,7 @@ public abstract class SecurityContext {
 
     final String userName;
 
-    final ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> authorizedReadDests = new ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination>();
-    final ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> authorizedWriteDests = new ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination>();
+    final ConcurrentMap<ActiveMQDestination, ActiveMQDestination> authorizedWriteDests = new ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination>();
 
     public SecurityContext(String userName) {
         this.userName = userName;
@@ -72,11 +73,7 @@ public abstract class SecurityContext {
         return userName;
     }
 
-    public ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedReadDests() {
-        return authorizedReadDests;
-    }
-
-    public ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedWriteDests() {
+    public ConcurrentMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedWriteDests() {
         return authorizedWriteDests;
     }
 

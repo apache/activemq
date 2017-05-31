@@ -16,20 +16,18 @@
  */
 package org.apache.activemq;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.TimeUnit;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
-
-import static org.junit.Assert.*;
-
-public class VirtualDestTest extends RuntimeConfigTestSupport {
+public class VirtualDestTest extends AbstractVirtualDestTest {
 
     String configurationSeed = "virtualDestTest";
 
@@ -181,6 +179,7 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
         forceAddDestination("AnyDest");
 
         assertTrue("getDestinationInterceptors empty on time", Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() {
                 return 0 == brokerService.getDestinationInterceptors().length;
             }
@@ -234,58 +233,32 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
         assertEquals("still one interceptor", 1, brokerService.getDestinationInterceptors().length);
     }
 
-    private void forceAddDestination(String dest) throws Exception {
-        ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection();
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        session.createConsumer(session.createQueue("Consumer.A." + dest));
-        connection.close();
+    @Test
+    public void testNewFilteredComposite() throws Exception {
+        final String brokerConfig = configurationSeed + "-new-filtered-composite-vd-broker";
+        applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG);
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        applyNewConfig(brokerConfig, configurationSeed + "-add-filtered-composite-vd", SLEEP);
+
+        exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "yes");
     }
 
-    private void exerciseVirtualTopic(String topic) throws Exception {
-        exerciseVirtualTopic("Consumer.A.", topic);
+    @Test
+    public void testModFilteredComposite() throws Exception {
+        final String brokerConfig = configurationSeed + "-mod-filtered-composite-vd-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-add-filtered-composite-vd");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+        exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "yes");
+
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-filtered-composite-vd", SLEEP);
+        exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "no");
+        exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "no");
     }
 
-    private void exerciseVirtualTopic(String prefix, String topic) throws Exception {
-        ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection();
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(session.createQueue(prefix + topic));
-        LOG.info("new consumer for: " + consumer.getDestination());
-        MessageProducer producer = session.createProducer(session.createTopic(topic));
-        final String body = "To vt:" + topic;
-        producer.send(session.createTextMessage(body));
-        LOG.info("sent to: " + producer.getDestination());
 
-        Message message = null;
-        for (int i=0; i<10 && message == null; i++) {
-            message = consumer.receive(1000);
-        }
-        assertNotNull("got message", message);
-        assertEquals("got expected message", body, ((TextMessage) message).getText());
-        connection.close();
-    }
-
-    private void exerciseCompositeQueue(String dest, String consumerQ) throws Exception {
-        ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection();
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(session.createQueue(consumerQ));
-        LOG.info("new consumer for: " + consumer.getDestination());
-        MessageProducer producer = session.createProducer(session.createQueue(dest));
-        final String body = "To cq:" + dest;
-        producer.send(session.createTextMessage(body));
-        LOG.info("sent to: " + producer.getDestination());
-
-        Message message = null;
-        for (int i=0; i<10 && message == null; i++) {
-            message = consumer.receive(1000);
-        }
-        assertNotNull("got message", message);
-        assertEquals("got expected message", body, ((TextMessage) message).getText());
-        connection.close();
-    }
 
 }

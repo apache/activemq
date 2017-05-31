@@ -34,17 +34,13 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RunWith(value = Parameterized.class)
 public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
-    private static final Logger LOG = LoggerFactory.getLogger(AbortSlowAckConsumer0Test.class);
-    protected long maxTimeSinceLastAck = 5 * 1000;
 
-    AbortSlowAckConsumerStrategy strategy;
+    protected long maxTimeSinceLastAck = 5 * 1000;
+    protected AbortSlowAckConsumerStrategy strategy;
 
     public AbortSlowAckConsumer0Test(Boolean isTopic) {
         super(isTopic);

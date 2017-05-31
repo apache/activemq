@@ -20,13 +20,13 @@ import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
+
+import junit.framework.TestCase;
 
 /**
  *
@@ -322,11 +322,28 @@ public class SelectorTest extends TestCase {
         assertSelector(message, "punctuation LIKE '!#$&()*+,-./:;<=>?@[\\]^`{|}~'", true);
     }
 
+    public void testSpecialEscapeLiteral() throws Exception {
+        Message message = createMessage();
+        assertSelector(message, "foo LIKE '%_%' ESCAPE '%'", true);
+        assertSelector(message, "endingUnderScore LIKE '_D7xlJIQn$_' ESCAPE '$'", true);
+        assertSelector(message, "endingUnderScore LIKE '_D7xlJIQn__' ESCAPE '_'", true);
+        assertSelector(message, "endingUnderScore LIKE '%D7xlJIQn%_' ESCAPE '%'", true);
+        assertSelector(message, "endingUnderScore LIKE '%D7xlJIQn%'  ESCAPE '%'", true);
+
+        // literal '%' at the end, no match
+        assertSelector(message, "endingUnderScore LIKE '%D7xlJIQn%%'  ESCAPE '%'", false);
+
+        assertSelector(message, "endingUnderScore LIKE '_D7xlJIQn\\_' ESCAPE '\\'", true);
+        assertSelector(message, "endingUnderScore LIKE '%D7xlJIQn\\_' ESCAPE '\\'", true);
+    }
+
     public void testInvalidSelector() throws Exception {
         Message message = createMessage();
         assertInvalidSelector(message, "3+5");
         assertInvalidSelector(message, "True AND 3+5");
         assertInvalidSelector(message, "=TEST 'test'");
+        assertInvalidSelector(message, "prop1 = prop2 foo AND string = 'Test'");
+        assertInvalidSelector(message, "a = 1 AMD  b = 2");
     }
 
     public void testFunctionSelector() throws Exception {
@@ -367,6 +384,8 @@ public class SelectorTest extends TestCase {
         message.setStringProperty("quote", "'In God We Trust'");
         message.setStringProperty("foo", "_foo");
         message.setStringProperty("punctuation", "!#$&()*+,-./:;<=>?@[\\]^`{|}~");
+        message.setStringProperty("endingUnderScore", "XD7xlJIQn_");
+
         message.setBooleanProperty("trueProp", true);
         message.setBooleanProperty("falseProp", false);
         return message;

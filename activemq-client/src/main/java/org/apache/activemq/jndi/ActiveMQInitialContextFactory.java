@@ -39,12 +39,10 @@ import org.apache.activemq.command.ActiveMQTopic;
 
 /**
  * A factory of the ActiveMQ InitialContext which contains
- * {@link ConnectionFactory} instances as well as a child context called
+ * {@link javax.jms.ConnectionFactory} instances as well as a child context called
  * <i>destinations</i> which contain all of the current active destinations, in
  * child context depending on the QoS such as transient or durable and queue or
  * topic.
- * 
- * 
  */
 public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
@@ -54,6 +52,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     private String queuePrefix = "queue.";
     private String topicPrefix = "topic.";
 
+    @Override
     public Context getInitialContext(Hashtable environment) throws NamingException {
         // lets create a factory
         Map<String, Object> data = new ConcurrentHashMap<String, Object>();
@@ -85,6 +84,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         data.put("dynamicQueues", new LazyCreateContext() {
             private static final long serialVersionUID = 6503881346214855588L;
 
+            @Override
             protected Object createEntry(String name) {
                 return new ActiveMQQueue(name);
             }
@@ -92,6 +92,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         data.put("dynamicTopics", new LazyCreateContext() {
             private static final long serialVersionUID = 2019166796234979615L;
 
+            @Override
             protected Object createEntry(String name) {
                 return new ActiveMQTopic(name);
             }
@@ -210,7 +211,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         return answer;
     }
 
-    private boolean needsXA(Hashtable environment) {
+    protected boolean needsXA(Hashtable environment) {
         boolean isXA = Boolean.parseBoolean((String) environment.get("xa"));
         // property not applicable to connectionfactory so remove
         environment.remove("xa");
@@ -224,5 +225,4 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     public void setConnectionPrefix(String connectionPrefix) {
         this.connectionPrefix = connectionPrefix;
     }
-
 }

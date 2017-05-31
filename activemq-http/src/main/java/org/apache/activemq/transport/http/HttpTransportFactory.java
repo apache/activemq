@@ -23,7 +23,6 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportLoggerFactory;
@@ -41,12 +40,15 @@ public class HttpTransportFactory extends TransportFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpTransportFactory.class);
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             HttpTransportServer result = new HttpTransportServer(location, this);
+            Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
             result.setTransportOption(transportOptions);
+            result.setHttpOptions(httpOptions);
             return result;
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
@@ -57,14 +59,16 @@ public class HttpTransportFactory extends TransportFactory {
         if (wireFormat instanceof TextWireFormat) {
             return (TextWireFormat)wireFormat;
         }
-        LOG.trace("Not created with a TextWireFormat: " + wireFormat);
+        LOG.trace("Not created with a TextWireFormat: {}", wireFormat);
         return new XStreamWireFormat();
     }
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "xstream";
     }
 
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws IOException {
         TextWireFormat textWireFormat = asTextWireFormat(wf);
         // need to remove options from uri
@@ -79,16 +83,18 @@ public class HttpTransportFactory extends TransportFactory {
         return new HttpClientTransport(textWireFormat, uri);
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         return compositeConfigure(transport, format, options);
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = super.compositeConfigure(transport, format, options);
-        HttpClientTransport httpTransport = (HttpClientTransport)transport.narrow(HttpClientTransport.class);
-        if(httpTransport != null && httpTransport.isTrace() ) {
+        HttpClientTransport httpTransport = transport.narrow(HttpClientTransport.class);
+        if (httpTransport != null && httpTransport.isTrace()) {
             try {
                 transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
             } catch (Throwable e) {
@@ -97,7 +103,7 @@ public class HttpTransportFactory extends TransportFactory {
         }
         boolean useInactivityMonitor = "true".equals(getOption(options, "useInactivityMonitor", "true"));
         if (useInactivityMonitor) {
-            transport = new InactivityMonitor(transport, null /* ignore wire format as no negotiation over http */);
+            transport = new HttpInactivityMonitor(transport);
             IntrospectionSupport.setProperties(transport, options);
         }
 

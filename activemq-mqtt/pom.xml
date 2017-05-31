@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-mqtt</artifactId>
@@ -140,10 +140,15 @@
       <artifactId>activemq-kahadb-store</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.eclipse.paho</groupId>
-      <artifactId>mqtt-client</artifactId>
+      <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+      <version>1.0.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -218,22 +223,11 @@
           <reuseForks>false</reuseForks>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
-          <!-- Note: if you want to see log messages on the console window remove the following comment -->
-          <!-- <redirectTestOutputToFile>false</redirectTestOutputToFile> -->
            <systemProperties>
             <property>
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
-            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
-                 while running mvn:test
-            -->
-            <!--
-            <property>
-              <name>log4j.configuration</name>
-              <value>file:target/test-classes/log4j.properties</value>
-            </property>
-            -->
            </systemProperties>
            <!-- includes>
              <include>**/*Test.*</include>
@@ -277,6 +271,63 @@
               </plugins>
           </build>
       </profile>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/MQTTCodecTest.*</include>
+                <include>**/MQTTConnectTest.*</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/auto/*Test.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
+
+  <repositories>
+      <!-- for the paho dependency -->
+      <repository>
+          <id>spring.io</id>
+          <url>http://repo.spring.io/plugins-release</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+      </repository>
+      <repository>
+          <id>Eclipse Paho Repo</id>
+          <url>https://repo.eclipse.org/content/repositories/paho-releases/</url>
+      </repository>
+  </repositories>
 
 </project>

@@ -28,6 +28,9 @@
   </bean>
 
   <broker xmlns="http://activemq.apache.org/schema/core" start="false" persistent="false" >
+    <managementContext>
+      <managementContext createConnector="false"/>
+    </managementContext>
     <plugins>
       <runtimeConfigurationPlugin checkPeriod="1000" />
     </plugins>

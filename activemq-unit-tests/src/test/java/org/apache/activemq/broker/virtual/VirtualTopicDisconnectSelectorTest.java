@@ -31,6 +31,7 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.plugin.SubQueueSelectorCacheBroker;
 import org.apache.activemq.spring.ConsumerBean;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
 import org.slf4j.Logger;
@@ -107,7 +108,7 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
         assertMessagesArrived(messageList, expected ,10000);
     }
             
-    protected Destination getConsumerDsetination() {
+    protected ActiveMQQueue getConsumerDsetination() {
         return new ActiveMQQueue("Consumer.VirtualTopic.TEST");
     }
 
@@ -182,4 +183,11 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
         return answer;
     }
 
+
+    protected void startBroker() throws Exception {
+        super.startBroker();
+        // start with a clean slate
+        SubQueueSelectorCacheBroker selectorCacheBroker  = (SubQueueSelectorCacheBroker) broker.getBroker().getAdaptor(SubQueueSelectorCacheBroker.class);
+        selectorCacheBroker.deleteAllSelectorsForDestination(getConsumerDsetination().getQualifiedName());
+    }
 }

@@ -185,10 +185,10 @@ public class JmsMultipleClientsTestSupport {
 
     protected MessageConsumer createMessageConsumer(Connection conn, Destination dest) throws Exception {
         connections.add(conn);
+        conn.start();
 
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final MessageConsumer consumer = sess.createConsumer(dest);
-        conn.start();
 
         return consumer;
     }

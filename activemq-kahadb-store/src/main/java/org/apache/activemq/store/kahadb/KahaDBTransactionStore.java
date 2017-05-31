@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -42,9 +43,7 @@ import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.activemq.store.kahadb.MessageDatabase.AddOpperation;
 import org.apache.activemq.store.kahadb.MessageDatabase.Operation;
-import org.apache.activemq.store.kahadb.MessageDatabase.RemoveOpperation;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
@@ -61,7 +60,7 @@ import org.slf4j.LoggerFactory;
  */
 public class KahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBTransactionStore.class);
-    ConcurrentHashMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
+    ConcurrentMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
     private final KahaDBStore theStore;
 
     public KahaDBTransactionStore(KahaDBStore theStore) {
@@ -233,6 +232,7 @@ public class KahaDBTransactionStore implements TransactionStore {
      * @throws IOException
      * @see org.apache.activemq.store.TransactionStore#prepare(TransactionId)
      */
+    @Override
     public void prepare(TransactionId txid) throws IOException {
         KahaTransactionInfo info = getTransactionInfo(txid);
         if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
@@ -254,7 +254,8 @@ public class KahaDBTransactionStore implements TransactionStore {
         return tx;
     }
 
-    public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit, Runnable postCommit)
+    @Override
+    public void commit(TransactionId txid, boolean wasPrepared, final Runnable preCommit, Runnable postCommit)
             throws IOException {
         if (txid != null) {
             if (!txid.isXATransaction() && theStore.isConcurrentStoreAndDispatchTransactions()) {
@@ -294,7 +295,10 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             } else {
                 KahaTransactionInfo info = getTransactionInfo(txid);
-                theStore.store(new KahaCommitCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), preCommit, postCommit);
+                if (preCommit != null) {
+                    preCommit.run();
+                }
+                theStore.store(new KahaCommitCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), null, postCommit);
                 forgetRecoveredAcks(txid, false);
             }
         }else {
@@ -306,6 +310,7 @@ public class KahaDBTransactionStore implements TransactionStore {
      * @throws IOException
      * @see org.apache.activemq.store.TransactionStore#rollback(TransactionId)
      */
+    @Override
     public void rollback(TransactionId txid) throws IOException {
         if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
             KahaTransactionInfo info = getTransactionInfo(txid);
@@ -323,12 +328,15 @@ public class KahaDBTransactionStore implements TransactionStore {
         }
     }
 
+    @Override
     public void start() throws Exception {
     }
 
+    @Override
     public void stop() throws Exception {
     }
 
+    @Override
     public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
         for (Map.Entry<TransactionId, List<Operation>> entry : theStore.preparedTransactions.entrySet()) {
             XATransactionId xid = (XATransactionId) entry.getKey();
@@ -336,13 +344,13 @@ public class KahaDBTransactionStore implements TransactionStore {
             ArrayList<MessageAck> ackList = new ArrayList<MessageAck>();
 
             for (Operation op : entry.getValue()) {
-                if (op.getClass() == AddOpperation.class) {
-                    AddOpperation addOp = (AddOpperation) op;
+                if (op.getClass() == MessageDatabase.AddOperation.class) {
+                    MessageDatabase.AddOperation addOp = (MessageDatabase.AddOperation) op;
                     Message msg = (Message) wireFormat().unmarshal(new DataInputStream(addOp.getCommand().getMessage()
                             .newInput()));
                     messageList.add(msg);
                 } else {
-                    RemoveOpperation rmOp = (RemoveOpperation) op;
+                    MessageDatabase.RemoveOperation rmOp = (MessageDatabase.RemoveOperation) op;
                     Buffer ackb = rmOp.getCommand().getAck();
                     MessageAck ack = (MessageAck) wireFormat().unmarshal(new DataInputStream(ackb.newInput()));
                     ackList.add(ack);
@@ -508,10 +516,12 @@ public class KahaDBTransactionStore implements TransactionStore {
             } else {
                 Tx tx = getTx(ack.getTransactionId());
                 tx.add(new RemoveMessageCommand(context) {
+                    @Override
                     public MessageAck getMessageAck() {
                         return ack;
                     }
 
+                    @Override
                     public Future<Object> run(ConnectionContext ctx) throws IOException {
                         destination.acknowledge(ctx, clientId, subscriptionName, messageId, ack);
                         return AbstractMessageStore.FUTURE;

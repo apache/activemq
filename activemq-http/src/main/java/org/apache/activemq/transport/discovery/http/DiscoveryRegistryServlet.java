@@ -21,6 +21,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -30,23 +32,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DiscoveryRegistryServlet extends HttpServlet {
-    
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOG = LoggerFactory.getLogger(HTTPDiscoveryAgent.class);
     long maxKeepAge = 1000*60*60; // 1 hour.
-    ConcurrentHashMap<String, ConcurrentHashMap<String, Long>> serviceGroups = new ConcurrentHashMap<String, ConcurrentHashMap<String, Long>>();
-    
+    ConcurrentMap<String, ConcurrentMap<String, Long>> serviceGroups = new ConcurrentHashMap<String, ConcurrentMap<String, Long>>();
+
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String group = req.getPathInfo();
         String service = req.getHeader("service");
         LOG.debug("Registering: group="+group+", service="+service);
-        
-        ConcurrentHashMap<String, Long> services = getServiceGroup(group);
+
+        ConcurrentMap<String, Long> services = getServiceGroup(group);
         services.put(service, System.currentTimeMillis());
     }
 
-    private ConcurrentHashMap<String, Long> getServiceGroup(String group) {
-        ConcurrentHashMap<String, Long> rc = serviceGroups.get(group);
+    private ConcurrentMap<String, Long> getServiceGroup(String group) {
+        ConcurrentMap<String, Long> rc = serviceGroups.get(group);
         if( rc == null ) {
             rc = new ConcurrentHashMap<String, Long>();
             serviceGroups.put(group, rc);
@@ -62,16 +65,16 @@ public class DiscoveryRegistryServlet extends HttpServlet {
             if( p!=null ) {
                 freshness = Long.parseLong(p);
             }
-            
+
             String group = req.getPathInfo();
             LOG.debug("group="+group);
-            ConcurrentHashMap<String, Long> services = getServiceGroup(group);
+            ConcurrentMap<String, Long> services = getServiceGroup(group);
             PrintWriter writer = resp.getWriter();
-            
+
             long now = System.currentTimeMillis();
-            long dropTime = now-maxKeepAge;             
+            long dropTime = now-maxKeepAge;
             long minimumTime = now-freshness;
-            
+
             ArrayList<String> dropList = new ArrayList<String>();
             for (Map.Entry<String, Long> entry : services.entrySet()) {
                 if( entry.getValue() > minimumTime ) {
@@ -80,26 +83,26 @@ public class DiscoveryRegistryServlet extends HttpServlet {
                     dropList.add(entry.getKey());
                 }
             }
-            
+
             // We might as well get rid of the really old entries.
             for (String service : dropList) {
                 services.remove(service);
             }
-            
-            
+
+
         } catch (Exception e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error occured: "+e);
         }
     }
-    
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String group = req.getPathInfo();
         String service = req.getHeader("service");
         LOG.debug("Unregistering: group="+group+", service="+service);
-        
-        ConcurrentHashMap<String, Long> services = getServiceGroup(group);
+
+        ConcurrentMap<String, Long> services = getServiceGroup(group);
         services.remove(service);
     }
-        
+
 }

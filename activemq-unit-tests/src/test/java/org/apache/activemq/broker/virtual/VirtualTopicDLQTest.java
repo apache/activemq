@@ -29,8 +29,6 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageProducer;
@@ -46,6 +44,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import junit.framework.TestCase;
 
 /**
  * Unit test for virtual topics and DLQ messaging. See individual test for more
@@ -69,11 +69,12 @@ public class VirtualTopicDLQTest extends TestCase {
 
     // Expected Individual Dead Letter Queue names that are tied to the
     // Subscriber Queues
-    private static final String dlqPrefix = "ActiveMQ.DLQ.Topic.";
+    private static final String dlqPrefix = "ActiveMQ.DLQ.Queue.";
 
     // Number of messages
     private static final int numberMessages = 6;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         try {
@@ -86,6 +87,7 @@ public class VirtualTopicDLQTest extends TestCase {
         }
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         try {
@@ -233,6 +235,7 @@ public class VirtualTopicDLQTest extends TestCase {
             return latch;
         }
 
+        @Override
         public void run() {
             ActiveMQConnectionFactory connectionFactory = null;
             ActiveMQConnection connection = null;
@@ -259,7 +262,7 @@ public class VirtualTopicDLQTest extends TestCase {
                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
                 for (int i = 0; i < numberMessages; i++) {
-                    TextMessage message = (TextMessage) session.createTextMessage("I am a message :: " + String.valueOf(i));
+                    TextMessage message = session.createTextMessage("I am a message :: " + String.valueOf(i));
                     try {
                         producer.send(message);
 
@@ -275,18 +278,13 @@ public class VirtualTopicDLQTest extends TestCase {
 
             } catch (Exception e) {
                 LOG.error("Terminating TestProducer(" + destinationName + ")Caught: " + e);
-                e.printStackTrace();
-
             } finally {
                 try {
                     // Clean up
-                    if (session != null)
-                        session.close();
-                    if (connection != null)
+                    if (connection != null) {
                         connection.close();
-
+                    }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     LOG.error("Closing connection/session (" + destinationName + ")Caught: " + e);
                 }
             }
@@ -318,6 +316,7 @@ public class VirtualTopicDLQTest extends TestCase {
             return latch;
         }
 
+        @Override
         public void run() {
 
             try {
@@ -354,24 +353,18 @@ public class VirtualTopicDLQTest extends TestCase {
 
             } catch (Exception e) {
                 LOG.error("Consumer (" + destinationName + ") Caught: " + e);
-                e.printStackTrace();
             } finally {
                 try {
-                    // Clean up
-                    if (consumer != null)
-                        consumer.close();
-                    if (session != null)
-                        session.close();
-                    if (connection != null)
+                    if (connection != null) {
                         connection.close();
-
+                    }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     LOG.error("Closing connection/session (" + destinationName + ")Caught: " + e);
                 }
             }
         }
 
+        @Override
         public synchronized void onException(JMSException ex) {
             ex.printStackTrace();
             LOG.error("Consumer for destination, (" + destinationName + "), JMS Exception occured.  Shutting down client.");
@@ -381,6 +374,7 @@ public class VirtualTopicDLQTest extends TestCase {
             this.bStop = bStop;
         }
 
+        @Override
         public synchronized void onMessage(Message message) {
             receivedMessageCounter++;
             latch.countDown();
@@ -401,7 +395,6 @@ public class VirtualTopicDLQTest extends TestCase {
                 }
 
             } catch (JMSException ex) {
-                ex.printStackTrace();
                 LOG.error("Error reading JMS Message from destination " + destinationName + ".");
             }
         }

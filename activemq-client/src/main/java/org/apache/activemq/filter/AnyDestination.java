@@ -28,7 +28,7 @@ public class AnyDestination extends ActiveMQDestination {
     public AnyDestination(ActiveMQDestination[] destinations) {
         super(destinations);
         // ensure we are small when it comes to comparison in DestinationMap
-        physicalName = "0";
+        physicalName = "!0";
     }
 
     @Override

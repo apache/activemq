@@ -81,9 +81,9 @@ public class MessageQuery extends QueueBrowseQuery {
         if (message instanceof ObjectMessage) {
             try {
                 return ((ObjectMessage) message).getObject();
-            } catch (JMSException e) {
+            } catch (Exception e) {
                 //message could not be parsed, make the reason available
-                return e;
+                return new String("Cannot display ObjectMessage body. Reason: " + e.getMessage());
             }
         }
         if (message instanceof MapMessage) {
@@ -110,6 +110,10 @@ public class MessageQuery extends QueueBrowseQuery {
         }
 
         return null;
+    }
+    
+    public boolean isDLQ() throws Exception {
+    	return getQueueView().isDLQ();
     }
 
     public Map<String, Object> getPropertiesMap() throws JMSException {

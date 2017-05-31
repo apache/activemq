@@ -140,9 +140,10 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
                     int redeliveryCount = messageReference.getRedeliveryCounter();
                     if (RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES == maximumRedeliveries || redeliveryCount < maximumRedeliveries) {
 
-                        long delay = ( redeliveryCount == 0 ?
-                                redeliveryPolicy.getInitialRedeliveryDelay() :
-                                redeliveryPolicy.getNextRedeliveryDelay(getExistingDelay(messageReference)));
+                        long delay = redeliveryPolicy.getInitialRedeliveryDelay();
+                        for (int i = 0; i < redeliveryCount; i++) {
+                            delay = redeliveryPolicy.getNextRedeliveryDelay(delay);
+                        }
 
                         scheduleRedelivery(context, messageReference, delay, ++redeliveryCount);
                     } else if (isSendToDlqIfMaxRetriesExceeded()) {
@@ -199,11 +200,4 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
         }
     }
 
-    private int getExistingDelay(MessageReference messageReference) throws IOException {
-        Object val = messageReference.getMessage().getProperty(REDELIVERY_DELAY);
-        if (val instanceof Long) {
-            return ((Long)val).intValue();
-        }
-        return 0;
-    }
 }

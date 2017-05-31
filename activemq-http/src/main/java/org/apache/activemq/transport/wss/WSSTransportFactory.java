@@ -22,6 +22,8 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
@@ -30,22 +32,31 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 
 /**
- *
  * Factory for Secure WebSocket (wss) transport
- *
  */
-public class WSSTransportFactory extends TransportFactory {
+public class WSSTransportFactory extends TransportFactory implements BrokerServiceAware {
 
+    private BrokerService brokerService;
+
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WSSTransportServer result = new WSSTransportServer(location, SslContext.getCurrentSslContext());
+            Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "");
+            IntrospectionSupport.setProperties(result, transportOptions);
             result.setTransportOption(transportOptions);
+            result.setHttpOptions(httpOptions);
+            result.setBrokerService(brokerService);
             return result;
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
     }
 
+    @Override
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
 }

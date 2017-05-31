@@ -27,6 +27,10 @@ import org.slf4j.LoggerFactory;
 /**
  * @org.apache.xbean.XBean
  */
+/*
+ * @deprecated Use more general {@link org.apache.activemq.util.LeaseLockerIOExceptionHandler} instead
+ */
+@Deprecated
 public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandler.class);
 

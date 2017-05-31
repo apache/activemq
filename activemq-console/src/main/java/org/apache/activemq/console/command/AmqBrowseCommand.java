@@ -25,6 +25,7 @@ import java.util.StringTokenizer;
 
 import javax.jms.Destination;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.console.util.AmqMessagesUtil;
@@ -39,11 +40,11 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
     public static final String VIEW_GROUP_BODY = "body:";
 
     protected String[] helpFile = new String[] {
-        "Task Usage: Main browse --amqurl <broker url> [browse-options] <destinations>",
+        "Task Usage: Main browse [browse-options] <destinations>",
         "Description: Display selected destination's messages.",
         "",
         "Browse Options:",
-        "    --amqurl <url>                Set the broker URL to connect to.",
+        "    --amqurl <url>                Set the broker URL to connect to. Default tcp://localhost:61616",
         "    --msgsel <msgsel1,msglsel2>   Add to the search list messages matched by the query similar to",
         "                                  the messages selector format.",
         "    --factory <className>         Load className as the javax.jms.ConnectionFactory to use for creating connections.",
@@ -68,7 +69,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
         "    Main browse --amqurl tcp://localhost:61616 -Vheader --view custom:MyField queue:FOO.BAR",
         "        - Print the message header and the custom field 'MyField' of all messages in the queue FOO.BAR",
         "",
-        "    Main browse --amqurl tcp://localhost:61616 --msgsel JMSMessageID='*:10',JMSPriority>5 FOO.BAR",
+        "    Main browse --amqurl tcp://localhost:61616 --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.BAR",
         "        - Print all the message fields that has a JMSMessageID in the header field that matches the",
         "          wildcard *:10, and has a JMSPriority field > 5 in the queue FOO.BAR",
         "        * To use wildcard queries, the field must be a string and the query enclosed in ''",
@@ -116,8 +117,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
             // If no broker url specified
             if (getBrokerUrl() == null) {
-                context.printException(new IllegalStateException("No broker url specified. Use the --amqurl option to specify a broker url."));
-                return;
+                setBrokerUrl(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
             }
 
             // Display the messages for each destination
@@ -151,9 +151,8 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
                 context.printMessage(AmqMessagesUtil.filterMessagesView(addMsgs, groupViews, queryViews));
             }
 
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute browse task. Reason: " + e));
-            throw new Exception(e);
+        } catch (Exception exception) {
+            handleException(exception, getBrokerUrl().toString());
         }
     }
 

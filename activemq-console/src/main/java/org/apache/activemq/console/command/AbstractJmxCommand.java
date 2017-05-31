@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
+import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -37,11 +38,11 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     public static String DEFAULT_JMX_URL;
     private static String jmxUser;
     private static String jmxPassword;
+    private static boolean jmxUseLocal;
     private static final String CONNECTOR_ADDRESS =
         "com.sun.management.jmxremote.localConnectorAddress";
 
     private JMXServiceURL jmxServiceUrl;
-    private boolean jmxUseLocal;
     private JMXConnector jmxConnector;
     private MBeanServerConnection jmxConnection;
 
@@ -49,6 +50,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
         DEFAULT_JMX_URL = System.getProperty("activemq.jmx.url", "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
         jmxUser = System.getProperty("activemq.jmx.user");
         jmxPassword = System.getProperty("activemq.jmx.password");
+        jmxUseLocal = Boolean.parseBoolean(System.getProperty("activemq.jmx.useLocal", "false"));
     }
 
     /**
@@ -254,7 +256,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
      * @param jmxUseLocal - <code>true</code> if the mbean server from this JVM should be used, <code>false<code> if the jmx url should be used
      */
     public void setJmxUseLocal(boolean jmxUseLocal) {
-        this.jmxUseLocal = jmxUseLocal;
+        AbstractJmxCommand.jmxUseLocal = jmxUseLocal;
     }
 
     /**
@@ -385,7 +387,10 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     public void execute(List<String> tokens) throws Exception {
         try {
             super.execute(tokens);
-        } finally {
+        } catch (Exception exception) {
+            handleException(exception, jmxServiceUrl.toString());
+            return;
+        }finally {
             closeJmxConnection();
         }
     }

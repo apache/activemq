@@ -16,13 +16,7 @@
  */
 package org.apache.activemq.console.filter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class PropertiesViewFilter implements QueryFilter {
     protected QueryFilter next;
@@ -102,10 +96,10 @@ public class PropertiesViewFilter implements QueryFilter {
         Map<Object, Object> newData;
         try {
             // Lets try to use the same class as the original
-            newData = data.getClass().newInstance();
+            newData = new LinkedHashMap(data.getClass().newInstance());
         } catch (Exception e) {
             // Lets use a default HashMap
-            newData = new HashMap<Object, Object>();
+            newData = new LinkedHashMap<Object, Object>();
         }
 
         // Filter the keys to view

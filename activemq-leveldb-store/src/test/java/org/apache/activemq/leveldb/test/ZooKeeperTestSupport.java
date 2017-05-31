@@ -18,13 +18,12 @@ package org.apache.activemq.leveldb.test;
 
 import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.util.FileSupport;
-import org.apache.zookeeper.server.NIOServerCnxnFactory;
+import org.apache.commons.io.FileUtils;
+import org.apache.zookeeper.server.TestServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 import org.junit.After;
 import org.junit.Before;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -35,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ZooKeeperTestSupport {
 
-    protected NIOServerCnxnFactory connector;
+    protected TestServerCnxnFactory connector;
 
     static File data_dir() {
         return new File("target/activemq-data/leveldb-elections");
@@ -50,7 +49,7 @@ public class ZooKeeperTestSupport {
         ZooKeeperServer zk_server = new ZooKeeperServer();
         zk_server.setTickTime(500);
         zk_server.setTxnLogFactory(new FileTxnSnapLog(new File(data_dir(), "zk-log"), new File(data_dir(), "zk-data")));
-        connector = new NIOServerCnxnFactory();
+        connector = new TestServerCnxnFactory();
         connector.configure(new InetSocketAddress(0), 100);
         connector.startup(zk_server);
         System.out.println("ZooKeeper started");
@@ -62,6 +61,8 @@ public class ZooKeeperTestSupport {
           connector.shutdown();
           connector = null;
         }
+        deleteDirectory("zk-log");
+        deleteDirectory("zk-data");
     }
 
 
@@ -106,6 +107,13 @@ public class ZooKeeperTestSupport {
             } else {
                 Thread.sleep(Math.min(remaining / 10, 100L));
             }
+        }
+    }
+
+    protected void deleteDirectory(String s) throws java.io.IOException {
+        try {
+            FileUtils.deleteDirectory(new File(data_dir(), s));
+        } catch (java.io.IOException e) {
         }
     }
 }

@@ -22,6 +22,9 @@ import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.leveldb.replicated.ElectingLevelDBStore;
 import org.apache.activemq.store.MessageStore;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +41,17 @@ import static org.junit.Assert.*;
 public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(ElectingLevelDBStoreTest.class);
+    ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
+    ElectingLevelDBStore master = null;
 
+    @Ignore("https://issues.apache.org/jira/browse/AMQ-5512")
     @Test(timeout = 1000*60*10)
     public void testElection() throws Exception {
+        deleteDirectory("leveldb-node1");
+        deleteDirectory("leveldb-node2");
+        deleteDirectory("leveldb-node3");
 
-        ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
+
         ArrayList<CountDownFuture> pending_starts = new ArrayList<CountDownFuture>();
 
         for(String dir: new String[]{"leveldb-node1", "leveldb-node2", "leveldb-node3"}) {
@@ -65,7 +74,6 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         }
 
         // Make sure only of the stores is reporting to be the master.
-        ElectingLevelDBStore master = null;
         for(ElectingLevelDBStore store: stores) {
             if( store.isMaster() ) {
                 assertNull(master);
@@ -123,12 +131,16 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         }
 
         LOG.info("Checking master state");
-        assertEquals(expected_list, getMessages(ms));
-
-        master.stop();
-        for(ElectingLevelDBStore store: stores) {
-            store.stop();
+        ArrayList<String> messagesInStore = getMessages(ms);
+        int index=0;
+        for (String id: expected_list) {
+            if (!id.equals(messagesInStore.get(index))) {
+                LOG.info("Mismatch for expected:" + id + ", got:" + messagesInStore.get(index));
+                break;
+            }
+            index++;
         }
+        assertEquals(expected_list, messagesInStore);
     }
 
     @Test(timeout = 1000 * 60 * 10)
@@ -168,10 +180,80 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
                 }
             }
         });
+    }
 
-        for (ElectingLevelDBStore store : stores) {
-            store.stop();
+    /*
+     * testAMQ5082 tests the behavior of an ElectingLevelDBStore
+     * pool when ZooKeeper I/O timeouts occur. See issue AMQ-5082.
+     */
+    @Test(timeout = 1000 * 60 * 5)
+    public void testAMQ5082() throws Throwable {
+        final ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
+
+        LOG.info("Launching 3 stores");
+        for (String dir : new String[]{"leveldb-node1", "leveldb-node2", "leveldb-node3"}) {
+            ElectingLevelDBStore store = createStoreNode();
+            store.setDirectory(new File(data_dir(), dir));
+            stores.add(store);
+            asyncStart(store);
         }
+
+        LOG.info("Waiting 30s for stores to start");
+        Thread.sleep(30 * 1000);
+
+        LOG.info("Checking for a single master");
+        ElectingLevelDBStore master = null;
+        for (ElectingLevelDBStore store: stores) {
+            if (store.isMaster()) {
+                assertNull(master);
+                master = store;
+            }
+        }
+        assertNotNull(master);
+
+        LOG.info("Imposing 1s I/O wait on Zookeeper connections, waiting 30s to confirm that quorum is not lost");
+        this.connector.testHandle.setIOWaitMillis(1 * 1000, 30 * 1000);
+
+        LOG.info("Confirming that the quorum has not been lost");
+        for (ElectingLevelDBStore store: stores) {
+            if (store.isMaster()) {
+                assertTrue(master == store);
+            }
+        }
+
+        LOG.info("Imposing 11s I/O wait on Zookeeper connections, waiting 30s for quorum to be lost");
+        this.connector.testHandle.setIOWaitMillis(11 * 1000, 30 * 1000);
+
+        LOG.info("Confirming that the quorum has been lost");
+        for (ElectingLevelDBStore store: stores) {
+            assertFalse(store.isMaster());
+        }
+        master = null;
+
+        LOG.info("Lifting I/O wait on Zookeeper connections, waiting 30s for quorum to be re-established");
+        this.connector.testHandle.setIOWaitMillis(0, 30 * 1000);
+
+        LOG.info("Checking for a single master");
+        for (ElectingLevelDBStore store: stores) {
+            if (store.isMaster()) {
+                assertNull(master);
+                master = store;
+            }
+        }
+        assertNotNull(master);
+    }
+
+    @After
+    public void stop() throws Exception {
+        if (master != null) {
+            master.stop();
+            FileUtils.deleteDirectory(master.directory());
+        }
+        for(ElectingLevelDBStore store: stores) {
+            store.stop();
+            FileUtils.deleteDirectory(store.directory());
+        }
+        stores.clear();
     }
 
     private CountDownFuture asyncStart(final Service service) {
@@ -211,6 +293,8 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         store.setSecurityToken("foo");
         store.setLogSize(1024 * 200);
         store.setReplicas(2);
+        store.setSync("quorum_disk");
+        store.setZkSessionTimeout("15s");
         store.setZkAddress("localhost:" + connector.getLocalPort());
         store.setZkPath("/broker-stores");
         store.setBrokerName("foo");

@@ -144,7 +144,7 @@ public class BitArrayBin implements Serializable {
     private int getBin(long index) {
         int answer = 0;
         if (longFirstIndex < 0) {
-            longFirstIndex = (int) (index - (index % BitArray.LONG_SIZE));
+            longFirstIndex = (index - (index % BitArray.LONG_SIZE));
         } else if (longFirstIndex >= 0) {
             answer = (int)((index - longFirstIndex) / BitArray.LONG_SIZE);
         }

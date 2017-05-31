@@ -111,4 +111,34 @@ public class AuthorizationEntry extends DestinationMapEntry {
         }
         return answer;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AuthorizationEntry)) return false;
+
+        AuthorizationEntry that = (AuthorizationEntry) o;
+
+        if (adminACLs != null ? !adminACLs.equals(that.adminACLs) : that.adminACLs != null) return false;
+        if (adminRoles != null ? !adminRoles.equals(that.adminRoles) : that.adminRoles != null) return false;
+        if (groupClass != null ? !groupClass.equals(that.groupClass) : that.groupClass != null) return false;
+        if (readACLs != null ? !readACLs.equals(that.readACLs) : that.readACLs != null) return false;
+        if (readRoles != null ? !readRoles.equals(that.readRoles) : that.readRoles != null) return false;
+        if (writeACLs != null ? !writeACLs.equals(that.writeACLs) : that.writeACLs != null) return false;
+        if (writeRoles != null ? !writeRoles.equals(that.writeRoles) : that.writeRoles != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = readACLs != null ? readACLs.hashCode() : 0;
+        result = 31 * result + (writeACLs != null ? writeACLs.hashCode() : 0);
+        result = 31 * result + (adminACLs != null ? adminACLs.hashCode() : 0);
+        result = 31 * result + (adminRoles != null ? adminRoles.hashCode() : 0);
+        result = 31 * result + (readRoles != null ? readRoles.hashCode() : 0);
+        result = 31 * result + (writeRoles != null ? writeRoles.hashCode() : 0);
+        result = 31 * result + (groupClass != null ? groupClass.hashCode() : 0);
+        return result;
+    }
 }

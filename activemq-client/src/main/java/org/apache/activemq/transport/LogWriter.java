@@ -35,6 +35,13 @@ import org.slf4j.Logger;
 public interface LogWriter {
 
     /**
+     * prefix each statement with this value. allows connections to be correlated
+     * when logger is shared
+     * @param prefix
+     */
+    public void setPrefix(String prefix);
+
+    /**
      * Writes a header message to the log.
      * @param log The log to be written to.
      */

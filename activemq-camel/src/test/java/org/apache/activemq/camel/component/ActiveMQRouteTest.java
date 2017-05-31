@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.camel.component;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 
@@ -33,17 +31,16 @@ import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComp
  *
  */
 public class ActiveMQRouteTest extends CamelTestSupport {
+    private static final String EXPECTED_BODY = "Hello there!"; 
     protected MockEndpoint resultEndpoint;
     protected String startEndpointUri = "activemq:queue:test.a";
 
     @Test
     public void testJmsRouteWithTextMessage() throws Exception {
-        String expectedBody = "Hello there!";
-
-        resultEndpoint.expectedBodiesReceived(expectedBody);
+        resultEndpoint.expectedBodiesReceived(EXPECTED_BODY);
         resultEndpoint.message(0).header("cheese").isEqualTo(123);
 
-        sendExchange(expectedBody);
+        sendExchange(EXPECTED_BODY);
 
         resultEndpoint.assertIsSatisfied();
     }
@@ -67,36 +64,6 @@ public class ActiveMQRouteTest extends CamelTestSupport {
         // END SNIPPET: example
 
         return camelContext;
-    }
-
-    @Test
-    public void testInvalidDestinationOptionOnConsumer() throws Exception {
-        getMockEndpoint("mock:result").expectedMessageCount(0);
-        assertMockEndpointsSatisfied(1, TimeUnit.SECONDS);
-        try {
-            new RouteBuilder() {
-                public void configure() throws Exception {
-                    from("activemq:queue:foo?destination.consumer.exclusive=true&destination.consumer.unknown=foo")
-                        .to("mock:result");
-                }
-            };
-        } catch (Exception e) {
-            fail("Should not have accepted bad destination options.");
-        }
-    }
-
-    @Test
-    public void testInvalidDestinationOptionOnProducer() throws Exception {
-        try {
-            new RouteBuilder() {
-                public void configure() throws Exception {
-                    from("activemq:queue:foo")
-                        .to("activemq:queue:bar?destination.producer.exclusive=true");
-                }
-            };
-        } catch (Exception e) {
-            fail("Should not have accepted bad destination options.");
-        }
     }
 
     protected RouteBuilder createRouteBuilder() throws Exception {

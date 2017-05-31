@@ -17,7 +17,9 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
+
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
@@ -25,27 +27,27 @@ import org.apache.activemq.command.SubscriptionInfo;
 
 /**
  * A MessageStore for durable topic subscriptions
- * 
- * 
  */
 public interface TopicMessageStore extends MessageStore {
+
     /**
      * Stores the last acknowledged messgeID for the given subscription so that
      * we can recover and commence dispatching messages from the last checkpoint
-     * 
+     *
      * @param context
      * @param clientId
      * @param subscriptionName
      * @param messageId
-     * @param subscriptionPersistentId
+     * @param ack
+     *
      * @throws IOException
      */
     void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId, MessageAck ack) throws IOException;
-    
+
     /**
      * @param clientId
      * @param subscriptionName
-     * @param sub
+     *
      * @throws IOException
      * @throws JMSException
      */
@@ -57,11 +59,11 @@ public interface TopicMessageStore extends MessageStore {
      * <p/> e.g. if we dispatched some messages to a new durable topic
      * subscriber, then went down before acknowledging any messages, we need to
      * know the correct point from which to recover from.
-     * 
+     *
      * @param clientId
      * @param subscriptionName
      * @param listener
-     * @param subscription
+     *
      * @throws Exception
      */
     void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception;
@@ -69,18 +71,19 @@ public interface TopicMessageStore extends MessageStore {
     /**
      * For an active subscription - retrieve messages from the store for the
      * subscriber after the lastMessageId messageId <p/>
-     * 
+     *
      * @param clientId
      * @param subscriptionName
      * @param maxReturned
      * @param listener
+     *
      * @throws Exception
      */
     void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception;
 
     /**
      * A hint to the Store to reset any batching state for a durable subscriber
-     * 
+     *
      * @param clientId
      * @param subscriptionName
      */
@@ -89,27 +92,50 @@ public interface TopicMessageStore extends MessageStore {
     /**
      * Get the number of messages ready to deliver from the store to a durable
      * subscriber
-     * 
+     *
      * @param clientId
      * @param subscriberName
+     *
      * @return the outstanding message count
+     *
      * @throws IOException
      */
     int getMessageCount(String clientId, String subscriberName) throws IOException;
 
     /**
+     * Get the total size of the messages ready to deliver from the store to the
+     * durable subscriber
+     *
+     * @param clientId
+     * @param subscriberName
+     * @return
+     * @throws IOException
+     */
+    long getMessageSize(String clientId, String subscriberName) throws IOException;
+
+    /**
+     * The subscription metrics contained in this store
+     *
+     * @param subscriptionKey
+     * @return
+     */
+    MessageStoreSubscriptionStatistics getMessageStoreSubStatistics();
+
+    /**
      * Finds the subscriber entry for the given consumer info
-     * 
+     *
      * @param clientId
      * @param subscriptionName
+     *
      * @return the SubscriptionInfo
+     *
      * @throws IOException
      */
     SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException;
 
     /**
      * Lists all the durable subscriptions for a given destination.
-     * 
+     *
      * @return an array SubscriptionInfos
      * @throws IOException
      */
@@ -122,11 +148,10 @@ public interface TopicMessageStore extends MessageStore {
      * new subscription. Otherwise, if retroactive is true, then create the
      * subscription without it having an acknowledged message so that on
      * recovery, all message recorded for the topic get replayed.
-     * 
-     * @param clientId
-     * @param subscriptionName
-     * @param selector
+     *
+     * @param subscriptionInfo
      * @param retroactive
+     *
      * @throws IOException
      */
     void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;

@@ -16,6 +16,9 @@
  */
 package org.apache.activemq;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -24,27 +27,39 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
 /**
- * 
+ * Test for client ACK support
  */
-public class JmsClientAckTest extends TestSupport {
+public class JmsClientAckTest {
+
+    @Rule
+    public TestName name = new TestName();
 
     private Connection connection;
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        connection = createConnection();
+    @Before
+    public void setUp() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+            "vm://localhost?broker.persistent=false&broker.useJmx=false");
+
+        connection = factory.createConnection();;
     }
 
     /**
      * @see junit.framework.TestCase#tearDown()
      */
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
             connection = null;
         }
-        super.tearDown();
     }
 
     /**
@@ -52,6 +67,7 @@ public class JmsClientAckTest extends TestSupport {
      *
      * @throws JMSException
      */
+    @Test(timeout = 60000)
     public void testAckedMessageAreConsumed() throws JMSException {
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -71,7 +87,7 @@ public class JmsClientAckTest extends TestSupport {
 
         // Attempt to Consume the message...
         consumer = session.createConsumer(queue);
-        msg = consumer.receive(1000);
+        msg = consumer.receive(500);
         assertNull(msg);
 
         session.close();
@@ -82,6 +98,7 @@ public class JmsClientAckTest extends TestSupport {
      *
      * @throws JMSException
      */
+    @Test(timeout = 60000)
     public void testLastMessageAcked() throws JMSException {
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -96,7 +113,7 @@ public class JmsClientAckTest extends TestSupport {
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
         msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         msg = consumer.receive(1000);
         assertNotNull(msg);
         msg.acknowledge();
@@ -107,17 +124,18 @@ public class JmsClientAckTest extends TestSupport {
 
         // Attempt to Consume the message...
         consumer = session.createConsumer(queue);
-        msg = consumer.receive(1000);
+        msg = consumer.receive(500);
         assertNull(msg);
 
         session.close();
     }
-    
+
     /**
      * Tests if unacknowledged messages are being re-delivered when the consumer connects again.
-     * 
+     *
      * @throws JMSException
      */
+    @Test(timeout = 60000)
     public void testUnAckedMessageAreNotConsumedOnSessionClose() throws JMSException {
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -128,24 +146,23 @@ public class JmsClientAckTest extends TestSupport {
         // Consume the message...
         MessageConsumer consumer = session.createConsumer(queue);
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         // Don't ack the message.
-        
+
         // Reset the session.  This should cause the unacknowledged message to be re-delivered.
         session.close();
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-                
+
         // Attempt to Consume the message...
         consumer = session.createConsumer(queue);
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         msg.acknowledge();
-        
+
         session.close();
     }
 
     protected String getQueueName() {
-        return getClass().getName() + "." + getName();
+        return getClass().getName() + "." + name.getMethodName();
     }
-
 }

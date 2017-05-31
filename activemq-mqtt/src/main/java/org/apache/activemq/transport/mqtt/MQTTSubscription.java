@@ -56,7 +56,7 @@ public class MQTTSubscription {
      * @return a new {@link MessageAck} command to acknowledge the message.
      */
     public MessageAck createMessageAck(MessageDispatch md) {
-        return new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
+        return new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
     }
 
     /**

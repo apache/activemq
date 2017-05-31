@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.shiro.subject;
 
+import java.security.Principal;
+import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.shiro.subject.Subject;
-
-import java.security.Principal;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ActiveMQ {@code SecurityContext} implementation that retains a Shiro {@code Subject} instance for use during
@@ -73,12 +73,7 @@ public class SubjectSecurityContext extends SecurityContext {
     }
 
     @Override
-    public ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedReadDests() {
-        throw notAllowed("getAuthorizedReadDests");
-    }
-
-    @Override
-    public ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedWriteDests() {
+    public ConcurrentMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedWriteDests() {
         throw notAllowed("getAuthorizedWriteDests");
     }
 

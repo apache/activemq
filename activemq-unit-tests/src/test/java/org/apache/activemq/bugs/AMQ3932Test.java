@@ -36,10 +36,11 @@ import org.apache.activemq.broker.TransportConnector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ3932Test {
-
+    static final Logger LOG = LoggerFactory.getLogger(AMQ3932Test.class);
     private Connection connection;
     private BrokerService broker;
 
@@ -85,7 +86,7 @@ public class AMQ3932Test {
             public void run() {
                 try {
                     started.countDown();
-                    Log.info("Entering into a Sync receive call");
+                    LOG.info("Entering into a Sync receive call");
                     consumer.receive();
                 } catch (JMSException e) {
                 }
@@ -114,7 +115,7 @@ public class AMQ3932Test {
             public void run() {
                 try {
                     started.countDown();
-                    Log.info("Entering into a Sync receiveNoWait call");
+                    LOG.info("Entering into a Sync receiveNoWait call");
                     consumer.receiveNoWait();
                 } catch (JMSException e) {
                 }
@@ -143,7 +144,7 @@ public class AMQ3932Test {
             public void run() {
                 try {
                     started.countDown();
-                    Log.info("Entering into a timed Sync receive call");
+                    LOG.info("Entering into a timed Sync receive call");
                     consumer.receive(10);
                 } catch (JMSException e) {
                 }

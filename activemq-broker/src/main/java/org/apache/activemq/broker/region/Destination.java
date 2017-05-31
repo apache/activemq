@@ -241,7 +241,5 @@ public interface Destination extends Service, Task, Message.MessageDestination {
 
     public void clearPendingMessages();
 
-    public boolean isDLQ();
-
     void duplicateFromStore(Message message, Subscription subscription);
 }

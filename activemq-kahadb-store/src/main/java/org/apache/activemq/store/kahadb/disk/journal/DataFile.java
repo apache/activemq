@@ -18,7 +18,6 @@ package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
@@ -27,17 +26,19 @@ import org.apache.activemq.util.RecoverableRandomAccessFile;
 
 /**
  * DataFile
- *
- *
  */
 public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFile> {
+
+    public final static byte STANDARD_LOG_FILE = 0x0;
 
     protected final File file;
     protected final Integer dataFileId;
     protected volatile int length;
+    protected int typeCode = STANDARD_LOG_FILE;
     protected final SequenceSet corruptedBlocks = new SequenceSet();
+    protected RecoverableRandomAccessFile appendRandomAccessFile;
 
-    DataFile(File file, int number, int preferedSize) {
+    DataFile(File file, int number) {
         this.file = file;
         this.dataFileId = Integer.valueOf(number);
         length = (int)(file.exists() ? file.length() : 0);
@@ -49,6 +50,14 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
 
     public Integer getDataFileId() {
         return dataFileId;
+    }
+
+    public int getTypeCode() {
+        return typeCode;
+    }
+
+    public void setTypeCode(int typeCode) {
+        this.typeCode = typeCode;
     }
 
     public synchronized int getLength() {
@@ -63,9 +72,20 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         length += size;
     }
 
+    public synchronized void decrementLength(int size) {
+        length -= size;
+    }
+
     @Override
-	public synchronized String toString() {
+    public synchronized String toString() {
         return file.getName() + " number = " + dataFileId + " , length = " + length;
+    }
+
+    public synchronized RecoverableRandomAccessFile appendRandomAccessFile() throws IOException {
+        if (appendRandomAccessFile == null) {
+            appendRandomAccessFile = new RecoverableRandomAccessFile(file.getCanonicalPath(), "rw");
+        }
+        return appendRandomAccessFile;
     }
 
     public synchronized RecoverableRandomAccessFile openRandomAccessFile() throws IOException {
@@ -74,6 +94,9 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
 
     public synchronized void closeRandomAccessFile(RecoverableRandomAccessFile file) throws IOException {
         file.close();
+        if (file == appendRandomAccessFile) {
+            appendRandomAccessFile = null;
+        }
     }
 
     public synchronized boolean delete() throws IOException {
@@ -81,7 +104,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     public synchronized void move(File targetDirectory) throws IOException{
-        IOHelper.moveFile(file,targetDirectory);
+        IOHelper.moveFile(file, targetDirectory);
     }
 
     public SequenceSet getCorruptedBlocks() {
@@ -89,7 +112,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     @Override
-	public int compareTo(DataFile df) {
+    public int compareTo(DataFile df) {
         return dataFileId - df.dataFileId;
     }
 

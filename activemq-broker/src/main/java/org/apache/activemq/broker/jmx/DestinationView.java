@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.jms.Connection;
 import javax.jms.InvalidSelectorException;
@@ -38,6 +39,7 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
@@ -51,6 +53,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
+import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,6 +122,12 @@ public class DestinationView implements DestinationViewMBean {
         return destination.getDestinationStatistics().getMessages().getCount();
     }
 
+    @Override
+    public long getStoreMessageSize() {
+        MessageStore messageStore = destination.getMessageStore();
+        return messageStore != null ? messageStore.getMessageStoreStatistics().getMessageSize().getTotalSize() : 0;
+    }
+
     public long getMessagesCached() {
         return destination.getDestinationStatistics().getMessagesCached().getCount();
     }
@@ -161,13 +170,16 @@ public class DestinationView implements DestinationViewMBean {
     /**
      * @return the average size of a message (bytes)
      */
-    public double getAverageMessageSize() {
-        return destination.getDestinationStatistics().getMessageSize().getAverageSize();
+    @Override
+    public long getAverageMessageSize() {
+        // we are okay with the size without decimals so cast to long
+        return (long) destination.getDestinationStatistics().getMessageSize().getAverageSize();
     }
 
     /**
      * @return the max size of a message (bytes)
      */
+    @Override
     public long getMaxMessageSize() {
         return destination.getDestinationStatistics().getMessageSize().getMaxSize();
     }
@@ -175,6 +187,7 @@ public class DestinationView implements DestinationViewMBean {
     /**
      * @return the min size of a message (bytes)
      */
+    @Override
     public long getMinMessageSize() {
         return destination.getDestinationStatistics().getMessageSize().getMinSize();
     }
@@ -217,10 +230,6 @@ public class DestinationView implements DestinationViewMBean {
                 }
 
             } catch (Throwable e) {
-                // TODO DELETE ME
-                System.out.println(e);
-                e.printStackTrace();
-                // TODO DELETE ME
                 LOG.warn("exception browsing destination", e);
             }
         }
@@ -334,12 +343,12 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     @Override
-    public String sendTextMessage(String body, String user, String password) throws Exception {
+    public String sendTextMessage(String body, String user, @Sensitive String password) throws Exception {
         return sendTextMessage(Collections.EMPTY_MAP, body, user, password);
     }
 
     @Override
-    public String sendTextMessage(Map<String, String> headers, String body, String userName, String password) throws Exception {
+    public String sendTextMessage(Map<String, String> headers, String body, String userName, @Sensitive String password) throws Exception {
 
         String brokerUrl = "vm://" + broker.getBrokerName();
         ActiveMQDestination dest = destination.getActiveMQDestination();
@@ -347,15 +356,14 @@ public class DestinationView implements DestinationViewMBean {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = null;
         try {
-
             connection = cf.createConnection(userName, password);
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer producer = session.createProducer(dest);
             ActiveMQTextMessage msg = (ActiveMQTextMessage) session.createTextMessage(body);
 
-            for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                msg.setObjectProperty((String) entry.getKey(), entry.getValue());
+            for (Iterator<Entry<String, String>> iter = headers.entrySet().iterator(); iter.hasNext();) {
+                Entry<String, String> entry = iter.next();
+                msg.setObjectProperty(entry.getKey(), entry.getValue());
             }
 
             producer.setDeliveryMode(msg.getJMSDeliveryMode());
@@ -375,9 +383,10 @@ public class DestinationView implements DestinationViewMBean {
             return msg.getJMSMessageID();
 
         } finally {
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         }
-
     }
 
     @Override
@@ -523,7 +532,12 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public boolean isDLQ() {
-        return destination.isDLQ();
+        return destination.getActiveMQDestination().isDLQ();
+    }
+
+    @Override
+    public void setDLQ(boolean val) {
+         destination.getActiveMQDestination().setDLQ(val);
     }
 
     @Override

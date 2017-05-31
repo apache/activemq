@@ -73,6 +73,11 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     private String maxMessagesPerSessions = "10";
     private String enableBatch = "false";
     private String maxMessagesPerBatch = "10";
+    private String trustStore;
+    private String trustStorePassword;
+    private String keyStore;
+    private String keyStorePassword;
+    private String keyStoreKeyPassword;
     private RedeliveryPolicy redeliveryPolicy;
     private boolean useJndi;
 
@@ -639,6 +644,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
      */
     public void setInitialRedeliveryDelay(long initialRedeliveryDelay) {
         lazyCreateRedeliveryPolicy().setInitialRedeliveryDelay(initialRedeliveryDelay);
+        redeliveryPolicy.setRedeliveryDelay(initialRedeliveryDelay);
     }
 
     /**
@@ -673,5 +679,60 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     
     public boolean isUseJndi() {
         return useJndi;
+    }
+
+    public String getTrustStore() {
+        if (!isEmpty(trustStore)) {
+            return trustStore;
+        }
+        return null;
+    }
+
+    public void setTrustStore(String trustStore) {
+        this.trustStore = trustStore;
+    }
+
+    public String getTrustStorePassword() {
+        if (!isEmpty(trustStorePassword)) {
+            return trustStorePassword;
+        }
+        return null;
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+    }
+
+    public String getKeyStore() {
+        if (!isEmpty(keyStore)) {
+            return keyStore;
+        }
+        return null;
+    }
+
+    public void setKeyStore(String keyStore) {
+        this.keyStore = keyStore;
+    }
+
+    public String getKeyStorePassword() {
+        if (!isEmpty(keyStorePassword)) {
+            return keyStorePassword;
+        }
+        return null;
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+    }
+
+    public String getKeyStoreKeyPassword() {
+        if (!isEmpty(keyStoreKeyPassword)) {
+            return keyStoreKeyPassword;
+        }
+        return null;
+    }
+
+    public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {
+        this.keyStoreKeyPassword = keyStoreKeyPassword;
     }
 }

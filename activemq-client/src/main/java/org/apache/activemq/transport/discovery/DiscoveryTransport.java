@@ -20,6 +20,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.TransportFilter;
@@ -30,10 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link ReliableTransportChannel} which uses a {@link DiscoveryAgent} to
+ * A {@link TransportFilter} which uses a {@link DiscoveryAgent} to
  * discover remote broker instances and dynamically connect to them.
- * 
- * 
  */
 public class DiscoveryTransport extends TransportFilter implements DiscoveryListener {
 
@@ -41,7 +41,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
 
     private final CompositeTransport next;
     private DiscoveryAgent discoveryAgent;
-    private final ConcurrentHashMap<String, URI> serviceURIs = new ConcurrentHashMap<String, URI>();
+    private final ConcurrentMap<String, URI> serviceURIs = new ConcurrentHashMap<String, URI>();
 
     private Map<String, String> parameters;
 
@@ -70,6 +70,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
         ss.throwFirstException();
     }
 
+    @Override
     public void onServiceAdd(DiscoveryEvent event) {
         String url = event.getServiceName();
         if (url != null) {
@@ -85,6 +86,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
         }
     }
 
+    @Override
     public void onServiceRemove(DiscoveryEvent event) {
         URI uri = serviceURIs.get(event.getServiceName());
         if (uri != null) {
@@ -101,7 +103,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
     }
 
     public void setParameters(Map<String, String> parameters) {
-       this.parameters = parameters;      
+       this.parameters = parameters;
     }
 
     @Override
@@ -110,7 +112,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
             try {
                 ((Suspendable)discoveryAgent).suspend();
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.warn("Exception suspending discoverAgent: ", discoveryAgent);
             }
         }
         super.transportResumed();
@@ -122,7 +124,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
             try {
                 ((Suspendable)discoveryAgent).resume();
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.warn("Exception resuming discoverAgent: ", discoveryAgent);
             }
         }
         super.transportInterupted();

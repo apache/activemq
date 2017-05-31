@@ -17,7 +17,7 @@
 package org.apache.activemq.broker;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.region.MessageReference;
@@ -34,8 +34,8 @@ import org.apache.activemq.transaction.Transaction;
 
 /**
  * Used to hold context information needed to process requests sent to a broker.
- * 
- * 
+ *
+ *
  */
 public class ConnectionContext {
 
@@ -44,7 +44,7 @@ public class ConnectionContext {
     private Broker broker;
     private boolean inRecoveryMode;
     private Transaction transaction;
-    private ConcurrentHashMap<TransactionId, Transaction> transactions;
+    private ConcurrentMap<TransactionId, Transaction> transactions;
     private SecurityContext securityContext;
     private ConnectionId connectionId;
     private String clientId;
@@ -64,20 +64,20 @@ public class ConnectionContext {
     private XATransactionId xid;
 
     public ConnectionContext() {
-    	this.messageEvaluationContext = new MessageEvaluationContext();
+        this.messageEvaluationContext = new MessageEvaluationContext();
     }
-    
+
     public ConnectionContext(MessageEvaluationContext messageEvaluationContext) {
-    	this.messageEvaluationContext=messageEvaluationContext;
+        this.messageEvaluationContext=messageEvaluationContext;
     }
-    
+
     public ConnectionContext(ConnectionInfo info) {
-    	this();
+        this();
         setClientId(info.getClientId());
         setUserName(info.getUserName());
         setConnectionId(info.getConnectionId());
     }
-    
+
     public ConnectionContext copy() {
         ConnectionContext rc = new ConnectionContext(this.messageEvaluationContext);
         rc.connection = this.connection;
@@ -186,7 +186,7 @@ public class ConnectionContext {
     }
 
     /**
-     * @return
+     * @return true if in recovery mode.
      */
     public boolean isInRecoveryMode() {
         return inRecoveryMode;
@@ -196,11 +196,11 @@ public class ConnectionContext {
         this.inRecoveryMode = inRecoveryMode;
     }
 
-    public ConcurrentHashMap<TransactionId, Transaction> getTransactions() {
+    public ConcurrentMap<TransactionId, Transaction> getTransactions() {
         return transactions;
     }
 
-    public void setTransactions(ConcurrentHashMap<TransactionId, Transaction> transactions) {
+    public void setTransactions(ConcurrentMap<TransactionId, Transaction> transactions) {
         this.transactions = transactions;
     }
 

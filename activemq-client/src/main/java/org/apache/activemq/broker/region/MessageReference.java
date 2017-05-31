@@ -63,5 +63,7 @@ public interface MessageReference {
      * @return true if the message is an advisory
      */
     boolean isAdvisory();
+
+    boolean canProcessAsExpired();
     
 }

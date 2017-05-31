@@ -120,11 +120,7 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + dest.getQueueName() + "\n" + "ack:client\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-
-        // ensure dispatch has started before pause
-        frame = stompConnection.receiveFrame();
-        assertTrue(frame.startsWith("MESSAGE"));
-
+        
         proxy.pause();
 
         // writes should back up... writeTimeout will kick in a abort the connection

@@ -33,8 +33,8 @@ import org.apache.activemq.usage.SystemUsage;
 /**
  * Abstract method holder for pending message (messages awaiting disptach to a
  * consumer) cursor
- * 
- * 
+ *
+ *
  */
 public abstract class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int memoryUsageHighWaterMark = 70;
@@ -49,12 +49,13 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     private boolean started=false;
     protected MessageReference last = null;
     protected final boolean prioritizedMessages;
-    
+
     public AbstractPendingMessageCursor(boolean prioritizedMessages) {
         this.prioritizedMessages=prioritizedMessages;
     }
-  
 
+
+    @Override
     public synchronized void start() throws Exception  {
         if (!started && enableAudit && audit==null) {
             audit= new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
@@ -62,71 +63,89 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
         started=true;
     }
 
+    @Override
     public synchronized void stop() throws Exception  {
         started=false;
         gc();
     }
 
+    @Override
     public void add(ConnectionContext context, Destination destination) throws Exception {
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
         return Collections.EMPTY_LIST;
     }
 
+    @Override
     public boolean isRecoveryRequired() {
         return true;
     }
 
+    @Override
     public void addMessageFirst(MessageReference node) throws Exception {
     }
 
-    public void addMessageLast(MessageReference node) throws Exception {
+    @Override
+    public boolean addMessageLast(MessageReference node) throws Exception {
+        return tryAddMessageLast(node, INFINITE_WAIT);
     }
-    
+
+    @Override
     public boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
-        addMessageLast(node);
         return true;
     }
 
+    @Override
     public void addRecoveredMessage(MessageReference node) throws Exception {
         addMessageLast(node);
     }
 
+    @Override
     public void clear() {
     }
 
+    @Override
     public boolean hasNext() {
         return false;
     }
 
+    @Override
     public boolean isEmpty() {
         return false;
     }
 
+    @Override
     public boolean isEmpty(Destination destination) {
         return isEmpty();
     }
 
+    @Override
     public MessageReference next() {
         return null;
     }
 
+    @Override
     public void remove() {
     }
 
+    @Override
     public void reset() {
     }
 
+    @Override
     public int size() {
         return 0;
     }
 
+    @Override
     public int getMaxBatchSize() {
         return maxBatchSize;
     }
 
+    @Override
     public void setMaxBatchSize(int maxBatchSize) {
         this.maxBatchSize = maxBatchSize;
     }
@@ -134,31 +153,50 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     protected void fillBatch() throws Exception {
     }
 
+    @Override
     public void resetForGC() {
         reset();
     }
 
+    @Override
     public void remove(MessageReference node) {
     }
 
+    @Override
     public void gc() {
     }
 
+    @Override
     public void setSystemUsage(SystemUsage usageManager) {
         this.systemUsage = usageManager;
     }
 
+    @Override
     public boolean hasSpace() {
-        return systemUsage != null ? (!systemUsage.getMemoryUsage().isFull(memoryUsageHighWaterMark)) : true;
+        // allow isFull to verify parent usage and otherwise enforce local memoryUsageHighWaterMark
+        return systemUsage != null ? (!isParentFull() && systemUsage.getMemoryUsage().getPercentUsage() < memoryUsageHighWaterMark) : true;
     }
 
+    private boolean isParentFull() {
+        boolean result = false;
+        if (systemUsage != null) {
+            if (systemUsage.getMemoryUsage().getParent() != null) {
+                return systemUsage.getMemoryUsage().getParent().getPercentUsage() >= 100;
+            }
+        }
+        return result;
+    }
+
+    @Override
     public boolean isFull() {
         return systemUsage != null ? systemUsage.getMemoryUsage().isFull() : false;
     }
 
+    @Override
     public void release() {
     }
 
+    @Override
     public boolean hasMessagesBufferedToDeliver() {
         return false;
     }
@@ -166,6 +204,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     /**
      * @return the memoryUsageHighWaterMark
      */
+    @Override
     public int getMemoryUsageHighWaterMark() {
         return memoryUsageHighWaterMark;
     }
@@ -173,6 +212,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     /**
      * @param memoryUsageHighWaterMark the memoryUsageHighWaterMark to set
      */
+    @Override
     public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
         this.memoryUsageHighWaterMark = memoryUsageHighWaterMark;
     }
@@ -180,25 +220,28 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     /**
      * @return the usageManager
      */
+    @Override
     public SystemUsage getSystemUsage() {
         return this.systemUsage;
     }
 
     /**
      * destroy the cursor
-     * 
+     *
      * @throws Exception
      */
+    @Override
     public void destroy() throws Exception {
         stop();
     }
 
     /**
      * Page in a restricted number of messages
-     * 
+     *
      * @param maxItems maximum number of messages to return
      * @return a list of paged in messages
      */
+    @Override
     public LinkedList<MessageReference> pageInList(int maxItems) {
         throw new RuntimeException("Not supported");
     }
@@ -206,6 +249,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     /**
      * @return the maxProducersToAudit
      */
+    @Override
     public int getMaxProducersToAudit() {
         return maxProducersToAudit;
     }
@@ -213,6 +257,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     /**
      * @param maxProducersToAudit the maxProducersToAudit to set
      */
+    @Override
     public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
         this.maxProducersToAudit = maxProducersToAudit;
         if (audit != null) {
@@ -223,25 +268,28 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     /**
      * @return the maxAuditDepth
      */
+    @Override
     public int getMaxAuditDepth() {
         return maxAuditDepth;
     }
-    
+
 
     /**
      * @param maxAuditDepth the maxAuditDepth to set
      */
+    @Override
     public synchronized void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
         if (audit != null) {
             audit.setAuditDepth(maxAuditDepth);
         }
     }
-    
-    
+
+
     /**
      * @return the enableAudit
      */
+    @Override
     public boolean isEnableAudit() {
         return enableAudit;
     }
@@ -249,38 +297,44 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     /**
      * @param enableAudit the enableAudit to set
      */
+    @Override
     public synchronized void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
         if (enableAudit && started && audit==null) {
             audit= new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
         }
     }
-    
+
+    @Override
     public boolean isTransient() {
         return false;
     }
-    
-       
+
+
     /**
      * set the audit
      * @param audit new audit component
      */
+    @Override
     public void setMessageAudit(ActiveMQMessageAudit audit) {
     	this.audit=audit;
     }
-    
-    
+
+
     /**
      * @return the audit
      */
+    @Override
     public ActiveMQMessageAudit getMessageAudit() {
     	return audit;
     }
-    
+
+    @Override
     public boolean isUseCache() {
         return useCache;
     }
 
+    @Override
     public void setUseCache(boolean useCache) {
         this.useCache = useCache;
     }
@@ -290,7 +344,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
         rollback(messageId);
         return !unique;
     }
-    
+
     /**
      * records a message id and checks if it is a duplicate
      * @param messageId
@@ -302,17 +356,18 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
         }
         return !audit.isDuplicate(messageId);
     }
-    
+
+    @Override
     public synchronized void rollback(MessageId id) {
         if (audit != null) {
             audit.rollback(id);
         }
     }
-    
+
     public synchronized boolean isStarted() {
         return started;
     }
-    
+
     public static boolean isPrioritizedMessageSubscriber(Broker broker,Subscription sub) {
         boolean result = false;
         Set<Destination> destinations = broker.getDestinations(sub.getActiveMQDestination());
@@ -328,6 +383,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
 
     }
 
+    @Override
     public synchronized boolean isCacheEnabled() {
         return cacheEnabled;
     }
@@ -336,6 +392,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
         cacheEnabled = val;
     }
 
+    @Override
     public void rebase() {
     }
 }

@@ -16,37 +16,21 @@
  */
 package org.apache.activemq.util;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Properties;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-/**
- * @author rajdavies
- */
-public class MarshallingSupportTest extends TestCase {
-
-    /**
-     * @throws java.lang.Exception
-     * @see junit.framework.TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    /**
-     * @throws java.lang.Exception
-     * @see junit.framework.TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
+public class MarshallingSupportTest {
 
     /**
      * Test method for
      * {@link org.apache.activemq.util.MarshallingSupport#propertiesToString(java.util.Properties)}.
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testPropertiesToString() throws Exception {
         Properties props = new Properties();
         for (int i = 0; i < 10; i++) {

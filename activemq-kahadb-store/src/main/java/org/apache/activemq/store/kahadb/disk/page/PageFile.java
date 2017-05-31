@@ -196,10 +196,10 @@ public class PageFile {
         public byte[] getDiskBound() throws IOException {
             if (diskBound == null && diskBoundLocation != -1) {
                 diskBound = new byte[length];
-                RandomAccessFile file = new RandomAccessFile(tmpFile, "r");
-                file.seek(diskBoundLocation);
-                file.read(diskBound);
-                file.close();
+                try(RandomAccessFile file = new RandomAccessFile(tmpFile, "r")) {
+                    file.seek(diskBoundLocation);
+                    file.read(diskBound);
+                }
                 diskBoundLocation = -1;
             }
             return diskBound;
@@ -401,6 +401,8 @@ public class PageFile {
                 recoveryFile = new RecoverableRandomAccessFile(getRecoveryFile(), "rw");
             }
 
+            boolean needsFreePageRecovery = false;
+
             if (metaData.isCleanShutdown()) {
                 nextTxid.set(metaData.getLastTxId() + 1);
                 if (metaData.getFreePages() > 0) {
@@ -409,8 +411,16 @@ public class PageFile {
             } else {
                 LOG.debug(toString() + ", Recovering page file...");
                 nextTxid.set(redoRecoveryUpdates());
+                needsFreePageRecovery = true;
+            }
 
-                // Scan all to find the free pages.
+            if (writeFile.length() < PAGE_FILE_HEADER_SIZE) {
+                writeFile.setLength(PAGE_FILE_HEADER_SIZE);
+            }
+            nextFreePageId.set((writeFile.length() - PAGE_FILE_HEADER_SIZE) / pageSize);
+
+            if (needsFreePageRecovery) {
+                // Scan all to find the free pages after nextFreePageId is set
                 freeList = new SequenceSet();
                 for (Iterator<Page> i = tx().iterator(true); i.hasNext(); ) {
                     Page page = i.next();
@@ -423,13 +433,7 @@ public class PageFile {
             metaData.setCleanShutdown(false);
             storeMetaData();
             getFreeFile().delete();
-
-            if (writeFile.length() < PAGE_FILE_HEADER_SIZE) {
-                writeFile.setLength(PAGE_FILE_HEADER_SIZE);
-            }
-            nextFreePageId.set((writeFile.length() - PAGE_FILE_HEADER_SIZE) / pageSize);
             startWriter();
-
         } else {
             throw new IllegalStateException("Cannot load the page file when it is already loaded.");
         }
@@ -487,6 +491,10 @@ public class PageFile {
 
     public boolean isLoaded() {
         return loaded.get();
+    }
+
+    public void allowIOResumption() {
+        loaded.set(true);
     }
 
     /**
@@ -1048,28 +1056,24 @@ public class PageFile {
             this.checkpointLatch = null;
         }
 
-        Checksum checksum = new Adler32();
-        if (enableRecoveryFile) {
-            recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
-        }
-        for (PageWrite w : batch) {
-            if (enableRecoveryFile) {
-                try {
-                    checksum.update(w.getDiskBound(), 0, pageSize);
-                } catch (Throwable t) {
-                    throw IOExceptionSupport.create("Cannot create recovery file. Reason: " + t, t);
-                }
-                recoveryFile.writeLong(w.page.getPageId());
-                recoveryFile.write(w.getDiskBound(), 0, pageSize);
-            }
-
-            writeFile.seek(toOffset(w.page.getPageId()));
-            writeFile.write(w.getDiskBound(), 0, pageSize);
-            w.done();
-        }
-
         try {
+
+            // First land the writes in the recovery file
             if (enableRecoveryFile) {
+                Checksum checksum = new Adler32();
+
+                recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
+
+                for (PageWrite w : batch) {
+                    try {
+                        checksum.update(w.getDiskBound(), 0, pageSize);
+                    } catch (Throwable t) {
+                        throw IOExceptionSupport.create("Cannot create recovery file. Reason: " + t, t);
+                    }
+                    recoveryFile.writeLong(w.page.getPageId());
+                    recoveryFile.write(w.getDiskBound(), 0, pageSize);
+                }
+
                 // Can we shrink the recovery buffer??
                 if (recoveryPageCount > recoveryFileMaxPageCount) {
                     int t = Math.max(recoveryFileMinPageCount, batch.size());
@@ -1086,15 +1090,28 @@ public class PageFile {
                 recoveryFile.writeLong(checksum.getValue());
                 // Write the # of pages that will follow
                 recoveryFile.writeInt(batch.size());
+
+                if (enableDiskSyncs) {
+                    recoveryFile.sync();
+                }
+            }
+
+            for (PageWrite w : batch) {
+                writeFile.seek(toOffset(w.page.getPageId()));
+                writeFile.write(w.getDiskBound(), 0, pageSize);
+                w.done();
             }
 
             if (enableDiskSyncs) {
-                // Sync to make sure recovery buffer writes land on disk..
-                if (enableRecoveryFile) {
-                    writeFile.sync();
-                }
                 writeFile.sync();
             }
+
+        } catch (IOException ioError) {
+            LOG.info("Unexpected io error on pagefile write of " + batch.size() + " pages.", ioError);
+            // any subsequent write needs to be prefaced with a considered call to redoRecoveryUpdates
+            // to ensure disk image is self consistent
+            loaded.set(false);
+            throw  ioError;
         } finally {
             synchronized (writes) {
                 for (PageWrite w : batch) {

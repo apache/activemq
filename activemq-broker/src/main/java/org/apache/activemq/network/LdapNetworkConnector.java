@@ -98,7 +98,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * sets the LDAP server URI
      *
-     * @param _uri
+     * @param uri
      *            LDAP server URI
      */
     public void setUri(URI uri) throws Exception {
@@ -114,7 +114,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * sets the base LDAP dn used for lookup operations
      *
-     * @param _base
+     * @param base
      *            LDAP base dn
      */
     public void setBase(String base) {
@@ -124,7 +124,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * sets the LDAP user for access credentials
      *
-     * @param _user
+     * @param user
      *            LDAP dn of user
      */
     public void setUser(String user) {
@@ -134,9 +134,10 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * sets the LDAP password for access credentials
      *
-     * @param _password
+     * @param password
      *            user password
      */
+    @Override
     public void setPassword(String password) {
         this.password = password;
     }
@@ -144,7 +145,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * sets LDAP anonymous authentication access credentials
      *
-     * @param _anonymousAuthentication
+     * @param anonymousAuthentication
      *            set to true to use anonymous authentication
      */
     public void setAnonymousAuthentication(boolean anonymousAuthentication) {
@@ -154,7 +155,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * sets the LDAP search scope
      *
-     * @param _searchScope
+     * @param searchScope
      *            LDAP JNDI search scope
      */
     public void setSearchScope(String searchScope) throws Exception {
@@ -174,7 +175,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * sets the LDAP search filter as defined in RFC 2254
      *
-     * @param _searchFilter
+     * @param searchFilter
      *            LDAP search filter
      * @see <a href="http://www.faqs.org/rfcs/rfc2254.html">RFC 2254</a>
      */
@@ -186,7 +187,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
      * enables/disable a persistent search to the LDAP server as defined in
      * draft-ietf-ldapext-psearch-03.txt (2.16.840.1.113730.3.4.3)
      *
-     * @param _searchEventListener
+     * @param searchEventListener
      *            enable = true, disable = false (default)
      * @see <a
      *      href="http://www.ietf.org/proceedings/01mar/I-D/draft-ietf-ldapext-psearch-03.txt">draft-ietf-ldapext-psearch-03.txt</a>
@@ -198,6 +199,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * start the connector
      */
+    @Override
     public void start() throws Exception {
         LOG.info("connecting...");
         Hashtable<String, String> env = new Hashtable<String, String>();
@@ -210,8 +212,16 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
             env.put(Context.SECURITY_AUTHENTICATION, "none");
         } else {
             LOG.debug("    login credentials [{}:******]", user);
-            env.put(Context.SECURITY_PRINCIPAL, user);
-            env.put(Context.SECURITY_CREDENTIALS, password);
+            if (user != null && !"".equals(user)) {
+                env.put(Context.SECURITY_PRINCIPAL, user);
+            } else {
+                throw new Exception("Empty username is not allowed");
+            }
+            if (password != null && !"".equals(password)) {
+                env.put(Context.SECURITY_CREDENTIALS, password);
+            } else {
+                throw new Exception("Empty password is not allowed");
+            }
         }
         boolean isConnected = false;
         while (!isConnected) {
@@ -254,6 +264,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * stop the connector
      */
+    @Override
     public void stop() throws Exception {
         LOG.info("stopping context...");
         for (NetworkConnector connector : connectorMap.values()) {
@@ -265,6 +276,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         context.close();
     }
 
+    @Override
     public String toString() {
         return this.getClass().getName() + getName() + "[" + ldapURI.toString() + "]";
     }
@@ -387,6 +399,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * invoked when an entry has been added during a persistent search
      */
+    @Override
     public void objectAdded(NamingEvent event) {
         LOG.debug("entry added");
         try {
@@ -399,6 +412,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * invoked when an entry has been removed during a persistent search
      */
+    @Override
     public void objectRemoved(NamingEvent event) {
         LOG.debug("entry removed");
         try {
@@ -411,6 +425,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * invoked when an entry has been renamed during a persistent search
      */
+    @Override
     public void objectRenamed(NamingEvent event) {
         LOG.debug("entry renamed");
         // XXX: getNameInNamespace method does not seem to work properly,
@@ -425,6 +440,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * invoked when an entry has been changed during a persistent search
      */
+    @Override
     public void objectChanged(NamingEvent event) {
         LOG.debug("entry changed");
         try {
@@ -439,6 +455,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     /**
      * invoked when an exception has occurred during a persistent search
      */
+    @Override
     public void namingExceptionThrown(NamingExceptionEvent event) {
         LOG.error("ERR: caught unexpected exception", event.getException());
     }

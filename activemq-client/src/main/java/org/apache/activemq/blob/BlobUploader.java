@@ -27,8 +27,8 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 
 /**
  * A helper class to represent a required upload of a BLOB to some remote URL
- * 
- * 
+ *
+ *
  */
 public class BlobUploader {
 

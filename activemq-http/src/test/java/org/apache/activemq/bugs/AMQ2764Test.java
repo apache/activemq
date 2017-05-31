@@ -16,11 +16,16 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -30,7 +35,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.ConsumerEvent;
 import org.apache.activemq.advisory.ConsumerEventSource;
@@ -39,18 +43,26 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.http.WaitForJettyListener;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AMQ2764Test extends TestCase {
+public class AMQ2764Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2764Test.class);
+
+    @Rule public TestName name = new TestName();
 
     private BrokerService brokerOne;
     private BrokerService brokerTwo;
     private Destination destination;
-    private ArrayList<Connection> connections = new ArrayList<Connection>();
+    private final ArrayList<Connection> connections = new ArrayList<Connection>();
 
+    @Test(timeout = 60000)
     public void testInactivityMonitor() throws Exception {
 
         startBrokerTwo();
@@ -58,8 +70,6 @@ public class AMQ2764Test extends TestCase {
 
         startBrokerOne();
         brokerOne.waitUntilStarted();
-
-        Thread.sleep(2000);
 
         ActiveMQConnectionFactory secondProducerConnectionFactory = createBrokerTwoHttpConnectionFactory();
         ActiveMQConnectionFactory consumerConnectionFactory = createBrokerOneHttpConnectionFactory();
@@ -73,35 +83,34 @@ public class AMQ2764Test extends TestCase {
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
+        final int expectedMessagesReceived = 1000;
 
-        final int expectedMessagesReceived = 2000;
-
-        for (int i = 0; i < expectedMessagesReceived; i++) {
+        for (int i = 1; i <= expectedMessagesReceived; i++) {
             Message message = session.createMessage();
-            producer.send(message);            
-            LOG.info("sent message " + i);
+            producer.send(message);
+            if (i % 200 == 0) {
+                LOG.info("sent message " + i);
+            }
         }
 
-        for (int i = 0; i < expectedMessagesReceived; i++) {
+        for (int i = 1; i <= expectedMessagesReceived; i++) {
             Message message = consumer.receive(2000);
             if (message == null) {
                 fail("Didn't receive a message");
             }
-            LOG.info("received message " + i);
+            if (i % 200 == 0) {
+                LOG.info("received message " + i);
+            }
         }
-
-
     }
 
+    @Test(timeout = 60000)
     public void testBrokerRestart() throws Exception {
-
         startBrokerTwo();
-        brokerTwo.waitUntilStarted();        
+        brokerTwo.waitUntilStarted();
 
         startBrokerOne();
         brokerOne.waitUntilStarted();
-
-        Thread.sleep(5000);
 
         ActiveMQConnectionFactory producerConnectionFactory = createBrokerOneConnectionFactory();
         ActiveMQConnectionFactory secondProducerConnectionFactory = createBrokerTwoConnectionFactory();
@@ -114,11 +123,11 @@ public class AMQ2764Test extends TestCase {
         final int expectedMessagesReceived = 25;
         int actualMessagesReceived = doSendMessage(expectedMessagesReceived, consumer, producerConnectionFactory);
         assertEquals("Didn't receive the right amount of messages directly connected", expectedMessagesReceived, actualMessagesReceived);
-        assertNull( "Had extra messages", consumer.receiveNoWait());
+        assertNull("Had extra messages", consumer.receiveNoWait());
 
         actualMessagesReceived = doSendMessage(expectedMessagesReceived, consumer, secondProducerConnectionFactory);
         assertEquals("Didn't receive the right amount of messages via network", expectedMessagesReceived, actualMessagesReceived);
-        assertNull( "Had extra messages", consumer.receiveNoWait());
+        assertNull("Had extra messages", consumer.receiveNoWait());
 
         LOG.info("Stopping broker one");
         stopBrokerOne();
@@ -133,7 +142,7 @@ public class AMQ2764Test extends TestCase {
 
         actualMessagesReceived = doSendMessage(expectedMessagesReceived, consumer, secondProducerConnectionFactory);
         assertEquals("Didn't receive the right amount of messages via network after restart", expectedMessagesReceived, actualMessagesReceived);
-        assertNull( "Had extra messages", consumer.receiveNoWait());
+        assertNull("Had extra messages", consumer.receiveNoWait());
 
         stopBrokerOne();
         stopBrokerTwo();
@@ -141,10 +150,10 @@ public class AMQ2764Test extends TestCase {
 
     protected int doSendMessage(int expectedMessagesReceived, MessageConsumer consumer, ActiveMQConnectionFactory connectionFactory) throws Exception {
         int messagesReceived = 0;
-        for (int i=0; i<expectedMessagesReceived; i++) {
-            String messageId = sendMessage(connectionFactory);
+        for (int i = 0; i < expectedMessagesReceived; i++) {
+            sendMessage(connectionFactory);
             Message message = consumer.receive(5000);
-            if ( message!=null ) {
+            if (message != null) {
                 messagesReceived++;
             }
         }
@@ -175,13 +184,13 @@ public class AMQ2764Test extends TestCase {
     protected BrokerService createSecondBroker() throws Exception {
         return BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/bugs/amq2764/reconnect-broker2.xml"));
     }
-    
+
     protected ActiveMQConnectionFactory createBrokerOneConnectionFactory() {
-        return new ActiveMQConnectionFactory("vm://broker1");
+        return new ActiveMQConnectionFactory("vm://broker1?create=false");
     }
 
     protected ActiveMQConnectionFactory createBrokerTwoConnectionFactory() {
-        return new ActiveMQConnectionFactory("vm://broker2");
+        return new ActiveMQConnectionFactory("vm://broker2?create=false");
     }
 
     protected ActiveMQConnectionFactory createBrokerOneHttpConnectionFactory() {
@@ -192,18 +201,16 @@ public class AMQ2764Test extends TestCase {
         return new ActiveMQConnectionFactory("http://localhost:61617");
     }
 
-    protected void setUp() throws Exception {
-
-        LOG.info("===============================================================================");
-        LOG.info("Running Test Case: " + getName());
-        LOG.info("===============================================================================");
-
+    @Before
+    public void setUp() throws Exception {
+        LOG.info("===== Starting test {} ================", getTestName());
         destination = new ActiveMQQueue("RECONNECT.TEST.QUEUE");
-
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         disposeConsumerConnections();
+        Thread.sleep(10);
         try {
             stopBrokerOne();
         } catch (Throwable e) {
@@ -212,6 +219,12 @@ public class AMQ2764Test extends TestCase {
             stopBrokerTwo();
         } catch (Throwable e) {
         }
+
+        LOG.info("===== Finished test {} ================", getTestName());
+    }
+
+    protected String getTestName() {
+        return name.getMethodName();
     }
 
     protected void disposeConsumerConnections() {
@@ -273,6 +286,7 @@ public class AMQ2764Test extends TestCase {
 
         ConsumerEventSource source = new ConsumerEventSource(connection, destination);
         source.setConsumerListener(new ConsumerListener() {
+            @Override
             public void onConsumerEvent(ConsumerEvent event) {
                 rc.set(event.getConsumerCount());
             }
@@ -283,24 +297,24 @@ public class AMQ2764Test extends TestCase {
     }
 
     protected void waitForConsumerToArrive(AtomicInteger consumerCounter) throws InterruptedException {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 200; i++) {
             if (consumerCounter.get() > 0) {
                 return;
             }
-            Thread.sleep(100);
+            Thread.sleep(50);
         }
+
         fail("The consumer did not arrive.");
     }
 
     protected void waitForConsumerToLeave(AtomicInteger consumerCounter) throws InterruptedException {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 200; i++) {
             if (consumerCounter.get() == 0) {
                 return;
             }
-            Thread.sleep(100);
+            Thread.sleep(50);
         }
+
         fail("The consumer did not leave.");
     }
-
 }
-

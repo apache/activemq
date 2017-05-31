@@ -17,9 +17,13 @@
 package org.apache.activemq.jms.pool;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import javax.jms.Destination;
+import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.QueueSession;
 import javax.jms.Session;
@@ -33,20 +37,26 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PooledSessionTest {
+public class PooledSessionTest extends JmsPoolTestSupport {
 
-    private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private PooledConnectionFactory pooledFactory;
     private String connectionUri;
 
+    @Override
     @Before
     public void setUp() throws Exception {
-        broker = new BrokerService();
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
-        TransportConnector connector = broker.addConnector("tcp://localhost:0");
-        broker.start();
+        super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
+        brokerService.setAdvisorySupport(false);
+        brokerService.setSchedulerSupport(false);
+        TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+
         connectionUri = connector.getPublishableConnectString();
         factory = new ActiveMQConnectionFactory(connectionUri);
         pooledFactory = new PooledConnectionFactory();
@@ -55,14 +65,19 @@ public class PooledSessionTest {
         pooledFactory.setBlockIfSessionPoolIsFull(false);
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
-        broker = null;
-    }
+        try {
+            pooledFactory.stop();
+        } catch (Exception ex) {
+            // ignored
+        }
 
-    @Test
+        super.tearDown();
+    }
+        
+    @Test(timeout = 60000)
     public void testPooledSessionStats() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
 
@@ -73,9 +88,11 @@ public class PooledSessionTest {
         assertEquals(0, connection.getNumActiveSessions());
         assertEquals(1, connection.getNumtIdleSessions());
         assertEquals(1, connection.getNumSessions());
+
+        connection.close();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testMessageProducersAreAllTheSame() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -87,9 +104,11 @@ public class PooledSessionTest {
         PooledProducer producer2 = (PooledProducer) session.createProducer(queue2);
 
         assertSame(producer1.getMessageProducer(), producer2.getMessageProducer());
+
+        connection.close();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testThrowsWhenDifferentDestinationGiven() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -110,9 +129,11 @@ public class PooledSessionTest {
             fail("Should only be able to send to queue 1");
         } catch (Exception ex) {
         }
+
+        connection.close();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testCreateTopicPublisher() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -124,9 +145,10 @@ public class PooledSessionTest {
         PooledTopicPublisher publisher2 = (PooledTopicPublisher) session.createPublisher(topic2);
 
         assertSame(publisher1.getMessageProducer(), publisher2.getMessageProducer());
+        connection.close();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQueueSender() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -138,5 +160,34 @@ public class PooledSessionTest {
         PooledQueueSender sender2 = (PooledQueueSender) session.createSender(queue2);
 
         assertSame(sender1.getMessageProducer(), sender2.getMessageProducer());
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testRepeatedCreateSessionProducerResultsInSame() throws Exception {
+        PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
+
+        assertTrue(pooledFactory.isUseAnonymousProducers());
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createTopic("test-topic");
+        PooledProducer producer = (PooledProducer) session.createProducer(destination);
+        MessageProducer original = producer.getMessageProducer();
+        assertNotNull(original);
+        session.close();
+
+        assertEquals(1, brokerService.getAdminView().getDynamicDestinationProducers().length);
+
+        for (int i = 0; i < 20; ++i) {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            producer = (PooledProducer) session.createProducer(destination);
+            assertSame(original, producer.getMessageProducer());
+            session.close();
+        }
+
+        assertEquals(1, brokerService.getAdminView().getDynamicDestinationProducers().length);
+
+        connection.close();
+        pooledFactory.clear();
     }
 }

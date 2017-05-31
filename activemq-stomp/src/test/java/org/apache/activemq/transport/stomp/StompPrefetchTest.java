@@ -20,6 +20,7 @@ package org.apache.activemq.transport.stomp;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Destination;
 
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StompPrefetchTest extends StompTestSupport {
+
     private static final Logger LOG = LoggerFactory.getLogger(StompPrefetchTest.class);
 
     @Override
@@ -50,19 +52,22 @@ public class StompPrefetchTest extends StompTestSupport {
 
         brokerService.setDestinationPolicy(pMap);
         brokerService.setAdvisorySupport(true);
+        brokerService.setUseJmx(false);
+        brokerService.setPersistent(false);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testTopicSubPrefetch() throws Exception {
-
+        stompConnect();
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/T", Stomp.Headers.Subscribe.AckModeValues.AUTO);
 
         verifyPrefetch(10, new ActiveMQTopic("T"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testDurableSubPrefetch() throws Exception {
+        stompConnect();
         stompConnection.connect("system", "manager");
         HashMap<String,String> headers = new HashMap<String, String>();
         headers.put("id", "durablesub");
@@ -71,7 +76,7 @@ public class StompPrefetchTest extends StompTestSupport {
         verifyPrefetch(10, new ActiveMQTopic("T"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQBrowserSubPrefetch() throws Exception {
         HashMap<String,String> headers = new HashMap<String, String>();
         headers.put("login","system");
@@ -80,14 +85,16 @@ public class StompPrefetchTest extends StompTestSupport {
         headers.put("browser", "true");
         headers.put("accept-version","1.1");
 
+        stompConnect();
         stompConnection.connect(headers);
         stompConnection.subscribe("/queue/Q", Stomp.Headers.Subscribe.AckModeValues.AUTO, headers);
 
         verifyPrefetch(10, new ActiveMQQueue("Q"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQueueSubPrefetch() throws Exception {
+        stompConnect();
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/queue/Q", Stomp.Headers.Subscribe.AckModeValues.AUTO);
 
@@ -107,7 +114,6 @@ public class StompPrefetchTest extends StompTestSupport {
                 }
                 return false;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
     }
-
 }

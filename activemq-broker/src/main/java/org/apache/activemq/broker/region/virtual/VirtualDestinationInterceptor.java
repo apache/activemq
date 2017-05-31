@@ -67,7 +67,6 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
         }
         // check if the destination instead matches any mapped destinations
         Set mappedDestinations = mappedDestinationMap.get(activeMQDestination);
-        assert mappedDestinations.size() < 2;
         if (!mappedDestinations.isEmpty()) {
             // create a mapped destination interceptor
             VirtualDestination virtualDestination = (VirtualDestination)

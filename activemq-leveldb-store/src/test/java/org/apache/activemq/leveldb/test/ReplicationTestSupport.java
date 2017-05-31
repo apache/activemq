@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.leveldb.test;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import javax.jms.JMSException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
-
-import javax.jms.JMSException;
-import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  */
@@ -58,6 +58,14 @@ public class ReplicationTestSupport {
         message.setMessageId(messageId);
         ms.addMessage(new ConnectionContext(), message);
         return message;
+    }
+
+    static public void removeMessage(MessageStore ms, MessageId messageId) throws JMSException, IOException {
+        MessageAck ack = new MessageAck();
+        ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
+        ack.setFirstMessageId(messageId);
+        ack.setLastMessageId(messageId);
+        ms.removeMessage(new ConnectionContext(), ack);
     }
 
     static public ArrayList<String> getMessages(MessageStore ms) throws Exception {

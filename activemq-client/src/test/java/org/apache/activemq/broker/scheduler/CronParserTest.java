@@ -188,6 +188,52 @@ public class CronParserTest {
     }
 
     @Test
+    public void testgetStartNextMonth() throws MessageFormatException {
+
+        // using an absolute date so that result will be absolute - Wednesday 15 Dec 2010
+        Calendar current = Calendar.getInstance();
+        current.set(2010, Calendar.DECEMBER, 15, 9, 15, 30);
+        LOG.debug("start:" + current.getTime());
+
+        String test = "* * 1 * *";
+        long next = CronParser.getNextScheduledTime(test, current.getTimeInMillis());
+
+        Calendar result = Calendar.getInstance();
+        result.setTimeInMillis(next);
+        LOG.debug("next:" + result.getTime());
+
+        assertEquals(0,result.get(Calendar.SECOND));
+        assertEquals(0,result.get(Calendar.MINUTE));
+        assertEquals(0,result.get(Calendar.HOUR_OF_DAY));
+        assertEquals(1,result.get(Calendar.DAY_OF_MONTH));
+        assertEquals(Calendar.JANUARY,result.get(Calendar.MONTH));
+        assertEquals(2011,result.get(Calendar.YEAR));
+    }
+
+    @Test
+    public void testgetNextStartCurrMonth() throws MessageFormatException {
+
+        // using an absolute date so that result will be absolute - Wednesday 15 Dec 2010
+        Calendar current = Calendar.getInstance();
+        current.set(2010, Calendar.DECEMBER, 15, 9, 15, 30);
+        LOG.debug("start:" + current.getTime());
+
+        String test = "* * 1 12 *";
+        long next = CronParser.getNextScheduledTime(test, current.getTimeInMillis());
+
+        Calendar result = Calendar.getInstance();
+        result.setTimeInMillis(next);
+        LOG.debug("next:" + result.getTime());
+
+        assertEquals(0,result.get(Calendar.SECOND));
+        assertEquals(0,result.get(Calendar.MINUTE));
+        assertEquals(0,result.get(Calendar.HOUR_OF_DAY));
+        assertEquals(1,result.get(Calendar.DAY_OF_MONTH));
+        assertEquals(Calendar.DECEMBER,result.get(Calendar.MONTH));
+        assertEquals(2011,result.get(Calendar.YEAR));
+    }
+
+    @Test
     public void testgetNextTimeDays() throws MessageFormatException {
 
         // using an absolute date so that result will be absolute - Monday 15 Nov 2010
@@ -216,13 +262,19 @@ public class CronParserTest {
         long current = 20*60*1000;
         Calendar calender = Calendar.getInstance();
         calender.setTimeInMillis(current);
+        int startHours = calender.get(Calendar.HOUR_OF_DAY);
+        int startMinutes = calender.get(Calendar.MINUTE);
         LOG.debug("start:" + calender.getTime());
         long next = CronParser.getNextScheduledTime(test, current);
 
         calender.setTimeInMillis(next);
         LOG.debug("next:" + calender.getTime());
         long result = next - current;
-        assertEquals(60*10*1000,result);
+        if (startHours == 20 && startMinutes == 50) {
+            assertEquals(60*40*1000,result); // allow for 30 min offset timezone
+        } else {
+            assertEquals(60*10*1000,result);
+        }
     }
 
     @Test

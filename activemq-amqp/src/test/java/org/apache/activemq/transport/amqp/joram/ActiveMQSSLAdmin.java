@@ -19,7 +19,6 @@ package org.apache.activemq.transport.amqp.joram;
 import java.io.File;
 import java.security.SecureRandom;
 
-import javax.jms.ConnectionFactory;
 import javax.naming.NamingException;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
@@ -28,12 +27,10 @@ import javax.net.ssl.TrustManager;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.transport.amqp.DefaultTrustManager;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- */
 public class ActiveMQSSLAdmin extends ActiveMQAdmin {
 
     private static final String AMQP_SSL_URI = "amqp+ssl://localhost:0";
@@ -71,8 +68,6 @@ public class ActiveMQSSLAdmin extends ActiveMQAdmin {
         LOG.info("ssl port is {}", port);
 
         broker.start();
-        //broker.
-        //super.startServer();
     }
 
     @Override
@@ -84,7 +79,18 @@ public class ActiveMQSSLAdmin extends ActiveMQAdmin {
     public void createConnectionFactory(String name) {
         try {
             LOG.debug("Creating a connection factory using port {}", port);
-            final ConnectionFactory factory = new ConnectionFactoryImpl("localhost", port, null, null, null, true);
+            final JmsConnectionFactory factory =
+                new JmsConnectionFactory("amqps://localhost:" + port + "?transport.verifyHost=false");
+
+            SpringSslContext sslContext = (SpringSslContext) broker.getSslContext();
+
+            System.setProperty("javax.net.ssl.trustStore", sslContext.getTrustStore());
+            System.setProperty("javax.net.ssl.trustStorePassword", "password");
+            System.setProperty("javax.net.ssl.trustStoreType", "jks");
+            System.setProperty("javax.net.ssl.keyStore", sslContext.getKeyStore());
+            System.setProperty("javax.net.ssl.keyStorePassword", "password");
+            System.setProperty("javax.net.ssl.keyStoreType", "jks");
+
             context.bind(name, factory);
         } catch (NamingException e) {
             throw new RuntimeException(e);

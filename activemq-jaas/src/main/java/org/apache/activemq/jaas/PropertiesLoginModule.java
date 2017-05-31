@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.jaas;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.security.auth.Subject;
@@ -36,80 +36,30 @@ import javax.security.auth.spi.LoginModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PropertiesLoginModule implements LoginModule {
+public class PropertiesLoginModule extends PropertiesLoader implements LoginModule {
 
-    private static final String USER_FILE = "org.apache.activemq.jaas.properties.user";
-    private static final String GROUP_FILE = "org.apache.activemq.jaas.properties.group";
+    private static final String USER_FILE_PROP_NAME = "org.apache.activemq.jaas.properties.user";
+    private static final String GROUP_FILE_PROP_NAME = "org.apache.activemq.jaas.properties.group";
 
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesLoginModule.class);
 
     private Subject subject;
     private CallbackHandler callbackHandler;
 
-    private boolean debug;
-    private boolean reload = false;
-    private static volatile PrincipalProperties users;
-    private static volatile PrincipalProperties groups;
+    private Properties users;
+    private Map<String,Set<String>> groups;
     private String user;
     private final Set<Principal> principals = new HashSet<Principal>();
-    private File baseDir;
     private boolean loginSucceeded;
-    private boolean decrypt = true;
 
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
         loginSucceeded = false;
-
-        debug = "true".equalsIgnoreCase((String) options.get("debug"));
-        if (options.get("reload") != null) {
-            reload = "true".equalsIgnoreCase((String) options.get("reload"));
-        }
-
-        if (options.get("baseDir") != null) {
-            baseDir = new File((String) options.get("baseDir"));
-        }
-
-        setBaseDir();
-        String usersFile = (String) options.get(USER_FILE) + "";
-        File uf = baseDir != null ? new File(baseDir, usersFile) : new File(usersFile);
-
-        if (reload || users == null || uf.lastModified() > users.getReloadTime()) {
-            if (debug) {
-                LOG.debug("Reloading users from " + uf.getAbsolutePath());
-            }
-            users = new PrincipalProperties("user", uf, LOG);
-            if( decrypt ) {
-                try {
-                    EncryptionSupport.decrypt(users.getPrincipals());
-                } catch(NoClassDefFoundError e) {
-                    // this Happens whe jasypt is not on the classpath..
-                    decrypt = false;
-                    LOG.info("jasypt is not on the classpath: password decryption disabled.");
-                }
-            }
-        }
-
-        String groupsFile = (String) options.get(GROUP_FILE) + "";
-        File gf = baseDir != null ? new File(baseDir, groupsFile) : new File(groupsFile);
-        if (reload || groups == null || gf.lastModified() > groups.getReloadTime()) {
-            if (debug) {
-                LOG.debug("Reloading groups from " + gf.getAbsolutePath());
-            }
-            groups = new PrincipalProperties("group", gf, LOG);
-        }
-    }
-
-    private void setBaseDir() {
-        if (baseDir == null) {
-            if (System.getProperty("java.security.auth.login.config") != null) {
-                baseDir = new File(System.getProperty("java.security.auth.login.config")).getParentFile();
-                if (debug) {
-                    LOG.debug("Using basedir=" + baseDir.getAbsolutePath());
-                }
-            }
-        }
+        init(options);
+        users = load(USER_FILE_PROP_NAME, "user", options).getProps();
+        groups = load(GROUP_FILE_PROP_NAME, "group", options).invertedPropertiesValuesMap();
     }
 
     @Override
@@ -155,14 +105,10 @@ public class PropertiesLoginModule implements LoginModule {
         if (result) {
             principals.add(new UserPrincipal(user));
 
-            for (Map.Entry<String, String> entry : groups.entries()) {
-                String name = entry.getKey();
-                String[] userList = entry.getValue().split(",");
-                for (int i = 0; i < userList.length; i++) {
-                    if (user.equals(userList[i])) {
-                        principals.add(new GroupPrincipal(name));
-                        break;
-                    }
+            Set<String> matchedGroups = groups.get(user);
+            if (matchedGroups != null) {
+                for (String entry : matchedGroups) {
+                    principals.add(new GroupPrincipal(entry));
                 }
             }
 
@@ -204,11 +150,4 @@ public class PropertiesLoginModule implements LoginModule {
         loginSucceeded = false;
     }
 
-    /**
-     * For test-usage only.
-     */
-    static void resetUsersAndGroupsCache() {
-        users = null;
-        groups = null;
-    }
 }

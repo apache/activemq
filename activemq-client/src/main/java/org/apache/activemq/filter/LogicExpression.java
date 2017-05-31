@@ -39,13 +39,17 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
             public Object evaluate(MessageEvaluationContext message) throws JMSException {
 
                 Boolean lv = (Boolean)left.evaluate(message);
-                // Can we do an OR shortcut??
                 if (lv != null && lv.booleanValue()) {
                     return Boolean.TRUE;
                 }
-
                 Boolean rv = (Boolean)right.evaluate(message);
-                return rv == null ? null : rv;
+                if (rv != null && rv.booleanValue()) {
+                    return Boolean.TRUE;
+                }
+                if (lv == null || rv == null) {
+                    return null;
+                }
+                return Boolean.FALSE;
             }
 
             public String getExpressionSymbol() {
@@ -61,16 +65,17 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
 
                 Boolean lv = (Boolean)left.evaluate(message);
 
-                // Can we do an AND shortcut??
-                if (lv == null) {
-                    return null;
-                }
-                if (!lv.booleanValue()) {
+                if (lv != null && !lv.booleanValue()) {
                     return Boolean.FALSE;
                 }
-
                 Boolean rv = (Boolean)right.evaluate(message);
-                return rv == null ? null : rv;
+                if (rv != null && !rv.booleanValue()) {
+                    return Boolean.FALSE;
+                }
+                if (lv == null || rv == null) {
+                    return null;
+                }
+                return Boolean.TRUE;
             }
 
             public String getExpressionSymbol() {

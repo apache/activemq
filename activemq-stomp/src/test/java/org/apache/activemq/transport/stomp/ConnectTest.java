@@ -22,6 +22,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ServerSocketFactory;
 
@@ -29,19 +31,19 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.security.JaasDualAuthenticationPlugin;
 import org.apache.activemq.util.Wait;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // https://issues.apache.org/jira/browse/AMQ-3393
 public class ConnectTest {
+
     private static final Logger LOG = LoggerFactory.getLogger(ConnectTest.class);
-    BrokerService brokerService;
-    Vector<Throwable> exceptions = new Vector<Throwable>();
+
+    private BrokerService brokerService;
+    private final Vector<Throwable> exceptions = new Vector<Throwable>();
 
     @Before
     public void startBroker() throws Exception {
@@ -58,7 +60,7 @@ public class ConnectTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testStompConnectLeak() throws Exception {
 
         brokerService.addConnector("stomp://0.0.0.0:0?transport.soLinger=0");
@@ -82,17 +84,19 @@ public class ConnectTest {
             public boolean isSatisified() throws Exception {
                 return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
+
         assertTrue("no exceptions", exceptions.isEmpty());
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testJaasDualStopWithOpenConnection() throws Exception {
 
         brokerService.setPlugins(new BrokerPlugin[]{new JaasDualAuthenticationPlugin()});
         brokerService.addConnector("stomp://0.0.0.0:0?transport.closeAsync=false");
         brokerService.start();
 
+        final CountDownLatch doneConnect = new CountDownLatch(1);
         final int listenPort = brokerService.getTransportConnectors().get(0).getConnectUri().getPort();
         Thread t1 = new Thread() {
             StompConnection connection = new StompConnection();
@@ -102,6 +106,7 @@ public class ConnectTest {
                 try {
                     connection.open("localhost", listenPort);
                     connection.connect("system", "manager");
+                    doneConnect.countDown();
                 } catch (Exception ex) {
                     LOG.error("unexpected exception on connect/disconnect", ex);
                     exceptions.add(ex);
@@ -116,8 +121,9 @@ public class ConnectTest {
             public boolean isSatisified() throws Exception {
                 return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
 
+        assertTrue("connected on time", doneConnect.await(5, TimeUnit.SECONDS));
         brokerService.stop();
 
         // server socket should be available after stop
@@ -130,7 +136,7 @@ public class ConnectTest {
         assertTrue("no exceptions", exceptions.isEmpty());
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testInactivityMonitor() throws Exception {
 
         brokerService.addConnector("stomp://0.0.0.0:0?transport.defaultHeartBeat=1000,0&transport.useKeepAlive=false");
@@ -154,11 +160,11 @@ public class ConnectTest {
         t1.start();
 
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
-                 @Override
-                 public boolean isSatisified() throws Exception {
-                     return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
-                 }
-             }));
+             @Override
+             public boolean isSatisified() throws Exception {
+                 return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
+             }
+         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
 
         // and it should be closed due to inactivity
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
@@ -166,7 +172,8 @@ public class ConnectTest {
             public boolean isSatisified() throws Exception {
                 return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
+
         assertTrue("no exceptions", exceptions.isEmpty());
     }
 }

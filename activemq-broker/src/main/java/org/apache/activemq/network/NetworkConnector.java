@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -50,7 +51,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     private static final Logger LOG = LoggerFactory.getLogger(NetworkConnector.class);
     protected URI localURI;
     protected ConnectionFilter connectionFilter;
-    protected ConcurrentHashMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
+    protected ConcurrentMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
 
     protected ServiceSupport serviceSupport = new ServiceSupport() {
 
@@ -134,6 +135,15 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         destsList = getStaticallyIncludedDestinations();
         dests = destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setStaticallyIncludedDestinations(dests);
+        result.setDurableDestinations(getDurableTopicDestinations(durableDestinations));
+        return result;
+    }
+
+    protected Transport createLocalTransport() throws Exception {
+        return NetworkBridgeFactory.createLocalTransport(this, localURI);
+    }
+
+    public static ActiveMQDestination[] getDurableTopicDestinations(final Set<ActiveMQDestination> durableDestinations) {
         if (durableDestinations != null) {
 
             HashSet<ActiveMQDestination> topics = new HashSet<ActiveMQDestination>();
@@ -145,13 +155,9 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 
             ActiveMQDestination[] dest = new ActiveMQDestination[topics.size()];
             dest = topics.toArray(dest);
-            result.setDurableDestinations(dest);
+            return dest;
         }
-        return result;
-    }
-
-    protected Transport createLocalTransport() throws Exception {
-        return TransportFactory.connect(localURI);
+        return null;
     }
 
     @Override

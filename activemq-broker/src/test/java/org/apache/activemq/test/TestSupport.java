@@ -20,6 +20,7 @@ import java.io.File;
 import java.lang.reflect.Array;
 
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -42,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public abstract class TestSupport extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(TestSupport.class);
     
-    protected ActiveMQConnectionFactory connectionFactory;
+    protected ConnectionFactory connectionFactory;
     protected boolean topic = true;
 
     public TestSupport() {
@@ -184,7 +185,7 @@ public abstract class TestSupport extends TestCase {
      * @return ActiveMQConnectionFactory
      * @throws Exception
      */
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+    protected ConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
     }
 
@@ -204,7 +205,7 @@ public abstract class TestSupport extends TestCase {
      * @return connectionFactory
      * @throws Exception
      */
-    public ActiveMQConnectionFactory getConnectionFactory() throws Exception {
+    public ConnectionFactory getConnectionFactory() throws Exception {
         if (connectionFactory == null) {
             connectionFactory = createConnectionFactory();
             assertTrue("Should have created a connection factory!", connectionFactory != null);

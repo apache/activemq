@@ -138,8 +138,9 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("foo");
         mqtt.setKeepAlive((short) 2);
+        mqtt.setVersion("3.1.1");
 
-        final BlockingConnection connection = mqtt.blockingConnection();
+        BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
         final String NAMED = "named";
@@ -163,7 +164,75 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         assertEquals(ANONYMOUS, new String(msg.getPayload()));
         msg.ack();
 
+        //delete retained message
+        connection.publish(ANONYMOUS, "".getBytes(), QoS.AT_MOST_ONCE, true);
+
+        // that delete retained message gets dispatched! Wonder if that is expected?
+        // guess it is simpler if it is - it shows up on the assertNull:196 below on occasion
+        msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg);
+        assertEquals(ANONYMOUS, new String(msg.getTopic()));
+        msg.ack();
+
         connection.disconnect();
+
+        // Test 3.1 functionality
+        mqtt.setVersion("3.1");
+        connection = mqtt.blockingConnection();
+        connection.connect();
+        qos = connection.subscribe(new Topic[] { new Topic(NAMED, QoS.AT_MOST_ONCE) });
+        assertEquals(QoS.AT_MOST_ONCE.ordinal(), qos[0]);
+
+        MQTT mqttPub = createMQTTConnection("pub", true);
+        mqttPub.setUserName("admin");
+        mqttPub.setPassword("admin");
+
+        BlockingConnection connectionPub = mqttPub.blockingConnection();
+        connectionPub.connect();
+        connectionPub.publish(NAMED, NAMED.getBytes(), QoS.AT_MOST_ONCE, true);
+
+        msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+        LOG.info("got msg: " + msg + ", " + (msg != null ? new String(msg.getTopic()) : ""));
+        assertNull(msg);
+    }
+
+    @Test(timeout = 30 * 1000)
+    public void testPublishWhenNotAuthorizedDoesNotStall() throws Exception {
+
+        getProxyToBroker().addTopic("USERS.foo");
+
+        MQTT mqtt = null;
+        BlockingConnection connection = null;
+
+        // Test 3.1 functionality
+        mqtt = createMQTTConnection("pub", true);
+        mqtt.setUserName("guest");
+        mqtt.setPassword("password");
+        mqtt.setVersion("3.1");
+
+        connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.publish("USERS.foo", "test-AT_MOST_ONCE".getBytes(), QoS.AT_MOST_ONCE, true);
+        connection.publish("USERS.foo", "test-AT_LEAST_ONCE".getBytes(), QoS.AT_LEAST_ONCE, true);
+        connection.publish("USERS.foo", "test-EXACTLY_ONCE".getBytes(), QoS.EXACTLY_ONCE, true);
+        connection.disconnect();
+
+        assertEquals(0, getProxyToTopic("USERS.foo").getEnqueueCount());
+
+        // Test 3.1.1 functionality
+        mqtt = createMQTTConnection("pub", true);
+        mqtt.setUserName("guest");
+        mqtt.setPassword("password");
+        mqtt.setVersion("3.1.1");
+
+        connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.publish("USERS.foo", "test-AT_MOST_ONCE".getBytes(), QoS.AT_MOST_ONCE, true);
+        connection.publish("USERS.foo", "test-AT_LEAST_ONCE".getBytes(), QoS.AT_LEAST_ONCE, true);
+        connection.publish("USERS.foo", "test-EXACTLY_ONCE".getBytes(), QoS.EXACTLY_ONCE, true);
+        connection.disconnect();
+
+        assertEquals(0, getProxyToTopic("USERS.foo").getEnqueueCount());
     }
 
     @Test(timeout = 60 * 1000)

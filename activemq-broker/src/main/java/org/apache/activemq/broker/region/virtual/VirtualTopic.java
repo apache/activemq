@@ -42,6 +42,8 @@ public class VirtualTopic implements VirtualDestination {
     private String name = ">";
     private boolean selectorAware = false;
     private boolean local = false;
+    private boolean concurrentSend = false;
+    private boolean transactedSend = false;
 
     @Override
     public ActiveMQDestination getVirtualDestination() {
@@ -50,8 +52,8 @@ public class VirtualTopic implements VirtualDestination {
 
     @Override
     public Destination intercept(Destination destination) {
-        return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, getPrefix(), getPostfix(), isLocal()) : new VirtualTopicInterceptor(
-            destination, getPrefix(), getPostfix(), isLocal());
+        return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, this) :
+                new VirtualTopicInterceptor(destination, this);
     }
 
     @Override
@@ -91,10 +93,11 @@ public class VirtualTopic implements VirtualDestination {
 
     @Override
     public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        if (destination.isQueue() && destination.isPattern() && broker.getDestinations(destination).isEmpty()) {
+        if (destination.isQueue() && destination.isPattern()) {
             DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue(prefix + DestinationFilter.ANY_DESCENDENT));
             if (filter.matches(destination)) {
                 broker.addDestination(context, destination, false);
+
             }
         }
     }
@@ -166,5 +169,78 @@ public class VirtualTopic implements VirtualDestination {
         return new StringBuilder("VirtualTopic:").append(prefix).append(',').append(name).append(',').
                                                   append(postfix).append(',').append(selectorAware).
                                                   append(',').append(local).toString();
+    }
+
+    public boolean isConcurrentSend() {
+        return concurrentSend;
+    }
+
+    /**
+     * When true, dispatch to matching destinations in parallel (in multiple threads)
+     * @param concurrentSend
+     */
+    public void setConcurrentSend(boolean concurrentSend) {
+        this.concurrentSend = concurrentSend;
+    }
+
+    public boolean isTransactedSend() {
+        return transactedSend;
+    }
+
+    /**
+     * When true, dispatch to matching destinations always uses a transaction.
+     * @param transactedSend
+     */
+    public void setTransactedSend(boolean transactedSend) {
+        this.transactedSend = transactedSend;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (concurrentSend ? 1231 : 1237);
+        result = prime * result + (local ? 1231 : 1237);
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((postfix == null) ? 0 : postfix.hashCode());
+        result = prime * result + ((prefix == null) ? 0 : prefix.hashCode());
+        result = prime * result + (selectorAware ? 1231 : 1237);
+        result = prime * result + (transactedSend ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        VirtualTopic other = (VirtualTopic) obj;
+        if (concurrentSend != other.concurrentSend)
+            return false;
+        if (local != other.local)
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (postfix == null) {
+            if (other.postfix != null)
+                return false;
+        } else if (!postfix.equals(other.postfix))
+            return false;
+        if (prefix == null) {
+            if (other.prefix != null)
+                return false;
+        } else if (!prefix.equals(other.prefix))
+            return false;
+        if (selectorAware != other.selectorAware)
+            return false;
+        if (transactedSend != other.transactedSend)
+            return false;
+        return true;
     }
 }

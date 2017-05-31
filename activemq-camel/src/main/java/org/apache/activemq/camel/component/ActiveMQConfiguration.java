@@ -17,27 +17,27 @@
 package org.apache.activemq.camel.component;
 
 import java.lang.reflect.Constructor;
-
 import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.camel.component.jms.JmsConfiguration;
-import org.springframework.jms.connection.SingleConnectionFactory;
 import org.springframework.jms.connection.JmsTransactionManager;
+import org.springframework.jms.connection.SingleConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * 
+ *
  */
 public class ActiveMQConfiguration extends JmsConfiguration {
+    private ActiveMQComponent activeMQComponent;
     private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
     private boolean useSingleConnection = false;
     private boolean usePooledConnection = true;
     private String userName;
     private String password;
-    private ActiveMQComponent activeMQComponent;
+    private boolean trustAllPackages;
 
     public ActiveMQConfiguration() {
     }
@@ -66,7 +66,6 @@ public class ActiveMQConfiguration extends JmsConfiguration {
 
     /**
      * Sets the username to be used to login to ActiveMQ
-     * @param userName
      */
     public void setUserName(String userName) {
         this.userName = userName;
@@ -78,8 +77,6 @@ public class ActiveMQConfiguration extends JmsConfiguration {
 
     /**
      * Sets the password/passcode used to login to ActiveMQ
-     *
-     * @param password
      */
     public void setPassword(String password) {
         this.password = password;
@@ -91,9 +88,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
      * than the default with the Spring {@link JmsTemplate} which will create a new connection, session, producer
      * for each message then close them all down again.
      * <p/>
-     * The default value is true so that a single connection is used by default.
-     *
-     * @param useSingleConnection
+     * The default value is false and a pooled connection is used by default.
      */
     public void setUseSingleConnection(boolean useSingleConnection) {
         this.useSingleConnection = useSingleConnection;
@@ -109,15 +104,34 @@ public class ActiveMQConfiguration extends JmsConfiguration {
      * than the default with the Spring {@link JmsTemplate} which will create a new connection, session, producer
      * for each message then close them all down again.
      * <p/>
-     * The default value is false by default as it requires an extra dependency on commons-pool.
+     * The default value is true. Note that this requires an extra dependency on commons-pool2.
      */
     public void setUsePooledConnection(boolean usePooledConnection) {
         this.usePooledConnection = usePooledConnection;
     }
 
+    public boolean isTrustAllPackages() {
+        return trustAllPackages;
+    }
+
+    /**
+     * ObjectMessage objects depend on Java serialization of marshal/unmarshal object payload.
+     * This process is generally considered unsafe as malicious payload can exploit the host system.
+     * That's why starting with versions 5.12.2 and 5.13.0, ActiveMQ enforces users to explicitly whitelist packages
+     * that can be exchanged using ObjectMessages.
+     * <br/>
+     * This option can be set to <tt>true</tt> to trust all packages (eg whitelist is *).
+     * <p/>
+     * See more details at: http://activemq.apache.org/objectmessage.html
+     */
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        this.trustAllPackages = trustAllPackages;
+    }
+
     /**
      * Factory method to create a default transaction manager if one is not specified
      */
+    @Override
     protected PlatformTransactionManager createTransactionManager() {
         JmsTransactionManager answer = new JmsTransactionManager(getConnectionFactory());
         answer.afterPropertiesSet();
@@ -131,6 +145,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     @Override
     protected ConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
+        answer.setTrustAllPackages(trustAllPackages);
         if (userName != null) {
             answer.setUserName(userName);
         }
@@ -161,7 +176,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     }
 
     protected ConnectionFactory createPooledConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
-        // lets not use classes directly to avoid a runtime dependency on commons-pool
+        // lets not use classes directly to avoid a runtime dependency on commons-pool2
         // for folks not using this option
         try {
             Class type = loadClass("org.apache.activemq.pool.PooledConnectionFactory", getClass().getClassLoader());

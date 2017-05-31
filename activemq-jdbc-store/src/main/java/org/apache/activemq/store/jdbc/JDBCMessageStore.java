@@ -16,22 +16,15 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.IndexListener;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
@@ -40,8 +33,13 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.LinkedList;
+
 /**
- * 
+ *
  */
 public class JDBCMessageStore extends AbstractMessageStore {
 
@@ -68,12 +66,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final WireFormat wireFormat;
     protected final JDBCAdapter adapter;
     protected final JDBCPersistenceAdapter persistenceAdapter;
-    protected AtomicLong lastRecoveredSequenceId = new AtomicLong(-1);
-    protected AtomicLong lastRecoveredPriority = new AtomicLong(Byte.MAX_VALUE -1);
-    final Set<Long> recoveredAdditions = new LinkedHashSet<Long>();
     protected ActiveMQMessageAudit audit;
-    protected final List<Long> pendingAdditions = new LinkedList<Long>();
-    
+    protected final LinkedList<Long> pendingAdditions = new LinkedList<Long>();
+    final long[] perPriorityLastRecovered = new long[10];
+
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) throws IOException {
         super(destination);
         this.persistenceAdapter = persistenceAdapter;
@@ -84,12 +80,12 @@ public class JDBCMessageStore extends AbstractMessageStore {
         if (destination.isQueue() && persistenceAdapter.getBrokerService().shouldRecordVirtualDestination(destination)) {
             recordDestinationCreation(destination);
         }
+        resetBatching();
     }
 
     private void recordDestinationCreation(ActiveMQDestination destination) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            c = persistenceAdapter.getTransactionContext();
             if (adapter.doGetLastAckedDurableSubscriberMessageId(c, destination, destination.getQualifiedName(), destination.getQualifiedName()) < 0) {
                 adapter.doRecordDestination(c, destination);
             }
@@ -101,7 +97,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
-    public void addMessage(ConnectionContext context, Message message) throws IOException {
+    @Override
+    public void addMessage(final ConnectionContext context, final Message message) throws IOException {
         MessageId messageId = message.getMessageId();
         if (audit != null && audit.isDuplicate(message)) {
             if (LOG.isDebugEnabled()) {
@@ -111,6 +108,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
             }
             return;
         }
+
+        // if xaXid present - this is a prepare - so we don't yet have an outcome
+        final XATransactionId xaXid =  context != null ? context.getXid() : null;
 
         // Serialize the Message..
         byte data[];
@@ -126,33 +126,49 @@ public class JDBCMessageStore extends AbstractMessageStore {
         long sequenceId;
         synchronized (pendingAdditions) {
             sequenceId = persistenceAdapter.getNextSequenceId();
-            if (message.isInTransaction()) {
-                trackPendingSequence(c, sequenceId);
+            final long sequence = sequenceId;
+            message.getMessageId().setEntryLocator(sequence);
+
+            if (xaXid == null) {
+                pendingAdditions.add(sequence);
+
+                c.onCompletion(new Runnable() {
+                    @Override
+                    public void run() {
+                        // jdbc close or jms commit - while futureOrSequenceLong==null ordered
+                        // work will remain pending on the Queue
+                        message.getMessageId().setFutureOrSequenceLong(sequence);
+                    }
+                });
+
+                if (indexListener != null) {
+                    indexListener.onAdd(new IndexListener.MessageContext(context, message, new Runnable() {
+                        @Override
+                        public void run() {
+                            // cursor add complete
+                            synchronized (pendingAdditions) { pendingAdditions.remove(sequence); }
+                        }
+                    }));
+                } else {
+                    pendingAdditions.remove(sequence);
+                }
             }
         }
         try {
             adapter.doAddMessage(c, sequenceId, messageId, destination, data, message.getExpiration(),
-                    this.isPrioritizedMessages() ? message.getPriority() : 0, context != null ? context.getXid() : null);
+                    this.isPrioritizedMessages() ? message.getPriority() : 0, xaXid);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } finally {
             c.close();
         }
-        message.getMessageId().setEntryLocator(sequenceId);
-        onAdd(message, sequenceId, message.getPriority());
+        if (xaXid == null) {
+            onAdd(message, sequenceId, message.getPriority());
+        }
     }
 
     // jdbc commit order is random with concurrent connections - limit scan to lowest pending
-    private void trackPendingSequence(final TransactionContext transactionContext, final long sequenceId) {
-        synchronized (pendingAdditions) { pendingAdditions.add(sequenceId); }
-        transactionContext.onCompletion(new Runnable() {
-            public void run() {
-                synchronized (pendingAdditions) { pendingAdditions.remove(sequenceId); }
-            }
-        });
-    }
-
     private long minPendingSequeunceId() {
         synchronized (pendingAdditions) {
             if (!pendingAdditions.isEmpty()) {
@@ -177,12 +193,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
-    protected void onAdd(Message message, long sequenceId, byte priority) {
-        if (message.getTransactionId() != null && message.getTransactionId().isXATransaction()
-                && lastRecoveredSequenceId.get() > 0 && sequenceId < lastRecoveredSequenceId.get()) {
-            recoveredAdditions.add(sequenceId);
-        }
-    }
+    protected void onAdd(Message message, long sequenceId, byte priority) {}
 
     public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
         // Get a connection and insert the message into the DB.
@@ -197,6 +208,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
     public Message getMessage(MessageId messageId) throws IOException {
         // Get a connection and pull the message out of the DB
         TransactionContext c = persistenceAdapter.getTransactionContext();
@@ -235,11 +247,12 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
 
-    	long seq = ack.getLastMessageId().getEntryLocator() != null ?
-                (Long) ack.getLastMessageId().getEntryLocator() :
-                persistenceAdapter.getStoreSequenceIdForMessageId(ack.getLastMessageId(), destination)[0];
+    	long seq = ack.getLastMessageId().getFutureOrSequenceLong() != null ?
+                (Long) ack.getLastMessageId().getFutureOrSequenceLong() :
+                persistenceAdapter.getStoreSequenceIdForMessageId(context, ack.getLastMessageId(), destination)[0];
 
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -251,26 +264,39 @@ public class JDBCMessageStore extends AbstractMessageStore {
         } finally {
             c.close();
         }
-        if (context != null && context.getXid() != null) {
-            ack.getLastMessageId().setEntryLocator(seq);
-        }
     }
 
+    @Override
     public void recover(final MessageRecoveryListener listener) throws Exception {
 
         // Get all the Message ids out of the database.
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            c = persistenceAdapter.getTransactionContext();
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
+                @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                    Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
-                    msg.getMessageId().setBrokerSequenceId(sequenceId);
-                    return listener.recoverMessage(msg);
+                    if (listener.hasSpace()) {
+                        Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
+                        msg.getMessageId().setBrokerSequenceId(sequenceId);
+                        return listener.recoverMessage(msg);
+                    } else {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Message recovery limit reached for MessageRecoveryListener");
+                        }
+                        return false;
+                    }
                 }
 
+                @Override
                 public boolean recoverMessageReference(String reference) throws Exception {
-                    return listener.recoverMessageReference(new MessageId(reference));
+                    if (listener.hasSpace()) {
+                        return listener.recoverMessageReference(new MessageId(reference));
+                    } else {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Message recovery limit reached for MessageRecoveryListener");
+                        }
+                        return false;
+                    }
                 }
             });
         } catch (SQLException e) {
@@ -284,6 +310,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     /**
      * @see org.apache.activemq.store.MessageStore#removeAllMessages(ConnectionContext)
      */
+    @Override
     public void removeAllMessages(ConnectionContext context) throws IOException {
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -297,6 +324,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
     public int getMessageCount() throws IOException {
         int result = 0;
         TransactionContext c = persistenceAdapter.getTransactionContext();
@@ -320,34 +348,27 @@ public class JDBCMessageStore extends AbstractMessageStore {
      * @see org.apache.activemq.store.MessageStore#recoverNextMessages(int,
      *      org.apache.activemq.store.MessageRecoveryListener)
      */
+    @Override
     public void recoverNextMessages(int maxReturned, final MessageRecoveryListener listener) throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            if (!recoveredAdditions.isEmpty()) {
-                for (Iterator<Long> iterator = recoveredAdditions.iterator(); iterator.hasNext(); )  {
-                    Long sequenceId = iterator.next();
-                    iterator.remove();
-                    maxReturned--;
-                    if (sequenceId <= lastRecoveredSequenceId.get()) {
-                        Message msg = (Message)wireFormat.unmarshal(new ByteSequence(adapter.doGetMessageById(c, sequenceId)));
-                        LOG.trace("recovered add {} {}", this, msg.getMessageId());
-                        listener.recoverMessage(msg);
-                    }
-                }
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(this + " recoverNext lastRecovered:" + Arrays.toString(perPriorityLastRecovered) + ", minPending:" + minPendingSequeunceId());
             }
-            adapter.doRecoverNextMessages(c, destination, minPendingSequeunceId(), lastRecoveredSequenceId.get(), lastRecoveredPriority.get(),
+            adapter.doRecoverNextMessages(c, destination, perPriorityLastRecovered, minPendingSequeunceId(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
+                @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
-                        msg.getMessageId().setEntryLocator(sequenceId);
+                        msg.getMessageId().setFutureOrSequenceLong(sequenceId);
                         listener.recoverMessage(msg);
-                        lastRecoveredSequenceId.set(sequenceId);
-                        lastRecoveredPriority.set(msg.getPriority());
+                        trackLastRecovered(sequenceId, msg.getPriority());
                         return true;
                 }
 
+                @Override
                 public boolean recoverMessageReference(String reference) throws Exception {
                     if (listener.hasSpace()) {
                         listener.recoverMessageReference(new MessageId(reference));
@@ -365,36 +386,53 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     }
 
+    private void trackLastRecovered(long sequenceId, int priority) {
+        perPriorityLastRecovered[isPrioritizedMessages() ? priority : 0] = sequenceId;
+    }
+
     /**
      * @see org.apache.activemq.store.MessageStore#resetBatching()
      */
+    @Override
     public void resetBatching() {
         if (LOG.isTraceEnabled()) {
-            LOG.trace(destination.getPhysicalName() + " resetBatching, existing last recovered seqId: " + lastRecoveredSequenceId.get());
+            LOG.trace(this + " resetBatching. last recovered: " + Arrays.toString(perPriorityLastRecovered));
         }
-        lastRecoveredSequenceId.set(-1);
-        lastRecoveredPriority.set(Byte.MAX_VALUE - 1);
-
+        setLastRecovered(-1);
     }
+
+    private void setLastRecovered(long val) {
+        for (int i=0;i<perPriorityLastRecovered.length;i++) {
+            perPriorityLastRecovered[i] = val;
+        }
+    }
+
 
     @Override
     public void setBatch(MessageId messageId) {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(this + " setBatch: last recovered: " + Arrays.toString(perPriorityLastRecovered));
+        }
         try {
-            long[] storedValues = persistenceAdapter.getStoreSequenceIdForMessageId(messageId, destination);
-            lastRecoveredSequenceId.set(storedValues[0]);
-            lastRecoveredPriority.set(storedValues[1]);
+            long[] storedValues = persistenceAdapter.getStoreSequenceIdForMessageId(null, messageId, destination);
+            setLastRecovered(storedValues[0]);
         } catch (IOException ignoredAsAlreadyLogged) {
-            lastRecoveredSequenceId.set(-1);
-            lastRecoveredPriority.set(Byte.MAX_VALUE -1);
+            resetBatching();
         }
         if (LOG.isTraceEnabled()) {
-            LOG.trace(destination.getPhysicalName() + " setBatch: new sequenceId: " + lastRecoveredSequenceId.get()
-                    + ", priority: " + lastRecoveredPriority.get());
+            LOG.trace(this + " setBatch: new last recovered: " + Arrays.toString(perPriorityLastRecovered));
         }
     }
 
 
+    @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         super.setPrioritizedMessages(prioritizedMessages);
     }
+
+    @Override
+    public String toString() {
+        return destination.getPhysicalName() + ",pendingSize:" + pendingAdditions.size();
+    }
+
 }

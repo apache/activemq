@@ -16,22 +16,50 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadb.KahaDBStore;
-// import org.apache.activemq.leveldb.LevelDBStore;
-
 import java.io.File;
+
+import javax.jms.Connection;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.store.kahadb.KahaDBStore;
 
 public class IDERunner {
 
+    private static final String AMQP_TRANSFORMER = "jms";
+    private static final boolean TRANSPORT_TRACE = false;
+    private static final boolean PERSISTENT = true;
+    private static final boolean CLIENT_CONNECT = false;
+
     public static void main(String[]args) throws Exception {
-        BrokerService bs = new BrokerService();
-        bs.addConnector("amqp://0.0.0.0:5672?trace=true");
+        BrokerService brokerService = new BrokerService();
+
+        TransportConnector connector = brokerService.addConnector(
+            "amqp://0.0.0.0:5672?trace=" + TRANSPORT_TRACE +
+                "&transport.transformer=" + AMQP_TRANSFORMER +
+                "&transport.wireFormat.maxFrameSize=104857600");
+
         KahaDBStore store = new KahaDBStore();
         store.setDirectory(new File("target/activemq-data/kahadb"));
-        bs.setPersistenceAdapter(store);
-        bs.deleteAllMessages();
-        bs.start();
-        bs.waitUntilStopped();
+
+        if (PERSISTENT) {
+            brokerService.setStoreOpenWireVersion(10);
+            brokerService.setPersistenceAdapter(store);
+            brokerService.deleteAllMessages();
+        } else {
+            brokerService.setPersistent(false);
+        }
+
+        brokerService.setUseJmx(false);
+        brokerService.setAdvisorySupport(false);
+
+        brokerService.start();
+
+        if (CLIENT_CONNECT) {
+            Connection connection = JMSClientContext.INSTANCE.createConnection(connector.getPublishableConnectURI());
+            connection.start();
+        }
+
+        brokerService.waitUntilStopped();
     }
 }

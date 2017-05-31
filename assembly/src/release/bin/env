@@ -1,0 +1,111 @@
+#!/bin/sh
+# ------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ------------------------------------------------------------------------
+#
+# Configuration file for running Apache Active MQ as standalone provider.
+#
+# This file overwrites the predefined settings of the sysv init-script.
+# You can also use alternate location for default settings -  
+# invoke the init-script without a argument an review help section "Configuration of this script"
+# /etc/default/activemq <activemq user home>/.activemqrc <activemq installation dir>/bin/env
+
+# Active MQ installation dirs
+# ACTIVEMQ_HOME="<Installationdir>/"
+# ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
+# ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+# ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+# ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
+
+# Set jvm memory configuration (minimal/maximum amount of memory)
+ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
+
+if [ -z "$ACTIVEMQ_OPTS" ] ; then
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+fi
+
+# Uncomment to enable audit logging
+#ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS -Dorg.apache.activemq.audit=true"
+
+# Set jvm jmx configuration
+# This enables jmx access over a configured jmx-tcp-port.
+# You have to configure the first four settings if you run a ibm jvm, caused by the
+# fact that IBM's jvm does not support VirtualMachine.attach(PID).
+# JMX access is needed for quering a running activemq instance to gain data or to
+# trigger management operations.
+#
+# Example for ${ACTIVEMQ_CONF}/jmx.access:
+# ---
+# # The "monitorRole" role has readonly access.
+# # The "controlRole" role has readwrite access.
+# monitorRole readonly
+# controlRole readwrite
+# ---
+#
+# Example for ${ACTIVEMQ_CONF}/jmx.password:
+# ---
+# # The "monitorRole" role has password "abc123".
+# # # The "controlRole" role has password "abcd1234".
+# monitorRole abc123
+# controlRole abcd1234
+# ---
+#
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.port=11099 "
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.password.file=${ACTIVEMQ_CONF}/jmx.password"
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.access.file=${ACTIVEMQ_CONF}/jmx.access"
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.ssl=false"
+ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
+
+# Set jvm jmx configuration for controlling the broker process
+# You only have to configure the first four settings if you run a ibm jvm, caused by the
+# fact that IBM's jvm does not support VirtualMachine.attach(PID)
+# (see also com.sun.management.jmxremote.port, .jmx.password.file and .jmx.access.file )
+#ACTIVEMQ_SUNJMX_CONTROL="--jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:1099/jmxrmi --jmxuser controlRole --jmxpassword abcd1234"
+ACTIVEMQ_SUNJMX_CONTROL=""
+
+# Specify the queue manager URL for using "browse" option of sysv initscript
+if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
+    ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
+fi
+
+# Set additional JSE arguments
+if [ -z "$ACTIVEMQ_SSL_OPTS" ] ; then
+    #ACTIVEMQ_SSL_OPTS="-Djava.security.properties=$ACTIVEMQ_CONF/java.security"
+    ACTIVEMQ_SSL_OPTS=""
+fi
+
+# Uncomment to enable remote debugging
+#ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
+
+# ActiveMQ tries to shutdown the broker by jmx,
+# after a specified number of seconds send SIGKILL
+if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
+    ACTIVEMQ_KILL_MAXSECONDS=30
+fi
+
+# Configure a user with non root privileges, if no user is specified do not change user
+# (the entire activemq installation should be owned by this user)
+ACTIVEMQ_USER=""
+
+# location of the pidfile
+# ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq.pid"
+
+# Location of the java installation
+# Specify the location of your java installation using JAVA_HOME, or specify the
+# path to the "java" binary using JAVACMD
+# (set JAVACMD to "auto" for automatic detection)
+#JAVA_HOME=""
+JAVACMD="auto"

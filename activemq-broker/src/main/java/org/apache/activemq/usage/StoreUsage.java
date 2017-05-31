@@ -26,7 +26,7 @@ import org.apache.activemq.store.PersistenceAdapter;
  * @org.apache.xbean.XBean
  *
  */
-public class StoreUsage extends Usage<StoreUsage> {
+public class StoreUsage extends PercentLimitUsage<StoreUsage> {
 
     private PersistenceAdapter store;
 
@@ -37,11 +37,13 @@ public class StoreUsage extends Usage<StoreUsage> {
     public StoreUsage(String name, PersistenceAdapter store) {
         super(null, name, 1.0f);
         this.store = store;
+        updateLimitBasedOnPercent();
     }
 
     public StoreUsage(StoreUsage parent, String name) {
         super(parent, name, 1.0f);
         this.store = parent.store;
+        updateLimitBasedOnPercent();
     }
 
     @Override
@@ -57,7 +59,12 @@ public class StoreUsage extends Usage<StoreUsage> {
 
     public void setStore(PersistenceAdapter store) {
         this.store = store;
-        onLimitChange();
+        if (percentLimit > 0 && store != null) {
+            //will trigger onLimitChange
+            updateLimitBasedOnPercent();
+        } else {
+            onLimitChange();
+        }
     }
 
     @Override
@@ -71,14 +78,24 @@ public class StoreUsage extends Usage<StoreUsage> {
         }
     }
 
-    @Override
-    public boolean waitForSpace(long timeout, int highWaterMark) throws InterruptedException {
-        if (parent != null) {
-            if (parent.waitForSpace(timeout, highWaterMark)) {
-                return true;
-            }
-        }
 
-        return super.waitForSpace(timeout, highWaterMark);
+    @Override
+    protected void updateLimitBasedOnPercent() {
+        usageLock.writeLock().lock();
+        try {
+            percentLimitFromFile(store != null ? store.getDirectory() : null);
+        } finally {
+            usageLock.writeLock().unlock();
+        }
+    }
+
+    public StoreUsage copy() {
+        StoreUsage storeUsage = new StoreUsage();
+        storeUsage.name = name;
+        storeUsage.parent = parent;
+        storeUsage.total = total;
+        storeUsage.percentLimit = percentLimit;
+        storeUsage.getLimiter().setLimit(getLimiter().getLimit());
+        return storeUsage;
     }
 }

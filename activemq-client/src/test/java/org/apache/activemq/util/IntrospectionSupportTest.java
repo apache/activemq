@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertTrue;
 
-/**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
- */
-public class IntrospectionSupportTest extends TestCase {
+import org.junit.Test;
 
-    class DummyClass {
+public class IntrospectionSupportTest {
+
+    private class DummyClass {
+
         private boolean trace;
 
         DummyClass(boolean trace) {
@@ -39,11 +39,13 @@ public class IntrospectionSupportTest extends TestCase {
         }
     }
 
+    @Test
     public void testSetPropertyPrimitiveWithWrapperValue() {
         // Wrapper value
         Boolean value = Boolean.valueOf(true);
 
         DummyClass dummyClass = new DummyClass(false);
+        dummyClass.setTrace(false);
 
         // dummy field expects a primitive
         IntrospectionSupport.setProperty(dummyClass, "trace", value);

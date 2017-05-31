@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -43,7 +44,7 @@ import org.junit.runner.RunWith;
 
 
 @RunWith( FrameworkRunner.class )
-@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP")})
+@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", port=1024)})
 @ApplyLdifFiles(
    "org/apache/activemq/security/activemq.ldif"
 )
@@ -74,10 +75,26 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
         Connection conn = factory.createQueueConnection("jdoe", "sunflower");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         conn.start();
-        Queue queue = sess.createQueue("TEST.FOO");
+        Destination queue = sess.createQueue("TEST.FOO");
 
         MessageProducer producer = sess.createProducer(queue);
         MessageConsumer consumer = sess.createConsumer(queue);
+
+        producer.send(sess.createTextMessage("test"));
+        Message msg = consumer.receive(1000);
+        assertNotNull(msg);
+    }
+
+    @Test
+    public void testSendTopic() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        Connection conn = factory.createQueueConnection("jdoe", "sunflower");
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn.start();
+        Destination topic = sess.createTopic("TEST.BAR");
+
+        MessageProducer producer = sess.createProducer(topic);
+        MessageConsumer consumer = sess.createConsumer(topic);
 
         producer.send(sess.createTextMessage("test"));
         Message msg = consumer.receive(1000);

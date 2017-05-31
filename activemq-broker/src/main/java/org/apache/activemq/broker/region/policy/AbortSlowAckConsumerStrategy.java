@@ -18,9 +18,10 @@ package org.apache.activemq.broker.region.policy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -40,10 +41,9 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowAckConsumerStrategy.class);
 
-    private final List<Destination> destinations = new LinkedList<Destination>();
+    private final Map<String, Destination> destinations = new ConcurrentHashMap<String, Destination>();
     private long maxTimeSinceLastAck = 30*1000;
     private boolean ignoreIdleConsumers = true;
-    private boolean ignoreNetworkConsumers = true;
 
     public AbortSlowAckConsumerStrategy() {
         this.name = "AbortSlowAckConsumerStrategy@" + hashCode();
@@ -83,7 +83,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
         List<Destination> disposed = new ArrayList<Destination>();
 
-        for (Destination destination : destinations) {
+        for (Destination destination : destinations.values()) {
             if (destination.isDisposed()) {
                 disposed.add(destination);
                 continue;
@@ -96,7 +96,9 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
         }
 
         // Clean up an disposed destinations to save space.
-        destinations.removeAll(disposed);
+        for (Destination destination : disposed) {
+            destinations.remove(destination.getName());
+        }
 
         abortAllQualifiedSlowConsumers();
     }
@@ -164,7 +166,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
     @Override
     public void addDestination(Destination destination) {
-        this.destinations.add(destination);
+        this.destinations.put(destination.getName(), destination);
     }
 
     /**
@@ -212,34 +214,4 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
     public void setIgnoreIdleConsumers(boolean ignoreIdleConsumers) {
         this.ignoreIdleConsumers = ignoreIdleConsumers;
     }
-
-    /**
-     * Returns whether the strategy is configured to ignore subscriptions that are from a network
-     * connection.
-     *
-     * @return true if the strategy will ignore network connection subscriptions when looking
-     *         for slow consumers.
-     */
-    public boolean isIgnoreNetworkSubscriptions() {
-        return ignoreNetworkConsumers;
-    }
-
-    /**
-     * Sets whether the strategy is configured to ignore consumers that are part of a network
-     * connection to another broker.
-     *
-     * When configured to not ignore idle consumers this strategy acts not only on consumers
-     * that are actually slow but also on any consumer that has not received any messages for
-     * the maxTimeSinceLastAck.  This allows for a way to evict idle consumers while also
-     * aborting slow consumers however for a network subscription this can create a lot of
-     * unnecessary churn and if the abort connection option is also enabled this can result
-     * in the entire network connection being torn down and rebuilt for no reason.
-     *
-     * @param ignoreNetworkConsumers
-     *      Should this strategy ignore subscriptions made by a network connector.
-     */
-    public void setIgnoreNetworkConsumers(boolean ignoreNetworkConsumers) {
-        this.ignoreNetworkConsumers = ignoreNetworkConsumers;
-    }
-
 }

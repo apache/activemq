@@ -24,13 +24,20 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionControl;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
@@ -64,6 +71,116 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         this.store = store;
         this.producerId.setConnectionId(ID_GENERATOR.generateId());
         this.context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
+        // we only get response on unexpected error
+        this.context.setConnection(new Connection() {
+            @Override
+            public Connector getConnector() {
+                return null;
+            }
+
+            @Override
+            public void dispatchSync(Command message) {
+                if (message instanceof ExceptionResponse) {
+                    LOG.warn("Unexpected response: " + message);
+                }
+            }
+
+            @Override
+            public void dispatchAsync(Command command) {
+                if (command instanceof ExceptionResponse) {
+                    LOG.warn("Unexpected response: " + command);
+                }
+            }
+
+            @Override
+            public Response service(Command command) {
+                return null;
+            }
+
+            @Override
+            public void serviceException(Throwable error) {
+                LOG.warn("Unexpected exception: " + error, error);
+            }
+
+            @Override
+            public boolean isSlow() {
+                return false;
+            }
+
+            @Override
+            public boolean isBlocked() {
+                return false;
+            }
+
+            @Override
+            public boolean isConnected() {
+                return false;
+            }
+
+            @Override
+            public boolean isActive() {
+                return false;
+            }
+
+            @Override
+            public int getDispatchQueueSize() {
+                return 0;
+            }
+
+            @Override
+            public ConnectionStatistics getStatistics() {
+                return null;
+            }
+
+            @Override
+            public boolean isManageable() {
+                return false;
+            }
+
+            @Override
+            public String getRemoteAddress() {
+                return null;
+            }
+
+            @Override
+            public void serviceExceptionAsync(IOException e) {
+                LOG.warn("Unexpected async ioexception: " + e, e);
+            }
+
+            @Override
+            public String getConnectionId() {
+                return null;
+            }
+
+            @Override
+            public boolean isNetworkConnection() {
+                return false;
+            }
+
+            @Override
+            public boolean isFaultTolerantConnection() {
+                return false;
+            }
+
+            @Override
+            public void updateClient(ConnectionControl control) {}
+
+            @Override
+            public int getActiveTransactionCount() {
+                return 0;
+            }
+
+            @Override
+            public Long getOldestActiveTransactionDuration() {
+                return null;
+            }
+
+            @Override
+            public void start() throws Exception {}
+
+            @Override
+            public void stop() throws Exception {}
+        });
         this.context.setBroker(next);
         this.systemUsage = brokerService.getSystemUsage();
 
@@ -155,6 +272,32 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
         } else if ((cronValue != null || periodValue != null || delayValue != null) && jobId == null) {
 
+            // Check for room in the job scheduler store
+            if (systemUsage.getJobSchedulerUsage() != null) {
+                JobSchedulerUsage usage = systemUsage.getJobSchedulerUsage();
+                if (usage.isFull()) {
+                    final String logMessage = "Job Scheduler Store is Full (" +
+                        usage.getPercentUsage() + "% of " + usage.getLimit() +
+                        "). Stopping producer (" + messageSend.getProducerId() +
+                        ") to prevent flooding of the job scheduler store." +
+                        " See http://activemq.apache.org/producer-flow-control.html for more info";
+
+                    long start = System.currentTimeMillis();
+                    long nextWarn = start;
+                    while (!usage.waitForSpace(1000)) {
+                        if (context.getStopping().get()) {
+                            throw new IOException("Connection closed, send aborted.");
+                        }
+
+                        long now = System.currentTimeMillis();
+                        if (now >= nextWarn) {
+                            LOG.info("" + usage + ": " + logMessage + " (blocking for: " + (now - start) / 1000 + "s)");
+                            nextWarn = now + 30000l;
+                        }
+                    }
+                }
+            }
+
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
                     @Override
@@ -202,7 +345,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     public void scheduledJob(String id, ByteSequence job) {
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job.getOffset(), job.getLength());
         try {
-            Message messageSend = (Message) this.wireFormat.unmarshal(packet);
+            Message messageSend = (Message) wireFormat.unmarshal(packet);
             messageSend.setOriginalTransactionId(null);
             Object repeatValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
             Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
@@ -212,36 +355,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
             }
 
-            // Check for room in the job scheduler store
-            if (systemUsage.getJobSchedulerUsage() != null) {
-                JobSchedulerUsage usage = systemUsage.getJobSchedulerUsage();
-                if (usage.isFull()) {
-                    final String logMessage = "Job Scheduler Store is Full (" +
-                        usage.getPercentUsage() + "% of " + usage.getLimit() +
-                        "). Stopping producer (" + messageSend.getProducerId() +
-                        ") to prevent flooding of the job scheduler store." +
-                        " See http://activemq.apache.org/producer-flow-control.html for more info";
-
-                    long start = System.currentTimeMillis();
-                    long nextWarn = start;
-                    while (!usage.waitForSpace(1000)) {
-                        if (context.getStopping().get()) {
-                            throw new IOException("Connection closed, send aborted.");
-                        }
-
-                        long now = System.currentTimeMillis();
-                        if (now >= nextWarn) {
-                            LOG.info("" + usage + ": " + logMessage + " (blocking for: " + (now - start) / 1000 + "s)");
-                            nextWarn = now + 30000l;
-                        }
-                    }
-                }
-            }
-
             if (repeat != 0 || cronStr != null && cronStr.length() > 0) {
                 // create a unique id - the original message could be sent
                 // lots of times
-                messageSend.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+                messageSend.setMessageId(new MessageId(producerId, messageIdGenerator.getNextSequenceId()));
             }
 
             // Add the jobId as a property
@@ -274,6 +391,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                     LOG.debug("Set message {} timestamp from {} to {}", new Object[]{ messageSend.getMessageId(), oldTimestamp, newTimeStamp });
                 }
             }
+
+            // Repackage the message contents prior to send now that all updates are complete.
+            messageSend.beforeMarshall(wireFormat);
 
             final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
             producerExchange.setConnectionContext(context);

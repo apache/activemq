@@ -46,7 +46,7 @@ public class NetworkLoopBackTest {
                 }
             });
 
-            final DemandForwardingBridgeSupport loopbackBridge = (DemandForwardingBridgeSupport) networkConnector.bridges.elements().nextElement();
+            final DemandForwardingBridgeSupport loopbackBridge = (DemandForwardingBridgeSupport) networkConnector.bridges.values().iterator().next();
             assertTrue("nc started", networkConnector.isStarted());
 
             assertTrue("It should get disposed", Wait.waitFor(new Wait.Condition() {

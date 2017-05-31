@@ -16,38 +16,56 @@
  */
 package org.apache.activemq.jms.pool;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Test;
 
-import javax.jms.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-
-public class PooledSessionExhaustionBlockTimeoutTest extends TestCase {
+public class PooledSessionExhaustionBlockTimeoutTest extends JmsPoolTestSupport {
     private static final String QUEUE = "FOO";
     private static final int NUM_MESSAGES = 500;
 
-    private Logger logger = Logger.getLogger(getClass());
+    private final Logger LOG = Logger.getLogger(getClass());
 
-    private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private PooledConnectionFactory pooledFactory;
     private String connectionUri;
     private int numReceived = 0;
     private final List<Exception> exceptionList = new ArrayList<Exception>();
 
-
     @Override
-    protected void setUp() throws Exception {
-        broker = new BrokerService();
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
-        TransportConnector connector = broker.addConnector("tcp://localhost:0");
-        broker.start();
+    public void setUp() throws Exception {
+        super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.setUseJmx(false);
+        brokerService.setSchedulerSupport(false);
+        brokerService.setAdvisorySupport(false);
+        TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+
         connectionUri = connector.getPublishableConnectString();
         factory = new ActiveMQConnectionFactory(connectionUri);
         pooledFactory = new PooledConnectionFactory();
@@ -59,10 +77,15 @@ public class PooledSessionExhaustionBlockTimeoutTest extends TestCase {
     }
 
     @Override
-    protected void tearDown() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
-        broker = null;
+    @After
+    public void tearDown() throws Exception {
+        try {
+            pooledFactory.stop();
+        } catch (Exception ex) {
+            // ignored
+        }
+
+        super.tearDown();
     }
 
     class TestRunner implements Runnable {
@@ -100,14 +123,16 @@ public class PooledSessionExhaustionBlockTimeoutTest extends TestCase {
             TextMessage message = session.createTextMessage(msgTo);
             producer.send(message);
             connection.close();
-            logger.info("sent " + i + " messages using " + connectionFactory.getClass());
+            LOG.debug("sent " + i + " messages using " + connectionFactory.getClass());
         }
     }
 
+    @Test(timeout = 60000)
     public void testCanExhaustSessions() throws Exception {
         final int totalMessagesExpected =  NUM_MESSAGES * 2;
         final CountDownLatch latch = new CountDownLatch(2);
         Thread thread = new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(connectionUri);
@@ -124,7 +149,7 @@ public class PooledSessionExhaustionBlockTimeoutTest extends TestCase {
                         }
                         numReceived++;
                         if (numReceived % 20 == 0) {
-                            logger.debug("received " + numReceived + " messages ");
+                            LOG.debug("received " + numReceived + " messages ");
                             System.runFinalization();
                         }
                     }
@@ -140,7 +165,7 @@ public class PooledSessionExhaustionBlockTimeoutTest extends TestCase {
 
             @Override
             public void run() {
-                System.out.println("Starting threads to send messages!");
+                LOG.trace("Starting threads to send messages!");
             }
         });
 
@@ -151,6 +176,5 @@ public class PooledSessionExhaustionBlockTimeoutTest extends TestCase {
         thread.join();
 
         assertEquals(totalMessagesExpected, numReceived);
-
     }
 }

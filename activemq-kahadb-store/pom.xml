@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-kahadb-store</artifactId>
@@ -140,6 +140,16 @@
       <artifactId>log4j</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jmock</groupId>
+      <artifactId>jmock-junit4</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jmock</groupId>
+      <artifactId>jmock-legacy</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -189,17 +199,6 @@
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
-            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
-                 while running mvn:test
-                 Note: if you want to see log messages on the console window remove
-                       "redirectTestOutputToFile" from the parent pom
-            -->
-            <!--
-            <property>
-              <name>log4j.configuration</name>
-              <value>file:target/test-classes/log4j.properties</value>
-            </property>
-            -->
           </systemProperties>
           <includes>
             <include>**/*Test.*</include>
@@ -238,6 +237,52 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/JournalCorruptionEofIndexRecoveryTest.*</exclude>
+                <exclude>**/JournalCorruptionIndexRecoveryTest.*</exclude>
+                <exclude>**/index/*.*</exclude>
+                <exclude>**/PListImplTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+	<profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
     <profile>
       <id>activemq.tests.aix.excludes</id>
       <activation>

@@ -16,17 +16,16 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.IOException;
 import java.util.Map;
 
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.OpenDataException;
 
 import org.apache.activemq.Service;
 
-
-/**
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (for the reloadLog4jProperties method)
- *
- */
 public interface BrokerViewMBean extends Service {
 
     /**
@@ -52,6 +51,12 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Uptime of the broker.")
     String getUptime();
+
+    /**
+     * @return Uptime of the broker in milliseconds.
+     */
+    @MBeanInfo("Uptime of the broker in milliseconds.")
+    long getUptimeMillis();
 
     /**
      * @return The current number of active connections on this Broker.
@@ -177,6 +182,20 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Standard Queues containing AIE messages.")
     ObjectName[] getQueues();
 
+    /**
+     * Queue Query API, take a look at {@link DestinationsViewFilter} for more information
+     */
+    @MBeanInfo("Query queues")
+    String queryQueues(String filter, int page, int pageSize) throws IOException;
+
+    /**
+     * Topic Query API, take a look at {@link DestinationsViewFilter} for more information
+     */
+    @MBeanInfo("Query topics")
+    String queryTopics(String filter, int page, int pageSize) throws IOException;
+
+    public CompositeData[] browseQueue(String queueName) throws OpenDataException, MalformedObjectNameException;
+
     @MBeanInfo("Temporary Topics; generally unused.")
     ObjectName[] getTemporaryTopics();
 
@@ -293,34 +312,6 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo(value="Reloads log4j.properties from the classpath.")
     public void reloadLog4jProperties() throws Throwable;
 
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    @Deprecated
-    @MBeanInfo("The url of the openwire connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
-    String getOpenWireURL();
-
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    @Deprecated
-    @MBeanInfo("The url of the stomp connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
-    String getStompURL();
-
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    @Deprecated
-    @MBeanInfo("The url of the SSL connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
-    String getSslURL();
-
-    /**
-     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
-     */
-    @Deprecated
-    @MBeanInfo("The url of the Stomp SSL connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
-    String getStompSslURL();
-
     @MBeanInfo("The url of the VM connector")
     String getVMURL();
 
@@ -335,4 +326,5 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("JMSJobScheduler")
     ObjectName getJMSJobScheduler();
+
 }

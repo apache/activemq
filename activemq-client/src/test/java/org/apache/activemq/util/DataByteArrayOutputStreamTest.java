@@ -18,14 +18,15 @@ package org.apache.activemq.util;
 
 import java.io.IOException;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class DataByteArrayOutputStreamTest extends TestCase {
+public class DataByteArrayOutputStreamTest {
 
     /**
      * This test case assumes that an ArrayIndexOutOfBoundsException will be thrown when the buffer fails to resize
      * @throws IOException
      */
+    @Test
     public void testResize() throws IOException {
         int initSize = 64;
         DataByteArrayOutputStream out = new DataByteArrayOutputStream();

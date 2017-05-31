@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.sql.DataSource;
 import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
@@ -35,6 +36,7 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -51,18 +53,20 @@ public class LeaseDatabaseLockerTest {
 
     JDBCPersistenceAdapter jdbc;
     BrokerService brokerService;
-    EmbeddedDataSource dataSource;
+    DataSource dataSource;
 
     @Before
     public void setUpStore() throws Exception {
-        dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
         jdbc = new JDBCPersistenceAdapter();
-        jdbc.setDataSource(dataSource);
+        dataSource = jdbc.getDataSource();
         brokerService = new BrokerService();
         jdbc.setBrokerService(brokerService);
         jdbc.getAdapter().doCreateTables(jdbc.getTransactionContext());
+    }
+
+    @After
+    public void stopDerby() {
+        DataSourceServiceSupport.shutdownDefaultDataSource(dataSource);
     }
 
     @Test
@@ -108,7 +112,7 @@ public class LeaseDatabaseLockerTest {
             }
         });
 
-        TimeUnit.MILLISECONDS.sleep(lockerB.getLockAcquireSleepInterval());
+        TimeUnit.MILLISECONDS.sleep(lockerB.getLockAcquireSleepInterval() / 2);
         assertTrue("B is blocked", blocked.get());
 
         assertTrue("A is good", lockerA.keepAlive());
@@ -129,6 +133,7 @@ public class LeaseDatabaseLockerTest {
         // build a fake lock
         final String fakeId = "Anon";
         final Connection connection = dataSource.getConnection();
+        printLockTable(connection);
         PreparedStatement statement = connection.prepareStatement(jdbc.getStatements().getLeaseObtainStatement());
 
         final long now = System.currentTimeMillis();

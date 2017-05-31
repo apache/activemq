@@ -136,7 +136,11 @@ public final class IntrospectionSupport {
         return rc;
     }
 
-    public static boolean setProperties(Object target, Map props) {
+    public static boolean setProperties(Object target, Map<?, ?> props) {
+        return setProperties(target, props, true);
+    }
+
+    public static boolean setProperties(Object target, Map<?, ?> props, boolean removeIfSet) {
         boolean rc = false;
 
         if (target == null) {
@@ -149,7 +153,9 @@ public final class IntrospectionSupport {
         for (Iterator<?> iter = props.entrySet().iterator(); iter.hasNext();) {
             Map.Entry<?,?> entry = (Entry<?,?>)iter.next();
             if (setProperty(target, (String)entry.getKey(), entry.getValue())) {
-                iter.remove();
+                if (removeIfSet) {
+                    iter.remove();
+                }
                 rc = true;
             }
         }
@@ -255,13 +261,26 @@ public final class IntrospectionSupport {
         }
     }
 
-    private static Method findSetterMethod(Class clazz, String name) {
+    public static Method findSetterMethod(Class clazz, String name) {
         // Build the method name.
         name = "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         Method[] methods = clazz.getMethods();
         for (Method method : methods) {
             Class<?> params[] = method.getParameterTypes();
             if (method.getName().equals(name) && params.length == 1 ) {
+                return method;
+            }
+        }
+        return null;
+    }
+
+    public static Method findGetterMethod(Class clazz, String name) {
+        // Build the method name.
+        name = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        Method[] methods = clazz.getMethods();
+        for (Method method : methods) {
+            Class<?> params[] = method.getParameterTypes();
+            if (method.getName().equals(name) && params.length == 0 ) {
                 return method;
             }
         }

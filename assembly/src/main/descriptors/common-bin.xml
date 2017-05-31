@@ -30,6 +30,8 @@
         <include>conf/*.cert</include>
         <include>webapps/*.ico</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
 
     <!-- lets copy the portions of the admin web app we need - as we can't exclude stuff from the WAR -->
@@ -39,6 +41,8 @@
       <includes>
         <include>*</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/styles</directory>
@@ -46,6 +50,8 @@
       <includes>
         <include>*</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp</directory>
@@ -54,6 +60,8 @@
         <exclude>**/activemq.xml</exclude>
         <exclude>**/webconsole-embedded.xml</exclude>
       </excludes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/target/classes</directory>
@@ -61,6 +69,8 @@
       <includes>
         <include>**/*.class</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
 
     <!-- the web demo -->
@@ -71,31 +81,26 @@
         <exclude>**/activemq.xml</exclude>
         <exclude>**/webconsole-embedded.xml</exclude>
       </excludes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/styles/</directory>
       <outputDirectory>/webapps-demo/demo/styles/</outputDirectory>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/images/</directory>
       <outputDirectory>/webapps-demo/demo/images/</outputDirectory>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp/js/</directory>
       <outputDirectory>/webapps-demo/demo/js/</outputDirectory>
-    </fileSet>
-
-    <!-- the file server -->
-    <fileSet>
-      <directory>../activemq-fileserver/src/main/webapp</directory>
-      <outputDirectory>/webapps/fileserver</outputDirectory>
-    </fileSet>
-    <fileSet>
-      <directory>../activemq-fileserver/target/classes</directory>
-      <outputDirectory>/webapps/fileserver/WEB-INF/classes</outputDirectory>
-      <includes>
-        <include>**/*.class</include>
-      </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </fileSet>
   </fileSets>
 
@@ -109,6 +114,7 @@
       <includes>
         <include>${pom.groupId}:activemq-run</include>
       </includes>
+      <fileMode>0644</fileMode>
     </dependencySet>
 
     <dependencySet>
@@ -141,6 +147,8 @@
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/camel</outputDirectory>
@@ -152,6 +160,8 @@
         <include>org.apache.camel:camel-jms</include>
         <include>org.apache.activemq:activemq-camel</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/optional</outputDirectory>
@@ -172,8 +182,8 @@
         <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
-        <include>commons-dbcp:commons-dbcp</include>
-        <include>commons-pool:commons-pool</include>
+        <include>org.apache.commons:commons-dbcp2</include>
+        <include>org.apache.commons:commons-pool2</include>
         <include>commons-codec:commons-codec</include>
         <include>commons-net:commons-net</include>
         <include>commons-lang:commons-lang</include>
@@ -197,10 +207,8 @@
         <include>org.apache.velocity:velocity</include>
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
-        <include>org.jasypt:jasypt-spring3</include>
+        <include>org.jasypt:jasypt-spring31</include>
         <include>javax.jmdns:jmdns</include>
-        <include>org.apache.qpid:proton</include>
-        <include>org.apache.qpid:proton-jms</include>
         <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
         <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>
@@ -229,6 +237,8 @@
         <include>io.fabric8.insight:insight-log4j</include>
 
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/extra</outputDirectory>
@@ -238,7 +248,12 @@
       <includes>
         <!-- mqtt -->
         <include>org.fusesource.mqtt-client:mqtt-client</include>
+
+        <!-- junit integration -->
+        <include>org.apache.activemq.tooling:activemq-junit</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
     <dependencySet>
       <outputDirectory>/lib/web</outputDirectory>
@@ -247,14 +262,25 @@
       <includes>
         <include>org.springframework:spring-web</include>
         <include>org.springframework:spring-webmvc</include>
-        <include>org.eclipse.jetty.aggregate:jetty-all-server</include>
-        <include>org.eclipse.jetty:jetty-websocket</include>
-        <include>org.apache.geronimo.specs:geronimo-servlet_2.5_spec</include>
+        <include>org.eclipse.jetty.aggregate:jetty-all</include>
+        <include>org.apache.tomcat:tomcat-servlet-api</include>
+        <include>org.apache.tomcat:tomcat-websocket-api</include>
 
         <!-- JSP support -->
-        <include>org.mortbay.jetty:jsp-2.1-glassfish</include>
-        <include>org.mortbay.jetty:jsp-api-2.1-glassfish</include>
-        <include>org.eclipse.jdt:core</include>
+        <!-- Jetty JSP api-->
+        <include>org.eclipse.jetty:apache-jsp</include>
+        <!-- Jetty JSP impl-->
+        <include>org.mortbay.jasper:apache-jsp</include>
+        <!-- jstl and el api -->
+        <include>org.eclipse.jetty:apache-jstl</include>
+        <include>org.apache.taglibs:taglibs-standard-spec</include>
+        <!-- jstl and el impl -->
+        <include>org.mortbay.jasper:apache-el</include>
+        <include>org.apache.taglibs:taglibs-standard-impl</include>
+
+        <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
+        <include>org.ow2.asm:asm</include>
+        <include>org.eclipse.jetty.orbit:org.eclipse.jdt.core</include>
 
         <!-- Atom/RSS support -->
         <include>rome:rome</include>
@@ -264,6 +290,8 @@
         <include>org.jolokia:jolokia-core</include>
         <include>com.googlecode.json-simple:json-simple</include>
       </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
     </dependencySet>
   </dependencySets>
 </component>

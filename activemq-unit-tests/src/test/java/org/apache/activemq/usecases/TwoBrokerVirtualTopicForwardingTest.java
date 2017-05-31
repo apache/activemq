@@ -32,8 +32,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
 import static org.apache.activemq.TestSupport.*;
 
 /**

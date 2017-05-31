@@ -22,7 +22,6 @@ import static org.junit.Assert.fail;
 import java.util.HashMap;
 import java.util.UUID;
 
-import org.apache.activemq.broker.TransportConnector;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +38,7 @@ public class StompMissingMessageTest extends StompTestSupport {
         destination = "/topic/" + getTopicName();
     }
 
-    @Override
-	protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
-        port = connector.getConnectUri().getPort();
-    }
-
-    @Test
+    @Test(timeout = 60000)
     public void testProducerConsumerLoop() throws Exception {
         final int ITERATIONS = 500;
         int received = 0;
@@ -88,7 +81,7 @@ public class StompMissingMessageTest extends StompTestSupport {
         return message;
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testProducerDurableConsumerLoop() throws Exception {
         final int ITERATIONS = 500;
         int received = 0;

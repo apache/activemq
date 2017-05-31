@@ -44,44 +44,43 @@ import org.apache.activemq.command.ConsumerId;
  * object is recommended for creating new code. The <CODE>QueueReceiver
  * </CODE>
  * is provided to support existing code.
- * 
+ *
  * @see javax.jms.Session#createConsumer(javax.jms.Destination, String)
  * @see javax.jms.Session#createConsumer(javax.jms.Destination)
  * @see javax.jms.QueueSession#createReceiver(Queue, String)
  * @see javax.jms.QueueSession#createReceiver(Queue)
  * @see javax.jms.MessageConsumer
  */
-
 public class ActiveMQQueueReceiver extends ActiveMQMessageConsumer implements QueueReceiver {
 
     /**
      * @param theSession
-     * @param value
+     * @param consumerId
      * @param destination
-     * @param messageSelector
+     * @param selector
      * @param prefetch
+     * @param maximumPendingMessageCount
      * @param asyncDispatch
+     *
      * @throws JMSException
      */
     protected ActiveMQQueueReceiver(ActiveMQSession theSession, ConsumerId consumerId,
                                     ActiveMQDestination destination, String selector, int prefetch,
-                                    int maximumPendingMessageCount, boolean asyncDispatch)
-        throws JMSException {
+                                    int maximumPendingMessageCount, boolean asyncDispatch) throws JMSException {
         super(theSession, consumerId, destination, null, selector, prefetch, maximumPendingMessageCount,
               false, false, asyncDispatch, null);
     }
 
     /**
      * Gets the <CODE>Queue</CODE> associated with this queue receiver.
-     * 
+     *
      * @return this receiver's <CODE>Queue</CODE>
      * @throws JMSException if the JMS provider fails to get the queue for this
      *                 queue receiver due to some internal error.
      */
-
+    @Override
     public Queue getQueue() throws JMSException {
         checkClosed();
         return (Queue)super.getDestination();
     }
-
 }

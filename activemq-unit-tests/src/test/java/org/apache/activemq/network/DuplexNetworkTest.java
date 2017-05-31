@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.network;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -25,8 +27,11 @@ import javax.jms.TemporaryQueue;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DuplexNetworkTest extends SimpleNetworkTest {
+    private static final Logger LOG = LoggerFactory.getLogger(DuplexNetworkTest.class);
 
     @Override
     protected String getLocalBrokerURI() {
@@ -37,7 +42,7 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
     protected BrokerService createRemoteBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("remoteBroker");
-        broker.addConnector("tcp://localhost:61617");
+        broker.addConnector("tcp://localhost:61617?transport.connectAttemptTimeout=2000");
         return broker;
     }
 
@@ -57,4 +62,43 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
             }
         }));
     }
+
+    @Test
+    public void testStaysUp() throws Exception {
+        int bridgeIdentity = getBridgeId();
+        LOG.info("Bridges: " + bridgeIdentity);
+        TimeUnit.SECONDS.sleep(5);
+        assertEquals("Same bridges", bridgeIdentity, getBridgeId());
+    }
+
+    private int getBridgeId() {
+        int id = 0;
+        while (id == 0) {
+            try {
+                id = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next().hashCode();
+            } catch (Throwable tryAgainInABit) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(500);
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+        return id;
+    }
+
+    @Override
+    protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
+
+        final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+                        expectedRemoteSent == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
+            }
+        }));
+
+    }
+
 }

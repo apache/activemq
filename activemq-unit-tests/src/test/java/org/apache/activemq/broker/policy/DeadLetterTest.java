@@ -19,6 +19,7 @@ package org.apache.activemq.broker.policy;
 import javax.jms.Destination;
 import javax.jms.Message;
 
+import javax.jms.Queue;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
@@ -52,6 +53,7 @@ public class DeadLetterTest extends DeadLetterTestSupport {
             consumeAndRollback(i);
         }
 
+        verifyIsDlq((Queue) dlqDestination);
         for (int i = 0; i < messageCount; i++) {
             Message msg = dlqConsumer.receive(1000);
             assertMessage(msg, i);

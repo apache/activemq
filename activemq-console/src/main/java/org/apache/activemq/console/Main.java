@@ -112,8 +112,8 @@ public class Main {
         app.addClassPathList(System.getProperty("activemq.classpath"));
 
         try {
-            app.runTaskClass(tokens);
-            System.exit(0);
+            int ret = app.runTaskClass(tokens);
+            System.exit(ret);
         } catch (ClassNotFoundException e) {
             System.out.println("Could not load class: " + e.getMessage());
             try {
@@ -216,7 +216,7 @@ public class Main {
 
     }
 
-    public void runTaskClass(List<String> tokens) throws Throwable {
+    public int runTaskClass(List<String> tokens) throws Throwable {
 
         StringBuilder buffer = new StringBuilder();
         buffer.append(System.getProperty("java.vendor"));
@@ -259,7 +259,7 @@ public class Main {
             Method runTask = task.getMethod("main", new Class[] {
                 String[].class, InputStream.class, PrintStream.class
             });
-            runTask.invoke(task.newInstance(), args, System.in, System.out);
+            return (int)runTask.invoke(task.newInstance(), args, System.in, System.out);
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }
@@ -271,7 +271,7 @@ public class Main {
 
     public void addClassPathList(String fileList) {
         if (fileList != null && fileList.length() > 0) {
-            StringTokenizer tokenizer = new StringTokenizer(fileList, ";");
+            StringTokenizer tokenizer = new StringTokenizer(fileList, File.pathSeparator);
             while (tokenizer.hasMoreTokens()) {
                 addClassPath(new File(tokenizer.nextToken()));
             }
@@ -320,6 +320,7 @@ public class Main {
                             // Sort the jars so that classpath built is consistently in the same
                             // order. Also allows us to use jar names to control classpath order.
                             Arrays.sort(files, new Comparator<File>() {
+                                @Override
                                 public int compare(File f1, File f2) {
                                     return f1.getName().compareTo(f2.getName());
                                 }

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.filter;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -162,9 +163,14 @@ public class DestinationMap {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected Set findWildcardMatches(ActiveMQDestination key) {
+       return findWildcardMatches(key, true);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected Set findWildcardMatches(ActiveMQDestination key, boolean deep) {
         String[] paths = key.getDestinationPaths();
         Set answer = new HashSet();
-        getRootNode(key).appendMatchingValues(answer, paths, 0);
+        getRootNode(key).appendMatchingValues(answer, paths, 0, deep);
         return answer;
     }
 
@@ -196,13 +202,19 @@ public class DestinationMap {
      * @return the largest matching value or null if no value matches
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object chooseValue(ActiveMQDestination destination) {
+    public Object chooseValue(final ActiveMQDestination destination) {
         Set set = get(destination);
         if (set == null || set.isEmpty()) {
             return null;
         }
-        SortedSet sortedSet = new TreeSet(set);
-        return sortedSet.last();
+        SortedSet sortedSet = new TreeSet(new Comparator<DestinationMapEntry>() {
+            @Override
+            public int compare(DestinationMapEntry entry1, DestinationMapEntry entry2) {
+                return destination.equals(entry1.destination) ? -1 : (destination.equals(entry2.destination) ? 1 : entry1.compareTo(entry2));
+            }
+        });
+        sortedSet.addAll(set);
+        return sortedSet.first();
     }
 
     /**

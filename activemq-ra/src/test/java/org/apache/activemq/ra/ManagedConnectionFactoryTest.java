@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.ra;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -36,23 +43,18 @@ import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * 
- */
-public class ManagedConnectionFactoryTest extends TestCase {
+public class ManagedConnectionFactoryTest {
 
     private static final String DEFAULT_HOST = "vm://localhost?broker.persistent=false&broker.schedulerSupport=false";
     private static final String REMOTE_HOST = "vm://remotehost?broker.persistent=false&broker.schedulerSupport=false";
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
 
-    /**
-     * @see junit.framework.TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
-
+    @Before
+    public void setUp() throws Exception {
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
         managedConnectionFactory.setServerUrl(DEFAULT_HOST);
         managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
@@ -60,17 +62,19 @@ public class ManagedConnectionFactoryTest extends TestCase {
         managedConnectionFactory.setUseSessionArgs(false);
     }
 
+    @Test(timeout = 60000)
     public void testConnectionFactoryAllocation() throws ResourceException, JMSException {
 
         // Make sure that the ConnectionFactory is asking the connection manager
-        // to
-        // allocate the connection.
+        // to allocate the connection.
         final boolean allocateRequested[] = new boolean[] {
             false
         };
+
         Object cf = managedConnectionFactory.createConnectionFactory(new ConnectionManagerAdapter() {
             private static final long serialVersionUID = 1699499816530099939L;
 
+            @Override
             public Object allocateConnection(ManagedConnectionFactory connectionFactory, ConnectionRequestInfo info) throws ResourceException {
                 allocateRequested[0] = true;
                 return super.allocateConnection(connectionFactory, info);
@@ -94,9 +98,9 @@ public class ManagedConnectionFactoryTest extends TestCase {
         assertFalse("transacted attribute is ignored, only transacted with xa or local tx", session.getTransacted());
 
         connection.close();
-
     }
 
+    @Test(timeout = 60000)
     public void testConnectionSessionArgs() throws ResourceException, JMSException {
         ActiveMQConnectionRequestInfo connectionRequestInfo = new ActiveMQConnectionRequestInfo();
         connectionRequestInfo.setServerUrl(DEFAULT_HOST);
@@ -112,6 +116,7 @@ public class ManagedConnectionFactoryTest extends TestCase {
         connection.close();
     }
 
+    @Test(timeout = 60000)
     public void testConnectionFactoryConnectionMatching() throws ResourceException, JMSException {
 
         ActiveMQConnectionRequestInfo ri1 = new ActiveMQConnectionRequestInfo();
@@ -150,6 +155,7 @@ public class ManagedConnectionFactoryTest extends TestCase {
         }
     }
 
+    @Test(timeout = 60000)
     public void testConnectionFactoryIsSerializableAndReferenceable() throws ResourceException, JMSException {
         Object cf = managedConnectionFactory.createConnectionFactory(new ConnectionManagerAdapter());
         assertTrue(cf != null);
@@ -157,39 +163,40 @@ public class ManagedConnectionFactoryTest extends TestCase {
         assertTrue(cf instanceof Referenceable);
     }
 
+    @Test(timeout = 60000)
     public void testImplementsQueueAndTopicConnectionFactory() throws Exception {
         Object cf = managedConnectionFactory.createConnectionFactory(new ConnectionManagerAdapter());
         assertTrue(cf instanceof QueueConnectionFactory);
         assertTrue(cf instanceof TopicConnectionFactory);
     }
 
+    @Test(timeout = 60000)
     public void testSerializability() throws Exception {
-        
+
         managedConnectionFactory.setLogWriter(new PrintWriter(new ByteArrayOutputStream()));
-        
+
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         oos.writeObject(managedConnectionFactory);
         oos.close();
         byte[] byteArray = bos.toByteArray();
-        
+
         ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(byteArray));
         ActiveMQManagedConnectionFactory deserializedFactory = (ActiveMQManagedConnectionFactory) ois.readObject();
         ois.close();
-        
+
         assertNull(
-                "[logWriter] property of deserialized ActiveMQManagedConnectionFactory is not null", 
+                "[logWriter] property of deserialized ActiveMQManagedConnectionFactory is not null",
                 deserializedFactory.getLogWriter());
         assertNotNull(
-                "ConnectionRequestInfo of deserialized ActiveMQManagedConnectionFactory is null", 
+                "ConnectionRequestInfo of deserialized ActiveMQManagedConnectionFactory is null",
                 deserializedFactory.getInfo());
         assertEquals(
-                "[serverUrl] property of deserialized ConnectionRequestInfo object is not [" + DEFAULT_HOST + "]", 
+                "[serverUrl] property of deserialized ConnectionRequestInfo object is not [" + DEFAULT_HOST + "]",
                 DEFAULT_HOST,
                 deserializedFactory.getInfo().getServerUrl());
         assertNotNull(
                 "Log instance of deserialized ActiveMQManagedConnectionFactory is null",
                 deserializedFactory.log);
-}
-
+    }
 }

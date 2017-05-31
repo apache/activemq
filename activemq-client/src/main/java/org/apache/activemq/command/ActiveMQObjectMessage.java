@@ -24,6 +24,10 @@ import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -63,17 +67,21 @@ import org.apache.activemq.wireformat.WireFormat;
  * @see javax.jms.StreamMessage
  * @see javax.jms.TextMessage
  */
-public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMessage {
+public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMessage, TransientInitializer {
 
-    // TODO: verify classloader
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_OBJECT_MESSAGE;
-    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader();
+
+    private transient List<String> trustedPackages = Arrays.asList(ClassLoadingAwareObjectInputStream.serializablePackages);
+    private transient boolean trustAllPackages = false;
 
     protected transient Serializable object;
 
+    @Override
     public Message copy() {
         ActiveMQObjectMessage copy = new ActiveMQObjectMessage();
         copy(copy);
+        copy.setTrustAllPackages(trustAllPackages);
+        copy.setTrustedPackages(trustedPackages);
         return copy;
     }
 
@@ -120,10 +128,12 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         }
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public String getJMSXMimeType() {
         return "jms/object-message";
     }
@@ -140,6 +150,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
      *                 due to some internal error.
      */
 
+    @Override
     public void clearBody() throws JMSException {
         super.clearBody();
         this.object = null;
@@ -160,6 +171,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
      *                 read-only mode.
      */
 
+    @Override
     public void setObject(Serializable newObject) throws JMSException {
         checkReadOnlyBody();
         this.object = newObject;
@@ -177,6 +189,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
      * @return the serializable object containing this message's data
      * @throws JMSException
      */
+    @Override
     public Serializable getObject() throws JMSException {
         if (object == null && getContent() != null) {
             try {
@@ -187,6 +200,8 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                 }
                 DataInputStream dataIn = new DataInputStream(is);
                 ClassLoadingAwareObjectInputStream objIn = new ClassLoadingAwareObjectInputStream(dataIn);
+                objIn.setTrustedPackages(trustedPackages);
+                objIn.setTrustAllPackages(trustAllPackages);
                 try {
                     object = (Serializable)objIn.readObject();
                 } catch (ClassNotFoundException ce) {
@@ -208,11 +223,13 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         storeContent();
     }
 
-    public void clearMarshalledState() throws JMSException {
-        super.clearMarshalledState();
+    @Override
+    public void clearUnMarshalledState() throws JMSException {
+        super.clearUnMarshalledState();
         this.object = null;
     }
 
+    @Override
     public void onMessageRolledBack() {
         super.onMessageRolledBack();
 
@@ -227,11 +244,34 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         super.compress();
     }
 
+    @Override
     public String toString() {
         try {
             getObject();
         } catch (JMSException e) {
         }
         return super.toString();
+    }
+
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
+    public void setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+    }
+
+    public boolean isTrustAllPackages() {
+        return trustAllPackages;
+    }
+
+    public void setTrustAllPackages(boolean trustAllPackages) {
+        this.trustAllPackages = trustAllPackages;
+    }
+
+    @Override
+    public void initTransients() {
+        trustedPackages = Arrays.asList(ClassLoadingAwareObjectInputStream.serializablePackages);
+        trustAllPackages = false;
     }
 }

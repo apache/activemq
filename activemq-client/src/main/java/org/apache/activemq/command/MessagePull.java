@@ -35,6 +35,8 @@ public class MessagePull extends BaseCommand {
     private MessageId messageId;
     private String correlationId;
 
+    private transient int quantity = 1;
+    private transient boolean alwaysSignalDone;
     private transient boolean tracked = false;
 
     @Override
@@ -123,5 +125,21 @@ public class MessagePull extends BaseCommand {
 
     public boolean isTracked() {
         return this.tracked;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public boolean isAlwaysSignalDone() {
+        return alwaysSignalDone;
+    }
+
+    public void setAlwaysSignalDone(boolean alwaysSignalDone) {
+        this.alwaysSignalDone = alwaysSignalDone;
     }
 }

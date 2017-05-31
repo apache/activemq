@@ -22,6 +22,7 @@ import java.rmi.NoSuchObjectException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,13 +61,25 @@ public class ManagementContext implements Service {
      */
     public static final String DEFAULT_DOMAIN = "org.apache.activemq";
 
+    static {
+        String option = Boolean.TRUE.toString();
+        try {
+            option = System.getProperty("org.apache.activemq.broker.jmx.createConnector", "true");
+        } catch (Exception ex) {
+        }
+
+        DEFAULT_CREATE_CONNECTOR = Boolean.valueOf(option);
+    }
+
+    public static final boolean DEFAULT_CREATE_CONNECTOR;
+
     private static final Logger LOG = LoggerFactory.getLogger(ManagementContext.class);
     private MBeanServer beanServer;
     private String jmxDomainName = DEFAULT_DOMAIN;
     private boolean useMBeanServer = true;
     private boolean createMBeanServer = true;
     private boolean locallyCreateMBeanServer;
-    private boolean createConnector = true;
+    private boolean createConnector = DEFAULT_CREATE_CONNECTOR;
     private boolean findTigerMbeanServer = true;
     private String connectorHost = "localhost";
     private int connectorPort = 1099;
@@ -81,6 +94,8 @@ public class ManagementContext implements Service {
     private final Map<ObjectName, ObjectName> registeredMBeanNames = new ConcurrentHashMap<ObjectName, ObjectName>();
     private boolean allowRemoteAddressInMBeanNames = true;
     private String brokerName;
+    private String suppressMBean;
+    private List<ObjectName> suppressMBeanList;
 
     public ManagementContext() {
         this(null);
@@ -91,9 +106,11 @@ public class ManagementContext implements Service {
     }
 
     @Override
-    public void start() throws IOException {
+    public void start() throws Exception {
         // lets force the MBeanServer to be created if needed
         if (started.compareAndSet(false, true)) {
+
+            populateMBeanSuppressionMap();
 
             // fallback and use localhost
             if (connectorHost == null) {
@@ -147,6 +164,15 @@ public class ManagementContext implements Service {
                 };
                 t.setDaemon(true);
                 t.start();
+            }
+        }
+    }
+
+    private void populateMBeanSuppressionMap() throws Exception {
+        if (suppressMBean != null) {
+            suppressMBeanList = new LinkedList<>();
+            for (String pair : suppressMBean.split(",")) {
+                suppressMBeanList.add(new ObjectName(jmxDomainName + ":*," + pair));
             }
         }
     }
@@ -251,7 +277,7 @@ public class ManagementContext implements Service {
      *
      * @return the MBeanServer
      */
-    protected MBeanServer getMBeanServer() {
+    public MBeanServer getMBeanServer() {
         if (this.beanServer == null) {
             this.beanServer = findMBeanServer();
         }
@@ -377,8 +403,24 @@ public class ManagementContext implements Service {
     }
 
     public ObjectInstance registerMBean(Object bean, ObjectName name) throws Exception{
-        ObjectInstance result = getMBeanServer().registerMBean(bean, name);
-        this.registeredMBeanNames.put(name, result.getObjectName());
+        ObjectInstance result = null;
+        if (isAllowedToRegister(name)) {
+            result = getMBeanServer().registerMBean(bean, name);
+            this.registeredMBeanNames.put(name, result.getObjectName());
+        }
+        return result;
+    }
+
+    protected boolean isAllowedToRegister(ObjectName name) {
+        boolean result = true;
+        if (suppressMBean != null && suppressMBeanList != null) {
+            for (ObjectName attr : suppressMBeanList) {
+                if (attr.apply(name)) {
+                    result = false;
+                    break;
+                }
+            }
+        }
         return result;
     }
 
@@ -479,7 +521,7 @@ public class ManagementContext implements Service {
     }
 
     /**
-     * @return
+     * @return an MBeanServer instance
      * @throws NullPointerException
      * @throws MalformedObjectNameException
      * @throws IOException
@@ -605,5 +647,20 @@ public class ManagementContext implements Service {
 
     public void setAllowRemoteAddressInMBeanNames(boolean allowRemoteAddressInMBeanNames) {
         this.allowRemoteAddressInMBeanNames = allowRemoteAddressInMBeanNames;
+    }
+
+    /**
+     * Allow selective MBeans registration to be suppressed. Any Mbean ObjectName that matches any
+     * of the supplied attribute values will not be registered with the MBeanServer.
+     * eg: "endpoint=dynamicProducer,endpoint=Consumer" will suppress the registration of *all* dynamic producer and consumer mbeans.
+     *
+     * @param commaListOfAttributeKeyValuePairs  the comma separated list of attribute key=value pairs to match.
+     */
+    public void setSuppressMBean(String commaListOfAttributeKeyValuePairs) {
+        this.suppressMBean = commaListOfAttributeKeyValuePairs;
+    }
+
+    public String getSuppressMBean() {
+        return suppressMBean;
     }
 }

@@ -17,70 +17,79 @@
 package org.apache.activemq.ra;
 
 import javax.jms.JMSException;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSslConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Abstract base class providing support for creating physical
- * connections to an ActiveMQ instance.
- * 
- * 
+ * Abstract base class providing support for creating physical connections to an
+ * ActiveMQ instance.
+ *
+ *
  */
 public class ActiveMQConnectionSupport {
-    
+
     private ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
     protected Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /**
      * Creates a factory for obtaining physical connections to an Active MQ
-     * broker. The factory is configured with the given configuration information.
-     * 
-     * @param connectionRequestInfo the configuration request information
+     * broker. The factory is configured with the given configuration
+     * information.
+     *
+     * @param connectionRequestInfo
+     *        the configuration request information
+     * @param activationSpec
      * @return the connection factory
-     * @throws java.lang.IllegalArgumentException if the server URL given in the
-     * configuration information is not a valid URL
+     * @throws java.lang.IllegalArgumentException
+     *         if the server URL given in the configuration information is not a
+     *         valid URL
      */
-    protected ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo connectionRequestInfo) {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        connectionRequestInfo.configure(factory);
+    protected ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo connectionRequestInfo, MessageActivationSpec activationSpec) {
+        // ActiveMQSslConnectionFactory defaults to TCP anyway
+        ActiveMQConnectionFactory factory = new ActiveMQSslConnectionFactory();
+        connectionRequestInfo.configure(factory, activationSpec);
         return factory;
     }
 
     /**
-     * Creates a new physical connection to an Active MQ broker identified by given
-     * connection request information.
-     * 
-     * @param connectionRequestInfo the connection request information identifying the broker and any
-     * required connection parameters, e.g. username/password
+     * Creates a new physical connection to an Active MQ broker identified by
+     * given connection request information.
+     *
+     * @param connectionRequestInfo
+     *        the connection request information identifying the broker and any
+     *        required connection parameters, e.g. username/password
      * @return the physical connection
-     * @throws JMSException if the connection could not be established
+     * @throws JMSException
+     *         if the connection could not be established
      */
-    public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo connectionRequestInfo) throws JMSException{
-        return makeConnection(connectionRequestInfo, createConnectionFactory(connectionRequestInfo));
+    public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo connectionRequestInfo) throws JMSException {
+        return makeConnection(connectionRequestInfo, createConnectionFactory(connectionRequestInfo, null));
     }
 
     /**
      * Creates a new physical connection to an Active MQ broker using a given
-     * connection factory and credentials supplied in connection request information.
-     * 
-     * @param connectionRequestInfo the connection request information containing the credentials to use
-     * for the connection request
+     * connection factory and credentials supplied in connection request
+     * information.
+     *
+     * @param connectionRequestInfo
+     *        the connection request information containing the credentials to
+     *        use for the connection request
      * @return the physical connection
-     * @throws JMSException if the connection could not be established
+     * @throws JMSException
+     *         if the connection could not be established
      */
-    public ActiveMQConnection makeConnection(
-            ActiveMQConnectionRequestInfo connectionRequestInfo,
-            ActiveMQConnectionFactory connectionFactory) throws JMSException
-    {
+    public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo connectionRequestInfo, ActiveMQConnectionFactory connectionFactory)
+        throws JMSException {
         String userName = connectionRequestInfo.getUserName();
         String password = connectionRequestInfo.getPassword();
         ActiveMQConnection physicalConnection = (ActiveMQConnection) connectionFactory.createConnection(userName, password);
 
         String clientId = connectionRequestInfo.getClientid();
-        if ( clientId != null && clientId.length() > 0 )
-        {
+        if (clientId != null && clientId.length() > 0) {
             physicalConnection.setClientID(clientId);
         }
         return physicalConnection;
@@ -88,22 +97,22 @@ public class ActiveMQConnectionSupport {
 
     /**
      * Gets the connection request information.
-     * 
+     *
      * @return the connection request information
      */
-    public ActiveMQConnectionRequestInfo getInfo()
-    {
+    public ActiveMQConnectionRequestInfo getInfo() {
         return info;
     }
-    
+
     /**
      * Sets the connection request information as a whole.
-     * 
-     * @param connectionRequestInfo the connection request information
+     *
+     * @param connectionRequestInfo
+     *        the connection request information
      */
-    protected void setInfo(ActiveMQConnectionRequestInfo connectionRequestInfo){
+    protected void setInfo(ActiveMQConnectionRequestInfo connectionRequestInfo) {
         info = connectionRequestInfo;
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug(this + ", setting [info] to: " + info);
         }
     }
@@ -113,12 +122,9 @@ public class ActiveMQConnectionSupport {
     }
 
     protected String emptyToNull(String value) {
-        if (value == null || value.length() == 0)
-        {
+        if (value == null || value.length() == 0) {
             return null;
-        }
-        else
-        {
+        } else {
             return value;
         }
     }
@@ -147,7 +153,7 @@ public class ActiveMQConnectionSupport {
      * @param clientid
      */
     public void setClientid(String clientid) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug(this + ", setting [clientid] to: " + clientid);
         }
         info.setClientid(clientid);
@@ -164,7 +170,7 @@ public class ActiveMQConnectionSupport {
      * @param password
      */
     public void setPassword(String password) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug(this + ", setting [password] property");
         }
         info.setPassword(password);
@@ -181,10 +187,45 @@ public class ActiveMQConnectionSupport {
      * @param url
      */
     public void setServerUrl(String url) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug(this + ", setting [serverUrl] to: " + url);
         }
         info.setServerUrl(url);
+    }
+
+    public void setTrustStore(String trustStore) {
+        if (log.isDebugEnabled()) {
+            log.debug(this + ", setting [trustStore] to: " + trustStore);
+        }
+        info.setTrustStore(trustStore);
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+        if (log.isDebugEnabled()) {
+            log.debug(this + ", setting [trustStorePassword] to: " + trustStorePassword);
+        }
+        info.setTrustStorePassword(trustStorePassword);
+    }
+
+    public void setKeyStore(String keyStore) {
+        if (log.isDebugEnabled()) {
+            log.debug(this + ", setting [keyStore] to: " + keyStore);
+        }
+        info.setKeyStore(keyStore);
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+        if (log.isDebugEnabled()) {
+            log.debug(this + ", setting [keyStorePassword] to: " + keyStorePassword);
+        }
+        info.setKeyStorePassword(keyStorePassword);
+    }
+
+    public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {
+        if (log.isDebugEnabled()) {
+            log.debug(this + ", setting [keyStoreKeyPassword] to: " + keyStoreKeyPassword);
+        }
+        info.setKeyStoreKeyPassword(keyStoreKeyPassword);
     }
 
     /**
@@ -198,7 +239,7 @@ public class ActiveMQConnectionSupport {
      * @param userid
      */
     public void setUserName(String userid) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [userName] to: " + userid);
         }
         info.setUserName(userid);
@@ -215,7 +256,7 @@ public class ActiveMQConnectionSupport {
      * @param optimizeDurableTopicPrefetch
      */
     public void setOptimizeDurableTopicPrefetch(Integer optimizeDurableTopicPrefetch) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [optimizeDurableTopicPrefetch] to: " + optimizeDurableTopicPrefetch);
         }
         info.setOptimizeDurableTopicPrefetch(optimizeDurableTopicPrefetch);
@@ -232,7 +273,7 @@ public class ActiveMQConnectionSupport {
      * @param durableTopicPrefetch
      */
     public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [durableTopicPrefetch] to: " + durableTopicPrefetch);
         }
         info.setDurableTopicPrefetch(durableTopicPrefetch);
@@ -249,12 +290,11 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setInitialRedeliveryDelay(Long value) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [initialRedeliveryDelay] to: " + value);
         }
         info.setInitialRedeliveryDelay(value);
     }
-
 
     /**
      * @return initial redelivery delay
@@ -267,7 +307,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setMaximumRedeliveryDelay(Long value) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [maximumRedeliveryDelay] to: " + value);
         }
         info.setMaximumRedeliveryDelay(value);
@@ -276,18 +316,9 @@ public class ActiveMQConnectionSupport {
     /**
      * @return input stream prefetch
      */
+    @Deprecated
     public Integer getInputStreamPrefetch() {
-        return info.getInputStreamPrefetch();
-    }
-
-    /**
-     * @param inputStreamPrefetch
-     */
-    public void setInputStreamPrefetch(Integer inputStreamPrefetch) {
-        if ( log.isDebugEnabled() ) {
-            log.debug("setting [inputStreamPrefetch] to: " + inputStreamPrefetch);
-        }
-        info.setInputStreamPrefetch(inputStreamPrefetch);
+        return 0;
     }
 
     /**
@@ -301,7 +332,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setMaximumRedeliveries(Integer value) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [maximumRedeliveries] to: " + value);
         }
         info.setMaximumRedeliveries(value);
@@ -318,7 +349,7 @@ public class ActiveMQConnectionSupport {
      * @param queueBrowserPrefetch
      */
     public void setQueueBrowserPrefetch(Integer queueBrowserPrefetch) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [queueBrowserPrefetch] to: " + queueBrowserPrefetch);
         }
         info.setQueueBrowserPrefetch(queueBrowserPrefetch);
@@ -335,7 +366,7 @@ public class ActiveMQConnectionSupport {
      * @param queuePrefetch
      */
     public void setQueuePrefetch(Integer queuePrefetch) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [queuePrefetch] to: " + queuePrefetch);
         }
         info.setQueuePrefetch(queuePrefetch);
@@ -352,7 +383,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setRedeliveryBackOffMultiplier(Double value) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [redeliveryBackOffMultiplier] to: " + value);
         }
         info.setRedeliveryBackOffMultiplier(value);
@@ -369,7 +400,7 @@ public class ActiveMQConnectionSupport {
      * @param value
      */
     public void setRedeliveryUseExponentialBackOff(Boolean value) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [redeliveryUseExponentialBackOff] to: " + value);
         }
         info.setRedeliveryUseExponentialBackOff(value);
@@ -386,7 +417,7 @@ public class ActiveMQConnectionSupport {
      * @param topicPrefetch
      */
     public void setTopicPrefetch(Integer topicPrefetch) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [topicPrefetch] to: " + topicPrefetch);
         }
         info.setTopicPrefetch(topicPrefetch);
@@ -417,7 +448,7 @@ public class ActiveMQConnectionSupport {
      * @param useInboundSession
      */
     public void setUseInboundSession(Boolean useInboundSession) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("setting [useInboundSession] to: " + useInboundSession);
         }
         info.setUseInboundSession(useInboundSession);
@@ -432,19 +463,19 @@ public class ActiveMQConnectionSupport {
     }
 
     /**
-     * if true, calls to managed connection factory.connection.createSession will
-     * respect the passed in args. When false (default) the args are ignored b/c
-     * the container will do transaction demarcation via xa or local transaction rar
-     * contracts.
-     * This option is useful when a managed connection is used in plain jms mode
-     * and a jms transacted session session is required.
+     * if true, calls to managed connection factory.connection.createSession
+     * will respect the passed in args. When false (default) the args are
+     * ignored b/c the container will do transaction demarcation via xa or local
+     * transaction rar contracts. This option is useful when a managed
+     * connection is used in plain jms mode and a jms transacted session session
+     * is required.
+     *
      * @param useSessionArgs
      */
     public void setUseSessionArgs(Boolean useSessionArgs) {
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug(this + ", setting [useSessionArgs] to: " + useSessionArgs);
         }
         info.setUseSessionArgs(useSessionArgs);
     }
-
 }

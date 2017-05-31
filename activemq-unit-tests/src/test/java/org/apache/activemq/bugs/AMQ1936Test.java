@@ -17,6 +17,7 @@
 package org.apache.activemq.bugs;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -148,7 +149,7 @@ public class AMQ1936Test extends TestCase {
     }
 
     public void testForDuplicateMessages() throws Exception {
-        final ConcurrentHashMap<String, String> messages = new ConcurrentHashMap<String, String>();
+        final ConcurrentMap<String, String> messages = new ConcurrentHashMap<String, String>();
         final Object lock = new Object();
         final CountDownLatch duplicateSignal = new CountDownLatch(1);
         final AtomicInteger messageCount = new AtomicInteger(0);

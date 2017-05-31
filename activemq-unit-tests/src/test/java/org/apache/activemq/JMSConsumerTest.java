@@ -27,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
+import javax.jms.IllegalStateException;
+import javax.jms.JMSException;
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -47,8 +49,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Test cases used to test the JMS message consumer.
- *
- *
  */
 public class JMSConsumerTest extends JmsTestSupport {
 
@@ -110,15 +110,14 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         // Send a message, but should not get delivered.
         sendMessages(session, destination, 1);
-        assertFalse(done2.await(1, TimeUnit.SECONDS));
+        assertFalse(done2.await(500, TimeUnit.MILLISECONDS));
         assertEquals(1, counter.get());
 
         // Start the consumer, and the message should now get delivered.
         consumer.start();
-        assertTrue(done2.await(1, TimeUnit.SECONDS));
+        assertTrue(done2.await(500, TimeUnit.MILLISECONDS));
         assertEquals(2, counter.get());
     }
-
 
     public void testMessageListenerWithConsumerCanBeStoppedConcurently() throws Exception {
 
@@ -131,7 +130,6 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         // preload the queue
         sendMessages(session, destination, 2000);
-
 
         final ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)session.createConsumer(destination);
 
@@ -164,7 +162,9 @@ public class JMSConsumerTest extends JmsTestSupport {
                     if (count % 200 == 0) {
                         // ensure there are some outstanding messages
                         // ack every 200
-                        message.acknowledge();
+                        try {
+                            message.acknowledge();
+                        } catch (IllegalStateException okForAck) {}
                     }
                 } catch (Exception e) {
                     LOG.error("Exception on close or ack:", e);
@@ -183,11 +183,13 @@ public class JMSConsumerTest extends JmsTestSupport {
         });
 
         assertTrue(closeDone.await(20, TimeUnit.SECONDS));
+
         // await possible exceptions
-        Thread.sleep(1000);
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.SECONDS);
+
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
     }
-
 
     public void initCombosForTestMutiReceiveWithPrefetch1() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
@@ -661,7 +663,6 @@ public class JMSConsumerTest extends JmsTestSupport {
         }
         message.acknowledge();
         assertNull(consumer.receiveNoWait());
-
     }
 
     public void initCombosForTestPrefetch1MessageNotDispatched() {
@@ -704,7 +705,6 @@ public class JMSConsumerTest extends JmsTestSupport {
         session2.commit();
 
         assertNull(consumer.receiveNoWait());
-
     }
 
     public void initCombosForTestDontStart() {
@@ -771,7 +771,6 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
     }
 
-
     public void testDupsOkConsumer() throws Exception {
 
         // Receive a message with the JMS API
@@ -788,13 +787,13 @@ public class JMSConsumerTest extends JmsTestSupport {
             Message m = consumer.receive(1000);
             assertNotNull(m);
         }
-        assertNull(consumer.receive(1000));
+        assertNull(consumer.receive(500));
 
         // Close out the consumer.. no other messages should be left on the queue.
         consumer.close();
 
         consumer = session.createConsumer(destination);
-        assertNull(consumer.receive(1000));
+        assertNull(consumer.receive(500));
     }
 
     public void testRedispatchOfUncommittedTx() throws Exception {
@@ -831,7 +830,6 @@ public class JMSConsumerTest extends JmsTestSupport {
         redispatchSession.close();
     }
 
-
     public void testRedispatchOfRolledbackTx() throws Exception {
 
         connection.start();
@@ -865,10 +863,36 @@ public class JMSConsumerTest extends JmsTestSupport {
         redispatchSession.close();
     }
 
+    public void testExceptionOnClientAckAfterConsumerClose() throws Exception {
+
+        connection.start();
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
+
+        sendMessages(connection, destination, 1);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+        Message message = consumer.receive(1000);
+        assertNotNull(message);
+        consumer.close();
+
+        try {
+            message.acknowledge();
+            fail("Expect exception on ack after close - consumer gone so message available again");
+        } catch (JMSException expected) {}
+
+        Session redispatchSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer redispatchConsumer = redispatchSession.createConsumer(destination);
+        Message msg = redispatchConsumer.receive(1000);
+        assertNotNull(msg);
+
+        redispatchSession.close();
+    }
+
 
     public void initCombosForTestAckOfExpired() {
         addCombinationValues("destinationType",
-                new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
+            new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
     }
 
     public void testAckOfExpired() throws Exception {
@@ -886,7 +910,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         Session sendSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = sendSession.createProducer(destination);
-        producer.setTimeToLive(1000);
+        producer.setTimeToLive(500);
         final int count = 4;
         for (int i = 0; i < count; i++) {
             TextMessage message = sendSession.createTextMessage("" + i);
@@ -894,7 +918,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         }
 
         // let first bunch in queue expire
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         producer.setTimeToLive(0);
         for (int i = 0; i < count; i++) {
@@ -904,7 +928,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         ActiveMQMessageConsumer amqConsumer = (ActiveMQMessageConsumer) consumer;
 
-        for(int i=0; i<count; i++) {
+        for (int i=0; i<count; i++) {
             TextMessage msg = (TextMessage) amqConsumer.receive();
             assertNotNull(msg);
             assertTrue("message has \"no expiry\" text: " + msg.getText(), msg.getText().contains("no expiry"));
@@ -924,14 +948,13 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
 
-         String domain = "org.apache.activemq";
-         ObjectName name;
+        String domain = "org.apache.activemq";
+        ObjectName name;
         if (destination.isQueue()) {
             name = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=test");
         } else {
             name = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test");
         }
-        return (DestinationViewMBean)broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class, true);
+        return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class, true);
     }
-
 }

@@ -23,15 +23,19 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.IndexListener;
 import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -46,6 +50,7 @@ import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
+import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IOHelper;
@@ -55,11 +60,12 @@ import org.slf4j.LoggerFactory;
 public class MultiKahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(MultiKahaDBTransactionStore.class);
     final MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter;
-    final ConcurrentHashMap<TransactionId, Tx> inflightTransactions = new ConcurrentHashMap<TransactionId, Tx>();
+    final ConcurrentMap<TransactionId, Tx> inflightTransactions = new ConcurrentHashMap<TransactionId, Tx>();
     final Set<TransactionId> recoveredPendingCommit = new HashSet<TransactionId>();
     private Journal journal;
     private int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     private int journalWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
     public MultiKahaDBTransactionStore(MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter) {
         this.multiKahaDBPersistenceAdapter = multiKahaDBPersistenceAdapter;
@@ -95,6 +101,28 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             @Override
             public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
                 MultiKahaDBTransactionStore.this.removeAsyncMessage(transactionStore, context, getDelegate(), ack);
+            }
+
+            @Override
+            public void registerIndexListener(IndexListener indexListener) {
+                getDelegate().registerIndexListener(indexListener);
+                try {
+                    if (indexListener instanceof BaseDestination) {
+                        // update queue storeUsage
+                        Object matchingPersistenceAdapter = multiKahaDBPersistenceAdapter.destinationMap.chooseValue(getDelegate().getDestination());
+                        if (matchingPersistenceAdapter instanceof FilteredKahaDBPersistenceAdapter) {
+                            FilteredKahaDBPersistenceAdapter filteredAdapter = (FilteredKahaDBPersistenceAdapter) matchingPersistenceAdapter;
+                            if (filteredAdapter.getUsage() != null && filteredAdapter.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
+                                StoreUsage storeUsage = filteredAdapter.getUsage();
+                                storeUsage.setStore(filteredAdapter.getPersistenceAdapter());
+                                storeUsage.setParent(multiKahaDBPersistenceAdapter.getBrokerService().getSystemUsage().getStoreUsage());
+                                ((BaseDestination) indexListener).getSystemUsage().setStoreUsage(storeUsage);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                    LOG.warn("Failed to set mKahaDB destination store usage", ignored);
+                }
             }
         };
     }
@@ -269,20 +297,22 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     @Override
     public void start() throws Exception {
-        journal = new Journal() {
-            @Override
-            protected void cleanup() {
-                super.cleanup();
-                txStoreCleanup();
-            }
-        };
-        journal.setDirectory(getDirectory());
-        journal.setMaxFileLength(journalMaxFileLength);
-        journal.setWriteBatchSize(journalWriteBatchSize);
-        IOHelper.mkdirs(journal.getDirectory());
-        journal.start();
-        recoverPendingLocalTransactions();
-        store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
+        if (started.compareAndSet(false, true)) {
+            journal = new Journal() {
+                @Override
+                public void cleanup() {
+                    super.cleanup();
+                    txStoreCleanup();
+                }
+            };
+            journal.setDirectory(getDirectory());
+            journal.setMaxFileLength(journalMaxFileLength);
+            journal.setWriteBatchSize(journalWriteBatchSize);
+            IOHelper.mkdirs(journal.getDirectory());
+            journal.start();
+            recoverPendingLocalTransactions();
+            store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
+        }
     }
 
     private void txStoreCleanup() {
@@ -303,8 +333,10 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     @Override
     public void stop() throws Exception {
-        journal.close();
-        journal = null;
+        if (started.compareAndSet(true, false) && journal != null) {
+            journal.close();
+            journal = null;
+        }
     }
 
     private void recoverPendingLocalTransactions() throws IOException {
@@ -444,4 +476,5 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
         destination.acknowledge(context, clientId, subscriptionName, messageId, ack);
     }
+
 }

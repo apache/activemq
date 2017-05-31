@@ -1,7 +1,22 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.tool;
 
-import static org.apache.activemq.command.ActiveMQDestination.QUEUE_TYPE;
-import static org.apache.activemq.command.ActiveMQDestination.TOPIC_TYPE;
+import static org.apache.activemq.command.ActiveMQDestination.*;
 import static org.junit.Assert.assertEquals;
 
 import java.net.URI;
@@ -86,6 +101,18 @@ public class AbstractJmsClientTest {
     }
 
     @Test
+    public void testCreateDestination_tempQueue() throws JMSException {
+        assertDestinationType(TEMP_QUEUE_TYPE,
+                asAmqDest(jmsClient.createDestination("temp-queue://dest")));
+    }
+
+    @Test
+    public void testCreateDestination_tempTopic() throws JMSException {
+        assertDestinationType(TEMP_TOPIC_TYPE,
+                asAmqDest(jmsClient.createDestination("temp-topic://dest")));
+    }
+
+    @Test
     public void testCreateDestinations_commaSeparated() throws JMSException {
         clientProperties.setDestName("queue://foo,topic://cheese");
         Destination[] destinations = jmsClient.createDestinations(1);
@@ -167,6 +194,10 @@ public class AbstractJmsClientTest {
     private void assertDestinationNameType(String physicalName, byte destinationType, ActiveMQDestination destination) {
         assertEquals(destinationType, destination.getDestinationType());
         assertEquals(physicalName, destination.getPhysicalName());
+    }
+
+    private void assertDestinationType(byte destinationType, ActiveMQDestination destination) {
+        assertEquals(destinationType, destination.getDestinationType());
     }
 
     private ActiveMQDestination asAmqDest(Destination destination) {

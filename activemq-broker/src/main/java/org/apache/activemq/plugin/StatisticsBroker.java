@@ -119,7 +119,8 @@ public class StatisticsBroker extends BrokerFilter {
                         statsMessage.setLong("expiredCount", stats.getExpired().getCount());
                         statsMessage.setLong("inflightCount", stats.getInflight().getCount());
                         statsMessage.setLong("messagesCached", stats.getMessagesCached().getCount());
-                        statsMessage.setDouble("averageMessageSize", stats.getMessageSize().getAveragePerSecond());
+                        // we are okay with the size without decimals so cast to long
+                        statsMessage.setLong("averageMessageSize", (long) stats.getMessageSize().getAverageSize());
                         statsMessage.setInt("memoryPercentUsage", dest.getMemoryUsage().getPercentUsage());
                         statsMessage.setLong("memoryUsage", dest.getMemoryUsage().getUsage());
                         statsMessage.setLong("memoryLimit", dest.getMemoryUsage().getLimit());
@@ -158,7 +159,8 @@ public class StatisticsBroker extends BrokerFilter {
                 statsMessage.setLong("dispatchCount", stats.getDispatched().getCount());
                 statsMessage.setLong("expiredCount", stats.getExpired().getCount());
                 statsMessage.setLong("inflightCount", stats.getInflight().getCount());
-                statsMessage.setDouble("averageMessageSize",stats.getMessageSize().getAverageSize());
+                // we are okay with the size without decimals so cast to long
+                statsMessage.setLong("averageMessageSize",(long) stats.getMessageSize().getAverageSize());
                 statsMessage.setLong("messagesCached", stats.getMessagesCached().getCount());
                 statsMessage.setInt("memoryPercentUsage", systemUsage.getMemoryUsage().getPercentUsage());
                 statsMessage.setLong("memoryUsage", systemUsage.getMemoryUsage().getUsage());

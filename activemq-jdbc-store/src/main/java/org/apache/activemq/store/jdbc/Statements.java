@@ -95,7 +95,7 @@ public class Statements {
         if (createSchemaStatements == null) {
             createSchemaStatements = new String[] {
                 "CREATE TABLE " + getFullMessageTableName() + "(" + "ID " + sequenceDataType + " NOT NULL"
-                    + ", CONTAINER " + containerNameDataType + ", MSGID_PROD " + msgIdDataType + ", MSGID_SEQ "
+                    + ", CONTAINER " + containerNameDataType + " NOT NULL, MSGID_PROD " + msgIdDataType + ", MSGID_SEQ "
                     + sequenceDataType + ", EXPIRATION " + longDataType + ", MSG "
                     + (useExternalMessageReferences ? stringIdDataType : binaryDataType)
                     + ", PRIMARY KEY ( ID ) )",
@@ -228,6 +228,10 @@ public class Statements {
         return findAllMessageIdsStatement;
     }
 
+    public void setFindAllMessageIdsStatement(String val) {
+        findAllMessageIdsStatement = val;
+    }
+
     public String getFindLastSequenceIdInMsgsStatement() {
         if (findLastSequenceIdInMsgsStatement == null) {
             findLastSequenceIdInMsgsStatement = "SELECT MAX(ID) FROM " + getFullMessageTableName();
@@ -331,17 +335,6 @@ public class Statements {
         return findDurableSubMessagesByPriorityStatement;
     }    
 
-    public String findAllDurableSubMessagesStatement() {
-        if (findAllDurableSubMessagesStatement == null) {
-            findAllDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName()
-                                                 + " M, " + getFullAckTableName() + " D "
-                                                 + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                                                 + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
-                                                 + " ORDER BY M.ID";
-        }
-        return findAllDurableSubMessagesStatement;
-    }
-
     public String getNextDurableSubscriberMessageStatement() {
         if (nextDurableSubscriberMessageStatement == null) {
             nextDurableSubscriberMessageStatement = "SELECT M.ID, M.MSG FROM "
@@ -397,7 +390,7 @@ public class Statements {
     public String getFindAllDestinationsStatement() {
         if (findAllDestinationsStatement == null) {
             findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullMessageTableName()
-                    + " UNION SELECT DISTINCT CONTAINER FROM "  + getFullAckTableName();
+                    + " WHERE CONTAINER IS NOT NULL UNION SELECT DISTINCT CONTAINER FROM " + getFullAckTableName();
         }
         return findAllDestinationsStatement;
     }
@@ -498,7 +491,7 @@ public class Statements {
     public String getFindNextMessagesStatement() {
         if (findNextMessagesStatement == null) {
             findNextMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
-                                        + " WHERE CONTAINER=? AND ID > ? AND ID < ? AND XID IS NULL ORDER BY ID";
+                                        + " WHERE CONTAINER=? AND ID < ? AND ID > ? AND XID IS NULL ORDER BY ID";
         }
         return findNextMessagesStatement;
     }
@@ -511,12 +504,26 @@ public class Statements {
             findNextMessagesByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
                                         + " WHERE CONTAINER=?"
                                         + " AND XID IS NULL"
-                                        + " AND ((ID > ? AND ID < ? AND PRIORITY = ?) OR PRIORITY < ?)"
+                                        + " AND ID < ? "
+                                        + " AND ( (ID > ? AND PRIORITY = 9) "
+                                        + "    OR (ID > ? AND PRIORITY = 8) "
+                                        + "    OR (ID > ? AND PRIORITY = 7) "
+                                        + "    OR (ID > ? AND PRIORITY = 6) "
+                                        + "    OR (ID > ? AND PRIORITY = 5) "
+                                        + "    OR (ID > ? AND PRIORITY = 4) "
+                                        + "    OR (ID > ? AND PRIORITY = 3) "
+                                        + "    OR (ID > ? AND PRIORITY = 2) "
+                                        + "    OR (ID > ? AND PRIORITY = 1) "
+                                        + "    OR (ID > ? AND PRIORITY = 0) )"
                                         + " ORDER BY PRIORITY DESC, ID";
         }
         return findNextMessagesByPriorityStatement;
     }    
-    
+
+    public void setFindNextMessagesByPriorityStatement(String val) {
+        findNextMessagesByPriorityStatement = val;
+    }
+
     /**
      * @return the lastAckedDurableSubscriberMessageStatement
      */
@@ -617,7 +624,7 @@ public class Statements {
     public String getClearXidFlagStatement() {
         if (clearXidFlagStatement == null) {
             clearXidFlagStatement = "UPDATE "  + getFullMessageTableName()
-                    + " SET XID = NULL WHERE ID = ?";
+                    + " SET XID = NULL, ID = ? WHERE ID = ?";
         }
         return clearXidFlagStatement;
     }

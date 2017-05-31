@@ -16,7 +16,6 @@
  */
 package org.apache.activemq;
 
-import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,20 +28,18 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.DataArrayResponse;
 import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.IntegerResponse;
 import org.apache.activemq.command.LocalTransactionId;
-import org.apache.activemq.command.Response;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.activemq.util.XASupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +68,7 @@ public class TransactionContext implements XAResource {
 
     // XATransactionId -> ArrayList of TransactionContext objects
     private final static HashMap<TransactionId, List<TransactionContext>> ENDED_XA_TRANSACTION_CONTEXTS =
-    		new HashMap<TransactionId, List<TransactionContext>>();
+            new HashMap<TransactionId, List<TransactionContext>>();
 
     private ActiveMQConnection connection;
     private final LongSequenceGenerator localTransactionIdGenerator;
@@ -82,6 +79,7 @@ public class TransactionContext implements XAResource {
     private TransactionId transactionId;
     private LocalTransactionEventListener localTransactionEventListener;
     private int beforeEndIndex;
+    private volatile boolean rollbackOnly;
 
     // for RAR recovery
     public TransactionContext() {
@@ -95,20 +93,22 @@ public class TransactionContext implements XAResource {
 
     public boolean isInXATransaction() {
         if (transactionId != null && transactionId.isXATransaction()) {
-        	return true;
+            return true;
         } else {
-    		if (!ENDED_XA_TRANSACTION_CONTEXTS.isEmpty()) {
-	        	synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-        			for(List<TransactionContext> transactions : ENDED_XA_TRANSACTION_CONTEXTS.values()) {
-        				if (transactions.contains(this)) {
-        					return true;
-        				}
-        			}
-        		}
-    		}
+            synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+                for(List<TransactionContext> transactions : ENDED_XA_TRANSACTION_CONTEXTS.values()) {
+                      if (transactions.contains(this)) {
+                          return true;
+                      }
+                }
+            }
         }
 
         return false;
+    }
+
+    public void setRollbackOnly(boolean val) {
+        rollbackOnly = val;
     }
 
     public boolean isInLocalTransaction() {
@@ -161,7 +161,7 @@ public class TransactionContext implements XAResource {
             try {
                 synchronizations.get(i).afterRollback();
             } catch (Throwable t) {
-                LOG.debug("Exception from afterRollback on " + synchronizations.get(i), t);
+                LOG.debug("Exception from afterRollback on {}", synchronizations.get(i), t);
                 if (firstException == null) {
                     firstException = t;
                 }
@@ -184,7 +184,7 @@ public class TransactionContext implements XAResource {
             try {
                 synchronizations.get(i).afterCommit();
             } catch (Throwable t) {
-                LOG.debug("Exception from afterCommit on " + synchronizations.get(i), t);
+                LOG.debug("Exception from afterCommit on {}", synchronizations.get(i), t);
                 if (firstException == null) {
                     firstException = t;
                 }
@@ -236,6 +236,7 @@ public class TransactionContext implements XAResource {
         if (transactionId == null) {
             synchronizations = null;
             beforeEndIndex = 0;
+            setRollbackOnly(false);
             this.transactionId = new LocalTransactionId(getConnectionId(), localTransactionIdGenerator.getNextSequenceId());
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.BEGIN);
             this.connection.ensureConnectionInfoSent();
@@ -245,11 +246,9 @@ public class TransactionContext implements XAResource {
             if (localTransactionEventListener != null) {
                 localTransactionEventListener.beginEvent();
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Begin:" + transactionId);
-            }
-        }
 
+            LOG.debug("Begin:{}", transactionId);
+        }
     }
 
     /**
@@ -272,16 +271,13 @@ public class TransactionContext implements XAResource {
             LOG.warn("rollback processing error", canOcurrOnFailover);
         }
         if (transactionId != null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Rollback: "  + transactionId
-                + " syncCount: "
-                + (synchronizations != null ? synchronizations.size() : 0));
-            }
+            LOG.debug("Rollback: {} syncCount: {}",
+                transactionId, (synchronizations != null ? synchronizations.size() : 0));
 
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.ROLLBACK);
             this.transactionId = null;
             //make this synchronous - see https://issues.apache.org/activemq/browse/AMQ-2364
-            this.connection.syncSendPacket(info);
+            this.connection.syncSendPacket(info, this.connection.isClosing() ? this.connection.getCloseTimeout() : 0);
             // Notify the listener that the tx was rolled back
             if (localTransactionEventListener != null) {
                 localTransactionEventListener.rollbackEvent();
@@ -312,25 +308,32 @@ public class TransactionContext implements XAResource {
             throw e;
         }
 
+        if (transactionId != null && rollbackOnly) {
+            final String message = "Commit of " + transactionId + "  failed due to rollback only request; typically due to failover with pending acks";
+            try {
+                rollback();
+            } finally {
+                LOG.warn(message);
+                throw new TransactionRolledBackException(message);
+            }
+        }
+
         // Only send commit if the transaction was started.
         if (transactionId != null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Commit: "  + transactionId
-                        + " syncCount: "
-                        + (synchronizations != null ? synchronizations.size() : 0));
-            }
+            LOG.debug("Commit: {} syncCount: {}",
+                transactionId, (synchronizations != null ? synchronizations.size() : 0));
 
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.COMMIT_ONE_PHASE);
             this.transactionId = null;
             // Notify the listener that the tx was committed back
             try {
-                syncSendPacketWithInterruptionHandling(info);
+                this.connection.syncSendPacket(info);
                 if (localTransactionEventListener != null) {
                     localTransactionEventListener.commitEvent();
                 }
                 afterCommit();
             } catch (JMSException cause) {
-                LOG.info("commit failed for transaction " + info.getTransactionId(), cause);
+                LOG.info("commit failed for transaction {}", info.getTransactionId(), cause);
                 if (localTransactionEventListener != null) {
                     localTransactionEventListener.rollbackEvent();
                 }
@@ -349,11 +352,11 @@ public class TransactionContext implements XAResource {
     /**
      * Associates a transaction with the resource.
      */
+    @Override
     public void start(Xid xid, int flags) throws XAException {
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Start: " + xid + ", flags:" + flags);
-        }
+        LOG.debug("Start: {}, flags: {}", xid, XASupport.toString(flags));
+
         if (isInLocalTransaction()) {
             throw new XAException(XAException.XAER_PROTO);
         }
@@ -365,13 +368,14 @@ public class TransactionContext implements XAResource {
         // if ((flags & TMJOIN) == TMJOIN) {
         // TODO: verify that the server has seen the xid
         // // }
-        // if ((flags & TMJOIN) == TMRESUME) {
+        // if ((flags & TMRESUME) == TMRESUME) {
         // // TODO: verify that the xid was suspended.
         // }
 
         // associate
         synchronizations = null;
         beforeEndIndex = 0;
+        setRollbackOnly(false);
         setXid(xid);
     }
 
@@ -382,11 +386,10 @@ public class TransactionContext implements XAResource {
         return connection.getConnectionInfo().getConnectionId();
     }
 
+    @Override
     public void end(Xid xid, int flags) throws XAException {
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("End: " + xid + ", flags:" + flags);
-        }
+        LOG.debug("End: {}, flags: {}", xid, XASupport.toString(flags));
 
         if (isInLocalTransaction()) {
             throw new XAException(XAException.XAER_PROTO);
@@ -397,29 +400,33 @@ public class TransactionContext implements XAResource {
             if (!equals(associatedXid, xid)) {
                 throw new XAException(XAException.XAER_PROTO);
             }
-
-            // TODO: we may want to put the xid in a suspended list.
-            try {
-                beforeEnd();
-            } catch (JMSException e) {
-                throw toXAException(e);
-            } finally {
-                setXid(null);
-            }
+            invokeBeforeEnd();
         } else if ((flags & TMSUCCESS) == TMSUCCESS) {
             // set to null if this is the current xid.
             // otherwise this could be an asynchronous success call
             if (equals(associatedXid, xid)) {
-                try {
-                    beforeEnd();
-                } catch (JMSException e) {
-                    throw toXAException(e);
-                } finally {
-                    setXid(null);
-                }
+                invokeBeforeEnd();
             }
         } else {
             throw new XAException(XAException.XAER_INVAL);
+        }
+    }
+
+    private void invokeBeforeEnd() throws XAException {
+        boolean throwingException = false;
+        try {
+            beforeEnd();
+        } catch (JMSException e) {
+            throwingException = true;
+            throw toXAException(e);
+        } finally {
+            try {
+                setXid(null);
+            } catch (XAException ignoreIfWillMask){
+                if (!throwingException) {
+                    throw ignoreIfWillMask;
+                }
+            }
         }
     }
 
@@ -434,10 +441,9 @@ public class TransactionContext implements XAResource {
                && Arrays.equals(xid1.getGlobalTransactionId(), xid2.getGlobalTransactionId());
     }
 
+    @Override
     public int prepare(Xid xid) throws XAException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Prepare: " + xid);
-        }
+        LOG.debug("Prepare: {}", xid);
 
         // We allow interleaving multiple transactions, so
         // we don't limit prepare to the associated xid.
@@ -451,48 +457,58 @@ public class TransactionContext implements XAResource {
             x = new XATransactionId(xid);
         }
 
+        if (rollbackOnly) {
+            LOG.warn("prepare of: " + x + " failed because it was marked rollback only; typically due to failover with pending acks");
+            throw new XAException(XAException.XA_RBINTEGRITY);
+        }
+
         try {
             TransactionInfo info = new TransactionInfo(getConnectionId(), x, TransactionInfo.PREPARE);
 
             // Find out if the server wants to commit or rollback.
-            IntegerResponse response = (IntegerResponse)syncSendPacketWithInterruptionHandling(info);
+            IntegerResponse response = (IntegerResponse)this.connection.syncSendPacket(info);
             if (XAResource.XA_RDONLY == response.getResult()) {
                 // transaction stops now, may be syncs that need a callback
-	        	synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-	                List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
-	                if (l != null && !l.isEmpty()) {
-	                    if (LOG.isDebugEnabled()) {
-	                        LOG.debug("firing afterCommit callbacks on XA_RDONLY from prepare: " + xid);
-	                    }
-	                    for (TransactionContext ctx : l) {
-	                        ctx.afterCommit();
-	                    }
-	                }
-	        	}
+                List<TransactionContext> l;
+                synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+                    l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+                }
+                // After commit may be expensive and can deadlock, do it outside global synch block
+                // No risk for concurrent updates as we own the list now
+                if (l != null) {
+                    if(! l.isEmpty()) {
+                        LOG.debug("firing afterCommit callbacks on XA_RDONLY from prepare: {}", xid);
+                        for (TransactionContext ctx : l) {
+                            ctx.afterCommit();
+                        }
+                    }
+                }
             }
             return response.getResult();
 
         } catch (JMSException e) {
             LOG.warn("prepare of: " + x + " failed with: " + e, e);
-        	synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-	            List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
-	            if (l != null && !l.isEmpty()) {
-	                for (TransactionContext ctx : l) {
-	                    try {
-	                        ctx.afterRollback();
-	                    } catch (Throwable ignored) {
-	                        if (LOG.isDebugEnabled()) {
-	                            LOG.debug("failed to firing afterRollback callbacks on prepare failure, txid: " +
-	                            		  x + ", context: " + ctx, ignored);
-	                        }
-	                    }
-	                }
-	            }
-        	}
+            List<TransactionContext> l;
+            synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+                l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+            }
+            // After rollback may be expensive and can deadlock, do it outside global synch block
+            // No risk for concurrent updates as we own the list now
+            if (l != null) {
+                for (TransactionContext ctx : l) {
+                    try {
+                        ctx.afterRollback();
+                    } catch (Throwable ignored) {
+                        LOG.debug("failed to firing afterRollback callbacks on prepare " +
+                                  "failure, txid: {}, context: {}", x, ctx, ignored);
+                    }
+                }
+            }
             throw toXAException(e);
         }
     }
 
+    @Override
     public void rollback(Xid xid) throws XAException {
 
         if (LOG.isDebugEnabled()) {
@@ -519,27 +535,29 @@ public class TransactionContext implements XAResource {
 
             // Let the server know that the tx is rollback.
             TransactionInfo info = new TransactionInfo(getConnectionId(), x, TransactionInfo.ROLLBACK);
-            syncSendPacketWithInterruptionHandling(info);
+            this.connection.syncSendPacket(info);
 
-        	synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-	            List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
-	            if (l != null && !l.isEmpty()) {
-	                for (TransactionContext ctx : l) {
-	                    ctx.afterRollback();
-	                }
-	            }
-        	}
+            List<TransactionContext> l;
+            synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+                l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+            }
+            // After rollback may be expensive and can deadlock, do it outside global synch block
+            // No risk for concurrent updates as we own the list now
+            if (l != null) {
+                for (TransactionContext ctx : l) {
+                    ctx.afterRollback();
+                }                  
+            }
         } catch (JMSException e) {
             throw toXAException(e);
         }
     }
 
     // XAResource interface
+    @Override
     public void commit(Xid xid, boolean onePhase) throws XAException {
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Commit: " + xid + ", onePhase=" + onePhase);
-        }
+        LOG.debug("Commit: {}, onePhase={}", xid, onePhase);
 
         // We allow interleaving multiple transactions, so
         // we don't limit commit to the associated xid.
@@ -552,6 +570,11 @@ public class TransactionContext implements XAResource {
             x = new XATransactionId(xid);
         }
 
+        if (rollbackOnly) {
+             LOG.warn("commit of: " + x + " failed because it was marked rollback only; typically due to failover with pending acks");
+             throw new XAException(XAException.XA_RBINTEGRITY);
+         }
+
         try {
             this.connection.checkClosedOrFailed();
             this.connection.ensureConnectionInfoSent();
@@ -559,48 +582,50 @@ public class TransactionContext implements XAResource {
             // Notify the server that the tx was committed back
             TransactionInfo info = new TransactionInfo(getConnectionId(), x, onePhase ? TransactionInfo.COMMIT_ONE_PHASE : TransactionInfo.COMMIT_TWO_PHASE);
 
-            syncSendPacketWithInterruptionHandling(info);
+            this.connection.syncSendPacket(info);
 
-        	synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-	            List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
-	            if (l != null && !l.isEmpty()) {
-	                for (TransactionContext ctx : l) {
-	                    try {
-	                        ctx.afterCommit();
-	                    } catch (Exception ignored) {
-	                        LOG.debug("ignoring exception from after completion on ended transaction: " + ignored, ignored);
-	                    }
-	                }
-	            }
-        	}
+            List<TransactionContext> l;
+            synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+                l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+            }
+            // After commit may be expensive and can deadlock, do it outside global synch block
+            // No risk for concurrent updates as we own the list now
+            if (l != null) {
+                for (TransactionContext ctx : l) {
+                    try {
+                        ctx.afterCommit();
+                    } catch (Exception ignored) {
+                        LOG.debug("ignoring exception from after completion on ended transaction: {}", ignored, ignored);
+                    }
+                }
+            }
 
         } catch (JMSException e) {
             LOG.warn("commit of: " + x + " failed with: " + e, e);
             if (onePhase) {
-	        	synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-	                List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
-	                if (l != null && !l.isEmpty()) {
-	                    for (TransactionContext ctx : l) {
-	                        try {
-	                            ctx.afterRollback();
-	                        } catch (Throwable ignored) {
-	                            if (LOG.isDebugEnabled()) {
-	                                LOG.debug("failed to firing afterRollback callbacks commit failure, txid: " + x + ", context: " + ctx, ignored);
-	                            }
-	                        }
-	                    }
-	                }
-	        	}
+                List<TransactionContext> l;
+                synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+                    l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+                }
+                // After rollback may be expensive and can deadlock, do it outside global synch block
+                // No risk for concurrent updates as we own the list now
+                if (l != null) {
+                    for (TransactionContext ctx : l) {
+                        try {
+                            ctx.afterRollback();
+                        } catch (Throwable ignored) {
+                            LOG.debug("failed to firing afterRollback callbacks commit failure, txid: {}, context: {}", x, ctx, ignored);
+                        }
+                    }
+                }
             }
             throw toXAException(e);
         }
-
     }
 
+    @Override
     public void forget(Xid xid) throws XAException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Forget: " + xid);
-        }
+        LOG.debug("Forget: {}", xid);
 
         // We allow interleaving multiple transactions, so
         // we don't limit forget to the associated xid.
@@ -619,15 +644,16 @@ public class TransactionContext implements XAResource {
 
         try {
             // Tell the server to forget the transaction.
-            syncSendPacketWithInterruptionHandling(info);
+            this.connection.syncSendPacket(info);
         } catch (JMSException e) {
             throw toXAException(e);
         }
-    	synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-    		ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
-    	}
+        synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+            ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+        }
     }
 
+    @Override
     public boolean isSameRM(XAResource xaResource) throws XAException {
         if (xaResource == null) {
             return false;
@@ -643,34 +669,43 @@ public class TransactionContext implements XAResource {
         }
     }
 
+    @Override
     public Xid[] recover(int flag) throws XAException {
         LOG.debug("recover({})", flag);
+        XATransactionId[] answer;
 
-        TransactionInfo info = new TransactionInfo(getConnectionId(), null, TransactionInfo.RECOVER);
-        try {
-            this.connection.checkClosedOrFailed();
-            this.connection.ensureConnectionInfoSent();
+        if (XAResource.TMNOFLAGS == flag) {
+            // signal next in cursor scan, which for us is always the end b/c we don't maintain any cursor state
+            // allows looping scan to complete
+            answer = new XATransactionId[0];
+        } else {
+            TransactionInfo info = new TransactionInfo(getConnectionId(), null, TransactionInfo.RECOVER);
+            try {
+                this.connection.checkClosedOrFailed();
+                this.connection.ensureConnectionInfoSent();
 
-            DataArrayResponse receipt = (DataArrayResponse)this.connection.syncSendPacket(info);
-            DataStructure[] data = receipt.getData();
-            XATransactionId[] answer;
-            if (data instanceof XATransactionId[]) {
-                answer = (XATransactionId[])data;
-            } else {
-                answer = new XATransactionId[data.length];
-                System.arraycopy(data, 0, answer, 0, data.length);
+                DataArrayResponse receipt = (DataArrayResponse) this.connection.syncSendPacket(info);
+                DataStructure[] data = receipt.getData();
+                if (data instanceof XATransactionId[]) {
+                    answer = (XATransactionId[]) data;
+                } else {
+                    answer = new XATransactionId[data.length];
+                    System.arraycopy(data, 0, answer, 0, data.length);
+                }
+            } catch (JMSException e) {
+                throw toXAException(e);
             }
-            LOG.debug("recover({})={}", flag, answer);
-            return answer;
-        } catch (JMSException e) {
-            throw toXAException(e);
         }
+        LOG.debug("recover({})={}", flag, answer);
+        return answer;
     }
 
+    @Override
     public int getTransactionTimeout() throws XAException {
         return 0;
     }
 
+    @Override
     public boolean setTransactionTimeout(int seconds) throws XAException {
         return false;
     }
@@ -702,9 +737,7 @@ public class TransactionContext implements XAResource {
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.BEGIN);
             try {
                 this.connection.asyncSendPacket(info);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("{} started XA transaction {} ", this, transactionId);
-                }
+                LOG.debug("{} started XA transaction {}", this, transactionId);
             } catch (JMSException e) {
                 disassociate();
                 throw toXAException(e);
@@ -715,10 +748,8 @@ public class TransactionContext implements XAResource {
             if (transactionId != null) {
                 TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.END);
                 try {
-                    syncSendPacketWithInterruptionHandling(info);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("{} ended XA transaction {}", this, transactionId);
-                    }
+                    this.connection.syncSendPacket(info);
+                    LOG.debug("{} ended XA transaction {}", this, transactionId);
                 } catch (JMSException e) {
                     disassociate();
                     throw toXAException(e);
@@ -726,16 +757,17 @@ public class TransactionContext implements XAResource {
 
                 // Add our self to the list of contexts that are interested in
                 // post commit/rollback events.
-	        	synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
-	                List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.get(transactionId);
-	                if (l == null) {
-	                    l = new ArrayList<TransactionContext>(3);
-	                    ENDED_XA_TRANSACTION_CONTEXTS.put(transactionId, l);
-	                    l.add(this);
-	                } else if (!l.contains(this)) {
-	                    l.add(this);
-	                }
-	        	}
+                List<TransactionContext> l;
+                synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
+                    l = ENDED_XA_TRANSACTION_CONTEXTS.get(transactionId);
+                    if (l == null) {
+                        l = new ArrayList<TransactionContext>(3);
+                        ENDED_XA_TRANSACTION_CONTEXTS.put(transactionId, l);
+                    }
+                    if (!l.contains(this)) {
+                        l.add(this);
+                    }
+                }
             }
 
             disassociate();
@@ -746,31 +778,6 @@ public class TransactionContext implements XAResource {
          // dis-associate
          associatedXid = null;
          transactionId = null;
-    }
-
-    /**
-     * Sends the given command. Also sends the command in case of interruption,
-     * so that important commands like rollback and commit are never interrupted.
-     * If interruption occurred, set the interruption state of the current
-     * after performing the action again.
-     *
-     * @return the response
-     */
-    private Response syncSendPacketWithInterruptionHandling(Command command) throws JMSException {
-        try {
-            return this.connection.syncSendPacket(command);
-        } catch (JMSException e) {
-            if (e.getLinkedException() instanceof InterruptedIOException) {
-                try {
-                    Thread.interrupted();
-                    return this.connection.syncSendPacket(command);
-                } finally {
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            throw e;
-        }
     }
 
     /**
@@ -813,7 +820,6 @@ public class TransactionContext implements XAResource {
     public ActiveMQConnection getConnection() {
         return connection;
     }
-
 
     // for RAR xa recovery where xaresource connection is per request
     public ActiveMQConnection setConnection(ActiveMQConnection connection) {

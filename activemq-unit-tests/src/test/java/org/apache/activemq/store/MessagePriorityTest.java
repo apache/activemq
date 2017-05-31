@@ -17,10 +17,13 @@
 
 package org.apache.activemq.store;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
@@ -31,6 +34,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
@@ -64,6 +69,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     public int MSG_NUM = 600;
     public int HIGH_PRI = 7;
     public int LOW_PRI = 3;
+    public int MED_PRI = 4;
 
     abstract protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception;
 
@@ -94,11 +100,17 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         ignoreExpired.setDeadLetterStrategy(ignoreExpiredStrategy);
         policyMap.put(new ActiveMQTopic("TEST_CLEANUP_NO_PRIORITY"), ignoreExpired);
 
+        PolicyEntry noCachePolicy = new PolicyEntry();
+        noCachePolicy.setUseCache(false);
+        noCachePolicy.setPrioritizedMessages(true);
+        policyMap.put(new ActiveMQQueue("TEST_LOW_THEN_HIGH_10"), noCachePolicy);
+
         broker.setDestinationPolicy(policyMap);
         broker.start();
         broker.waitUntilStarted();
 
         factory = new ActiveMQConnectionFactory("vm://priorityTest");
+        factory.setMessagePrioritySupported(true);
         ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
         prefetch.setAll(prefetchVal);
         factory.setPrefetchPolicy(prefetch);
@@ -563,7 +575,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     public void testQueueBacklog() throws Exception {
-        final int backlog = 180000;
+        final int backlog = 1800;
         ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST");
 
         ProducerThread lowPri = new ProducerThread(queue, backlog, LOW_PRI);
@@ -583,5 +595,223 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < 10 ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
+
+        final DestinationStatistics destinationStatistics = ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics();
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Enqueues: " + destinationStatistics.getEnqueues().getCount() + ", Dequeues: " + destinationStatistics.getDequeues().getCount());
+                return destinationStatistics.getEnqueues().getCount() == backlog + 10 && destinationStatistics.getDequeues().getCount() == 500;
+            }
+        }, 10000));
+    }
+
+    public void initCombosForTestLowThenHighBatch() {
+        // the cache limits the priority ordering to available memory
+        addCombinationValues("useCache", new Object[] {new Boolean(false)});
+        // expiry processing can fill the cursor with a snapshot of the producer
+        // priority, before producers are complete
+        addCombinationValues("expireMessagePeriod", new Object[] {new Integer(0)});
+    }
+
+    public void testLowThenHighBatch() throws Exception {
+        ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST_LOW_THEN_HIGH_10");
+
+        ProducerThread producerThread = new ProducerThread(queue, 10, LOW_PRI);
+        producerThread.run();
+
+        MessageConsumer queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", LOW_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+
+        producerThread.priority = HIGH_PRI;
+        producerThread.run();
+
+        queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+
+        producerThread.priority = LOW_PRI;
+        producerThread.run();
+        producerThread.priority = MED_PRI;
+        producerThread.run();
+
+        queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", MED_PRI, message.getJMSPriority());
+        }
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", LOW_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+
+        producerThread.priority = HIGH_PRI;
+        producerThread.run();
+
+        queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+    }
+
+    public void testInterleaveHiNewConsumerGetsHi() throws Exception {
+        ActiveMQQueue queue = (ActiveMQQueue) sess.createQueue("TEST");
+        doTestInterleaveHiNewConsumerGetsHi(queue);
+    }
+
+    public void testInterleaveHiNewConsumerGetsHiPull() throws Exception {
+        ActiveMQQueue queue = (ActiveMQQueue) sess.createQueue("TEST?consumer.prefetchSize=0");
+        doTestInterleaveHiNewConsumerGetsHi(queue);
+    }
+
+    public void doTestInterleaveHiNewConsumerGetsHi(ActiveMQQueue queue) throws Exception {
+
+        // one hi sandwich
+        ProducerThread producerThread = new ProducerThread(queue, 3, LOW_PRI);
+        producerThread.run();
+        producerThread = new ProducerThread(queue, 1, HIGH_PRI);
+        producerThread.run();
+        producerThread = new ProducerThread(queue, 3, LOW_PRI);
+        producerThread.run();
+
+        // consume hi
+        MessageConsumer queueConsumer = sess.createConsumer(queue);
+        Message message = queueConsumer.receive(10000);
+        assertNotNull("expect #", message);
+        assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        queueConsumer.close();
+
+        // last hi
+        producerThread = new ProducerThread(queue, 3, LOW_PRI);
+        producerThread.run();
+        producerThread = new ProducerThread(queue, 1, HIGH_PRI);
+        producerThread.run();
+
+        // consume hi
+        queueConsumer = sess.createConsumer(queue);
+        message = queueConsumer.receive(10000);
+        assertNotNull("expect #", message);
+        assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        queueConsumer.close();
+
+        // consume the rest
+        queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 9; i++) {
+            message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", LOW_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+    }
+
+    public void initCombosForTestEveryXHi() {
+        // the cache limits the priority ordering to available memory
+        addCombinationValues("useCache", new Object[] {Boolean.FALSE, Boolean.TRUE});
+        // expiry processing can fill the cursor with a snapshot of the producer
+        // priority, before producers are complete
+        addCombinationValues("expireMessagePeriod", new Object[] {new Integer(0)});
+    }
+
+    public void testEveryXHi() throws Exception {
+
+        ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST");
+
+        // ensure we hit the limit to disable the cache
+        broker.getDestinationPolicy().getEntryFor(queue).setMemoryLimit(50*1024);
+        final String payload = new String(new byte[1024]);
+        final int numMessages = 500;
+
+        final AtomicInteger received = new AtomicInteger(0);
+        MessageConsumer queueConsumer = sess.createConsumer(queue);
+        queueConsumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                received.incrementAndGet();
+
+                if (received.get() < 20) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        MessageProducer producer = sess.createProducer(queue);
+        for (int i = 0; i < numMessages; i++) {
+            Message message = sess.createMessage();
+            message.setStringProperty("payload", payload);
+            if (i % 5 == 0) {
+                message.setJMSPriority(9);
+            } else {
+                message.setJMSPriority(4);
+            }
+            producer.send(message, Message.DEFAULT_DELIVERY_MODE, message.getJMSPriority(), Message.DEFAULT_TIME_TO_LIVE);
+        }
+
+        assertTrue("Got all", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return numMessages == received.get();
+            }
+        }));
+
+
+        final DestinationStatistics destinationStatistics = ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics();
+        assertTrue("Nothing else Like dlq involved", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Enqueues: " + destinationStatistics.getEnqueues().getCount() + ", Dequeues: " + destinationStatistics.getDequeues().getCount());
+                return destinationStatistics.getEnqueues().getCount() == numMessages && destinationStatistics.getDequeues().getCount() == numMessages;
+            }
+        }, 10000));
+
+        // do it again!
+        received.set(0);
+        destinationStatistics.reset();
+        for (int i = 0; i < numMessages; i++) {
+            Message message = sess.createMessage();
+            message.setStringProperty("payload", payload);
+            if (i % 5 == 0) {
+                message.setJMSPriority(9);
+            } else {
+                message.setJMSPriority(4);
+            }
+            producer.send(message, Message.DEFAULT_DELIVERY_MODE, message.getJMSPriority(), Message.DEFAULT_TIME_TO_LIVE);
+        }
+
+        assertTrue("Got all", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return numMessages == received.get();
+            }
+        }));
+
+
+        assertTrue("Nothing else Like dlq involved", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Enqueues: " + destinationStatistics.getEnqueues().getCount() + ", Dequeues: " + destinationStatistics.getDequeues().getCount());
+                return destinationStatistics.getEnqueues().getCount() == numMessages && destinationStatistics.getDequeues().getCount() == numMessages;
+            }
+        }, 10000));
+
+        queueConsumer.close();
     }
 }

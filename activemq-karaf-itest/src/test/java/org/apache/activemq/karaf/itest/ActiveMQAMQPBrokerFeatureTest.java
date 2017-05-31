@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,52 +16,51 @@
  */
 package org.apache.activemq.karaf.itest;
 
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.junit.runner.RunWith;
+import javax.jms.Connection;
+
+import org.apache.qpid.jms.JmsConnectionFactory;
+import org.junit.Test;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-
-@RunWith(PaxExam.class)
-public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
+public class ActiveMQAMQPBrokerFeatureTest extends AbstractFeatureTest {
     private static final Integer AMQP_PORT = 61636;
 
     @Configuration
     public static Option[] configure() {
-        Option[] activeMQOptions = configure("activemq");
-
-        MavenArtifactProvisionOption qpidClient = CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-client").versionAsInProject();
-        MavenArtifactProvisionOption qpidClientJms = CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-client-jms").versionAsInProject();
-        MavenArtifactProvisionOption qpidCommon = CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-common").versionAsInProject();
-        MavenArtifactProvisionOption geronimoJms = CoreOptions.mavenBundle("org.apache.geronimo.specs", "geronimo-jms_1.1_spec").versionAsInProject();
-        MavenArtifactProvisionOption geronimoJta = CoreOptions.mavenBundle("org.apache.geronimo.specs", "geronimo-jta_1.1_spec","1.1.1");
-
-        Option[] options = append(qpidClient, activeMQOptions);
-        options = append(qpidClientJms, options);
-        options = append(qpidCommon, options);
-        options = append(geronimoJms, options);
-        options = append(geronimoJta, options);
-
-        Option[] configuredOptions = configureBrokerStart(options);
-        return configuredOptions;
+        return new Option[] //
+        {
+         CoreOptions.mavenBundle("org.apache.geronimo.specs","geronimo-jms_2.0_spec").version("1.0-alpha-2"),
+         configure("activemq", "activemq-amqp-client"), //
+         configureBrokerStart()
+        };
     }
 
-    @Override
-    protected Connection getConnection() throws JMSException {
-        ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", AMQP_PORT, AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
-        Connection connection = factory.createConnection();
-        connection.start();
-
-        return connection;
+    @Test(timeout = 5 * 60 * 1000)
+    public void testProduceConsume() throws Throwable {
+    	JMSTester tester = new JMSTester(getQPIDConnection());
+    	tester.produceAndConsume(sessionFactory);
+    	tester.close();
     }
 
-    @Override
-    public void testTemporaryDestinations() throws Throwable {
-        // ignore until we have temporary destination are working in amqp
-    }
+	protected Connection getQPIDConnection() throws Exception {
+		assertBrokerStarted();
+	    assertQpidClient();
+	
+	    JmsConnectionFactory factory = new JmsConnectionFactory("amqp://localhost:" + AMQP_PORT);
+	    factory.setUsername(KarafShellHelper.USER);
+	    factory.setPassword(KarafShellHelper.PASSWORD);
+	    Connection connection = factory.createConnection();
+	    connection.start();
+	    return connection;
+	}
+
+	private void assertQpidClient() throws Exception {
+		withinReason(new Runnable() {
+	        public void run() {
+	            getBundle("org.apache.qpid.jms.client");
+	        }
+	    });
+	}
 }

@@ -16,66 +16,65 @@
  */
 package org.apache.activemq.karaf.itest;
 
-import org.apache.felix.service.command.CommandProcessor;
-import org.apache.felix.service.command.CommandSession;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.maven;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
+
 import org.apache.karaf.features.FeaturesService;
+import org.apache.karaf.shell.api.console.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.ProbeBuilder;
-import org.ops4j.pax.exam.karaf.options.KarafDistributionOption;
+import org.ops4j.pax.exam.TestProbeBuilder;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption;
+import org.ops4j.pax.exam.options.MavenUrlReference;
 import org.ops4j.pax.exam.options.UrlReference;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-
-
-import static org.ops4j.pax.exam.CoreOptions.*;
-import static org.junit.Assert.assertTrue;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
-
+@RunWith(PaxExam.class)
+@ExamReactorStrategy(PerClass.class)
 public abstract class AbstractFeatureTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
-    private static final long ASSERTION_TIMEOUT = 20000L;
-    private static final long COMMAND_TIMEOUT = 30000L;
-    public static final String USER = "karaf";
-    public static final String PASSWORD = "karaf";
-
-    static String basedir;
-    static {
-        try {
-            File location = new File(AbstractFeatureTest.class.getProtectionDomain().getCodeSource().getLocation().getFile());
-            basedir = new File(location, "../..").getCanonicalPath();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private static final String KARAF_MAJOR_VERSION = "4.0.0";
+    public static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
+    public static final long ASSERTION_TIMEOUT = 30000L;
+    public static final String RESOURCE_BASE = "src/test/resources/org/apache/activemq/karaf/itest/";
 
     @Inject
-    protected BundleContext bundleContext;
+    BundleContext bundleContext;
 
-	@Inject
-	FeaturesService featuresService;
+    @Inject
+    FeaturesService featuresService;
+    
+    @Inject
+    SessionFactory sessionFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -92,57 +91,17 @@ public abstract class AbstractFeatureTest {
         return probe;
     }
 
-    @Inject
-    CommandProcessor commandProcessor;
-    ExecutorService executor = Executors.newCachedThreadPool();
-
-    protected String executeCommand(final String command, final Long timeout, final Boolean silent) {
-            String response;
-            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            final PrintStream printStream = new PrintStream(byteArrayOutputStream);
-            final CommandSession commandSession = commandProcessor.createSession(System.in, printStream, printStream);
-            commandSession.put("APPLICATION", System.getProperty("karaf.name", "root"));
-            commandSession.put("USER", USER);
-            FutureTask<String> commandFuture = new FutureTask<String>(
-                    new Callable<String>() {
-                        public String call() {
-                            try {
-                                if (!silent) {
-                                    System.out.println(command);
-                                    System.out.flush();
-                                }
-                                commandSession.execute(command);
-                            } catch (Exception e) {
-                                e.printStackTrace(System.err);
-                            }
-                            printStream.flush();
-                            return byteArrayOutputStream.toString();
-                        }
-                    });
-
-            try {
-                executor.submit(commandFuture);
-                response = commandFuture.get(timeout, TimeUnit.MILLISECONDS);
-            } catch (Exception e) {
-                e.printStackTrace(System.err);
-                response = "SHELL COMMAND TIMED OUT: ";
-            }
-
-            return response;
-        }
-
-    protected String executeCommand(final String command) {
-        return executeCommand(command, COMMAND_TIMEOUT, false);
+    /**
+     * Installs a feature and asserts that feature is properly installed.
+     * 
+     * @param feature
+     * @throws Exception
+     */
+    public void installAndAssertFeature(final String feature) throws Throwable {
+        featuresService.installFeature(feature);
     }
 
-	/**
-	 * Installs a feature and asserts that feature is properly installed.
-	 * @param feature
-	 * @throws Exception
-	 */
-	public void installAndAssertFeature(final String feature) throws Throwable {
-		System.err.println(executeCommand("features:install " + feature));
-		System.err.println(executeCommand("osgi:list -t 0"));
+    public void assertFeatureInstalled(final String feature) throws Throwable {
         withinReason(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
@@ -150,83 +109,66 @@ public abstract class AbstractFeatureTest {
                 return true;
             }
         });
+    }
+    
+    public Bundle getBundle(String symName) {
+        for (Bundle bundle: bundleContext.getBundles()) {
+            if (bundle.getSymbolicName().contains(symName)) {
+                return bundle;
+            }
+        }
+        throw new RuntimeException("Bundle " + symName + " not found");
+    }
+
+    protected String executeCommand(String command) {
+		return KarafShellHelper.executeCommand(sessionFactory, command);
 	}
 
+	protected void assertBrokerStarted() throws Exception {
+		withinReason(new Runnable() {
+	        public void run() {
+	            assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
+	            assertTrue(executeCommand("activemq:bstat").trim().contains("BrokerName = amq-broker"));
+	        }
+	    });
+	}
 
-
-	public static String karafVersion() {
-        return System.getProperty("karafVersion", "unknown-need-env-var");
+	public static Option configureBrokerStart(String xmlConfig) {
+        return composite(
+                replaceConfigurationFile("etc/activemq.xml", new File(RESOURCE_BASE + xmlConfig + ".xml")),
+                replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", 
+                                         new File(RESOURCE_BASE + "org.apache.activemq.server-default.cfg"))
+                );
     }
 
-    public static UrlReference getActiveMQKarafFeatureUrl() {
-        String type = "xml/features";
-        return mavenBundle().groupId("org.apache.activemq").
-            artifactId("activemq-karaf").versionAsInProject().type(type);
+    public static Option configureBrokerStart() {
+        return configureBrokerStart("activemq");
     }
 
-    // for use from a probe
-    public String getCamelFeatureUrl() {
-        return getCamelFeatureUrl(System.getProperty("camel.version", "unknown"));
+    public static Option configure(String... features) {
+        MavenUrlReference karafUrl = maven().groupId("org.apache.karaf").artifactId("apache-karaf")
+            .type("tar.gz").versionAsInProject();
+        UrlReference camelUrl = maven().groupId("org.apache.camel.karaf")
+            .artifactId("apache-camel").type("xml").classifier("features").versionAsInProject();
+        UrlReference activeMQUrl = maven().groupId("org.apache.activemq").
+            artifactId("activemq-karaf").versionAsInProject().type("xml").classifier("features").versionAsInProject();
+        return composite(
+         karafDistributionConfiguration().frameworkUrl(karafUrl).karafVersion(KARAF_MAJOR_VERSION)
+             .name("Apache Karaf").unpackDirectory(new File("target/paxexam/unpack/")),
+         keepRuntimeFolder(), //
+         logLevel(LogLevelOption.LogLevel.WARN), //
+         editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
+         // debugConfiguration("5005", true),
+         features(activeMQUrl, features), //
+         features(camelUrl)
+        );
     }
 
-    public static String getCamelFeatureUrl(String ver) {
-        return "mvn:org.apache.camel.karaf/apache-camel/"
-        + ver
-        + "/xml/features";
+    protected static String camelVersion() {
+        return MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel");
     }
 
-    public static UrlReference getKarafFeatureUrl() {
-        LOG.info("*** The karaf version is " + karafVersion() + " ***");
-
-        String type = "xml/features";
-        return mavenBundle().groupId("org.apache.karaf.assemblies.features").
-            artifactId("standard").version(karafVersion()).type(type);
-    }
-
-    public static Option[] configureBrokerStart(Option[] existingOptions, String xmlConfig) {
-        existingOptions = append(
-                replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server-default.cfg")),
-                existingOptions);
-        return append(
-                replaceConfigurationFile("etc/activemq.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/" + xmlConfig + ".xml")),
-                existingOptions);
-    }
-
-    public static Option[] configureBrokerStart(Option[] existingOptions) {
-        final String xmlConfig = "activemq";
-        return configureBrokerStart(existingOptions, xmlConfig);
-    }
-
-    public static Option[] append(Option toAdd, Option[] existingOptions) {
-        ArrayList<Option> newOptions = new ArrayList<Option>();
-        newOptions.addAll(Arrays.asList(existingOptions));
-        newOptions.add(toAdd);
-        return newOptions.toArray(new Option[]{});
-    }
-
-    public static Option[] configure(String ...features) {
-
-        ArrayList<String> f = new ArrayList<String>();
-        f.addAll(Arrays.asList(features));
-
-        Option[] options =
-            new Option[]{
-                karafDistributionConfiguration().frameworkUrl(
-                    maven().groupId("org.apache.karaf").artifactId("apache-karaf").type("tar.gz").version(karafVersion()))
-                    //This version doesn't affect the version of karaf we use
-                    .karafVersion(karafVersion()).name("Apache Karaf")
-                    .unpackDirectory(new File("target/paxexam/unpack/")),
-
-                KarafDistributionOption.keepRuntimeFolder(),
-                logLevel(LogLevelOption.LogLevel.INFO),
-                replaceConfigurationFile("etc/config.properties", new File(basedir+"/target/classes/org/apache/activemq/karaf/itest/config.properties")),
-                replaceConfigurationFile("etc/custom.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/custom.properties")),
-                features(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
-
-        return options;
-    }
-
-    protected boolean withinReason(Callable<Boolean> callable) throws Throwable {
+    public static boolean withinReason(Callable<Boolean> callable) throws Exception {
         long max = System.currentTimeMillis() + ASSERTION_TIMEOUT;
         while (true) {
             try {
@@ -241,4 +183,51 @@ public abstract class AbstractFeatureTest {
             }
         }
     }
+    
+    public static void withinReason(Runnable runable) {
+        long max = System.currentTimeMillis() + ASSERTION_TIMEOUT;
+        while (true) {
+            try {
+                runable.run();
+                return;
+            } catch (Throwable t) {
+                if (System.currentTimeMillis() < max) {
+                    try {
+						TimeUnit.SECONDS.sleep(1);
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+                    continue;
+                } else {
+                    throw t;
+                }
+            }
+        }
+    }
+    
+    @SuppressWarnings("resource")
+    public static void copyFile(File from, File to) throws IOException {
+        if (!to.exists()) {
+            System.err.println("Creating new file for: "+ to);
+            to.createNewFile();
+        }
+        FileChannel in = new FileInputStream(from).getChannel();
+        FileChannel out = new FileOutputStream(to).getChannel();
+        try {
+            long size = in.size();
+            long position = 0;
+            while (position < size) {
+                position += in.transferTo(position, 8192, out);
+            }
+        } finally {
+            try {
+                in.close();
+                out.force(true);
+                out.close();
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+    }
+
 }

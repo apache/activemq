@@ -22,38 +22,42 @@
 
     <!-- Bundles needed if only client will be deployed in the container -->
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}" resolver="(obr)" start-level="50">
-        <feature version="[3.1,4)">spring</feature>
+        <feature version="[3.2,5)">spring</feature>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
         <bundle dependency="true">mvn:org.jvnet.jaxb2_commons/jaxb2-basics-runtime/${jaxb-basics-version}</bundle>
         <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-impl/${jaxb-bundle-version}</bundle>
-        <bundle dependency="false">mvn:commons-pool/commons-pool/${commons-pool-version}</bundle>
+        <bundle dependency="false">mvn:org.apache.commons/commons-pool2/${commons-pool2-version}</bundle>
         <bundle dependency="false">mvn:commons-net/commons-net/${commons-net-version}</bundle>
         <bundle dependency='true'>mvn:org.apache.zookeeper/zookeeper/${zookeeper-version}</bundle>
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
-        <bundle dependency="false">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
+    </feature>
+    
+    <feature name="activemq-cf" description="ActiveMQ ConnectionFactory from config" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature>activemq-client</feature>
+        <feature>scr</feature>
+        <bundle>mvn:org.apache.activemq/activemq-cf/${project.version}</bundle>
     </feature>
 
     <!-- All bundles needed by the broker -->
     <feature name="activemq" description="ActiveMQ broker libraries" version="${project.version}" resolver="(obr)" start-level="50">
+      <feature>connector</feature>
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
       <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
-      <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
       <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
-      <bundle dependency="true">mvn:commons-codec/commons-codec/1.4</bundle>
+      <bundle dependency="true">mvn:commons-codec/commons-codec/1.9</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_6</bundle>
-      <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.1_1</bundle>
+      <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.2_1</bundle>
+      <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt-spring31/1.9.2_1</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/${servicemix.specs.version}</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/${xpp3-bundle-version}</bundle>
       <bundle dependency="true">mvn:joda-time/joda-time/${jodatime-bundle-version}</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream-bundle-version}</bundle>
-      <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
-      <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle>
       <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries-version}</bundle>
       <bundle dependency="true">mvn:org.apache.activemq/activeio-core/${activeio-version}</bundle>
       <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison-version}</bundle>

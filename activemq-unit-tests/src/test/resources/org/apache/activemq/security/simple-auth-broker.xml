@@ -25,12 +25,12 @@
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-  <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor"> 
+  <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
       <property name="algorithm" value="PBEWithMD5AndDES"/> 
       <property name="password" value="activemq"/> 
   </bean> 
     
-  <bean id="propertyConfigurer" class="org.jasypt.spring.properties.EncryptablePropertyPlaceholderConfigurer"> 
+  <bean id="propertyConfigurer" class="org.jasypt.spring31.properties.EncryptablePropertyPlaceholderConfigurer">
       <constructor-arg ref="configurationEncryptor" /> 
       <property name="location" value="classpath:credentials.properties"/> 
   </bean> 
@@ -43,7 +43,7 @@
 
     <!-- Use a non-default port in case the default port is in use -->
     <managementContext>
-      <managementContext connectorPort="1199"/>
+      <managementContext connectorPort="1199" createConnector="true"/>
     </managementContext>
 
     <destinationPolicy>

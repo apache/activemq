@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.util;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +61,10 @@ public class StringToListOfActiveMQDestinationConverter {
     }
 
     public static String convertFromActiveMQDestination(Object value) {
+        return convertFromActiveMQDestination(value, false);
+    }
+
+    public static String convertFromActiveMQDestination(Object value, boolean includeOptions) {
         if (value == null) {
             return null;
         }
@@ -70,7 +76,17 @@ public class StringToListOfActiveMQDestinationConverter {
                 Object e = list.get(i);
                 if (e instanceof ActiveMQDestination) {
                     ActiveMQDestination destination = (ActiveMQDestination) e;
-                    sb.append(destination);
+                    if (includeOptions && destination.getOptions() != null) {
+                        try {
+                            //Reapply the options as URI parameters
+                            sb.append(destination.toString() + URISupport.applyParameters(
+                                new URI(""), destination.getOptions()));
+                        } catch (URISyntaxException e1) {
+                            sb.append(destination);
+                        }
+                    } else {
+                        sb.append(destination);
+                    }
                     if (i < list.size() - 1) {
                         sb.append(", ");
                     }

@@ -63,15 +63,13 @@ public class ManagedTransportConnection extends TransportConnection {
 
     @Override
     public void stopAsync() {
-        if (!isStopping()) {
-            synchronized (this) {
-                unregisterMBean(byClientIdName);
-                unregisterMBean(byAddressName);
-                byClientIdName = null;
-                byAddressName = null;
-            }
-        }
         super.stopAsync();
+        synchronized (this) {
+            unregisterMBean(byClientIdName);
+            unregisterMBean(byAddressName);
+            byClientIdName = null;
+            byAddressName = null;
+        }
     }
 
     @Override

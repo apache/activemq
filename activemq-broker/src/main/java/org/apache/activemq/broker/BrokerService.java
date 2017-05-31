@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -111,6 +112,8 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
+import org.apache.activemq.usage.PercentLimitUsage;
+import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
@@ -119,6 +122,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.StoreUtil;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.util.TimeUtils;
 import org.apache.activemq.util.URISupport;
@@ -177,11 +181,11 @@ public class BrokerService implements Service {
     private PersistenceAdapterFactory persistenceFactory;
     protected DestinationFactory destinationFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
-    private final List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
-    private final List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<NetworkConnector>();
-    private final List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<ProxyConnector>();
-    private final List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<JmsConnector>();
-    private final List<Service> services = new ArrayList<Service>();
+    private final List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<>();
+    private final List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<>();
+    private final List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<>();
+    private final List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<>();
+    private final List<Service> services = new ArrayList<>();
     private transient Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
@@ -200,6 +204,15 @@ public class BrokerService implements Service {
     private boolean useVirtualTopics = true;
     private boolean useMirroredQueues = false;
     private boolean useTempMirroredQueues = true;
+    /**
+     * Whether or not virtual destination subscriptions should cause network demand
+     */
+    private boolean useVirtualDestSubs = false;
+    /**
+     * Whether or not the creation of destinations that match virtual destinations
+     * should cause network demand
+     */
+    private boolean useVirtualDestSubsOnCreation = false;
     private BrokerId brokerId;
     private volatile DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
@@ -208,7 +221,6 @@ public class BrokerService implements Service {
     private boolean useLocalHostBrokerName;
     private final CountDownLatch stoppedLatch = new CountDownLatch(1);
     private final CountDownLatch startedLatch = new CountDownLatch(1);
-    private boolean supportFailOver;
     private Broker regionBroker;
     private int producerSystemUsagePortion = 60;
     private int consumerSystemUsagePortion = 40;
@@ -218,7 +230,7 @@ public class BrokerService implements Service {
     private boolean dedicatedTaskRunner;
     private boolean cacheTempDestinations = false;// useful for failover
     private int timeBeforePurgeTempDestinations = 5000;
-    private final List<Runnable> shutdownHooks = new ArrayList<Runnable>();
+    private final List<Runnable> shutdownHooks = new ArrayList<>();
     private boolean systemExitOnShutdown;
     private int systemExitOnShutdownExitCode;
     private SslContext sslContext;
@@ -230,6 +242,9 @@ public class BrokerService implements Service {
     private ThreadPoolExecutor executor;
     private int schedulePeriodForDestinationPurge= 0;
     private int maxPurgedDestinationsPerSweep = 0;
+    private int schedulePeriodForDiskUsageCheck = 0;
+    private int diskUsageCheckRegrowThreshold = -1;
+    private boolean adjustUsageLimits = true;
     private BrokerContext brokerContext;
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
@@ -241,7 +256,7 @@ public class BrokerService implements Service {
     private long offlineDurableSubscriberTaskSchedule = 300000;
     private DestinationFilter virtualConsumerDestinationFilter;
 
-    private final Object persistenceAdapterLock = new Object();
+    private final AtomicBoolean persistenceAdapterStarted = new AtomicBoolean(false);
     private Throwable startException = null;
     private boolean startAsync = false;
     private Date startDate;
@@ -249,8 +264,10 @@ public class BrokerService implements Service {
 
     private boolean restartAllowed = true;
     private boolean restartRequested = false;
+    private boolean rejectDurableConsumers = false;
+    private boolean rollbackOnlyOnAsyncException = true;
 
-    private int storeOpenWireVersion = OpenWireFormat.DEFAULT_VERSION;
+    private int storeOpenWireVersion = OpenWireFormat.DEFAULT_STORE_VERSION;
 
     static {
 
@@ -258,7 +275,8 @@ public class BrokerService implements Service {
             ClassLoader loader = BrokerService.class.getClassLoader();
             Class<?> clazz = loader.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
             Provider bouncycastle = (Provider) clazz.newInstance();
-            Security.insertProviderAt(bouncycastle, 2);
+            Security.insertProviderAt(bouncycastle,
+                Integer.getInteger("org.apache.activemq.broker.BouncyCastlePosition", 2));
             LOG.info("Loaded the Bouncy Castle security provider.");
         } catch(Throwable e) {
             // No BouncyCastle found so we use the default Java Security Provider
@@ -272,14 +290,16 @@ public class BrokerService implements Service {
         }
         LOCAL_HOST_NAME = localHostName;
 
-        InputStream in = null;
         String version = null;
-        if ((in = BrokerService.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            try {
-                version = reader.readLine();
-            } catch(Exception e) {
+        try(InputStream in = BrokerService.class.getResourceAsStream("/org/apache/activemq/version.txt")) {
+            if (in != null) {
+                try(InputStreamReader isr = new InputStreamReader(in);
+                    BufferedReader reader = new BufferedReader(isr)) {
+                    version = reader.readLine();
+                }
             }
+        } catch (IOException ie) {
+            LOG.warn("Error reading broker version ", ie);
         }
         BROKER_VERSION = version;
     }
@@ -404,11 +424,7 @@ public class BrokerService implements Service {
      */
     public NetworkConnector addNetworkConnector(NetworkConnector connector) throws Exception {
         connector.setBrokerService(this);
-        URI uri = getVmConnectorURI();
-        Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-        map.put("network", "true");
-        uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
-        connector.setLocalUri(uri);
+        connector.setLocalUri(getVmConnectorURI());
         // Set a connection filter so that the connector does not establish loop
         // back connections.
         connector.setConnectionFilter(new ConnectionFilter() {
@@ -489,12 +505,21 @@ public class BrokerService implements Service {
     }
 
     public String getUptime() {
-        // compute and log uptime
-        if (startDate == null) {
+        long delta = getUptimeMillis();
+
+        if (delta == 0) {
             return "not started";
         }
-        long delta = new Date().getTime() - startDate.getTime();
+
         return TimeUtils.printDuration(delta);
+    }
+
+    public long getUptimeMillis() {
+        if (startDate == null) {
+            return 0;
+        }
+
+        return new Date().getTime() - startDate.getTime();
     }
 
     public boolean isStarted() {
@@ -565,11 +590,13 @@ public class BrokerService implements Service {
             return;
         }
 
+        setStartException(null);
         stopping.set(false);
         startDate = new Date();
         MDC.put("activemq.broker", brokerName);
 
         try {
+            checkMemorySystemUsageLimits();
             if (systemExitOnShutdown && useShutdownHook) {
                 throw new ConfigurationException("'useShutdownHook' property cannot be be used with 'systemExitOnShutdown', please turn it off (useShutdownHook=false)");
             }
@@ -597,7 +624,7 @@ public class BrokerService implements Service {
             startBroker(startAsync);
             brokerRegistry.bind(getBrokerName(), BrokerService.this);
         } catch (Exception e) {
-            LOG.error("Failed to start Apache ActiveMQ ({}, {})", new Object[]{ getBrokerName(), brokerId }, e);
+            LOG.error("Failed to start Apache ActiveMQ ({}, {})", getBrokerName(), brokerId, e);
             try {
                 if (!stopped.get()) {
                     stop();
@@ -619,10 +646,11 @@ public class BrokerService implements Service {
                     try {
                         doStartPersistenceAdapter();
                     } catch (Throwable e) {
-                        startException = e;
+                        setStartException(e);
                     } finally {
-                        synchronized (persistenceAdapterLock) {
-                            persistenceAdapterLock.notifyAll();
+                        synchronized (persistenceAdapterStarted) {
+                            persistenceAdapterStarted.set(true);
+                            persistenceAdapterStarted.notifyAll();
                         }
                     }
                 }
@@ -633,13 +661,43 @@ public class BrokerService implements Service {
     }
 
     private void doStartPersistenceAdapter() throws Exception {
-        getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
-        getPersistenceAdapter().setBrokerName(getBrokerName());
-        LOG.info("Using Persistence Adapter: {}", getPersistenceAdapter());
+        PersistenceAdapter persistenceAdapterToStart = getPersistenceAdapter();
+        if (persistenceAdapterToStart == null) {
+            checkStartException();
+            throw new ConfigurationException("Cannot start null persistence adapter");
+        }
+        persistenceAdapterToStart.setUsageManager(getProducerSystemUsage());
+        persistenceAdapterToStart.setBrokerName(getBrokerName());
+        LOG.info("Using Persistence Adapter: {}", persistenceAdapterToStart);
         if (deleteAllMessagesOnStartup) {
             deleteAllMessages();
         }
-        getPersistenceAdapter().start();
+        persistenceAdapterToStart.start();
+
+        getTempDataStore();
+        if (tempDataStore != null) {
+            try {
+                // start after we have the store lock
+                tempDataStore.start();
+            } catch (Exception e) {
+                RuntimeException exception = new RuntimeException(
+                        "Failed to start temp data store: " + tempDataStore, e);
+                LOG.error(exception.getLocalizedMessage(), e);
+                throw exception;
+            }
+        }
+
+        getJobSchedulerStore();
+        if (jobSchedulerStore != null) {
+            try {
+                jobSchedulerStore.start();
+            } catch (Exception e) {
+                RuntimeException exception = new RuntimeException(
+                        "Failed to start job scheduler store: " + jobSchedulerStore, e);
+                LOG.error(exception.getLocalizedMessage(), e);
+                throw exception;
+            }
+        }
     }
 
     private void startBroker(boolean async) throws Exception {
@@ -648,12 +706,14 @@ public class BrokerService implements Service {
                 @Override
                 public void run() {
                     try {
-                        synchronized (persistenceAdapterLock) {
-                            persistenceAdapterLock.wait();
+                        synchronized (persistenceAdapterStarted) {
+                            if (!persistenceAdapterStarted.get()) {
+                                persistenceAdapterStarted.wait();
+                            }
                         }
                         doStartBroker();
                     } catch (Throwable t) {
-                        startException = t;
+                        setStartException(t);
                     }
                 }
             }.start();
@@ -663,9 +723,7 @@ public class BrokerService implements Service {
     }
 
     private void doStartBroker() throws Exception {
-        if (startException != null) {
-            return;
-        }
+        checkStartException();
         startDestinations();
         addShutdownHook();
 
@@ -704,7 +762,7 @@ public class BrokerService implements Service {
         LOG.info("For help or more information please see: http://activemq.apache.org");
 
         getBroker().brokerServiceStarted();
-        checkSystemUsageLimits();
+        checkStoreSystemUsageLimits();
         startedLatch.countDown();
         getBroker().nowMasterBroker();
     }
@@ -735,6 +793,7 @@ public class BrokerService implements Service {
             return;
         }
 
+        setStartException(new BrokerStoppedException("Stop invoked"));
         MDC.put("activemq.broker", brokerName);
 
         if (systemExitOnShutdown) {
@@ -780,10 +839,10 @@ public class BrokerService implements Service {
             tempDataStore = null;
         }
         try {
-            stopper.stop(persistenceAdapter);
+            stopper.stop(getPersistenceAdapter());
             persistenceAdapter = null;
             if (isUseJmx()) {
-                stopper.stop(getManagementContext());
+                stopper.stop(managementContext);
                 managementContext = null;
             }
             // Clear SelectorParser cache to free memory
@@ -938,7 +997,7 @@ public class BrokerService implements Service {
         long expiration = Math.max(0, timeout + System.currentTimeMillis());
         while (!isStarted() && !stopped.get() && !waitSucceeded && expiration > System.currentTimeMillis()) {
             try {
-                if (startException != null) {
+                if (getStartException() != null) {
                     return waitSucceeded;
                 }
                 waitSucceeded = startedLatch.await(100L, TimeUnit.MILLISECONDS);
@@ -955,6 +1014,7 @@ public class BrokerService implements Service {
      */
     public Broker getBroker() throws Exception {
         if (broker == null) {
+            checkStartException();
             broker = createBroker();
         }
         return broker;
@@ -986,13 +1046,14 @@ public class BrokerService implements Service {
      *
      * @param brokerName
      */
+    private static final String brokerNameReplacedCharsRegExp = "[^a-zA-Z0-9\\.\\_\\-\\:]";
     public void setBrokerName(String brokerName) {
         if (brokerName == null) {
             throw new NullPointerException("The broker name cannot be null");
         }
-        String str = brokerName.replaceAll("[^a-zA-Z0-9\\.\\_\\-\\:]", "_");
+        String str = brokerName.replaceAll(brokerNameReplacedCharsRegExp, "_");
         if (!str.equals(brokerName)) {
-            LOG.error("Broker Name: {} contained illegal characters - replaced with {}", brokerName, str);
+            LOG.error("Broker Name: {} contained illegal characters matching regExp: {} - replaced with {}", brokerName, brokerNameReplacedCharsRegExp, str);
         }
         this.brokerName = str.trim();
     }
@@ -1174,8 +1235,8 @@ public class BrokerService implements Service {
         addService(this.producerSystemUsage);
     }
 
-    public PersistenceAdapter getPersistenceAdapter() throws IOException {
-        if (persistenceAdapter == null) {
+    public synchronized PersistenceAdapter getPersistenceAdapter() throws IOException {
+        if (persistenceAdapter == null && !hasStartException()) {
             persistenceAdapter = createPersistenceAdapter();
             configureService(persistenceAdapter);
             this.persistenceAdapter = registerPersistenceAdapterMBean(persistenceAdapter);
@@ -1202,6 +1263,7 @@ public class BrokerService implements Service {
         if (this.taskRunnerFactory == null) {
             this.taskRunnerFactory = new TaskRunnerFactory("ActiveMQ BrokerService["+getBrokerName()+"] Task", getTaskRunnerPriority(), true, 1000,
                     isDedicatedTaskRunner());
+            this.taskRunnerFactory.setThreadClassLoader(this.getClass().getClassLoader());
         }
         return this.taskRunnerFactory;
     }
@@ -1262,9 +1324,24 @@ public class BrokerService implements Service {
 
     public ManagementContext getManagementContext() {
         if (managementContext == null) {
+            checkStartException();
             managementContext = new ManagementContext();
         }
         return managementContext;
+    }
+
+    synchronized private void checkStartException() {
+        if (startException != null) {
+            throw new BrokerStoppedException(startException);
+        }
+    }
+
+    synchronized private boolean hasStartException() {
+        return startException != null;
+    }
+
+    synchronized private void setStartException(Throwable t) {
+        startException = t;
     }
 
     public void setManagementContext(ManagementContext managementContext) {
@@ -1298,7 +1375,7 @@ public class BrokerService implements Service {
     }
 
     public Map<String, String> getTransportConnectorURIsAsMap() {
-        Map<String, String> answer = new HashMap<String, String>();
+        Map<String, String> answer = new HashMap<>();
         for (TransportConnector connector : transportConnectors) {
             try {
                 URI uri = connector.getConnectUri();
@@ -1419,7 +1496,7 @@ public class BrokerService implements Service {
     }
 
     public List<TransportConnector> getTransportConnectors() {
-        return new ArrayList<TransportConnector>(transportConnectors);
+        return new ArrayList<>(transportConnectors);
     }
 
     /**
@@ -1454,11 +1531,11 @@ public class BrokerService implements Service {
     }
 
     public List<NetworkConnector> getNetworkConnectors() {
-        return new ArrayList<NetworkConnector>(networkConnectors);
+        return new ArrayList<>(networkConnectors);
     }
 
     public List<ProxyConnector> getProxyConnectors() {
-        return new ArrayList<ProxyConnector>(proxyConnectors);
+        return new ArrayList<>(proxyConnectors);
     }
 
     /**
@@ -1545,7 +1622,7 @@ public class BrokerService implements Service {
     public URI getVmConnectorURI() {
         if (vmConnectorURI == null) {
             try {
-                vmConnectorURI = new URI("vm://" + getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_"));
+                vmConnectorURI = new URI("vm://" + getBrokerName());
             } catch (URISyntaxException e) {
                 LOG.error("Badly formed URI from {}", getBrokerName(), e);
             }
@@ -1678,32 +1755,11 @@ public class BrokerService implements Service {
                 throw new RuntimeException(e);
             }
 
-            boolean result = true;
-            boolean empty = true;
             try {
-                File directory = getTmpDataDirectory();
-                if (directory.exists() && directory.isDirectory()) {
-                    File[] files = directory.listFiles();
-                    if (files != null && files.length > 0) {
-                        empty = false;
-                        for (int i = 0; i < files.length; i++) {
-                            File file = files[i];
-                            if (!file.isDirectory()) {
-                                result &= file.delete();
-                            }
-                        }
-                    }
-                }
-                if (!empty) {
-                    String str = result ? "Successfully deleted" : "Failed to delete";
-                    LOG.info("{} temporary storage", str);
-                }
-
                 String clazz = "org.apache.activemq.store.kahadb.plist.PListStoreImpl";
                 this.tempDataStore = (PListStore) getClass().getClassLoader().loadClass(clazz).newInstance();
                 this.tempDataStore.setDirectory(getTmpDataDirectory());
                 configureService(tempDataStore);
-                this.tempDataStore.start();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -1717,14 +1773,14 @@ public class BrokerService implements Service {
      */
     public void setTempDataStore(PListStore tempDataStore) {
         this.tempDataStore = tempDataStore;
-        configureService(tempDataStore);
-        try {
-            tempDataStore.start();
-        } catch (Exception e) {
-            RuntimeException exception = new RuntimeException("Failed to start provided temp data store: " + tempDataStore, e);
-            LOG.error(exception.getLocalizedMessage(), e);
-            throw exception;
+        if (tempDataStore != null) {
+            if (tmpDataDirectory == null) {
+                tmpDataDirectory = tempDataStore.getDirectory();
+            } else if (tempDataStore.getDirectory() == null) {
+                tempDataStore.setDirectory(tmpDataDirectory);
+            }
         }
+        configureService(tempDataStore);
     }
 
     public int getPersistenceThreadPriority() {
@@ -1751,21 +1807,6 @@ public class BrokerService implements Service {
         if (useLocalHostBrokerName && !started.get() && brokerName == null || brokerName == DEFAULT_BROKER_NAME) {
             brokerName = LOCAL_HOST_NAME;
         }
-    }
-
-    /**
-     * @return the supportFailOver
-     */
-    public boolean isSupportFailOver() {
-        return this.supportFailOver;
-    }
-
-    /**
-     * @param supportFailOver
-     *            the supportFailOver to set
-     */
-    public void setSupportFailOver(boolean supportFailOver) {
-        this.supportFailOver = supportFailOver;
     }
 
     /**
@@ -1866,11 +1907,6 @@ public class BrokerService implements Service {
             if (!isPersistent()) {
                 this.jobSchedulerStore = new InMemoryJobSchedulerStore();
                 configureService(jobSchedulerStore);
-                try {
-                    jobSchedulerStore.start();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
                 return this.jobSchedulerStore;
             }
 
@@ -1880,7 +1916,6 @@ public class BrokerService implements Service {
                     this.jobSchedulerStore = pa.createJobSchedulerStore();
                     jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
                     configureService(jobSchedulerStore);
-                    jobSchedulerStore.start();
                     return this.jobSchedulerStore;
                 }
             } catch (IOException e) {
@@ -1911,7 +1946,6 @@ public class BrokerService implements Service {
                 jobSchedulerStore = adaptor.createJobSchedulerStore();
                 jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
                 configureService(jobSchedulerStore);
-                jobSchedulerStore.start();
                 LOG.info("JobScheduler using directory: {}", getSchedulerDirectoryFile());
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -1923,14 +1957,6 @@ public class BrokerService implements Service {
     public void setJobSchedulerStore(JobSchedulerStore jobSchedulerStore) {
         this.jobSchedulerStore = jobSchedulerStore;
         configureService(jobSchedulerStore);
-        try {
-            jobSchedulerStore.start();
-        } catch (Exception e) {
-            RuntimeException exception = new RuntimeException(
-                    "Failed to start provided job scheduler store: " + jobSchedulerStore, e);
-            LOG.error(exception.getLocalizedMessage(), e);
-            throw exception;
-        }
     }
 
     //
@@ -1962,44 +1988,16 @@ public class BrokerService implements Service {
         }
     }
 
-    protected void checkSystemUsageLimits() throws IOException {
-        SystemUsage usage = getSystemUsage();
-        long memLimit = usage.getMemoryUsage().getLimit();
-        long jvmLimit = Runtime.getRuntime().maxMemory();
-
-        if (memLimit > jvmLimit) {
-            usage.getMemoryUsage().setPercentOfJvmHeap(70);
-            LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
-                    " mb) is more than the maximum available for the JVM: " +
-                    jvmLimit / (1024 * 1024) + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
-        }
+    /**
+     * Check that the store usage limit is not greater than max usable
+     * space and adjust if it is
+     */
+    protected void checkStoreUsageLimits() throws Exception {
+        final SystemUsage usage = getSystemUsage();
 
         if (getPersistenceAdapter() != null) {
             PersistenceAdapter adapter = getPersistenceAdapter();
-            File dir = adapter.getDirectory();
-
-            if (dir != null) {
-                String dirPath = dir.getAbsolutePath();
-                if (!dir.isAbsolute()) {
-                    dir = new File(dirPath);
-                }
-
-                while (dir != null && !dir.isDirectory()) {
-                    dir = dir.getParentFile();
-                }
-                long storeLimit = usage.getStoreUsage().getLimit();
-                long storeCurrent = usage.getStoreUsage().getUsage();
-                long dirFreeSpace = dir.getUsableSpace();
-                if (storeLimit > (dirFreeSpace + storeCurrent)) {
-                    LOG.warn("Store limit is " + storeLimit / (1024 * 1024) +
-                             " mb (current store usage is " + storeCurrent / (1024 * 1024) +
-                             " mb). The data directory: " + dir.getAbsolutePath() +
-                             " only has " + dirFreeSpace / (1024 * 1024) +
-                             " mb of usable space - resetting to maximum available disk space: " +
-                            (dirFreeSpace + storeCurrent) / (1024 * 1024) + " mb");
-                    usage.getStoreUsage().setLimit(dirFreeSpace + storeCurrent);
-                }
-            }
+            checkUsageLimit(adapter.getDirectory(), usage.getStoreUsage(), usage.getStoreUsage().getPercentLimit());
 
             long maxJournalFileSize = 0;
             long storeLimit = usage.getStoreUsage().getLimit();
@@ -2008,7 +2006,7 @@ public class BrokerService implements Service {
                 maxJournalFileSize = ((JournaledStore) adapter).getJournalMaxFileLength();
             }
 
-            if (storeLimit < maxJournalFileSize) {
+            if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
                 LOG.error("Store limit is " + storeLimit / (1024 * 1024) +
                           " mb, whilst the max journal file size for the store is: " +
                           maxJournalFileSize / (1024 * 1024) + " mb, " +
@@ -2016,27 +2014,19 @@ public class BrokerService implements Service {
 
             }
         }
+    }
+
+    /**
+     * Check that temporary usage limit is not greater than max usable
+     * space and adjust if it is
+     */
+    protected void checkTmpStoreUsageLimits() throws Exception {
+        final SystemUsage usage = getSystemUsage();
 
         File tmpDir = getTmpDataDirectory();
+
         if (tmpDir != null) {
-
-            String tmpDirPath = tmpDir.getAbsolutePath();
-            if (!tmpDir.isAbsolute()) {
-                tmpDir = new File(tmpDirPath);
-            }
-
-            long storeLimit = usage.getTempUsage().getLimit();
-            while (tmpDir != null && !tmpDir.isDirectory()) {
-                tmpDir = tmpDir.getParentFile();
-            }
-            long dirFreeSpace = tmpDir.getUsableSpace();
-            if (storeLimit > dirFreeSpace) {
-                LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
-                        " mb, whilst the temporary data directory: " + tmpDirPath +
-                        " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to maximum available " +
-                        dirFreeSpace / (1024 * 1024) + " mb.");
-                usage.getTempUsage().setLimit(dirFreeSpace);
-            }
+            checkUsageLimit(tmpDir, usage.getTempUsage(), usage.getTempUsage().getPercentLimit());
 
             if (isPersistent()) {
                 long maxJournalFileSize;
@@ -2047,8 +2037,9 @@ public class BrokerService implements Service {
                 } else {
                     maxJournalFileSize = DEFAULT_MAX_FILE_LENGTH;
                 }
+                long storeLimit = usage.getTempUsage().getLimit();
 
-                if (storeLimit < maxJournalFileSize) {
+                if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
                     LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
                               " mb, whilst the max journal file size for the temporary store is: " +
                               maxJournalFileSize / (1024 * 1024) + " mb, " +
@@ -2056,6 +2047,132 @@ public class BrokerService implements Service {
                 }
             }
         }
+    }
+
+    protected void checkUsageLimit(File dir, PercentLimitUsage<?> storeUsage, int percentLimit) throws ConfigurationException {
+        if (dir != null) {
+            dir = StoreUtil.findParentDirectory(dir);
+            String storeName = storeUsage instanceof StoreUsage ? "Store" : "Temporary Store";
+            long storeLimit = storeUsage.getLimit();
+            long storeCurrent = storeUsage.getUsage();
+            long totalSpace = storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getTotalSpace();
+            long totalUsableSpace = (storeUsage.getTotal() > 0 ? storeUsage.getTotal() : dir.getUsableSpace()) + storeCurrent;
+            if (totalUsableSpace < 0 || totalSpace < 0) {
+                final String message = "File system space reported by: " + dir + " was negative, possibly a huge file system, set a sane usage.total to provide some guidance";
+                LOG.error(message);
+                throw new ConfigurationException(message);
+            }
+            //compute byte value of the percent limit
+            long bytePercentLimit = totalSpace * percentLimit / 100;
+            int oneMeg = 1024 * 1024;
+
+            //Check if the store limit is less than the percent Limit that was set and also
+            //the usable space...this means we can grow the store larger
+            //Changes in partition size (total space) as well as changes in usable space should
+            //be detected here
+            if (diskUsageCheckRegrowThreshold > -1 && percentLimit > 0
+                    && storeUsage.getTotal() == 0
+                    && storeLimit < bytePercentLimit && storeLimit < totalUsableSpace){
+
+                // set the limit to be bytePercentLimit or usableSpace if
+                // usableSpace is less than the percentLimit
+                long newLimit = bytePercentLimit > totalUsableSpace ? totalUsableSpace : bytePercentLimit;
+
+                //To prevent changing too often, check threshold
+                if (newLimit - storeLimit >= diskUsageCheckRegrowThreshold) {
+                    LOG.info("Usable disk space has been increased, attempting to regrow " + storeName + " limit to "
+                            + percentLimit + "% of the partition size.");
+                    storeUsage.setLimit(newLimit);
+                    LOG.info(storeName + " limit has been increased to " + newLimit * 100 / totalSpace
+                            + "% (" + newLimit / oneMeg + " mb) of the partition size.");
+                }
+
+            //check if the limit is too large for the amount of usable space
+            } else if (storeLimit > totalUsableSpace) {
+                final String message = storeName + " limit is " +  storeLimit / oneMeg
+                        + " mb (current store usage is " + storeCurrent / oneMeg
+                        + " mb). The data directory: " + dir.getAbsolutePath()
+                        + " only has " + totalUsableSpace / oneMeg
+                        + " mb of usable space.";
+
+                if (!isAdjustUsageLimits()) {
+                    LOG.error(message);
+                    throw new ConfigurationException(message);
+                }
+
+                if (percentLimit > 0) {
+                    LOG.warn(storeName + " limit has been set to "
+                            + percentLimit + "% (" + bytePercentLimit / oneMeg + " mb)"
+                            + " of the partition size but there is not enough usable space."
+                            + " The current store limit (which may have been adjusted by a"
+                            + " previous usage limit check) is set to (" + storeLimit / oneMeg + " mb)"
+                            + " but only " + totalUsableSpace * 100 / totalSpace + "% (" + totalUsableSpace / oneMeg + " mb)"
+                            + " is available - resetting limit");
+                } else {
+                    LOG.warn(message + " - resetting to maximum available disk space: " +
+                            totalUsableSpace / oneMeg + " mb");
+                }
+                storeUsage.setLimit(totalUsableSpace);
+            }
+        }
+    }
+
+    /**
+     * Schedules a periodic task based on schedulePeriodForDiskLimitCheck to
+     * update store and temporary store limits if the amount of available space
+     * plus current store size is less than the existin configured limit
+     */
+    protected void scheduleDiskUsageLimitsCheck() throws IOException {
+        if (schedulePeriodForDiskUsageCheck > 0 &&
+                (getPersistenceAdapter() != null || getTmpDataDirectory() != null)) {
+            Runnable diskLimitCheckTask = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        checkStoreUsageLimits();
+                    } catch (Exception e) {
+                        LOG.error("Failed to check persistent disk usage limits", e);
+                    }
+
+                    try {
+                        checkTmpStoreUsageLimits();
+                    } catch (Exception e) {
+                        LOG.error("Failed to check temporary store usage limits", e);
+                    }
+                }
+            };
+            scheduler.executePeriodically(diskLimitCheckTask, schedulePeriodForDiskUsageCheck);
+        }
+    }
+
+    protected void checkMemorySystemUsageLimits() throws Exception {
+        final SystemUsage usage = getSystemUsage();
+        long memLimit = usage.getMemoryUsage().getLimit();
+        long jvmLimit = Runtime.getRuntime().maxMemory();
+
+        if (memLimit > jvmLimit) {
+            final String message = "Memory Usage for the Broker (" + memLimit / (1024 * 1024)
+                    + "mb) is more than the maximum available for the JVM: " + jvmLimit / (1024 * 1024);
+
+            if (adjustUsageLimits) {
+                usage.getMemoryUsage().setPercentOfJvmHeap(70);
+                LOG.warn(message + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
+            } else {
+                LOG.error(message);
+                throw new ConfigurationException(message);
+            }
+        }
+    }
+
+    protected void checkStoreSystemUsageLimits() throws Exception {
+        final SystemUsage usage = getSystemUsage();
+
+        //Check the persistent store and temp store limits if they exist
+        //and schedule a periodic check to update disk limits if
+        //schedulePeriodForDiskLimitCheck is set
+        checkStoreUsageLimits();
+        checkTmpStoreUsageLimits();
+        scheduleDiskUsageLimitsCheck();
 
         if (getJobSchedulerStore() != null) {
             JobSchedulerStore scheduler = getJobSchedulerStore();
@@ -2115,7 +2232,7 @@ public class BrokerService implements Service {
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
             return connector;
         } catch (Throwable e) {
-            throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
+            throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e, e);
         }
     }
 
@@ -2154,7 +2271,7 @@ public class BrokerService implements Service {
         }
     }
 
-    protected ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
+    public ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
         return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "networkConnectors", connector.getName());
     }
 
@@ -2197,8 +2314,6 @@ public class BrokerService implements Service {
      * Factory method to create a new broker
      *
      * @throws Exception
-     * @throws
-     * @throws
      */
     protected Broker createBroker() throws Exception {
         regionBroker = createRegionBroker();
@@ -2276,7 +2391,7 @@ public class BrokerService implements Service {
      * Create the default destination interceptor
      */
     protected DestinationInterceptor[] createDefaultDestinationInterceptor() {
-        List<DestinationInterceptor> answer = new ArrayList<DestinationInterceptor>();
+        List<DestinationInterceptor> answer = new ArrayList<>();
         if (isUseVirtualTopics()) {
             VirtualDestinationInterceptor interceptor = new VirtualDestinationInterceptor();
             VirtualTopic virtualTopic = new VirtualTopic();
@@ -2489,8 +2604,8 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public void startAllConnectors() throws Exception {
-        Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
-        List<TransportConnector> al = new ArrayList<TransportConnector>();
+        final Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
+        List<TransportConnector> al = new ArrayList<>();
         for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
             TransportConnector connector = iter.next();
             al.add(startTransportConnector(connector));
@@ -2502,12 +2617,6 @@ public class BrokerService implements Service {
             setTransportConnectors(al);
         }
         this.slave = false;
-        URI uri = getVmConnectorURI();
-        Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-        map.put("network", "true");
-        map.put("async", "false");
-        uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
-
         if (!stopped.get()) {
             ThreadPoolExecutor networkConnectorStartExecutor = null;
             if (isNetworkConnectorStartAsync()) {
@@ -2527,27 +2636,8 @@ public class BrokerService implements Service {
 
             for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 final NetworkConnector connector = iter.next();
-                connector.setLocalUri(uri);
-                connector.setBrokerName(getBrokerName());
-                connector.setDurableDestinations(durableDestinations);
-                if (getDefaultSocketURIString() != null) {
-                    connector.setBrokerURL(getDefaultSocketURIString());
-                }
-                if (networkConnectorStartExecutor != null) {
-                    networkConnectorStartExecutor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                LOG.info("Async start of {}", connector);
-                                connector.start();
-                            } catch(Exception e) {
-                                LOG.error("Async start of network connector: {} failed", connector, e);
-                            }
-                        }
-                    });
-                } else {
-                    connector.start();
-                }
+                connector.setLocalUri(getVmConnectorURI());
+                startNetworkConnector(connector, durableDestinations, networkConnectorStartExecutor);
             }
             if (networkConnectorStartExecutor != null) {
                 // executor done when enqueued tasks are complete
@@ -2566,6 +2656,51 @@ public class BrokerService implements Service {
                 configureService(service);
                 service.start();
             }
+        }
+    }
+
+    public void startNetworkConnector(final NetworkConnector connector,
+            final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
+        startNetworkConnector(connector, getBroker().getDurableDestinations(), networkConnectorStartExecutor);
+    }
+
+    public void startNetworkConnector(final NetworkConnector connector,
+            final Set<ActiveMQDestination> durableDestinations,
+            final ThreadPoolExecutor networkConnectorStartExecutor) throws Exception {
+        connector.setBrokerName(getBrokerName());
+        //set the durable destinations to match the broker if not set on the connector
+        if (connector.getDurableDestinations() == null) {
+            connector.setDurableDestinations(durableDestinations);
+        }
+        String defaultSocketURI = getDefaultSocketURIString();
+        if (defaultSocketURI != null) {
+            connector.setBrokerURL(defaultSocketURI);
+        }
+        //If using the runtime plugin to start a network connector then the mbean needs
+        //to be added, under normal start it will already exist so check for InstanceNotFoundException
+        if (isUseJmx()) {
+            ObjectName networkMbean = createNetworkConnectorObjectName(connector);
+            try {
+                getManagementContext().getObjectInstance(networkMbean);
+            } catch (InstanceNotFoundException e) {
+                LOG.debug("Network connector MBean {} not found, registering", networkMbean);
+                registerNetworkConnectorMBean(connector);
+            }
+        }
+        if (networkConnectorStartExecutor != null) {
+            networkConnectorStartExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        LOG.info("Async start of {}", connector);
+                        connector.start();
+                    } catch(Exception e) {
+                        LOG.error("Async start of network connector: {} failed", connector, e);
+                    }
+                }
+            });
+        } else {
+            connector.start();
         }
     }
 
@@ -2612,6 +2747,7 @@ public class BrokerService implements Service {
     }
 
     protected void startVirtualConsumerDestinations() throws Exception {
+        checkStartException();
         ConnectionContext adminConnectionContext = getAdminConnectionContext();
         Set<ActiveMQDestination> destinations = destinationFactory.getDestinations();
         DestinationFilter filter = getVirtualTopicConsumerDestinationFilter();
@@ -2627,7 +2763,7 @@ public class BrokerService implements Service {
     private DestinationFilter getVirtualTopicConsumerDestinationFilter() {
         // created at startup, so no sync needed
         if (virtualConsumerDestinationFilter == null) {
-            Set <ActiveMQQueue> consumerDestinations = new HashSet<ActiveMQQueue>();
+            Set <ActiveMQQueue> consumerDestinations = new HashSet<>();
             if (destinationInterceptors != null) {
                 for (DestinationInterceptor interceptor : destinationInterceptors) {
                     if (interceptor instanceof VirtualDestinationInterceptor) {
@@ -2635,6 +2771,14 @@ public class BrokerService implements Service {
                         for (VirtualDestination virtualDestination: virtualDestinationInterceptor.getVirtualDestinations()) {
                             if (virtualDestination instanceof VirtualTopic) {
                                 consumerDestinations.add(new ActiveMQQueue(((VirtualTopic) virtualDestination).getPrefix() + DestinationFilter.ANY_DESCENDENT));
+                            }
+                            if (isUseVirtualDestSubs()) {
+                                try {
+                                    broker.virtualDestinationAdded(getAdminConnectionContext(), virtualDestination);
+                                    LOG.debug("Adding virtual destination: {}", virtualDestination);
+                                } catch (Exception e) {
+                                    LOG.warn("Could not fire virtual destination consumer advisory", e);
+                                }
                             }
                         }
                     }
@@ -2847,6 +2991,26 @@ public class BrokerService implements Service {
         this.schedulePeriodForDestinationPurge = schedulePeriodForDestinationPurge;
     }
 
+    /**
+     * @param schedulePeriodForDiskUsageCheck
+     */
+    public void setSchedulePeriodForDiskUsageCheck(
+            int schedulePeriodForDiskUsageCheck) {
+        this.schedulePeriodForDiskUsageCheck = schedulePeriodForDiskUsageCheck;
+    }
+
+    public int getDiskUsageCheckRegrowThreshold() {
+        return diskUsageCheckRegrowThreshold;
+    }
+
+    /**
+     * @param diskUsageCheckRegrowThreshold
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
+    public void setDiskUsageCheckRegrowThreshold(int diskUsageCheckRegrowThreshold) {
+        this.diskUsageCheckRegrowThreshold = diskUsageCheckRegrowThreshold;
+    }
+
     public int getMaxPurgedDestinationsPerSweep() {
         return this.maxPurgedDestinationsPerSweep;
     }
@@ -2959,7 +3123,7 @@ public class BrokerService implements Service {
                getVirtualTopicConsumerDestinationFilter().matches(destination);
     }
 
-    public Throwable getStartException() {
+    synchronized public Throwable getStartException() {
         return startException;
     }
 
@@ -2988,7 +3152,6 @@ public class BrokerService implements Service {
 
     /**
      * Sets if the broker allowed to restart on shutdown.
-     * @return
      */
     public void setRestartAllowed(boolean restartAllowed) {
         this.restartAllowed = restartAllowed;
@@ -3042,5 +3205,47 @@ public class BrokerService implements Service {
 
     public void incrementTotalConnections() {
         this.totalConnections.incrementAndGet();
+    }
+
+    public boolean isRejectDurableConsumers() {
+        return rejectDurableConsumers;
+    }
+
+    public void setRejectDurableConsumers(boolean rejectDurableConsumers) {
+        this.rejectDurableConsumers = rejectDurableConsumers;
+    }
+
+    public boolean isUseVirtualDestSubs() {
+        return useVirtualDestSubs;
+    }
+
+    public void setUseVirtualDestSubs(
+            boolean useVirtualDestSubs) {
+        this.useVirtualDestSubs = useVirtualDestSubs;
+    }
+
+    public boolean isUseVirtualDestSubsOnCreation() {
+        return useVirtualDestSubsOnCreation;
+    }
+
+    public void setUseVirtualDestSubsOnCreation(
+            boolean useVirtualDestSubsOnCreation) {
+        this.useVirtualDestSubsOnCreation = useVirtualDestSubsOnCreation;
+    }
+
+    public boolean isAdjustUsageLimits() {
+        return adjustUsageLimits;
+    }
+
+    public void setAdjustUsageLimits(boolean adjustUsageLimits) {
+        this.adjustUsageLimits = adjustUsageLimits;
+    }
+
+    public void setRollbackOnlyOnAsyncException(boolean rollbackOnlyOnAsyncException) {
+        this.rollbackOnlyOnAsyncException = rollbackOnlyOnAsyncException;
+    }
+
+    public boolean isRollbackOnlyOnAsyncException() {
+        return rollbackOnlyOnAsyncException;
     }
 }

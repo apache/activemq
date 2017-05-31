@@ -17,8 +17,11 @@
 package org.apache.activemq.leveldb.test;
 
 import org.apache.activemq.leveldb.replicated.MasterLevelDBStore;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Test;
 
+import java.io.File;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -34,9 +37,12 @@ import static org.junit.Assert.*;
  */
 public class MasterLevelDBStoreTest {
 
+    MasterLevelDBStore store;
+
     @Test(timeout = 1000*60*10)
     public void testStoppingStoreStopsTransport() throws Exception {
-        final MasterLevelDBStore store = new MasterLevelDBStore();
+        store = new MasterLevelDBStore();
+        store.setDirectory(new File("target/activemq-data/master-leveldb-store-test"));
         store.setReplicas(0);
 
         ExecutorService threads = Executors.newFixedThreadPool(1);
@@ -85,5 +91,13 @@ public class MasterLevelDBStoreTest {
             fail("Server protocol port is still opened..");
         }
 
+    }
+
+    @After
+    public void stop() throws Exception {
+        if (store.isStarted()) {
+            store.stop();
+            FileUtils.deleteQuietly(store.directory());
+        }
     }
 }

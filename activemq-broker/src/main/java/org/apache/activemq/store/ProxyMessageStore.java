@@ -17,7 +17,6 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -102,6 +101,11 @@ public class ProxyMessageStore implements MessageStore {
     }
 
     @Override
+    public long getMessageSize() throws IOException {
+        return delegate.getMessageSize();
+    }
+
+    @Override
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
         delegate.recoverNextMessages(maxReturned, listener);
     }
@@ -138,7 +142,7 @@ public class ProxyMessageStore implements MessageStore {
 
     @Override
     public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
-        return asyncAddTopicMessage(context,message,canOptimizeHint);
+        return delegate.asyncAddTopicMessage(context,message,canOptimizeHint);
     }
 
     @Override
@@ -160,4 +164,20 @@ public class ProxyMessageStore implements MessageStore {
     public void updateMessage(Message message) throws IOException {
         delegate.updateMessage(message);
     }
+
+    @Override
+    public void registerIndexListener(IndexListener indexListener) {
+        delegate.registerIndexListener(indexListener);
+    }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
+
+    @Override
+    public MessageStoreStatistics getMessageStoreStatistics() {
+        return delegate.getMessageStoreStatistics();
+    }
+
 }

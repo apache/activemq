@@ -21,9 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.security.ProtectionDomain;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,10 +29,6 @@ import java.util.concurrent.TimeUnit;
 import javax.jms.JMSException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -44,6 +37,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
+import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.transport.mqtt.util.ResourceLoadingSslContext;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Tracer;
@@ -58,6 +52,8 @@ import org.slf4j.LoggerFactory;
 public class MQTTTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTTestSupport.class);
+
+    public static final String KAHADB_DIRECTORY = "target/activemq-data/";
 
     protected BrokerService brokerService;
     protected int port;
@@ -90,7 +86,7 @@ public class MQTTTestSupport {
         this.useSSL = useSSL;
     }
 
-    public String getName() {
+    public String getTestName() {
         return name.getMethodName();
     }
 
@@ -115,11 +111,52 @@ public class MQTTTestSupport {
     }
 
     public void startBroker() throws Exception {
+        brokerService = createBroker(true);
 
-        createBroker();
+        configureBroker(brokerService);
 
-        applyBrokerPolicies();
-        applyMemoryLimitPolicy();
+        brokerService.start();
+        brokerService.waitUntilStarted();
+        port = brokerService.getTransportConnectorByName("mqtt").getConnectUri().getPort();
+        jmsUri = brokerService.getTransportConnectorByName("openwire").getPublishableConnectString();
+        cf = new ActiveMQConnectionFactory(jmsUri);
+    }
+
+    public void restartBroker() throws Exception {
+        stopBroker();
+
+        brokerService = createBroker(false);
+
+        configureBroker(brokerService);
+
+        brokerService.start();
+        brokerService.waitUntilStarted();
+        port = brokerService.getTransportConnectorByName("mqtt").getConnectUri().getPort();
+        jmsUri = brokerService.getTransportConnectorByName("openwire").getPublishableConnectString();
+        cf = new ActiveMQConnectionFactory(jmsUri);
+    }
+
+    protected BrokerService createBroker(boolean deleteAllMessages) throws Exception {
+        BrokerService brokerService = new BrokerService();
+        brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
+        brokerService.setPersistent(isPersistent());
+        if (isPersistent()) {
+            KahaDBStore kaha = new KahaDBStore();
+            kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
+            brokerService.setPersistenceAdapter(kaha);
+        }
+        brokerService.setAdvisorySupport(false);
+        brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
+        brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
+        brokerService.setPopulateJMSXUserID(true);
+
+        return brokerService;
+    }
+
+    protected void configureBroker(BrokerService brokerService) throws Exception {
+        applyBrokerPolicies(brokerService);
+        applyMemoryLimitPolicy(brokerService);
 
         // Setup SSL context...
         File keyStore = new File(basedir(), "src/test/resources/server.keystore");
@@ -133,10 +170,8 @@ public class MQTTTestSupport {
         sslContext.afterPropertiesSet();
         brokerService.setSslContext(sslContext);
 
-        addMQTTConnector();
-        addOpenWireConnector();
-
-        cf = new ActiveMQConnectionFactory(jmsUri);
+        addMQTTConnector(brokerService);
+        addOpenWireConnector(brokerService);
 
         ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
         createPlugins(plugins);
@@ -155,21 +190,6 @@ public class MQTTTestSupport {
             BrokerPlugin[] array = new BrokerPlugin[plugins.size()];
             brokerService.setPlugins(plugins.toArray(array));
         }
-
-        brokerService.start();
-        brokerService.waitUntilStarted();
-        port = brokerService.getTransportConnectorByName("mqtt").getConnectUri().getPort();
-    }
-
-    protected void applyMemoryLimitPolicy() throws Exception {
-    }
-
-    protected void createBroker() throws Exception {
-        brokerService = new BrokerService();
-        brokerService.setPersistent(isPersistent());
-        brokerService.setAdvisorySupport(false);
-        brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
-        brokerService.setPopulateJMSXUserID(true);
     }
 
     /**
@@ -195,16 +215,21 @@ public class MQTTTestSupport {
         return null;
     }
 
-    protected void applyBrokerPolicies() throws Exception {
+    protected void applyBrokerPolicies(BrokerService brokerService) throws Exception {
         // NOOP here
     }
 
-    protected void addOpenWireConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("tcp://0.0.0.0:0");
-        jmsUri = connector.getPublishableConnectString();
+    protected void applyMemoryLimitPolicy(BrokerService brokerService) throws Exception {
     }
 
-    protected void addMQTTConnector() throws Exception {
+    protected void addOpenWireConnector(BrokerService brokerService) throws Exception {
+        TransportConnector connector = new TransportConnector();
+        connector.setUri(new URI("tcp://0.0.0.0:0"));
+        connector.setName("openwire");
+        brokerService.addConnector(connector);
+    }
+
+    protected void addMQTTConnector(BrokerService brokerService) throws Exception {
         // Overrides of this method can add additional configuration options or add multiple
         // MQTT transport connectors as needed, the port variable is always supposed to be
         // assigned the primary MQTT connector's port.
@@ -212,6 +237,7 @@ public class MQTTTestSupport {
         StringBuilder connectorURI = new StringBuilder();
         connectorURI.append(getProtocolScheme());
         connectorURI.append("://0.0.0.0:").append(port);
+        String protocolConfig = getProtocolConfig();
         if (protocolConfig != null && !protocolConfig.isEmpty()) {
             connectorURI.append("?").append(protocolConfig);
         }
@@ -237,7 +263,9 @@ public class MQTTTestSupport {
     }
 
     protected String getTopicName() {
-        return getClass().getName() + "." + name.getMethodName();
+        //wildcard characters are illegal in publish
+        //replace a + with something else, like _ which is allowed
+        return (getClass().getName() + "." + name.getMethodName()).replace("+", "_");
     }
 
     protected BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {
@@ -276,9 +304,18 @@ public class MQTTTestSupport {
         if (!isUseSSL()) {
             provider.connect("tcp://localhost:" + port);
         } else {
-            SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
-            provider.setSslContext(ctx);
+            // Setup SSL context...
+            File trustStore = new File(basedir(), "src/test/resources/server.keystore");
+            File keyStore = new File(basedir(), "src/test/resources/client.keystore");
+
+            final ResourceLoadingSslContext sslContext = new ResourceLoadingSslContext();
+            sslContext.setKeyStore(keyStore.getCanonicalPath());
+            sslContext.setKeyStorePassword("password");
+            sslContext.setTrustStore(trustStore.getCanonicalPath());
+            sslContext.setTrustStorePassword("password");
+            sslContext.afterPropertiesSet();
+
+            provider.setSslContext(sslContext.getSSLContext());
             provider.connect("ssl://localhost:" + port);
         }
     }
@@ -289,6 +326,14 @@ public class MQTTTestSupport {
 
     public void setProtocolScheme(String scheme) {
         this.protocolScheme = scheme;
+    }
+
+    public String getProtocolConfig() {
+        return protocolConfig;
+    }
+
+    public void setProtocolConfig(String config) {
+        this.protocolConfig = config;
     }
 
     public boolean isUseSSL() {
@@ -378,9 +423,18 @@ public class MQTTTestSupport {
         }
         mqtt.setCleanSession(clean);
 
-        SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
-        mqtt.setSslContext(ctx);
+        // Setup SSL context...
+        File trustStore = new File(basedir(), "src/test/resources/server.keystore");
+        File keyStore = new File(basedir(), "src/test/resources/client.keystore");
+
+        final ResourceLoadingSslContext sslContext = new ResourceLoadingSslContext();
+        sslContext.setKeyStore(keyStore.getCanonicalPath());
+        sslContext.setKeyStorePassword("password");
+        sslContext.setTrustStore(trustStore.getCanonicalPath());
+        sslContext.setTrustStorePassword("password");
+        sslContext.afterPropertiesSet();
+
+        mqtt.setSslContext(sslContext.getSSLContext());
         return mqtt;
     }
 
@@ -388,34 +442,18 @@ public class MQTTTestSupport {
         return new Tracer() {
             @Override
             public void onReceive(MQTTFrame frame) {
-                LOG.info("Client Received:\n" + frame);
+                LOG.debug("Client Received:\n" + frame);
             }
 
             @Override
             public void onSend(MQTTFrame frame) {
-                LOG.info("Client Sent:\n" + frame);
+                LOG.debug("Client Sent:\n" + frame);
             }
 
             @Override
             public void debug(String message, Object... args) {
-                LOG.info(String.format(message, args));
+                LOG.debug(String.format(message, args));
             }
         };
-    }
-
-    static class DefaultTrustManager implements X509TrustManager {
-
-        @Override
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
     }
 }

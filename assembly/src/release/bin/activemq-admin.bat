@@ -80,10 +80,10 @@ if "%ACTIVEMQ_TMP%" == "" set ACTIVEMQ_TMP=%ACTIVEMQ_DATA%\tmp
 if /i not "%1" == "start" goto debugOpts
 
 
-if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=%ACTIVEMQ_CONF%\login.config
+if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config="%ACTIVEMQ_CONF%\login.config"
 
-if "%SUNJMX%" == "" set SUNJMX=-Dcom.sun.management.jmxremote
-REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
+if "%ACTIVEMQ_SUNJMX_START%" == "" set ACTIVEMQ_SUNJMX_START=-Dcom.sun.management.jmxremote
+REM set ACTIVEMQ_SUNJMX_START=-Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
 
 
 :debugOpts
@@ -95,7 +95,7 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 
 REM Setup ActiveMQ Classpath. Default is the conf directory.
 set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_CONF%;%ACTIVEMQ_DATA%;%ACTIVEMQ_CLASSPATH%
-"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -Dactivemq.data="%ACTIVEMQ_DATA%" -Djava.io.tmpdir="%ACTIVEMQ_TMP%" -Dactivemq.conf="%ACTIVEMQ_CONF%" -jar "%ACTIVEMQ_HOME%/bin/activemq.jar" %*
+"%_JAVACMD%" %ACTIVEMQ_SUNJMX_START% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %ACTIVEMQ_SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -Dactivemq.data="%ACTIVEMQ_DATA%" -Djava.io.tmpdir="%ACTIVEMQ_TMP%" -Dactivemq.conf="%ACTIVEMQ_CONF%" -jar "%ACTIVEMQ_HOME%/bin/activemq.jar" %*
 
 goto end
 

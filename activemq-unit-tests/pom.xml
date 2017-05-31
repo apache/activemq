@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-unit-tests</artifactId>
@@ -64,11 +64,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-amqp</artifactId>
+      <artifactId>activemq-partition</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-partition</artifactId>
+      <artifactId>activemq-runtime-config</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -86,6 +86,10 @@
     <dependency>
       <groupId>org.fusesource.mqtt-client</groupId>
       <artifactId>mqtt-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq.tooling</groupId>
+      <artifactId>activemq-junit</artifactId>
     </dependency>
 
     <!-- =============================== -->
@@ -157,7 +161,7 @@
     <!-- =============================== -->
     <dependency>
       <groupId>org.apache.qpid</groupId>
-      <artifactId>qpid-amqp-1-0-client-jms</artifactId>
+      <artifactId>qpid-jms-client</artifactId>
       <version>${qpid-jms-version}</version>
       <scope>test</scope>
     </dependency>
@@ -218,17 +222,10 @@
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-spring3</artifactId>
+      <artifactId>jasypt-spring31</artifactId>
       <version>${jasypt-version}</version>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty-util</artifactId>
-      <version>6.1.26</version>
-      <scope>test</scope>
-    </dependency>
-
     <!-- database testing -->
     <dependency>
       <groupId>commons-collections</groupId>
@@ -251,9 +248,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>commons-dbcp</groupId>
-      <artifactId>commons-dbcp</artifactId>
-      <version>1.4</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-dbcp2</artifactId>
       <optional>true</optional>
       <scope>test</scope>
     </dependency>
@@ -268,7 +264,7 @@
     <dependency>
       <!-- using it for Jetty's JNDI context to work /w Joram tests. -->
       <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
+      <artifactId>jetty-all</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -319,6 +315,31 @@
       <version>${ftpserver-version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito-common</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <reporting>
@@ -328,6 +349,8 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>${maven-javadoc-plugin-version}</version>
         <configuration>
+          <!-- necessary for now under the javadocs can be fixed because jdk8 is much stricter -->
+          <additionalparam>${javadoc.options}</additionalparam>
           <links>
             <link>${javase-javadoc-url}</link>
             <link>${javaee-javadoc-url}</link>
@@ -438,7 +461,7 @@
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+          <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
           <runOrder>alphabetical</runOrder>
           <excludes>
             <!-- temporarily exclude failing tests so that CI works; fix asap and reenable -->
@@ -449,8 +472,10 @@
             <exclude>**/SimpleDispatchPolicyTest.java</exclude>
           </excludes>
           <systemPropertyVariables>
-            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+            <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+            <org.apache.activemq.default.directory.prefix>target/</org.apache.activemq.default.directory.prefix>
             <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+            <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
           </systemPropertyVariables>
           <includes>
             <include>**/*Test.*</include>
@@ -544,6 +569,68 @@
       </build>
     </profile>
     <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/JMSConsumerTest.*</include>
+                <include>**/MBeanTest.*</include>
+                <include>**/BrokerTest.*</include>
+                <include>**/JmsQueueSendReceiveTest.*</include>
+                <include>**/JmsTopicRequestReplyTest.*</include>
+                <include>**/AdvisoryJmxTest.*</include>
+                <include>**/VirtualTopicPubSubTest.*</include>
+                <include>**/RedeliveryPluginTest.*</include>
+                <include>**/AMQ3014Test.*</include>
+                <include>**/AMQ3678Test.*</include>
+                <include>**/AMQ4222Test.*</include>
+                <include>**/AMQ4899Test.*</include>
+                <include>**/ActiveMQDestinationTest.*</include>
+                <include>**/XAConnectionFactoryTest.*</include>
+                <include>**/JDBCStoreOrderTest.*</include>
+                <include>**/KahaDBPersistenceAdapterTest.*</include>
+                <include>**/FailoverUriTest.*</include>
+                <include>**/TransactionRollbackOrderTest.*</include>
+                <include>**/StaticNetworkTest.*</include>
+                <include>**/QueueBrowsingLimitTest.*</include>
+                <include>**/DurableSubscriptionActivationTest.*</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>activemq.tests-autoTransport</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>autoTransport</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/transport/auto/**/*Test.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>activemq.exclude-broken-tests</id>
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -588,7 +675,6 @@
                 <exclude>**/amq1490/*</exclude>
                 <exclude>**/archive/*</exclude>
                 <exclude>**/NetworkFailoverTest.*/**</exclude>
-                <exclude>**/vm/VMTransportBrokerTest.*</exclude>
                 <exclude>**/broker/MarshallingBrokerTest.*</exclude>
                 <exclude>**/AMQDeadlockTest3.*</exclude>
                 <!-- https://issues.apache.org/activemq/browse/AMQ-2050 -->
@@ -1033,6 +1119,8 @@
                 <exclude>org/apache/activemq/store/kahadb/disk/index/HashIndexTest.*</exclude>
                 <exclude>org/apache/activemq/store/kahadb/disk/index/ListIndexTest.*</exclude>
                 <exclude>org/apache/activemq/store/kahadb/disk/util/DataByteArrayInputStreamTest.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ5266StarvedConsumerTest.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ5266Test.*</exclude>
               </excludes>
             </configuration>
           </plugin>
@@ -1207,8 +1295,5 @@
               </plugins>
           </build>
       </profile>
-
-
-
   </profiles>
 </project>

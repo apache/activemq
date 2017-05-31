@@ -174,7 +174,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
     }
 
     private void doTestManyMessageConsumer(boolean transacted) throws Exception {
-        Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(transacted, transacted ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
 
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Msg1"));
@@ -221,12 +221,11 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
             session.commit();
         }
         // Now using other consumer
-        // this call should return the next message (Msg5) still left on the queue
+        // this call should return the next message still left on the queue
         answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg6");
         // read one more message without commit
-        // Now using other consumer
-        // this call should return the next message (Msg5) still left on the queue
+        // this call should return the next message still left on the queue
         answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg7");
         if (transacted) {
@@ -247,12 +246,17 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         doTestManyMessageConsumerWithSend(true);
     }
 
+    public void testManyMessageConsumerWithTxSendPrioritySupport() throws Exception {
+        ((ActiveMQConnection)connection).setMessagePrioritySupported(true);
+        doTestManyMessageConsumerWithSend(true);
+    }
+
     public void testManyMessageConsumerWithSendNoTransaction() throws Exception {
         doTestManyMessageConsumerWithSend(false);
     }
 
     private void doTestManyMessageConsumerWithSend(boolean transacted) throws Exception {
-        Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(transacted, transacted ? Session.SESSION_TRANSACTED :Session.AUTO_ACKNOWLEDGE);
 
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Msg1"));
@@ -332,6 +336,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         MessageConsumer consumer = session.createConsumer(brokerZeroQueue);
 
         TextMessage answer = (TextMessage)consumer.receive(5000);
+        assertNotNull("Consumer should have read a message", answer);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
     }
 
@@ -389,12 +394,14 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
     @Override
     protected void tearDown() throws Exception {
-        connection.close();
+        try {
+            connection.close();
+        } catch (Exception ex) {}
+
         super.tearDown();
     }
 
     protected Queue createQueue() {
         return new ActiveMQQueue(getDestinationString() + "?consumer.prefetchSize=0");
     }
-
 }

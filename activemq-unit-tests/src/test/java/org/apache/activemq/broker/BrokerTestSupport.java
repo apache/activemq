@@ -63,12 +63,12 @@ public class BrokerTestSupport extends CombinationTestSupport {
     public static final boolean FAST_NO_MESSAGE_LEFT_ASSERT = System.getProperty("FAST_NO_MESSAGE_LEFT_ASSERT", "true").equals("true");
 
     protected RegionBroker regionBroker;
-    protected BrokerService broker;
+    public BrokerService broker;
     protected long idGenerator;
     protected int msgIdGenerator;
     protected int txGenerator;
     protected int tempDestGenerator;
-    protected PersistenceAdapter persistenceAdapter;
+    public PersistenceAdapter persistenceAdapter;
 
     protected String queueName = "TEST";
 
@@ -297,16 +297,6 @@ public class BrokerTestSupport extends CombinationTestSupport {
         info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
         info.setTimeout(0);
         return info;
-    }
-
-    public static void recursiveDelete(File f) {
-        if (f.isDirectory()) {
-            File[] files = f.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                recursiveDelete(files[i]);
-            }
-        }
-        f.delete();
     }
 
     protected StubConnection createConnection() throws Exception {

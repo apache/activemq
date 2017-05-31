@@ -16,45 +16,47 @@
  */
 package org.apache.activemq.jms.pool;
 
+import static org.junit.Assert.assertEquals;
+
+import javax.jms.Connection;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.Topic;
-import javax.jms.Connection;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.test.TestSupport;
-import org.apache.activemq.ActiveMQConnectionFactory;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @version $Revision: 1.1 $
- */
-public class PooledConnectionFactoryWithTemporaryDestinationsTest extends TestSupport {
+public class PooledConnectionFactoryWithTemporaryDestinationsTest extends JmsPoolTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(PooledConnectionFactoryWithTemporaryDestinationsTest.class);
 
-    private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private PooledConnectionFactory pooledFactory;
 
-    protected void setUp() throws Exception {
-        broker = new BrokerService();
-        broker.setUseJmx(false);
-        broker.setPersistent(false);
-        TransportConnector connector = broker.addConnector("tcp://localhost:0");
-        broker.start();
+    @Override
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setUseJmx(false);
+        brokerService.setPersistent(false);
+        brokerService.setSchedulerSupport(false);
+        brokerService.setAdvisorySupport(false);
+        TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
         factory = new ActiveMQConnectionFactory("mock:" + connector.getConnectUri() + "?closeAsync=false");
         pooledFactory = new PooledConnectionFactory();
         pooledFactory.setConnectionFactory(factory);
     }
 
-    protected void tearDown() throws Exception {
-        broker.stop();
-    }
-
+    @Test(timeout = 60000)
     public void testTemporaryQueueWithMultipleConnectionUsers() throws Exception {
         Connection pooledConnection = null;
         Connection pooledConnection2 = null;
@@ -85,6 +87,7 @@ public class PooledConnectionFactoryWithTemporaryDestinationsTest extends TestSu
         assertEquals(0, countBrokerTemporaryQueues());
     }
 
+    @Test(timeout = 60000)
     public void testTemporaryQueueLeakAfterConnectionClose() throws Exception {
         Connection pooledConnection = null;
         Session session = null;
@@ -100,6 +103,7 @@ public class PooledConnectionFactoryWithTemporaryDestinationsTest extends TestSu
         assertEquals(0, countBrokerTemporaryQueues());
     }
 
+    @Test(timeout = 60000)
     public void testTemporaryTopicLeakAfterConnectionClose() throws Exception {
         Connection pooledConnection = null;
         Session session = null;
@@ -116,10 +120,10 @@ public class PooledConnectionFactoryWithTemporaryDestinationsTest extends TestSu
     }
 
     private int countBrokerTemporaryQueues() throws Exception {
-        return ((RegionBroker) broker.getRegionBroker()).getTempQueueRegion().getDestinationMap().size();
+        return ((RegionBroker) brokerService.getRegionBroker()).getTempQueueRegion().getDestinationMap().size();
     }
 
     private int countBrokerTemporaryTopics() throws Exception {
-        return ((RegionBroker) broker.getRegionBroker()).getTempTopicRegion().getDestinationMap().size();
+        return ((RegionBroker) brokerService.getRegionBroker()).getTempTopicRegion().getDestinationMap().size();
     }
 }

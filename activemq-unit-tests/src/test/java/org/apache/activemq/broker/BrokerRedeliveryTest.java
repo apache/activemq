@@ -17,13 +17,14 @@
 package org.apache.activemq.broker;
 
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
@@ -71,17 +72,17 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         LOG.info("got: " + message);
         consumerSession.rollback();
 
-        for (int i=0;i<maxBrokerRedeliveriesToValidate;i++) {
+        for (int i = 0; i < maxBrokerRedeliveriesToValidate; i++) {
             Message shouldBeNull = consumer.receive(500);
-            assertNull("did not get message after redelivery count exceeded: " + shouldBeNull, shouldBeNull);
+            assertNull("did not get message early: " + shouldBeNull, shouldBeNull);
 
-            TimeUnit.SECONDS.sleep(3);
+            TimeUnit.SECONDS.sleep(4);
 
-            Message brokerRedeliveryMessage = consumer.receive(500);
+            Message brokerRedeliveryMessage = consumer.receive(1500);
             LOG.info("got: " + brokerRedeliveryMessage);
             assertNotNull("got message via broker redelivery after delay", brokerRedeliveryMessage);
             assertEquals("message matches", message.getStringProperty("data"), brokerRedeliveryMessage.getStringProperty("data"));
-            assertEquals("has expiryDelay specified", i == 0 ? initialRedeliveryDelayMillis : redeliveryDelayMillis, brokerRedeliveryMessage.getLongProperty(RedeliveryPlugin.REDELIVERY_DELAY));
+            assertEquals("has expiryDelay specified - iteration:" + i, i == 0 ? initialRedeliveryDelayMillis : redeliveryDelayMillis, brokerRedeliveryMessage.getLongProperty(RedeliveryPlugin.REDELIVERY_DELAY));
 
             consumerSession.rollback();
         }
@@ -144,8 +145,8 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
     private void startBroker(boolean deleteMessages) throws Exception {
         broker = new BrokerService();
+        broker.setPersistent(false);
         broker.setSchedulerSupport(true);
-
 
         RedeliveryPlugin redeliveryPlugin = new RedeliveryPlugin();
 
@@ -166,13 +167,14 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         broker.start();
     }
 
-
     private void stopBroker() throws Exception {
-        if (broker != null)
+        if (broker != null) {
             broker.stop();
-        broker = null;
+            broker = null;
+        }
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://localhost");
     }

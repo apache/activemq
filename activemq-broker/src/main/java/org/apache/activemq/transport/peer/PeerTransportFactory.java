@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
@@ -37,16 +38,18 @@ import org.apache.activemq.util.URISupport;
 
 public class PeerTransportFactory extends TransportFactory {
 
-    public static final ConcurrentHashMap BROKERS = new ConcurrentHashMap();
-    public static final ConcurrentHashMap CONNECTORS = new ConcurrentHashMap();
-    public static final ConcurrentHashMap SERVERS = new ConcurrentHashMap();
+    public static final ConcurrentMap BROKERS = new ConcurrentHashMap();
+    public static final ConcurrentMap CONNECTORS = new ConcurrentHashMap();
+    public static final ConcurrentMap SERVERS = new ConcurrentHashMap();
     private static final IdGenerator ID_GENERATOR = new IdGenerator("peer-");
 
+    @Override
     public Transport doConnect(URI location) throws Exception {
         VMTransportFactory vmTransportFactory = createTransportFactory(location);
         return vmTransportFactory.doConnect(location);
     }
 
+    @Override
     public Transport doCompositeConnect(URI location) throws Exception {
         VMTransportFactory vmTransportFactory = createTransportFactory(location);
         return vmTransportFactory.doCompositeConnect(location);
@@ -78,15 +81,18 @@ public class PeerTransportFactory extends TransportFactory {
             final String finalBroker = broker;
             final String finalGroup = group;
             VMTransportFactory rc = new VMTransportFactory() {
+                @Override
                 public Transport doConnect(URI ignore) throws Exception {
                     return super.doConnect(finalLocation);
                 };
 
+                @Override
                 public Transport doCompositeConnect(URI ignore) throws Exception {
                     return super.doCompositeConnect(finalLocation);
                 };
             };
             rc.setBrokerFactoryHandler(new BrokerFactoryHandler() {
+                @Override
                 public BrokerService createBroker(URI brokerURI) throws Exception {
                     BrokerService service = new BrokerService();
                     IntrospectionSupport.setProperties(service, brokerOptions);
@@ -104,6 +110,7 @@ public class PeerTransportFactory extends TransportFactory {
         }
     }
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         throw new IOException("This protocol does not support being bound.");
     }

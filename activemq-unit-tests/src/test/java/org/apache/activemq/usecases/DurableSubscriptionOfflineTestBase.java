@@ -130,8 +130,13 @@ public abstract class DurableSubscriptionOfflineTestBase {
             // have lots of journal files
             ((KahaDBPersistenceAdapter)broker.getPersistenceAdapter()).setJournalMaxFileLength(journalMaxFileLength);
         }
+
+        configurePlugins(broker);
         broker.start();
         broker.waitUntilStarted();
+    }
+
+    public void configurePlugins(BrokerService broker) throws Exception {
     }
 
     protected void destroyBroker() throws Exception {

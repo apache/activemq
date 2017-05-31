@@ -276,6 +276,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     private void logSend(Message copy) {
+        copy.getSize();
         Logger perDestinationsLogger = LOG;
         if (isPerDestinationLogger()) {
             ActiveMQDestination destination = copy.getDestination();
@@ -514,7 +515,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void isFull(ConnectionContext context, Destination destination, Usage usage) {
+    public void isFull(ConnectionContext context, Destination destination, Usage<?> usage) {
         if (isLogAll() || isLogProducerEvents() || isLogInternalEvents()) {
             LOG.info("Destination is full: {}", destination.getName());
         }
