@@ -484,7 +484,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public TransactionContext getTransactionContext(ConnectionContext context) throws IOException {
-        if (context == null) {
+        if (context == null || isBrokerContext(context)) {
             return getTransactionContext();
         } else {
             TransactionContext answer = (TransactionContext)context.getLongTermStoreContext();
@@ -494,6 +494,10 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             }
             return answer;
         }
+    }
+
+    private boolean isBrokerContext(ConnectionContext context) {
+        return context.getSecurityContext() != null && context.getSecurityContext().isBrokerContext();
     }
 
     public TransactionContext getTransactionContext() throws IOException {
