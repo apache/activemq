@@ -1153,7 +1153,7 @@ public class Stomp11Test extends StompTestSupport {
         String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("CONNECTED"));
 
-        QueueViewMBean queueView = getProxyToQueue(getQueueName());
+        final QueueViewMBean queueView = getProxyToQueue(getQueueName());
         assertEquals(1, queueView.getQueueSize());
 
         frame = "BEGIN\n" + "transaction: tx1\n" + "\n\n" + Stomp.NULL;
