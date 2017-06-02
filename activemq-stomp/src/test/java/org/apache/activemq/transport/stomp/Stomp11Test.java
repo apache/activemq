@@ -1131,7 +1131,17 @@ public class Stomp11Test extends StompTestSupport {
     }
 
     @Test(timeout = 60000)
-    public void testTransactionRollbackAllowsSecondAckOutsideTX() throws Exception {
+    public void testTransactionRollbackAllowsSecondAckOutsideTXClientAck() throws Exception {
+        doTestTransactionRollbackAllowsSecondAckOutsideTXClientAck("client");
+    }
+
+    @Test(timeout = 60000)
+    public void testTransactionRollbackAllowsSecondAckOutsideTXClientIndividualAck() throws Exception {
+        doTestTransactionRollbackAllowsSecondAckOutsideTXClientAck("client-individual");
+    }
+
+    public void doTestTransactionRollbackAllowsSecondAckOutsideTXClientAck(String ackMode) throws Exception {
+
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Hello"));
         producer.close();
@@ -1150,7 +1160,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
-            "id:12345\n" + "ack:client\n\n" + Stomp.NULL;
+            "id:12345\n" + "ack:" + ackMode + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         StompFrame received = stompConnection.receive();
