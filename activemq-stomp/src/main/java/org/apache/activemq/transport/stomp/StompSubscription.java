@@ -49,8 +49,8 @@ public class StompSubscription {
     protected final String subscriptionId;
     protected final ConsumerInfo consumerInfo;
 
-    protected final LinkedHashMap<MessageId, MessageDispatch> dispatchedMessage = new LinkedHashMap<MessageId, MessageDispatch>();
-    protected final LinkedList<MessageDispatch> unconsumedMessage = new LinkedList<MessageDispatch>();
+    protected final LinkedHashMap<MessageId, MessageDispatch> dispatchedMessage = new LinkedHashMap<>();
+    protected final LinkedList<MessageDispatch> unconsumedMessage = new LinkedList<>();
 
     protected String ackMode = AUTO_ACK;
     protected ActiveMQDestination destination;
@@ -65,15 +65,11 @@ public class StompSubscription {
 
     void onMessageDispatch(MessageDispatch md, String ackId) throws IOException, JMSException {
         ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
-        if (ackMode == CLIENT_ACK) {
+        if (ackMode.equals(CLIENT_ACK) || ackMode.equals(INDIVIDUAL_ACK)) {
             synchronized (this) {
                 dispatchedMessage.put(message.getMessageId(), md);
             }
-        } else if (ackMode == INDIVIDUAL_ACK) {
-            synchronized (this) {
-                dispatchedMessage.put(message.getMessageId(), md);
-            }
-        } else if (ackMode == AUTO_ACK) {
+        } else if (ackMode.equals(AUTO_ACK)) {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             protocolConverter.getStompTransport().sendToActiveMQ(ack);
         }
@@ -179,11 +175,13 @@ public class StompSubscription {
         } else if (ackMode == INDIVIDUAL_ACK) {
             ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
             ack.setMessageID(msgId);
+            ack.setMessageCount(1);
             if (transactionId != null) {
                 unconsumedMessage.add(dispatchedMessage.get(msgId));
                 ack.setTransactionId(transactionId);
+            } else {
+                dispatchedMessage.remove(msgId);
             }
-            dispatchedMessage.remove(msgId);
         }
         return ack;
     }
