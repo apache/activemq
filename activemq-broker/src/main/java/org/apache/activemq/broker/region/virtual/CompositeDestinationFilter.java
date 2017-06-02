@@ -111,6 +111,7 @@ public class CompositeDestinationFilter extends DestinationFilter {
 
     private void doForward(ProducerBrokerExchange context, Message message, Broker regionBroker, ActiveMQDestination destination) throws Exception {
         Message forwardedMessage = message.copy();
+        forwardedMessage.setMemoryUsage(null);
 
         forwardedMessage.setOriginalDestination( message.getDestination() );
         forwardedMessage.setDestination(destination);
