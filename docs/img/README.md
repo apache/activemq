@@ -1,1 +1,3 @@
-This is a placeholder for new logo submissions... 
+Current submissions for the Call for logo can be seen at:
+
+- https://github.com/apache/activemq/pulls
