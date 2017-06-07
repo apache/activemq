@@ -36,3 +36,26 @@ ___
 
 ![Img 2](https://raw.githubusercontent.com/apache/activemq/305953e6565f085bacf1054dd1256c391b5ec87a/docs/img/ActiveArrowALetterWithTextUpper.png)
 
+
+***
+[Martyn Taylor. Hex Colourful](https://github.com/apache/activemq/pull/249)
+___
+
+
+![Hex](https://raw.githubusercontent.com/apache/activemq/a608ae6caa23c9b0d38eb9cfabb3fbe2538cbd89/docs/img/hex-plain-text.png)
+
+
+***
+[Martyn Taylor. Hex Colourful Feather](https://github.com/apache/activemq/pull/249)
+___
+
+
+![Hex Feather](https://raw.githubusercontent.com/apache/activemq/a608ae6caa23c9b0d38eb9cfabb3fbe2538cbd89/docs/img/hex-feather-text.png)
+
+***
+[Martyn Taylor. Hex Colourful Graph](https://github.com/apache/activemq/pull/249)
+___
+
+
+![Hex Graph](https://raw.githubusercontent.com/apache/activemq/a608ae6caa23c9b0d38eb9cfabb3fbe2538cbd89/docs/img/hex-graph-text.png)
+
