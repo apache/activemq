@@ -78,7 +78,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
     protected final ThreadPoolExecutor newConnectionExecutor;
     protected final ThreadPoolExecutor protocolDetectionExecutor;
     protected int maxConnectionThreadPoolSize = Integer.MAX_VALUE;
-    protected int protocolDetectionTimeOut = 15000;
+    protected int protocolDetectionTimeOut = 30000;
 
     private static final FactoryFinder TRANSPORT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
     private final ConcurrentMap<String, TransportFactory> transportFactories = new ConcurrentHashMap<String, TransportFactory>();
