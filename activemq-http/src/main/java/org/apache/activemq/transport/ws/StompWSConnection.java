@@ -16,13 +16,17 @@
  */
 package org.apache.activemq.transport.ws;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.stomp.StompFrame;
+import org.apache.activemq.transport.stomp.StompWireFormat;
+import org.apache.activemq.util.ByteArrayOutputStream;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
@@ -40,6 +44,7 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
     private final CountDownLatch connectLatch = new CountDownLatch(1);
 
     private final BlockingQueue<String> prefetch = new LinkedBlockingDeque<String>();
+    private final StompWireFormat wireFormat = new StompWireFormat();
 
     private int closeCode = -1;
     private String closeMessage;
@@ -68,7 +73,12 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
 
     public synchronized void sendFrame(StompFrame frame) throws Exception {
         checkConnected();
-        connection.getRemote().sendString(frame.format());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        wireFormat.marshal(frame, dos);
+        dos.close();
+        ByteBuffer byteBuffer = ByteBuffer.wrap(baos.toByteArray());
+        connection.getRemote().sendBytes(byteBuffer);
     }
 
     public synchronized void keepAlive() throws Exception {

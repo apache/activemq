@@ -16,12 +16,15 @@
  */
 package org.apache.activemq.transport.ws.jetty9;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.ws.AbstractStompSocket;
+import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
@@ -46,8 +49,13 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     @Override
     public void sendToStomp(StompFrame command) throws IOException {
         try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(baos);
+            getWireFormat().marshal(command, dos);
+            dos.close();
+            ByteBuffer byteBuffer = ByteBuffer.wrap(baos.toByteArray());
             //timeout after a period of time so we don't wait forever and hold the protocol lock
-            session.getRemote().sendStringByFuture(command.format()).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+            session.getRemote().sendBytesByFuture(byteBuffer).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
