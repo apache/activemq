@@ -172,7 +172,7 @@ public class OpenWireConnectionTimeoutTest {
             case "auto+ssl":
             case "nio+ssl":
             case "auto+nio+ssl":
-                useSsl = true;;
+                useSsl = true;
                 break;
             default:
                 throw new IOException("Invalid OpenWire connector scheme passed to test.");

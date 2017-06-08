@@ -110,14 +110,18 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
             //Clone the map because we will need to set the options later on the actual transport
             IntrospectionSupport.setProperties(in, new HashMap<>(transportOptions));
         }
-        in.start();
-        SSLEngine engine = in.getSslSession();
 
         //Attempt to read enough bytes to detect the protocol until the timeout period
         //is reached
         Future<?> future = protocolDetectionExecutor.submit(new Runnable() {
             @Override
             public void run() {
+                try {
+                    in.start();
+                } catch (Exception e) {
+                    throw new IllegalStateException("Could not complete Transport start", e);
+                }
+
                 int attempts = 0;
                 do {
                     if(attempts > 0) {
@@ -157,7 +161,7 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         }
 
         WireFormat format = protocolInfo.detectedWireFormatFactory.createWireFormat();
-        Transport transport = createTransport(socket, format, engine, initBuffer, in.getInputBuffer(), protocolInfo.detectedTransportFactory);
+        Transport transport = createTransport(socket, format, in.getSslSession(), initBuffer, in.getInputBuffer(), protocolInfo.detectedTransportFactory);
 
         return new TransportInfo(format, transport, protocolInfo.detectedTransportFactory);
     }
