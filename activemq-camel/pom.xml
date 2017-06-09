@@ -32,7 +32,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-       org.springframework.jms*;version="[3,5)",
+       org.springframework.jms*;version="[4,5)",
        org.apache.activemq.pool,
        org.apache.camel*;version="${camel-version-range}",
        *
@@ -102,7 +102,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
-      <artifactId>camel-test-spring3</artifactId>
+      <artifactId>camel-test-spring</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

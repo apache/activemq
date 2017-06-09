@@ -26,7 +26,7 @@ import java.util.Properties;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
-import org.apache.camel.osgi.CamelContextFactoryBean;
+import org.apache.camel.blueprint.CamelContextFactoryBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
