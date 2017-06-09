@@ -120,8 +120,8 @@ public class StompWireFormat implements WireFormat {
         if (stomp.getContent() != null) {
             String contentString = new String(stomp.getContent(), "UTF-8");
             buffer.append(contentString);
-            buffer.append('\u0000');
         }
+        buffer.append('\u0000');
         return buffer.toString();
     }
 
