@@ -74,16 +74,7 @@ public class StompWireFormat implements WireFormat {
         return unmarshal(dis);
     }
 
-    @Override
-    public void marshal(Object command, DataOutput os) throws IOException {
-        StompFrame stomp = (org.apache.activemq.transport.stomp.StompFrame)command;
-
-        if (stomp.getAction().equals(Stomp.Commands.KEEPALIVE)) {
-            os.write(Stomp.BREAK);
-            return;
-        }
-
-        StringBuilder buffer = new StringBuilder();
+    private void marshalHeaders(StompFrame stomp, StringBuilder buffer) throws IOException {
         buffer.append(stomp.getAction());
         buffer.append(Stomp.NEWLINE);
 
@@ -97,10 +88,41 @@ public class StompWireFormat implements WireFormat {
 
         // Add a newline to seperate the headers from the content.
         buffer.append(Stomp.NEWLINE);
+    }
 
-        os.write(buffer.toString().getBytes("UTF-8"));
+    private String marshalHeaders(StompFrame stomp) throws IOException {
+        StringBuilder buffer = new StringBuilder();
+        marshalHeaders(stomp, buffer);
+        return buffer.toString();
+    }
+
+    @Override
+    public void marshal(Object command, DataOutput os) throws IOException {
+        StompFrame stomp = (org.apache.activemq.transport.stomp.StompFrame)command;
+
+        if (stomp.getAction().equals(Stomp.Commands.KEEPALIVE)) {
+            os.write(Stomp.BREAK);
+            return;
+        }
+
+        StringBuilder buffer = new StringBuilder();
+        os.write(marshalHeaders(stomp).getBytes("UTF-8"));
         os.write(stomp.getContent());
         os.write(END_OF_FRAME);
+    }
+
+    public String marshalToString(StompFrame stomp) throws IOException {
+        if (stomp.getAction().equals(Stomp.Commands.KEEPALIVE)) {
+            return String.valueOf((char)Stomp.BREAK);
+        }
+        StringBuilder buffer = new StringBuilder();
+        marshalHeaders(stomp, buffer);
+        if (stomp.getContent() != null) {
+            String contentString = new String(stomp.getContent(), "UTF-8");
+            buffer.append(contentString);
+        }
+        buffer.append('\u0000');
+        return buffer.toString();
     }
 
     @Override

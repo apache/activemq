@@ -23,6 +23,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.stomp.StompFrame;
+import org.apache.activemq.transport.stomp.StompWireFormat;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
@@ -40,6 +41,7 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
     private final CountDownLatch connectLatch = new CountDownLatch(1);
 
     private final BlockingQueue<String> prefetch = new LinkedBlockingDeque<String>();
+    private final StompWireFormat wireFormat = new StompWireFormat();
 
     private int closeCode = -1;
     private String closeMessage;
@@ -68,7 +70,7 @@ public class StompWSConnection extends WebSocketAdapter implements WebSocketList
 
     public synchronized void sendFrame(StompFrame frame) throws Exception {
         checkConnected();
-        connection.getRemote().sendString(frame.format());
+        connection.getRemote().sendString(wireFormat.marshalToString(frame));
     }
 
     public synchronized void keepAlive() throws Exception {
