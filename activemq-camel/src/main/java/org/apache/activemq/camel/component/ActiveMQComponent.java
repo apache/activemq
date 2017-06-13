@@ -104,21 +104,11 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
     }
 
     /**
-     * Sets the username to be used to login to ActiveMQ
+     * @deprecated - use JmsComponent#setUsername(String)
+     * @see JmsComponent#setUsername(String)
      */
     public void setUserName(String userName) {
-        if (getConfiguration() instanceof ActiveMQConfiguration) {
-            ((ActiveMQConfiguration)getConfiguration()).setUserName(userName);
-        }
-    }
-
-    /**
-     * Sets the password/passcode used to login to ActiveMQ
-     */
-    public void setPassword(String password) {
-        if (getConfiguration() instanceof ActiveMQConfiguration) {
-            ((ActiveMQConfiguration)getConfiguration()).setPassword(password);
-        }
+        setUsername(userName);
     }
 
     public void setTrustAllPackages(boolean trustAllPackages) {
@@ -303,6 +293,7 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
      *
      * @return false
      */
+    @Override
     public boolean isAllowAutoWiredConnectionFactory() {
         return false;
     }

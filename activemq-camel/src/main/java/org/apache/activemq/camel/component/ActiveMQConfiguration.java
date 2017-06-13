@@ -35,8 +35,6 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
     private boolean useSingleConnection = false;
     private boolean usePooledConnection = true;
-    private String userName;
-    private String password;
     private boolean trustAllPackages;
 
     public ActiveMQConfiguration() {
@@ -60,26 +58,22 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         return useSingleConnection;
     }
 
+    /**
+     * @deprecated - use JmsConfiguration#getUsername()
+     * @see JmsConfiguration#getUsername()
+     */
+    @Deprecated
     public String getUserName() {
-        return userName;
+        return getUsername();
     }
 
     /**
-     * Sets the username to be used to login to ActiveMQ
+     * @deprecated - use JmsConfiguration#setUsername(String)
+     * @see JmsConfiguration#setUsername(String)
      */
+    @Deprecated
     public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    /**
-     * Sets the password/passcode used to login to ActiveMQ
-     */
-    public void setPassword(String password) {
-        this.password = password;
+        setUsername(userName);
     }
 
     /**
@@ -146,11 +140,11 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     protected ConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
         answer.setTrustAllPackages(trustAllPackages);
-        if (userName != null) {
-            answer.setUserName(userName);
+        if (getUsername() != null) {
+            answer.setUserName(getUsername());
         }
-        if (password != null) {
-            answer.setPassword(password);
+        if (getPassword() != null) {
+            answer.setPassword(getPassword());
         }
         if (answer.getBeanName() == null) {
             answer.setBeanName("Camel");
