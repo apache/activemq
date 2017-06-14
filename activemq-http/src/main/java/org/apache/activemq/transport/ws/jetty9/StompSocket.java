@@ -47,7 +47,7 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     public void sendToStomp(StompFrame command) throws IOException {
         try {
             //timeout after a period of time so we don't wait forever and hold the protocol lock
-            session.getRemote().sendStringByFuture(command.format()).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
+            session.getRemote().sendStringByFuture(getWireFormat().marshalToString(command)).get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
