@@ -50,7 +50,7 @@
     <camel-version>2.19.1</camel-version>
     <camel-version-range>[2.18,3)</camel-version-range>
     <cglib-version>2.2</cglib-version>
-    <commons-beanutils-version>1.9.2</commons-beanutils-version>
+    <commons-beanutils-version>1.9.3</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-daemon-version>1.0.15</commons-daemon-version>
     <commons-dbcp2-version>2.1.1</commons-dbcp2-version>
@@ -59,7 +59,7 @@
     <commons-logging-version>1.2</commons-logging-version>
     <commons-pool2-version>2.4.2</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
-    <commons-net-version>3.5</commons-net-version>
+    <commons-net-version>3.6</commons-net-version>
     <directory-version>2.0.0-M6</directory-version>
     <ftpserver-version>1.0.6</ftpserver-version>
     <geronimo-version>1.0</geronimo-version>
@@ -69,8 +69,8 @@
     <hawtdispatch-version>1.22</hawtdispatch-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.12</hsqldb-version>
-    <httpclient-version>4.5.2</httpclient-version>
-    <httpcore-version>4.4.5</httpcore-version>
+    <httpclient-version>4.5.3</httpclient-version>
+    <httpcore-version>4.4.6</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.6.3</jackson-version>
     <jasypt-version>1.9.2</jasypt-version>
