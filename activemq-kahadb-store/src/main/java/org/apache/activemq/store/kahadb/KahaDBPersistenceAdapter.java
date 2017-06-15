@@ -163,6 +163,11 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         return this.letter.getLastProducerSequenceId(id);
     }
 
+    @Override
+    public void allowIOResumption() {
+        this.letter.allowIOResumption();
+    }
+
     /**
      * @param destination
      * @see org.apache.activemq.store.PersistenceAdapter#removeQueueMessageStore(org.apache.activemq.command.ActiveMQQueue)

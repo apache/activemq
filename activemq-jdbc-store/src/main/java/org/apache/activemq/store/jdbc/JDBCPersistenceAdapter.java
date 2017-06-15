@@ -292,6 +292,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     @Override
+    public void allowIOResumption() {}
+
+    @Override
     public void init() throws Exception {
         getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());
 

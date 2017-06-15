@@ -206,4 +206,6 @@ public interface PersistenceAdapter extends Service {
      * @return the last stored sequence id or -1 if no suppression needed
      */
     long getLastProducerSequenceId(ProducerId id) throws IOException;
+
+    void allowIOResumption();
 }

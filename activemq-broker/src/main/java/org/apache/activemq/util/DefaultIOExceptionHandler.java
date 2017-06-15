@@ -166,6 +166,11 @@ import org.slf4j.LoggerFactory;
     }
 
     protected void allowIOResumption() {
+        try {
+            broker.getPersistenceAdapter().allowIOResumption();
+        } catch (IOException e) {
+            LOG.warn("Failed to allow IO resumption", e);
+        }
     }
 
     private void stopBroker(Exception exception) {

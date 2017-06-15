@@ -238,6 +238,9 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
     }
 
     @Override
+    public void allowIOResumption() {}
+
+    @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         // We could eventuall implement an in memory scheduler.
         throw new UnsupportedOperationException();

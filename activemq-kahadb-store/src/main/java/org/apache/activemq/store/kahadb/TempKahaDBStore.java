@@ -648,6 +648,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
     }
 
     @Override
+    public void allowIOResumption() {
+        if (pageFile != null) {
+            pageFile.allowIOResumption();
+        }
+    }
+
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
     }

@@ -800,6 +800,11 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     @Override
+    public void allowIOResumption() {
+        longTermPersistence.allowIOResumption();
+    }
+
+    @Override
     public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
         return longTermPersistence.createJobSchedulerStore();
     }

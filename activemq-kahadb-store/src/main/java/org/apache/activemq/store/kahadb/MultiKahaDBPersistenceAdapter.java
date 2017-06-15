@@ -289,6 +289,13 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     @Override
+    public void allowIOResumption() {
+        for (PersistenceAdapter persistenceAdapter : adapters) {
+            persistenceAdapter.allowIOResumption();
+        }
+    }
+
+    @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         PersistenceAdapter adapter = null;
         try {

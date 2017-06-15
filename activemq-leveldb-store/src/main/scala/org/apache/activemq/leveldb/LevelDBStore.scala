@@ -1147,4 +1147,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   def rollbackTransaction(context: ConnectionContext): Unit = {}
 
   def createClient = new LevelDBClient(this);
+
+  def allowIOResumption() = {}
 }
