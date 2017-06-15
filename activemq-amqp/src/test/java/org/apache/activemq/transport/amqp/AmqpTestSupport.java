@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -68,8 +66,6 @@ public class AmqpTestSupport {
     @Rule public TestName name = new TestName();
 
     protected static final Logger LOG = LoggerFactory.getLogger(AmqpTestSupport.class);
-
-    protected ExecutorService testService = Executors.newSingleThreadExecutor();
 
     protected BrokerService brokerService;
     protected Vector<Throwable> exceptions = new Vector<>();

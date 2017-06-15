@@ -215,6 +215,7 @@ public class JMSClientContext {
         factory.setForceSyncSend(syncPublish);
         factory.setTopicPrefix("topic://");
         factory.setQueuePrefix("queue://");
+        factory.setCloseTimeout(60000);
 
         return factory;
     }
