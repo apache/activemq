@@ -71,6 +71,7 @@ public class JDBCIOExceptionHandlerMockeryTest {
             allowing(brokerService).stopAllConnectors(with(any(ServiceStopper.class)));
             allowing(brokerService).getPersistenceAdapter();
             will(returnValue(jdbcPersistenceAdapter));
+            allowing(jdbcPersistenceAdapter).allowIOResumption();
             allowing(jdbcPersistenceAdapter).getLocker();
             will(returnValue(locker));
             allowing(locker).keepAlive();
