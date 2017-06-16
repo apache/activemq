@@ -268,6 +268,7 @@ public class BrokerService implements Service {
     private boolean rollbackOnlyOnAsyncException = true;
 
     private int storeOpenWireVersion = OpenWireFormat.DEFAULT_STORE_VERSION;
+    private List<Runnable> preShutdownHooks = new CopyOnWriteArrayList<>();
 
     static {
 
@@ -476,6 +477,16 @@ public class BrokerService implements Service {
             registerJmsConnectorMBean(connector);
         }
         return connector;
+    }
+
+    /**
+     * Adds a {@link Runnable} hook that will be invoked before the
+     * broker is stopped. This allows performing cleanup actions
+     * before the broker is stopped. The hook should not throw
+     * exceptions or block.
+     */
+    public final void addPreShutdownHook(final Runnable hook) {
+        preShutdownHooks.add(hook);
     }
 
     public JmsConnector removeJmsConnector(JmsConnector connector) {
@@ -788,6 +799,16 @@ public class BrokerService implements Service {
      */
     @Override
     public void stop() throws Exception {
+        final ServiceStopper stopper = new ServiceStopper();
+
+        for (Runnable hook : preShutdownHooks) {
+            try {
+                hook.run();
+            } catch (Throwable e) {
+                stopper.onException(hook, e);
+            }
+        }
+
         if (!stopping.compareAndSet(false, true)) {
             LOG.trace("Broker already stopping/stopped");
             return;
@@ -812,7 +833,6 @@ public class BrokerService implements Service {
             this.scheduler.stop();
             this.scheduler = null;
         }
-        ServiceStopper stopper = new ServiceStopper();
         if (services != null) {
             for (Service service : services) {
                 stopper.stop(service);
@@ -2844,6 +2864,10 @@ public class BrokerService implements Service {
 
     public void setRegionBroker(Broker regionBroker) {
         this.regionBroker = regionBroker;
+    }
+
+    public final void removePreShutdownHook(final Runnable hook) {
+        preShutdownHooks.remove(hook);
     }
 
     public void addShutdownHook(Runnable hook) {
