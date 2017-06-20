@@ -125,7 +125,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.StoreUtil;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.util.TimeUtils;
-import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -199,6 +198,7 @@ public class BrokerService implements Service {
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean stopped = new AtomicBoolean(false);
     private final AtomicBoolean stopping = new AtomicBoolean(false);
+    private final AtomicBoolean preShutdownHooksInvoked = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
     private boolean keepDurableSubsActive = true;
     private boolean useVirtualTopics = true;
@@ -268,7 +268,7 @@ public class BrokerService implements Service {
     private boolean rollbackOnlyOnAsyncException = true;
 
     private int storeOpenWireVersion = OpenWireFormat.DEFAULT_STORE_VERSION;
-    private List<Runnable> preShutdownHooks = new CopyOnWriteArrayList<>();
+    private final List<Runnable> preShutdownHooks = new CopyOnWriteArrayList<>();
 
     static {
 
@@ -603,6 +603,7 @@ public class BrokerService implements Service {
 
         setStartException(null);
         stopping.set(false);
+        preShutdownHooksInvoked.set(false);
         startDate = new Date();
         MDC.put("activemq.broker", brokerName);
 
@@ -801,11 +802,17 @@ public class BrokerService implements Service {
     public void stop() throws Exception {
         final ServiceStopper stopper = new ServiceStopper();
 
-        for (Runnable hook : preShutdownHooks) {
-            try {
-                hook.run();
-            } catch (Throwable e) {
-                stopper.onException(hook, e);
+        //The preShutdownHooks need to run before stopping.compareAndSet()
+        //so there is a separate AtomicBoolean so the hooks only run once
+        //We want to make sure the hooks are run before stop is initialized
+        //including setting the stopping variable - See AMQ-6706
+        if (preShutdownHooksInvoked.compareAndSet(false, true)) {
+            for (Runnable hook : preShutdownHooks) {
+                try {
+                    hook.run();
+                } catch (Throwable e) {
+                    stopper.onException(hook, e);
+                }
             }
         }
 
