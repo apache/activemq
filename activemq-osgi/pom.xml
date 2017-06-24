@@ -87,7 +87,6 @@
     </activemq.osgi.export>
     <activemq.osgi.private.pkg>
          org.apache.xbean*,
-         org.springframework.osgi*,
          org.fusesource.hawtdispatch*,
          org.fusesource.mqtt*,
          org.fusesource.hawtbuf*,
@@ -178,29 +177,6 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-blueprint</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.osgi</groupId>
-      <artifactId>spring-osgi-core</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.aop</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.beans</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.context</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.core</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
@@ -303,7 +279,6 @@
             <Embed-Dependency>
               *;groupId=org.apache.activemq;inline=META-INF/services/*,
               *;groupId=org.apache.qpid;inline=META-INF/services/*,
-              *;groupId=org.springframework.osgi;inline=true
               *;groupId=org.apache.xbean;inline=true
               <!--
               groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,

@@ -204,30 +204,6 @@
       <artifactId>activemq-ra</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.springframework.osgi</groupId>
-      <artifactId>spring-osgi-core</artifactId>
-      <scope>provided</scope>
-      <optional>true</optional>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.context</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.beans</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.aop</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
   </dependencies>
 
   <build>
