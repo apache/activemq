@@ -1,3 +1,19 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.ra;
 
 import java.util.Set;
@@ -5,7 +21,7 @@ import java.util.Iterator;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.ra.ActiveMQResourceAdapter; 
+import org.apache.activemq.ra.ActiveMQResourceAdapter;
 
 import org.junit.Assert;
 import org.junit.After;
@@ -91,7 +107,7 @@ public class ActiveMQConnectionExecutorThreadCleanUpTest {
 
             // check if thread exists
             Assert.assertFalse("Thread named \"" +
-                    AMQ_CONN_EXECUTOR_THREAD_NAME + 
+                    AMQ_CONN_EXECUTOR_THREAD_NAME +
                     "\" not cleared up with ActiveMQConnection.",
                 hasActiveMQConnectionExceutorThread());
         }
@@ -102,7 +118,7 @@ public class ActiveMQConnectionExecutorThreadCleanUpTest {
     /**
      * Retrieves all threads from JVM and checks if any thread names contain
      * AMQ_CONN_EXECUTOR_THREAD_NAME.
-     * 
+     *
      * @return true if such thread exists, otherwise false
      */
     public boolean hasActiveMQConnectionExceutorThread() {
