@@ -110,6 +110,13 @@ ___
 
 ![Logo R1v3](https://raw.githubusercontent.com/apache/activemq/d356623e3044911b0172dfd06c082188762ed2b6/docs/img/apache_activemq_logo_r1v3.png)
 
+***
+[Jason Brock. Logo R1v3b](https://github.com/apache/activemq/pull/251)
+___
+
+
+![Logo R1v3b](https://raw.githubusercontent.com/apache/activemq/b2068cab9f9326a26c3c7274053297681f12a968/docs/img/apache_activemq_logo_r1v3b.png)
+
 
 ***
 [Jason Brock. Logo R1v4](https://github.com/apache/activemq/pull/251)
@@ -117,6 +124,14 @@ ___
 
 
 ![Logo R1v4](https://raw.githubusercontent.com/apache/activemq/d356623e3044911b0172dfd06c082188762ed2b6/docs/img/apache_activemq_logo_r1v4.png)
+
+
+***
+[Jason Brock. Logo R1v4](https://github.com/apache/activemq/pull/251)
+___
+
+
+![Logo R1v4b](https://raw.githubusercontent.com/apache/activemq/b2068cab9f9326a26c3c7274053297681f12a968/docs/img/apache_activemq_logo_r1v4b.png)
 
 
 ***
