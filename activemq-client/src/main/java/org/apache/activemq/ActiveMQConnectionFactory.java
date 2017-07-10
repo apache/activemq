@@ -1271,6 +1271,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.trustedPackages = trustedPackages;
     }
 
+    public void addTrustedPackage(String trustedPackage) {
+        if (trustedPackages != null) {
+            this.trustedPackages.add(trustedPackage);
+        }
+    }
+
     public boolean isTrustAllPackages() {
         return trustAllPackages;
     }
