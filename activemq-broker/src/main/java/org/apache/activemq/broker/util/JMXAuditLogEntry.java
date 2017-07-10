@@ -19,9 +19,16 @@ package org.apache.activemq.broker.util;
 import java.util.Arrays;
 
 public class JMXAuditLogEntry extends AuditLogEntry {
+    public static final String[] VERBS = new String[] {" called ", " ended "};
+    private int state = 0;
+
+    public void complete() {
+        setTimestamp(System.currentTimeMillis());
+        state = 1;
+    }
 
     @Override
     public String toString() {
-        return user.trim() + " called " + operation + Arrays.toString((Object[])parameters.get("arguments")) + " at " + getFormattedTime();
+        return user.trim() + VERBS[state] + operation + Arrays.toString((Object[])parameters.get("arguments")) + " at " + getFormattedTime();
     }
 }

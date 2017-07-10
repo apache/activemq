@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.management.MBeanAttributeInfo;
@@ -48,7 +49,12 @@ public class AnnotatedMBean extends StandardMBean {
 
     private static final Logger LOG = LoggerFactory.getLogger("org.apache.activemq.audit");
 
-    private static boolean audit;
+    private static final byte OFF = 0b00;
+    private static final byte ENTRY = 0b01;
+    private static final byte EXIT = 0b10;
+    private static final byte ALL = 0b11;
+
+    private static byte audit = OFF;
     private static AuditLogService auditLog;
 
     static {
@@ -56,10 +62,23 @@ public class AnnotatedMBean extends StandardMBean {
         for (Class<?> c : p) {
             primitives.put(c.getName(), c);
         }
-        audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
-        if (audit) {
+        audit = byteFromProperty("org.apache.activemq.audit");
+        if (audit != OFF) {
             auditLog = AuditLogService.getAuditLog();
         }
+    }
+
+    private static byte byteFromProperty(String s) {
+        byte val = OFF;
+        String config = System.getProperty(s, "").toLowerCase(Locale.ENGLISH);
+        if ("true".equals(config) || "entry".equals(config)) {
+            val = ENTRY;
+        } else if ("exit".equals(config)) {
+            val = EXIT;
+        } else if ("all".equals(config)) {
+            val = ALL;
+        }
+        return val;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -179,7 +198,8 @@ public class AnnotatedMBean extends StandardMBean {
 
     @Override
     public Object invoke(String s, Object[] objects, String[] strings) throws MBeanException, ReflectionException {
-        if (audit) {
+        JMXAuditLogEntry entry = null;
+        if (audit != OFF) {
             Subject subject = Subject.getSubject(AccessController.getContext());
             String caller = "anonymous";
             if (subject != null) {
@@ -189,7 +209,7 @@ public class AnnotatedMBean extends StandardMBean {
                 }
             }
 
-            AuditLogEntry entry = new JMXAuditLogEntry();
+            entry = new JMXAuditLogEntry();
             entry.setUser(caller);
             entry.setTimestamp(System.currentTimeMillis());
             entry.setOperation(this.getMBeanInfo().getClassName() + "." + s);
@@ -213,9 +233,16 @@ public class AnnotatedMBean extends StandardMBean {
                entry.getParameters().put("arguments", objects);
             }
 
+            if ((audit&ENTRY) == ENTRY) {
+                auditLog.log(entry);
+            }
+        }
+        Object result = super.invoke(s, objects, strings);
+        if ((audit&EXIT) == EXIT) {
+            entry.complete();
             auditLog.log(entry);
         }
-        return super.invoke(s, objects, strings);
+        return result;
     }
 
     private Method getMBeanMethod(Class clazz, String methodName, String[] signature) throws ReflectiveOperationException {

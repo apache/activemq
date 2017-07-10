@@ -25,6 +25,8 @@ import javax.management.remote.JMXServiceURL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -38,6 +40,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Test;
 
+import static org.apache.activemq.broker.util.JMXAuditLogEntry.VERBS;
 import static org.apache.activemq.util.TestUtils.findOpenPort;
 
 public class JmxAuditLogTest extends TestSupport
@@ -55,7 +58,7 @@ public class JmxAuditLogTest extends TestSupport
       setMaxTestTime(TimeUnit.MINUTES.toMillis(10));
       setAutoFail(true);
 
-      System.setProperty("org.apache.activemq.audit", "true");
+      System.setProperty("org.apache.activemq.audit", "all");
 
       broker = new BrokerService();
       broker.setUseJmx(true);
@@ -113,6 +116,8 @@ public class JmxAuditLogTest extends TestSupport
    {
       Logger log4jLogger = Logger.getLogger("org.apache.activemq.audit");
       log4jLogger.setLevel(Level.INFO);
+      final AtomicInteger logCount = new AtomicInteger(0);
+      final AtomicBoolean gotEnded = new AtomicBoolean(false);
 
       Appender appender = new DefaultTestAppender()
       {
@@ -122,11 +127,16 @@ public class JmxAuditLogTest extends TestSupport
             if (event.getMessage() instanceof String)
             {
                String message = (String) event.getMessage();
+               System.out.println(message);
                if (message.contains("testPassword"))
                {
                   fail("Password should not appear in log file");
                }
+               if (message.contains(VERBS[1])) {
+                  gotEnded.set(true);
+               }
             }
+            logCount.incrementAndGet();
          }
       };
       log4jLogger.addAppender(appender);
@@ -139,5 +149,9 @@ public class JmxAuditLogTest extends TestSupport
 
       conn.invoke(queueObjName, "sendTextMessage", params, signature);
       log4jLogger.removeAppender(appender);
+
+      assertTrue("got ended statement", gotEnded.get());
+      assertEquals("got two messages", 2, logCount.get());
+
    }
 }
