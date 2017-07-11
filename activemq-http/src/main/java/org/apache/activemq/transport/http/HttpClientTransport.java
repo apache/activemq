@@ -281,6 +281,7 @@ public class HttpClientTransport extends HttpTransportSupport {
             httpClient.execute(httpMethod, new BasicResponseHandler());
             httpClient.execute(optionsMethod, handler);
         } catch(Exception e) {
+            LOG.trace("Error on start: ", e);
             throw new IOException("Failed to perform GET on: " + remoteUrl + " as response was: " + e.getMessage());
         }
 
