@@ -26,7 +26,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -90,12 +89,21 @@ public class Journal {
         // with corruption on recovery we have no faith in the content - slip to the next batch record or eof
         DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         try {
-            int nextOffset = findNextBatchRecord(reader, recoveryPosition.getOffset() + 1);
-            Sequence sequence = new Sequence(recoveryPosition.getOffset(), nextOffset >= 0 ? nextOffset - 1 : dataFile.getLength() - 1);
+            RandomAccessFile randomAccessFile = reader.getRaf().getRaf();
+            randomAccessFile.seek(recoveryPosition.getOffset() + 1);
+            byte[] data = new byte[getWriteBatchSize()];
+            ByteSequence bs = new ByteSequence(data, 0, randomAccessFile.read(data));
+            int nextOffset = 0;
+            if (findNextBatchRecord(bs, randomAccessFile) >= 0) {
+                nextOffset = Math.toIntExact(randomAccessFile.getFilePointer() - bs.remaining());
+            } else {
+                nextOffset = Math.toIntExact(randomAccessFile.length());
+            }
+            Sequence sequence = new Sequence(recoveryPosition.getOffset(), nextOffset - 1);
             LOG.warn("Corrupt journal records found in '{}' between offsets: {}", dataFile.getFile(), sequence);
 
             // skip corruption on getNextLocation
-            recoveryPosition.setOffset((int) sequence.getLast() + 1);
+            recoveryPosition.setOffset(nextOffset);
             recoveryPosition.setSize(-1);
 
             dataFile.corruptedBlocks.add(sequence);
@@ -463,21 +471,19 @@ public class Journal {
     }
 
     public boolean isUnusedPreallocated(DataFile dataFile) throws IOException {
-        int firstBatchRecordSize = -1;
         if (preallocationScope == PreallocationScope.ENTIRE_JOURNAL_ASYNC) {
-            Location location = new Location();
-            location.setDataFileId(dataFile.getDataFileId());
-            location.setOffset(0);
-
             DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
             try {
-                firstBatchRecordSize = checkBatchRecord(reader, location.getOffset());
+                byte[] firstFewBytes = new byte[BATCH_CONTROL_RECORD_HEADER.length];
+                reader.readFully(0, firstFewBytes);
+                ByteSequence bs = new ByteSequence(firstFewBytes);
+                return bs.startsWith(EOF_RECORD);
             } catch (Exception ignored) {
             } finally {
                 accessorPool.closeDataFileAccessor(reader);
             }
         }
-        return firstBatchRecordSize == 0;
+        return false;
     }
 
     protected Location recoveryCheck(DataFile dataFile) throws IOException {
@@ -487,9 +493,15 @@ public class Journal {
 
         DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         try {
+            RandomAccessFile randomAccessFile = reader.getRaf().getRaf();
+            randomAccessFile.seek(0);
+            final long totalFileLength = randomAccessFile.length();
+            byte[] data = new byte[getWriteBatchSize()];
+            ByteSequence bs = new ByteSequence(data, 0, randomAccessFile.read(data));
+
             while (true) {
-                int size = checkBatchRecord(reader, location.getOffset());
-                if (size >= 0 && location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size <= dataFile.getLength()) {
+                int size = checkBatchRecord(bs, randomAccessFile);
+                if (size >= 0 && location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size <= totalFileLength) {
                     if (size == 0) {
                         // eof batch record
                         break;
@@ -500,8 +512,8 @@ public class Journal {
                     // Perhaps it's just some corruption... scan through the
                     // file to find the next valid batch record. We
                     // may have subsequent valid batch records.
-                    int nextOffset = findNextBatchRecord(reader, location.getOffset() + 1);
-                    if (nextOffset >= 0) {
+                    if (findNextBatchRecord(bs, randomAccessFile) >= 0) {
+                        int nextOffset = Math.toIntExact(randomAccessFile.getFilePointer() - bs.remaining());
                         Sequence sequence = new Sequence(location.getOffset(), nextOffset - 1);
                         LOG.warn("Corrupt journal records found in '{}' between offsets: {}", dataFile.getFile(), sequence);
                         dataFile.corruptedBlocks.add(sequence);
@@ -533,41 +545,33 @@ public class Journal {
         return location;
     }
 
-    private int findNextBatchRecord(DataFileAccessor reader, int offset) throws IOException {
-        ByteSequence header = new ByteSequence(BATCH_CONTROL_RECORD_HEADER);
-        byte data[] = new byte[1024*4];
-        ByteSequence bs = new ByteSequence(data, 0, reader.read(offset, data));
-
+    private int findNextBatchRecord(ByteSequence bs, RandomAccessFile reader) throws IOException {
+        final ByteSequence header = new ByteSequence(BATCH_CONTROL_RECORD_HEADER);
         int pos = 0;
         while (true) {
-            pos = bs.indexOf(header, pos);
+            pos = bs.indexOf(header, 0);
             if (pos >= 0) {
-                return offset + pos;
+                bs.setOffset(bs.offset + pos);
+                return pos;
             } else {
                 // need to load the next data chunck in..
-                if (bs.length != data.length) {
+                if (bs.length != bs.data.length) {
                     // If we had a short read then we were at EOF
                     return -1;
                 }
-                offset += bs.length - BATCH_CONTROL_RECORD_HEADER.length;
-                bs = new ByteSequence(data, 0, reader.read(offset, data));
-                pos = 0;
+                bs.setOffset(bs.length - BATCH_CONTROL_RECORD_HEADER.length);
+                bs.reset();
+                bs.setLength(bs.length + reader.read(bs.data, bs.length, bs.data.length - BATCH_CONTROL_RECORD_HEADER.length));
             }
         }
     }
 
-    public int checkBatchRecord(DataFileAccessor reader, int offset) throws IOException {
-        byte controlRecord[] = new byte[BATCH_CONTROL_RECORD_SIZE];
+    private int checkBatchRecord(ByteSequence bs, RandomAccessFile reader) throws IOException {
 
-        try (DataByteArrayInputStream controlIs = new DataByteArrayInputStream(controlRecord);) {
-
-            reader.readFully(offset, controlRecord);
-
-            // check for journal eof
-            if (Arrays.equals(EOF_RECORD, Arrays.copyOfRange(controlRecord, 0, EOF_RECORD.length))) {
-                // eof batch
-                return 0;
-            }
+        if (bs.startsWith(EOF_RECORD)) {
+            return 0; // eof
+        }
+        try (DataByteArrayInputStream controlIs = new DataByteArrayInputStream(bs)) {
 
             // Assert that it's a batch record.
             for (int i = 0; i < BATCH_CONTROL_RECORD_HEADER.length; i++) {
@@ -578,28 +582,43 @@ public class Journal {
 
             int size = controlIs.readInt();
             if (size < 0 || size > Integer.MAX_VALUE - (BATCH_CONTROL_RECORD_SIZE + EOF_RECORD.length)) {
-                return -1;
+                return -2;
             }
 
-            if (isChecksum()) {
+            long expectedChecksum = controlIs.readLong();
+            Checksum checksum = null;
+            if (isChecksum() && expectedChecksum > 0) {
+                checksum = new Adler32();
+            }
 
-                long expectedChecksum = controlIs.readLong();
-                if (expectedChecksum == 0) {
-                    // Checksuming was not enabled when the record was stored.
-                    // we can't validate the record :(
-                    return size;
-                }
+            // revert to bs to consume data
+            bs.setOffset(controlIs.position());
+            int toRead = size;
+            while (toRead > 0) {
+                if (bs.remaining() >= toRead) {
+                    if (checksum != null) {
+                        checksum.update(bs.getData(), bs.getOffset(), toRead);
+                    }
+                    bs.setOffset(bs.offset + toRead);
+                    toRead = 0;
+                } else {
+                    if (bs.length != bs.data.length) {
+                        // buffer exhausted
+                        return  -3;
+                    }
 
-                byte data[] = new byte[size];
-                reader.readFully(offset + BATCH_CONTROL_RECORD_SIZE, data);
-
-                Checksum checksum = new Adler32();
-                checksum.update(data, 0, data.length);
-
-                if (expectedChecksum != checksum.getValue()) {
-                    return -1;
+                    toRead -= bs.remaining();
+                    if (checksum != null) {
+                        checksum.update(bs.getData(), bs.getOffset(), bs.remaining());
+                    }
+                    bs.setLength(reader.read(bs.data));
+                    bs.setOffset(0);
                 }
             }
+            if (checksum != null && expectedChecksum != checksum.getValue()) {
+                return -4;
+            }
+
             return size;
         }
     }

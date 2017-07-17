@@ -64,10 +64,12 @@ public class JournalCorruptionEofIndexRecoveryTest {
     private String connectionUri;
     private KahaDBPersistenceAdapter adapter;
     private boolean ignoreMissingJournalFiles = false;
+    private int journalMaxBatchSize;
 
     private final Destination destination = new ActiveMQQueue("Test");
     private final String KAHADB_DIRECTORY = "target/activemq-data/";
     private final String payload = new String(new byte[1024]);
+    File brokerDataDir = null;
 
     protected void startBroker() throws Exception {
         doStartBroker(true, false);
@@ -78,14 +80,13 @@ public class JournalCorruptionEofIndexRecoveryTest {
     }
 
     protected void restartBroker(boolean whackIndex, boolean forceRecoverIndex) throws Exception {
-        File dataDir = broker.getPersistenceAdapter().getDirectory();
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
         }
 
         if (whackIndex) {
-            File indexToDelete = new File(dataDir, "db.data");
+            File indexToDelete = new File(brokerDataDir, "db.data");
             LOG.info("Whacking index: " + indexToDelete);
             indexToDelete.delete();
         }
@@ -113,6 +114,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         cf = new ActiveMQConnectionFactory(connectionUri);
 
         broker.start();
+        brokerDataDir = broker.getPersistenceAdapter().getDirectory();
         LOG.info("Starting broker..");
     }
 
@@ -123,6 +125,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
         // ensure there are a bunch of data files but multiple entries in each
         adapter.setJournalMaxFileLength(1024 * 20);
+
+        adapter.setJournalMaxWriteBatchSize(journalMaxBatchSize);
 
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(5000);
@@ -146,6 +150,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
     @Before
     public void reset() throws Exception {
         ignoreMissingJournalFiles = true;
+        journalMaxBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     }
 
     @Test
@@ -223,6 +228,20 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     @Test
     public void testRecoverIndex() throws Exception {
+        startBroker();
+
+        final int numToSend = 4;
+        produceMessagesToConsumeMultipleDataFiles(numToSend);
+
+        // force journal replay by whacking the index
+        restartBroker(false, true);
+
+        assertEquals("Drain", numToSend, drainQueue(numToSend));
+    }
+
+    @Test
+    public void testRecoverIndexWithSmallBatch() throws Exception {
+        journalMaxBatchSize = 2 * 1024;
         startBroker();
 
         final int numToSend = 4;

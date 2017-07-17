@@ -25,6 +25,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,8 @@ import javax.management.Attribute;
 import javax.management.ObjectName;
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -54,8 +57,7 @@ public class JournalFdRecoveryTest {
     private static final Logger LOG = LoggerFactory.getLogger(JournalFdRecoveryTest.class);
 
     private final String KAHADB_DIRECTORY = "target/activemq-data/";
-    private final String payload = new String(new byte[1024]);
-
+    private String payload;
     private ActiveMQConnectionFactory cf = null;
     private BrokerService broker = null;
     private final Destination destination = new ActiveMQQueue("Test");
@@ -63,6 +65,7 @@ public class JournalFdRecoveryTest {
     private KahaDBPersistenceAdapter adapter;
 
     public byte fill = Byte.valueOf("3");
+    private int maxJournalSizeBytes;
 
     protected void startBroker() throws Exception {
         doStartBroker(true);
@@ -88,7 +91,6 @@ public class JournalFdRecoveryTest {
     }
 
     private void doCreateBroker(boolean delete) throws Exception {
-
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(delete);
         broker.setPersistent(true);
@@ -112,7 +114,7 @@ public class JournalFdRecoveryTest {
         adapter = (KahaDBPersistenceAdapter) brokerService.getPersistenceAdapter();
 
         // ensure there are a bunch of data files but multiple entries in each
-        adapter.setJournalMaxFileLength(1024 * 20);
+        adapter.setJournalMaxFileLength(maxJournalSizeBytes);
 
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(5000);
@@ -130,6 +132,12 @@ public class JournalFdRecoveryTest {
             broker.stop();
             broker.waitUntilStopped();
         }
+    }
+
+    @Before
+    public void initPayLoad() {
+        payload = new String(new byte[1024]);
+        maxJournalSizeBytes = 1024 * 20;
     }
 
 
@@ -234,6 +242,27 @@ public class JournalFdRecoveryTest {
 
         assertEquals("no queue size ", 0l,  ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics().getMessages().getCount());
 
+    }
+
+    @Test
+    public void testRecoveryCheckSpeedSmallMessages() throws Exception {
+        maxJournalSizeBytes = Journal.DEFAULT_MAX_FILE_LENGTH;
+        doCreateBroker(true);
+        broker.start();
+
+        int toSend = 20000;
+        payload = new String(new byte[100]);
+        produceMessagesToConsumeMultipleDataFiles(toSend);
+
+        broker.stop();
+        broker.waitUntilStopped();
+
+        Instant b = Instant.now();
+        doStartBroker(false);
+        Instant e = Instant.now();
+
+        Duration timeElapsed = Duration.between(b, e);
+        LOG.info("Elapsed: " + timeElapsed);
     }
 
     private long totalOpenFileDescriptorCount(BrokerService broker) {
