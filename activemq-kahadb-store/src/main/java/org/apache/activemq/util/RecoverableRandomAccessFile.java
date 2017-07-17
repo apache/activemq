@@ -48,7 +48,7 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
         this(new File(name), mode);
     }
 
-    protected RandomAccessFile getRaf() throws IOException {
+    public RandomAccessFile getRaf() throws IOException {
         if (raf == null) {
             raf = new RandomAccessFile(file, mode);
         }

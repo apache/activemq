@@ -480,6 +480,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         try {
             IOHelper.mkdirs(directory);
             if (deleteAllMessages) {
+                getJournal().setCheckForCorruptionOnStartup(false);
                 getJournal().start();
                 getJournal().delete();
                 getJournal().close();
@@ -1048,7 +1049,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     private Location getNextInitializedLocation(Location location) throws IOException {
         Location mayNotBeInitialized = journal.getNextLocation(location);
-        if (location.getSize() == NOT_SET && mayNotBeInitialized.getSize() != NOT_SET) {
+        if (location.getSize() == NOT_SET && mayNotBeInitialized != null && mayNotBeInitialized.getSize() != NOT_SET) {
             // need to init size and type to skip
             return journal.getNextLocation(mayNotBeInitialized);
         } else {

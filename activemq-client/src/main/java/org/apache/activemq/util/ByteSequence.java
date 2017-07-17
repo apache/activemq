@@ -50,6 +50,8 @@ public class ByteSequence {
         return offset;
     }
 
+    public int remaining() { return length - offset; }
+
     public void setData(byte[] data) {
         this.data = data;
     }
@@ -71,8 +73,14 @@ public class ByteSequence {
         }
     }
 
+    public void reset() {
+        length = remaining();
+        System.arraycopy(data, offset, data, 0, length);
+        offset = 0;
+    }
+
     public int indexOf(ByteSequence needle, int pos) {
-        int max = length - needle.length;
+        int max = length - needle.length - offset;
         for (int i = pos; i < max; i++) {
             if (matches(needle, i)) {
                 return i;
@@ -101,5 +109,17 @@ public class ByteSequence {
             }
         }
         return -1;
+    }
+
+    public boolean startsWith(final byte[] bytes) {
+        if (length - offset < bytes.length) {
+            return false;
+        }
+        for (int i = 0; i<bytes.length; i++) {
+            if (data[offset+i] != bytes[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }
