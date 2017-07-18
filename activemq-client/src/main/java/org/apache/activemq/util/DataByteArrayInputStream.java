@@ -226,7 +226,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     }
 
     public long readLong() throws IOException {
-        if (pos + 8 >= buf.length ) {
+        if (pos + 8 > buf.length ) {
             throw new EOFException();
         }
         long rc = ((long)buf[pos++] << 56) + ((long)(buf[pos++] & 255) << 48) + ((long)(buf[pos++] & 255) << 40) + ((long)(buf[pos++] & 255) << 32);

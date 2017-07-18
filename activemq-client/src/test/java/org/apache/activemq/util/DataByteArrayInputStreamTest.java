@@ -76,4 +76,15 @@ public class DataByteArrayInputStreamTest {
         String readBack = in.readUTF();
         assertEquals(value, readBack);
     }
+
+    @Test
+    public void testReadLong() throws Exception {
+        DataByteArrayOutputStream out = new DataByteArrayOutputStream(8);
+        out.writeLong(Long.MAX_VALUE);
+        out.close();
+
+        DataByteArrayInputStream in = new DataByteArrayInputStream(out.getData());
+        long readBack = in.readLong();
+        assertEquals(Long.MAX_VALUE, readBack);
+    }
 }
