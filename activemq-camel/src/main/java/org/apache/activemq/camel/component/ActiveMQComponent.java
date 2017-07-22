@@ -288,14 +288,4 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
         return answer;
     }
 
-    /**
-     * We don't want to ever auto-wire the connection factory from the spring app context (requires Camel 2.18 onwards)
-     *
-     * @return false
-     */
-    @Override
-    public boolean isAllowAutoWiredConnectionFactory() {
-        return false;
-    }
-
 }
