@@ -24,8 +24,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLException;
+import javax.security.sasl.SaslClient;
+import javax.security.sasl.SaslServer;
 
 import org.apache.activemq.transport.tcp.TimeStampStream;
+import sun.security.ssl.SSLEngineImpl;
 
 /**
  * An optimized buffered OutputStream for TCP/IP
@@ -42,7 +47,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     private boolean closed;
     private volatile long writeTimestamp = -1; // concurrent reads of this value
 
-    private SSLEngine engine;
+    private DataWrappingEngine engine;
 
     /**
      * Constructor
@@ -169,7 +174,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     protected void write(ByteBuffer data) throws IOException {
         ByteBuffer plain;
         if (engine != null) {
-            plain = ByteBuffer.allocate(engine.getSession().getPacketBufferSize());
+            plain = ByteBuffer.allocate(engine.getPacketBufferSize());
             plain.clear();
             engine.wrap(data, plain);
             plain.flip();
@@ -243,7 +248,137 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
         return writeTimestamp;
     }
 
-    public void setEngine(SSLEngine engine) {
+    public void setEngine(DataWrappingEngine engine) {
         this.engine = engine;
+    }
+
+
+    //FIXME MOVE OUT FROM HERE
+    public interface DataWrappingEngine<T> {
+
+        void closeOutbound();
+
+        void wrap(ByteBuffer data, ByteBuffer plain) throws IOException;
+
+        T unwrap(ByteBuffer inputBuffer, ByteBuffer plain) throws IOException;
+
+        int getPacketBufferSize();
+    }
+
+    public static class SSLDataWrappingEngine implements DataWrappingEngine<SSLEngineResult> {
+        private final SSLEngine sslEngine;
+
+        public SSLDataWrappingEngine(SSLEngine sslEngine) {
+            this.sslEngine = sslEngine;
+        }
+
+        @Override
+        public void closeOutbound() {
+            sslEngine.closeOutbound();
+        }
+
+        @Override
+        public void wrap(ByteBuffer data, ByteBuffer plain) throws IOException {
+            sslEngine.wrap(data, plain);
+        }
+
+        @Override
+        public int getPacketBufferSize() {
+            return sslEngine.getSession().getPacketBufferSize();
+        }
+
+        @Override
+        public SSLEngineResult unwrap(ByteBuffer inputBuffer, ByteBuffer plain) throws IOException {
+            return sslEngine.unwrap(inputBuffer, plain);
+        }
+    }
+
+    public static class SASLDataWrappingEngine implements DataWrappingEngine<Integer> {
+        private SaslServer saslServer;
+        private SaslClient saslClient;
+
+        public SASLDataWrappingEngine(SaslServer saslServer) {
+            this.saslServer = saslServer;
+        }
+        public SASLDataWrappingEngine(SaslClient saslClient) {
+            this.saslClient = saslClient;
+        }
+
+        @Override
+        public void wrap(ByteBuffer data, ByteBuffer plain) throws IOException {
+            byte[] buff = new byte[data.remaining()];
+            data.get(buff);
+
+            if (saslServer != null) {
+                buff = saslServer.wrap(buff, 0, buff.length);
+            } else {
+                buff = saslClient.wrap(buff, 0, buff.length);
+            }
+
+            plain.putInt(buff.length);
+            plain.put(buff);
+        }
+
+        @Override
+        public Integer unwrap(ByteBuffer inputBuffer, ByteBuffer plain) throws IOException {
+            int tokenLenght = inputBuffer.getInt();
+            byte[] buff = new byte[tokenLenght];
+            inputBuffer.get(buff);
+
+            if (saslServer != null) {
+                buff = saslServer.unwrap(buff, 0, buff.length);
+            } else {
+                buff = saslClient.unwrap(buff, 0, buff.length);
+            }
+
+            plain.put(buff);
+            return buff.length;
+        }
+
+        @Override
+        public void closeOutbound() {
+            //no-op
+        }
+
+        @Override
+        public int getPacketBufferSize() {
+            return BUFFER_SIZE;
+        }
+    }
+
+    public static class SASLAuthenticationEngine implements DataWrappingEngine<Integer> {
+        private SaslServer saslServer;
+        private SaslClient saslClient;
+
+        public SASLAuthenticationEngine(SaslServer saslServer) {
+            this.saslServer = saslServer;
+        }
+        public SASLAuthenticationEngine(SaslClient saslClient) {
+            this.saslClient = saslClient;
+        }
+
+        @Override
+        public void wrap(ByteBuffer data, ByteBuffer plain) throws IOException {
+            plain.putInt(data.remaining());
+            plain.put(data);
+        }
+
+        @Override
+        public Integer unwrap(ByteBuffer inputBuffer, ByteBuffer plain) throws IOException {
+            plain.putInt(inputBuffer.remaining());
+            plain.put(inputBuffer);
+
+            return inputBuffer.remaining();
+        }
+
+        @Override
+        public void closeOutbound() {
+            //no-op
+        }
+
+        @Override
+        public int getPacketBufferSize() {
+            return BUFFER_SIZE;
+        }
     }
 }

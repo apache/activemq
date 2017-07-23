@@ -23,18 +23,17 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.security.cert.X509Certificate;
+import java.security.PrivilegedExceptionAction;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLEngineResult;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSession;
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
+import javax.security.sasl.SaslClient;
+import javax.security.sasl.SaslServer;
 
-import org.apache.activemq.command.ConnectionInfo;
+import com.sun.prism.shader.Solid_TextureYV12_AlphaTest_Loader;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -43,94 +42,77 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NIOSSLTransport extends NIOTransport {
+public class NIOSASLTransport extends NIOTransport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NIOSSLTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NIOSASLTransport.class);
 
     protected boolean needClientAuth;
     protected boolean wantClientAuth;
     protected String[] enabledCipherSuites;
     protected String[] enabledProtocols;
 
-    protected SSLContext sslContext;
-    protected SSLEngine sslEngine;
-    protected SSLSession sslSession;
-
     protected volatile boolean handshakeInProgress = false;
-    protected SSLEngineResult.Status status = null;
-    protected SSLEngineResult.HandshakeStatus handshakeStatus = null;
     protected TaskRunnerFactory taskRunnerFactory;
+    private SaslServer saslServer;
+    private SaslClient saslClient;
 
-    public NIOSSLTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
+    NIOOutputStream.DataWrappingEngine<Integer> dataWrappingEngine;
+    private String krb5ConfigName;
+    private Subject currentSubject;
+
+    public NIOSASLTransport(Subject subject, SaslClient saslClient, WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
+        this.saslClient = saslClient;
+        this.currentSubject = subject;
     }
 
-    public NIOSSLTransport(WireFormat wireFormat, Socket socket) throws IOException {
+    public NIOSASLTransport(Subject subject, SaslServer saslServer, WireFormat wireFormat, Socket socket) throws IOException {
         super(wireFormat, socket);
-    }
-
-    public void setSslContext(SSLContext sslContext) {
-        this.sslContext = sslContext;
+        this.saslServer = saslServer;
+        this.currentSubject = subject;
     }
 
     @Override
     protected void initializeStreams() throws IOException {
         NIOOutputStream outputStream = null;
+
         try {
             channel = socket.getChannel();
             channel.configureBlocking(false);
 
-            if (sslContext == null) {
-                sslContext = SSLContext.getDefault();
+            if (saslClient != null) {
+                dataWrappingEngine = new NIOOutputStream.SASLAuthenticationEngine(saslClient);
+            } else if (saslServer != null) {
+                dataWrappingEngine = new NIOOutputStream.SASLAuthenticationEngine(saslServer);
             }
 
-            String remoteHost = null;
-            int remotePort = -1;
-
-            try {
-                URI remoteAddress = new URI(this.getRemoteAddress());
-                remoteHost = remoteAddress.getHost();
-                remotePort = remoteAddress.getPort();
-            } catch (Exception e) {
-            }
-
-            // initialize engine, the initial sslSession we get will need to be
-            // updated once the ssl handshake process is completed.
-            if (remoteHost != null && remotePort != -1) {
-                sslEngine = sslContext.createSSLEngine(remoteHost, remotePort);
-            } else {
-                sslEngine = sslContext.createSSLEngine();
-            }
-
-            sslEngine.setUseClientMode(false);
-            if (enabledCipherSuites != null) {
-                sslEngine.setEnabledCipherSuites(enabledCipherSuites);
-            }
-
-            if (enabledProtocols != null) {
-                sslEngine.setEnabledProtocols(enabledProtocols);
-            }
-
-            if (wantClientAuth) {
-                sslEngine.setWantClientAuth(wantClientAuth);
-            }
-
-            if (needClientAuth) {
-                sslEngine.setNeedClientAuth(needClientAuth);
-            }
-
-            sslSession = sslEngine.getSession();
-
-            inputBuffer = ByteBuffer.allocate(sslSession.getPacketBufferSize());
+            inputBuffer = ByteBuffer.allocate(dataWrappingEngine.getPacketBufferSize());
             inputBuffer.clear();
 
             outputStream = new NIOOutputStream(channel);
-            outputStream.setEngine(new NIOOutputStream.SSLDataWrappingEngine(sslEngine));
+            outputStream.setEngine(dataWrappingEngine);
+
             this.dataOut = new DataOutputStream(outputStream);
             this.buffOut = outputStream;
-            sslEngine.beginHandshake();
-            handshakeStatus = sslEngine.getHandshakeStatus();
-            doHandshake();
+
+            //FIXME RECONSIDER
+            Subject.doAs(currentSubject, new PrivilegedExceptionAction<Void>() {
+                public Void run() throws Exception {
+                    doHandshake();
+                    return null;
+                }
+            });
+
+            if (saslClient != null) {
+                dataWrappingEngine = new NIOOutputStream.SASLDataWrappingEngine(saslClient);
+            } else if (saslServer != null) {
+                dataWrappingEngine = new NIOOutputStream.SASLDataWrappingEngine(saslServer);
+            }
+
+            outputStream.setEngine(dataWrappingEngine);
+
+            handshakeInProgress = false;
+
         } catch (Exception e) {
             try {
                 if(outputStream != null) {
@@ -142,43 +124,10 @@ public class NIOSSLTransport extends NIOTransport {
         }
     }
 
-    protected void finishHandshake() throws Exception {
-        if (handshakeInProgress) {
-            handshakeInProgress = false;
-            nextFrameSize = -1;
-
-            // Once handshake completes we need to ask for the now real sslSession
-            // otherwise the session would return 'SSL_NULL_WITH_NULL_NULL' for the
-            // cipher suite.
-            sslSession = sslEngine.getSession();
-
-            // listen for events telling us when the socket is readable.
-            selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
-                @Override
-                public void onSelect(SelectorSelection selection) {
-                    serviceRead();
-                }
-
-                @Override
-                public void onError(SelectorSelection selection, Throwable error) {
-                    if (error instanceof IOException) {
-                        onException((IOException) error);
-                    } else {
-                        onException(IOExceptionSupport.create(error));
-                    }
-                }
-            });
-        }
-    }
-
     @Override
     protected void serviceRead() {
         try {
-            if (handshakeInProgress) {
-                doHandshake();
-            }
-
-            ByteBuffer plain = ByteBuffer.allocate(sslSession.getApplicationBufferSize());
+            ByteBuffer plain = ByteBuffer.allocate(dataWrappingEngine.getPacketBufferSize());
             plain.position(plain.limit());
 
             while (true) {
@@ -199,10 +148,7 @@ public class NIOSSLTransport extends NIOTransport {
 
                     receiveCounter += readCount;
                 }
-
-                if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
-                    processCommand(plain);
-                }
+                processCommand(plain);
             }
         } catch (IOException e) {
             onException(e);
@@ -259,7 +205,7 @@ public class NIOSSLTransport extends NIOTransport {
                 long maxFrameSize = ((OpenWireFormat) wireFormat).getMaxFrameSize();
                 if (nextFrameSize > maxFrameSize) {
                     throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) +
-                                          " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+                            " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
                 }
             }
 
@@ -294,8 +240,7 @@ public class NIOSSLTransport extends NIOTransport {
     }
 
     protected int secureRead(ByteBuffer plain) throws Exception {
-
-        if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining()) || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
+        if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining())) {
             int bytesRead = channel.read(inputBuffer);
 
             if (bytesRead == 0) {
@@ -303,8 +248,7 @@ public class NIOSSLTransport extends NIOTransport {
             }
 
             if (bytesRead == -1) {
-                sslEngine.closeInbound();
-                if (inputBuffer.position() == 0 || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
+                if (inputBuffer.position() == 0) {
                     return -1;
                 }
             }
@@ -313,24 +257,12 @@ public class NIOSSLTransport extends NIOTransport {
         plain.clear();
 
         inputBuffer.flip();
-        SSLEngineResult res;
-        do {
-            res = sslEngine.unwrap(inputBuffer, plain);
-        } while (res.getStatus() == SSLEngineResult.Status.OK && res.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.NEED_UNWRAP
-                && res.bytesProduced() == 0);
+        int responseBytes;
 
-        if (res.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.FINISHED) {
-            finishHandshake();
-        }
-
-        status = res.getStatus();
-        handshakeStatus = res.getHandshakeStatus();
-
-        // TODO deal with BUFFER_OVERFLOW
-
-        if (status == SSLEngineResult.Status.CLOSED) {
-            sslEngine.closeInbound();
-            return -1;
+        if (!handshakeInProgress) {
+            do {
+                responseBytes = dataWrappingEngine.unwrap(inputBuffer, plain);
+            } while (responseBytes == 0);
         }
 
         inputBuffer.compact();
@@ -339,33 +271,92 @@ public class NIOSSLTransport extends NIOTransport {
         return plain.remaining();
     }
 
+    // Implementation basing on official Oracle documentation
     protected void doHandshake() throws Exception {
         handshakeInProgress = true;
-        while (true) {
-            switch (sslEngine.getHandshakeStatus()) {
-            case NEED_UNWRAP:
-                secureRead(ByteBuffer.allocate(sslSession.getApplicationBufferSize()));
-                break;
-            case NEED_TASK:
-                Runnable task;
-                while ((task = sslEngine.getDelegatedTask()) != null) {
-                    taskRunnerFactory.execute(task);
+        byte[] token = new byte[0];
+
+        if (saslClient != null) {
+            token = saslClient.hasInitialResponse() ? saslClient.evaluateChallenge(token) : token;
+
+            while (!saslClient.isComplete()) {
+
+                if (token != null) {
+                    if (token.length > 0) {
+                        dataOut.write(token);
+                    }
+                    dataOut.flush();
                 }
-                break;
-            case NEED_WRAP:
-                ((NIOOutputStream) buffOut).write(ByteBuffer.allocate(0));
-                break;
-            case FINISHED:
-            case NOT_HANDSHAKING:
-                finishHandshake();
-                return;
+
+                int bytesRead;
+                do {
+                    bytesRead = channel.read(inputBuffer);
+                } while (bytesRead == 0);
+
+                inputBuffer.flip();
+                token = new byte[inputBuffer.getInt()];
+                inputBuffer.get(token);
+
+                token = saslClient.evaluateChallenge(token);
+                inputBuffer.compact();
+            }
+
+            // Requesting/Confirmation of protection level
+            if (token.length > 0) {
+                dataOut.write(token);
+            }
+            dataOut.flush();
+        } else {
+            while (!saslServer.isComplete()) {
+                int bytesRead;
+                do {
+                    bytesRead = channel.read(inputBuffer);
+                } while (bytesRead == 0 && !saslServer.isComplete());
+
+                inputBuffer.flip();
+
+                token = new byte[inputBuffer.getInt()];
+                inputBuffer.get(token);
+
+                token = saslServer.evaluateResponse(token);
+
+                inputBuffer.compact();
+
+                if (saslServer.isComplete()) {
+                    break;
+                }
+
+                // Send a token to the peer if one was generated by acceptSecContext
+                if (token != null) {
+                    dataOut.write(token);
+                    dataOut.flush();
+                }
             }
         }
+
+        nextFrameSize = -1;
+
+        // listen for events telling us when the socket is readable.
+        selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
+            @Override
+            public void onSelect(SelectorSelection selection) {
+                serviceRead();
+            }
+
+            @Override
+            public void onError(SelectorSelection selection, Throwable error) {
+                if (error instanceof IOException) {
+                    onException((IOException) error);
+                } else {
+                    onException(IOExceptionSupport.create(error));
+                }
+            }
+        });
     }
 
     @Override
     protected void doStart() throws Exception {
-        taskRunnerFactory = new TaskRunnerFactory("ActiveMQ NIOSSLTransport Task");
+        taskRunnerFactory = new TaskRunnerFactory("ActiveMQ NIOSASLTransport Task");
         // no need to init as we can delay that until demand (eg in doHandshake)
         super.doStart();
     }
@@ -383,39 +374,10 @@ public class NIOSSLTransport extends NIOTransport {
         super.doStop(stopper);
     }
 
-    /**
-     * Overriding in order to add the client's certificates to ConnectionInfo Commands.
-     *
-     * @param command
-     *            The Command coming in.
-     */
-    @Override
-    public void doConsume(Object command) {
-        if (command instanceof ConnectionInfo) {
-            ConnectionInfo connectionInfo = (ConnectionInfo) command;
-            connectionInfo.setTransportContext(getPeerCertificates());
-        }
-        super.doConsume(command);
+    public void setKrb5ConfigName(String krb5ConfigName) {
+        // no-op
     }
 
-    /**
-     * @return peer certificate chain associated with the ssl socket
-     */
-    public X509Certificate[] getPeerCertificates() {
-
-        X509Certificate[] clientCertChain = null;
-        try {
-            if (sslEngine.getSession() != null) {
-                clientCertChain = (X509Certificate[]) sslEngine.getSession().getPeerCertificates();
-            }
-        } catch (SSLPeerUnverifiedException e) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Failed to get peer certificates.", e);
-            }
-        }
-
-        return clientCertChain;
-    }
 
     public boolean isNeedClientAuth() {
         return needClientAuth;
@@ -447,5 +409,13 @@ public class NIOSSLTransport extends NIOTransport {
 
     public void setEnabledProtocols(String[] enabledProtocols) {
         this.enabledProtocols = enabledProtocols;
+    }
+
+    public void setSaslServer(SaslServer saslServer) {
+        this.saslServer = saslServer;
+    }
+
+    public void setSaslClient(SaslClient saslClient) {
+        this.saslClient = saslClient;
     }
 }
