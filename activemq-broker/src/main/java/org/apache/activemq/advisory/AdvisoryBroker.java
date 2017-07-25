@@ -832,43 +832,41 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
-        if (getBrokerService().isStarted()) {
-            //set properties
-            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_NAME, getBrokerName());
-            String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
-            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
+        //set properties
+        advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_NAME, getBrokerName());
+        String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
+        advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
 
-            String url = getBrokerService().getVmConnectorURI().toString();
-            //try and find the URL on the transport connector and use if it exists else
-            //try and find a default URL
-            if (context.getConnector() instanceof TransportConnector
-                    && ((TransportConnector) context.getConnector()).getPublishableConnectString() != null) {
-                url = ((TransportConnector) context.getConnector()).getPublishableConnectString();
-            } else if (getBrokerService().getDefaultSocketURIString() != null) {
-                url = getBrokerService().getDefaultSocketURIString();
-            }
-            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL, url);
+        String url = getBrokerService().getVmConnectorURI().toString();
+        //try and find the URL on the transport connector and use if it exists else
+        //try and find a default URL
+        if (context.getConnector() instanceof TransportConnector
+                && ((TransportConnector) context.getConnector()).getPublishableConnectString() != null) {
+            url = ((TransportConnector) context.getConnector()).getPublishableConnectString();
+        } else if (getBrokerService().getDefaultSocketURIString() != null) {
+            url = getBrokerService().getDefaultSocketURIString();
+        }
+        advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL, url);
 
-            //set the data structure
-            advisoryMessage.setDataStructure(command);
-            advisoryMessage.setPersistent(false);
-            advisoryMessage.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
-            advisoryMessage.setMessageId(new MessageId(advisoryProducerId, messageIdGenerator.getNextSequenceId()));
-            advisoryMessage.setTargetConsumerId(targetConsumerId);
-            advisoryMessage.setDestination(topic);
-            advisoryMessage.setResponseRequired(false);
-            advisoryMessage.setProducerId(advisoryProducerId);
-            boolean originalFlowControl = context.isProducerFlowControl();
-            final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
-            producerExchange.setConnectionContext(context);
-            producerExchange.setMutable(true);
-            producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
-            try {
-                context.setProducerFlowControl(false);
-                next.send(producerExchange, advisoryMessage);
-            } finally {
-                context.setProducerFlowControl(originalFlowControl);
-            }
+        //set the data structure
+        advisoryMessage.setDataStructure(command);
+        advisoryMessage.setPersistent(false);
+        advisoryMessage.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
+        advisoryMessage.setMessageId(new MessageId(advisoryProducerId, messageIdGenerator.getNextSequenceId()));
+        advisoryMessage.setTargetConsumerId(targetConsumerId);
+        advisoryMessage.setDestination(topic);
+        advisoryMessage.setResponseRequired(false);
+        advisoryMessage.setProducerId(advisoryProducerId);
+        boolean originalFlowControl = context.isProducerFlowControl();
+        final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+        producerExchange.setConnectionContext(context);
+        producerExchange.setMutable(true);
+        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
+        try {
+            context.setProducerFlowControl(false);
+            next.send(producerExchange, advisoryMessage);
+        } finally {
+            context.setProducerFlowControl(originalFlowControl);
         }
     }
 
