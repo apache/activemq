@@ -191,7 +191,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
         try {
             frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(data, offset, length));
         } catch (IOException e) {
-            LOG.error("Could not decode incoming MQTT Frame: ", e.getMessage());
+            LOG.error("Could not decode incoming MQTT Frame: {}", e.getMessage(), e);
             connection.close();
         }
 
@@ -245,7 +245,7 @@ public class MQTTWSConnection extends WebSocketAdapter implements WebSocketListe
                 connection.close();
             }
         } catch (Exception e) {
-            LOG.error("Could not decode incoming MQTT Frame: ", e.getMessage());
+            LOG.error("Could not decode incoming MQTT Frame: {}", e.getMessage(), e);
             connection.close();
         }
     }

@@ -288,7 +288,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                             try {
                                 setConnection(newConnection());
                                 super.commit(xid, onePhase);
-                                LOG.trace("{}.commit({},{})", getConnection(), xid);
+                                LOG.trace("{}.commit({},{})", getConnection(), xid, onePhase);
 
                             } catch (JMSException e) {
                                 LOG.trace("{}.commit({},{}) failed", getConnection(), xid, onePhase, e);

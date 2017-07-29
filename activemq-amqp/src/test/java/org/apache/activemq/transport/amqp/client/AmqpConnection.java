@@ -228,7 +228,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                     request.sync(closeTimeout, TimeUnit.MILLISECONDS);
                 }
             } catch (IOException e) {
-                LOG.warn("Error caught while closing Provider: ", e.getMessage());
+                LOG.warn("Error caught while closing Provider: {}", e.getMessage());
             } finally {
                 if (transport != null) {
                     try {

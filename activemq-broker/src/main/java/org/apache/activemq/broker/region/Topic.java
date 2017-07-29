@@ -869,7 +869,7 @@ public class Topic extends BaseDestination implements Task {
                 LOG.warn("After clear of pending, failed to dispatch to: {}, for: {}, pending: {}", new Object[]{
                         durableTopicSubscription,
                         destination,
-                        durableTopicSubscription.pending }, exception);
+                        durableTopicSubscription.pending, exception });
             }
         }
     }

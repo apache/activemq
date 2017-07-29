@@ -149,7 +149,7 @@ public abstract class DestinationBridge implements Service, MessageListener {
                 return;
 
             } catch (Exception e) {
-                LOG.info("failed to forward message on attempt: {} reason: {} message: {}", new Object[]{ attempt, e, message }, e);
+                LOG.info("failed to forward message on attempt: {} reason: {} message: {}", new Object[]{ attempt, e, message, e });
             }
         }
     }

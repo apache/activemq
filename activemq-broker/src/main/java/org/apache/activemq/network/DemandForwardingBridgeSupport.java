@@ -1036,7 +1036,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                 }
             } catch (Exception e) {
-                LOG.warn("failed to fire forward failure advisory, cause: {}", e);
+                LOG.warn("failed to fire forward failure advisory, cause: {}", (Object) e);
                 LOG.debug("detail", e);
             }
         }

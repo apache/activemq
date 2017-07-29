@@ -580,7 +580,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (consumerExchange != null) {
             broker.acknowledge(consumerExchange, ack);
         } else if (ack.isInTransaction()) {
-            LOG.warn("no matching consumer, ignoring ack {}", consumerExchange, ack);
+            LOG.warn("no matching consumer in {}, ignoring ack {}", consumerExchange, ack);
         }
         return null;
     }

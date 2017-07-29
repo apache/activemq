@@ -146,7 +146,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
             if (getMaxSlowDuration() > 0 && (entry.getValue().markCount * getCheckPeriod() >= getMaxSlowDuration()) ||
                 getMaxSlowCount() > 0 && entry.getValue().slowCount >= getMaxSlowCount()) {
 
-                LOG.trace("Transferring consumer{} to the abort list: {} slow duration = {}, slow count = {}",
+                LOG.trace("Transferring consumer {} to the abort list: slow duration = {}, slow count = {}",
                         new Object[]{ entry.getKey().getConsumerInfo().getConsumerId(),
                         entry.getValue().markCount * getCheckPeriod(),
                         entry.getValue().getSlowCount() });
