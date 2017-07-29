@@ -49,32 +49,32 @@ public class CustomLogWriter implements LogWriter {
 
     // doc comment inherited from LogWriter
     public void logRequest (Logger log, Object command) {
-        log.debug("$$ SENDREQ: " + CustomLogWriter.commandToString(command));
+        log.debug("$$ SENDREQ: {}", CustomLogWriter.commandToString(command));
     }
     
     // doc comment inherited from LogWriter
     public void logResponse (Logger log, Object response) {
-        log.debug("$$ GOT_RESPONSE: "+response);
+        log.debug("$$ GOT_RESPONSE: {}", response);
     }
     
     // doc comment inherited from LogWriter
     public void logAsyncRequest (Logger log, Object command) {
-        log.debug("$$ SENDING_ASNYC_REQUEST: "+command);
+        log.debug("$$ SENDING_ASNYC_REQUEST: {}", command);
     }
     
     // doc comment inherited from LogWriter
     public void logOneWay (Logger log, Object command) {
-        log.debug("$$ SENDING: " + CustomLogWriter.commandToString(command));
+        log.debug("$$ SENDING: {}", CustomLogWriter.commandToString(command));
     }
     
     // doc comment inherited from LogWriter
     public void logReceivedCommand (Logger log, Object command) {
-        log.debug("$$ RECEIVED: " + CustomLogWriter.commandToString(command));
+        log.debug("$$ RECEIVED: {}", CustomLogWriter.commandToString(command));
     }
     
     // doc comment inherited from LogWriter
     public void logReceivedException (Logger log, IOException error) {
-        log.debug("$$ RECEIVED_EXCEPTION: "+error, error);
+        log.debug("$$ RECEIVED_EXCEPTION: {}", error, error);
     }
     
     /**

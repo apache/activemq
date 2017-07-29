@@ -219,7 +219,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
             } catch (InterruptedException e) {
-                LOG.debug(getName() + "Producer Flow Control Timeout Task is stopping");
+                LOG.debug("{}Producer Flow Control Timeout Task is stopping", getName());
             }
         }
     }

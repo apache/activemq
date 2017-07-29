@@ -168,7 +168,7 @@ public class JMSEndpointStatsImpl extends StatsImpl {
             CountStatisticImpl c = (CountStatisticImpl)child;
             c.setParent((CountStatisticImpl)parent);
         } else {
-            LOG.warn("Cannot associate endpoint counters with session level counters as they are not both CountStatisticImpl clases. Endpoint: " + child + " session: " + parent);
+            LOG.warn("Cannot associate endpoint counters with session level counters as they are not both CountStatisticImpl clases. Endpoint: {} session: {}", child, parent);
         }
     }
 
@@ -177,7 +177,7 @@ public class JMSEndpointStatsImpl extends StatsImpl {
             TimeStatisticImpl c = (TimeStatisticImpl)child;
             c.setParent((TimeStatisticImpl)parent);
         } else {
-            LOG.warn("Cannot associate endpoint counters with session level counters as they are not both TimeStatisticImpl clases. Endpoint: " + child + " session: " + parent);
+            LOG.warn("Cannot associate endpoint counters with session level counters as they are not both TimeStatisticImpl clases. Endpoint: {} session: {}", child, parent);
         }
     }
 }

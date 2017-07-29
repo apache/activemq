@@ -504,9 +504,7 @@ public class NIOSSLTransport extends NIOTransport {
                 clientCertChain = (X509Certificate[]) sslEngine.getSession().getPeerCertificates();
             }
         } catch (SSLPeerUnverifiedException e) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Failed to get peer certificates.", e);
-            }
+            LOG.trace("Failed to get peer certificates.", e);
         }
 
         return clientCertChain;

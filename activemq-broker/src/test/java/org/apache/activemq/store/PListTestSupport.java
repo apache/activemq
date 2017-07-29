@@ -535,7 +535,7 @@ public abstract class PListTestSupport {
                     case CREATE:
                         Thread.currentThread().setName("C:"+id);
                         plist = store.getPList(String.valueOf(id));
-                        LOG.info("Job-" + id + ", CREATE");
+                        LOG.info("Job-{}, CREATE", id);
                         break;
                     case DELETE:
                         Thread.currentThread().setName("D:"+id);
@@ -557,7 +557,7 @@ public abstract class PListTestSupport {
                         }
 
                         if (exceptions.isEmpty()) {
-                            LOG.info("Job-" + id + ", Add, done: " + iterations);
+                            LOG.info("Job-{}, Add, done: {}", id, iterations);
                         }
                         break;
                     case REMOVE:
@@ -572,7 +572,7 @@ public abstract class PListTestSupport {
                                     plist.remove(position);
                                 }
                                 if (j > 0 && j % (iterations / 2) == 0) {
-                                    LOG.info("Job-" + id + " Done remove: " + j);
+                                    LOG.info("Job-{} Done remove: {}", id, j);
                                 }
                             }
                         }
@@ -615,14 +615,14 @@ public abstract class PListTestSupport {
                                 }
                             }
                         }
-                        LOG.info("Job-" + id + " Done remove: " + removeCount);
+                        LOG.info("Job-{} Done remove: {}", id, removeCount);
                         break;
 
                     default:
                 }
 
             } catch (Exception e) {
-                LOG.warn("Job["+id+"] caught exception: " + e.getMessage());
+                LOG.warn("Job[{}] caught exception: {}", id, e.getMessage(), e);
                 e.printStackTrace();
                 exceptions.add(e);
                 if (executor != null) {

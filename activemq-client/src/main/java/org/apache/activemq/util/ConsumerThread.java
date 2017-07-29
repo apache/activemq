@@ -51,7 +51,7 @@ public class ConsumerThread extends Thread {
         running = true;
         MessageConsumer consumer = null;
         String threadName = Thread.currentThread().getName();
-        LOG.info(threadName + " wait until " + messageCount + " messages are consumed");
+        LOG.info("{} wait until {} messages are consumed", threadName, messageCount);
         try {
             if (durable && destination instanceof Topic) {
                 consumer = session.createDurableSubscriber((Topic) destination, getName());
@@ -61,12 +61,12 @@ public class ConsumerThread extends Thread {
             while (running && received < messageCount) {
                 Message msg = consumer.receive(receiveTimeOut);
                 if (msg != null) {
-                    LOG.info(threadName + " Received " + (msg instanceof TextMessage ? ((TextMessage) msg).getText() : msg.getJMSMessageID()));
+                    LOG.info("{} Received {}", threadName, msg instanceof TextMessage ? ((TextMessage) msg).getText() : msg.getJMSMessageID());
                     if (bytesAsText && (msg instanceof BytesMessage)) {
                         long length = ((BytesMessage) msg).getBodyLength();
                         byte[] bytes = new byte[(int) length];
                         ((BytesMessage) msg).readBytes(bytes);
-                        LOG.info("BytesMessage as text string: " + new String(bytes));
+                        LOG.info("BytesMessage as text string: {}", new String(bytes));
                     }
                     received++;
                 } else {
@@ -77,12 +77,12 @@ public class ConsumerThread extends Thread {
 
                 if (session.getTransacted()) {
                     if (batchSize > 0 && received > 0 && received % batchSize == 0) {
-                        LOG.info(threadName + " Committing transaction: " + transactions++);
+                        LOG.info("{} Committing transaction: {}", threadName, transactions++);
                         session.commit();
                     }
                 } else if (session.getAcknowledgeMode() == Session.CLIENT_ACKNOWLEDGE) {
                     if (batchSize > 0 && received > 0 && received % batchSize == 0) {
-                        LOG.info("Acknowledging last " + batchSize + " messages; messages so far = " + received);
+                        LOG.info("Acknowledging last {} messages; messages so far = {}", batchSize, received);
                         msg.acknowledge();
                     }
                 }
@@ -98,7 +98,7 @@ public class ConsumerThread extends Thread {
                 finished.countDown();
             }
             if (consumer != null) {
-                LOG.info(threadName + " Consumed: " + this.getReceived() + " messages");
+                LOG.info("{} Consumed: {} messages", threadName, this.getReceived());
                 try {
                     consumer.close();
                 } catch (JMSException e) {
@@ -107,7 +107,7 @@ public class ConsumerThread extends Thread {
             }
         }
 
-        LOG.info(threadName + " Consumer thread finished");
+        LOG.info("{} Consumer thread finished", threadName);
     }
 
     public int getReceived() {

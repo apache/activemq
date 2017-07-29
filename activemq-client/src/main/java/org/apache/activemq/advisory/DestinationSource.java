@@ -133,11 +133,11 @@ public class DestinationSource implements MessageListener {
                 fireDestinationEvent(event);
             }
             else {
-                LOG.warn("Unknown dataStructure: " + command);
+                LOG.warn("Unknown dataStructure: {}", command);
             }
         }
         else {
-            LOG.warn("Unknown message type: " + message + ". Message ignored");
+            LOG.warn("Unknown message type: {}. Message ignored", message);
         }
     }
 

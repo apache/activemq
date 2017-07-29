@@ -67,18 +67,12 @@ public class SharedFileLocker extends AbstractLocker {
                     } catch (IOException e) {
                         if (!warned)
                         {
-                            LOG.info("Database "
-                                         + lockFileName
-                                         + " is locked by another server. This broker is now in slave mode waiting a lock to be acquired");
+                            LOG.info("Database {} is locked by another server. This broker is now in slave mode waiting a lock to be acquired", lockFileName);
                             warned = true;
                         }
 
-                        LOG.debug("Database "
-                                    + lockFileName
-                                    + " is locked... waiting "
-                                    + (lockAcquireSleepInterval / 1000)
-                                    + " seconds for the database to be unlocked. Reason: "
-                                    + e);
+                        LOG.debug("Database {} is locked... waiting {} seconds for the database to be unlocked. Reason: {}",
+                                lockFileName, (lockAcquireSleepInterval / 1000), e);
                         try {
                             TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
                         } catch (InterruptedException e1) {

@@ -61,11 +61,11 @@ public class ThreadTracker {
     public static void result() {
         synchronized(trackers) {
             for (Entry<String, Tracker> t: trackers.entrySet()) {
-                LOG.info("Tracker: " + t.getKey() + ", " + t.getValue().size() + " entry points...");
+                LOG.info("Tracker: {}, {} entry points...", t.getKey(), t.getValue().size());
                 for (Trace trace : t.getValue().values()) {
-                    LOG.info("count: " + trace.count, trace);
+                    LOG.info("count: {}", trace.count, trace);
                 }
-                LOG.info("Tracker: " + t.getKey() + ", done.");
+                LOG.info("Tracker: {}, done.", t.getKey());
             }
         }
     }

@@ -35,11 +35,9 @@ public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
     
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
-        	
-        	  if (LOG.isTraceEnabled()) {      
-               LOG.trace("doCreateDiscoveryAgent: uri = " + uri.toString());               
-            }
-            
+
+            LOG.trace("doCreateDiscoveryAgent: uri = {}", uri);
+
             MulticastDiscoveryAgent mda = new MulticastDiscoveryAgent();          
             
             mda.setDiscoveryURI(uri);            

@@ -119,7 +119,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                             LOG.trace("Destroying connection: {}", connection);
                             connection.close();
                         } catch (Exception e) {
-                            LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
+                            LOG.warn("Close connection failed for connection: {}. This exception will be ignored.", connection, e);
                         }
                     }
 

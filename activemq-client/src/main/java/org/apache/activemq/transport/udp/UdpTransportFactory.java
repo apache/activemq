@@ -92,7 +92,7 @@ public class UdpTransportFactory extends TransportFactory {
             try {
                 transport = TransportLoggerSupport.createTransportLogger(transport);
             } catch (Throwable e) {
-                log.error("Could not create TransportLogger, reason: " + e, e);
+                log.error("Could not create TransportLogger, reason: {}", e, e);
             }
         }
 

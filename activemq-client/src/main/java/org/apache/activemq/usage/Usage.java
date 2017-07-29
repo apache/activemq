@@ -286,7 +286,7 @@ public abstract class Usage<T extends Usage> implements Service {
     // Must be called with the usage lock's writeLock held.
     private void fireEvent(final int oldPercentUsage, final int newPercentUsage) {
         if (debug) {
-            LOG.debug(getName() + ": usage change from: " + oldPercentUsage + "% of available memory, to: " + newPercentUsage + "% of available memory");
+            LOG.debug("{}: usage change from: {}% of available memory, to: {}% of available memory", getName(), oldPercentUsage, newPercentUsage);
         }
         if (started.get()) {
             // Switching from being full to not being full..

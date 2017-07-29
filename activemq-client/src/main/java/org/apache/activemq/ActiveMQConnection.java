@@ -716,7 +716,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     ThreadPoolUtils.shutdown(executor);
                 }
             } catch (Throwable e) {
-                LOG.warn("Error shutting down thread pool: " + executor + ". This exception will be ignored.", e);
+                LOG.warn("Error shutting down thread pool: {}. This exception will be ignored.", executor, e);
             }
 
             ServiceSupport.dispose(this.transport);
@@ -1351,7 +1351,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                 try {
                                     jmsEx = JMSExceptionSupport.create(exception);
                                 } catch(Throwable e) {
-                                    LOG.error("Caught an exception trying to create a JMSException for " +exception,e);
+                                    LOG.error("Caught an exception trying to create a JMSException for {}", exception, e);
                                 }
                                 // dispose of transport for security exceptions on connection initiation
                                 if (exception instanceof SecurityException && command instanceof ConnectionInfo){
@@ -1373,7 +1373,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     private void forceCloseOnSecurityException(Throwable exception) {
-        LOG.trace("force close on security exception:" + this + ", transport=" + transport, exception);
+        LOG.trace("force close on security exception:{}, transport={}", this, transport, exception);
         onException(new IOException("Force close due to SecurityException on connect", exception));
     }
 
@@ -1398,7 +1398,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         try {
                             jmsEx = JMSExceptionSupport.create(er.getException());
                         } catch(Throwable e) {
-                            LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
+                            LOG.error("Caught an exception trying to create a JMSException for {}", er.getException(), e);
                         }
                         if (er.getException() instanceof SecurityException && command instanceof ConnectionInfo){
                             forceCloseOnSecurityException(er.getException());
@@ -1933,8 +1933,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     }
                 });
             } else {
-                LOG.debug("Async client internal exception occurred with no exception listener registered: "
-                        + error, error);
+                LOG.debug("Async client internal exception occurred with no exception listener registered: {}",
+                          error, error);
             }
         }
     }
@@ -1961,7 +1961,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 });
 
             } else {
-                LOG.debug("Async exception with no exception listener: " + error, error);
+                LOG.debug("Async exception with no exception listener: {}", error, error);
             }
         }
     }
@@ -1979,7 +1979,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     try {
                         doCleanup(true);
                     } catch (JMSException e) {
-                        LOG.warn("Exception during connection cleanup, " + e, e);
+                        LOG.warn("Exception during connection cleanup, {}", e, e);
                     }
                     for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
                         TransportListener listener = iter.next();
@@ -2316,7 +2316,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     protected void waitForTransportInterruptionProcessingToComplete() throws InterruptedException {
         if (!closed.get() && !transportFailed.get() && transportInterruptionProcessingComplete.get()>0) {
-            LOG.warn("dispatch with outstanding dispatch interruption processing count " + transportInterruptionProcessingComplete.get());
+            LOG.warn("dispatch with outstanding dispatch interruption processing count {}", transportInterruptionProcessingComplete.get());
             signalInterruptionProcessingComplete();
         }
     }
@@ -2328,18 +2328,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     private void signalInterruptionProcessingComplete() {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("transportInterruptionProcessingComplete: " + transportInterruptionProcessingComplete.get()
-                        + " for:" + this.getConnectionInfo().getConnectionId());
-            }
+            LOG.debug("transportInterruptionProcessingComplete: {} for: {}",
+                      transportInterruptionProcessingComplete.get(), this.getConnectionInfo().getConnectionId());
 
             FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
             if (failoverTransport != null) {
                 failoverTransport.connectionInterruptProcessingComplete(this.getConnectionInfo().getConnectionId());
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("notified failover transport (" + failoverTransport
-                            + ") of interruption completion for: " + this.getConnectionInfo().getConnectionId());
-                }
+                LOG.debug("notified failover transport ({}) of interruption completion for: {}",
+                          failoverTransport, this.getConnectionInfo().getConnectionId());
             }
             transportInterruptionProcessingComplete.set(0);
     }

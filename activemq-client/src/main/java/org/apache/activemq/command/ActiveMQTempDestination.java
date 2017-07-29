@@ -74,7 +74,7 @@ public abstract class ActiveMQTempDestination extends ActiveMQDestination {
                     try {
                         sequenceId = Integer.parseInt(seqStr);
                     } catch (NumberFormatException e) {
-                        LOG.debug("Did not parse sequence Id from " + physicalName);
+                        LOG.debug("Did not parse sequence Id from {}", physicalName);
                     }
                     // The rest should be the connection id.
                     connectionId = this.physicalName.substring(0, p);

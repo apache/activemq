@@ -92,7 +92,7 @@ public class IdGenerator {
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("Closing the server socket failed", ioe);
                         } else {
-                            LOG.warn("Closing the server socket failed" + " due " + ioe.getMessage());
+                            LOG.warn("Closing the server socket failed" + " due {}", ioe.getMessage());
                         }
                     }
                 }

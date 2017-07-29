@@ -115,7 +115,7 @@ public class WriteTimeoutFilter extends TransportFilter {
                 LOG.warn(message);
                 Socket sock = filter.getSocket();
                 if (sock==null) {
-                    LOG.error("Destination socket is null, unable to close socket.("+message+")");
+                    LOG.error("Destination socket is null, unable to close socket.({})", message);
                 } else {
                     try {
                         sock.close();

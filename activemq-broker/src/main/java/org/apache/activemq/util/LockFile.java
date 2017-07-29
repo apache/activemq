@@ -166,13 +166,13 @@ public class LockFile {
 
         if (localFile.exists()) {
             if(localFile.lastModified() != lastModified) {
-                LOG.info("Lock file " + file.getAbsolutePath() + ", locked at " + new Date(lastModified) + ", has been modified at " + new Date(localFile.lastModified()));
+                LOG.info("Lock file {}, locked at {}, has been modified at {}", file.getAbsolutePath(), new Date(lastModified), new Date(localFile.lastModified()));
                 modified = true;
             }
         }
         else {
             //The lock file is missing
-            LOG.info("Lock file " + file.getAbsolutePath() + ", does not exist");
+            LOG.info("Lock file {}, does not exist", file.getAbsolutePath());
             modified = true;
         }
 

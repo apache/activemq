@@ -249,9 +249,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
             ByteBuffer writeBuffer = (ByteBuffer)buffer;
             sendWriteBuffer(commandId, getReplayAddress(), writeBuffer, true);
         } else {
-            if (LOG.isWarnEnabled()) {
-                LOG.warn("Request for buffer: " + commandId + " is no longer present");
-            }
+            LOG.warn("Request for buffer: {} is no longer present", commandId);
         }
     }
 

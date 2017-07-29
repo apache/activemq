@@ -67,7 +67,7 @@ public class ProducerThread extends Thread {
             initPayLoad();
             running = true;
 
-            LOG.info(threadName +  " Started to calculate elapsed time ...\n");
+            LOG.info("{} Started to calculate elapsed time ...\n", threadName);
             long tStart = System.currentTimeMillis();
 
             if (runIndefinitely) {
@@ -87,11 +87,11 @@ public class ProducerThread extends Thread {
                 }
             }
 
-            LOG.info(threadName + " Produced: " + this.getSentCount() + " messages");
+            LOG.info("{} Produced: {} messages", threadName, this.getSentCount());
             long tEnd = System.currentTimeMillis();
             long elapsed = (tEnd - tStart) / 1000;
-            LOG.info(threadName + " Elapsed time in second : " + elapsed + " s");
-            LOG.info(threadName + " Elapsed time in milli second : " + (tEnd - tStart) + " milli seconds");
+            LOG.info("{} Elapsed time in second : {} s", threadName, elapsed);
+            LOG.info("{} Elapsed time in milli second : {} milli seconds", threadName, (tEnd - tStart));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -117,7 +117,7 @@ public class ProducerThread extends Thread {
         }
 
         if (transactionBatchSize > 0 && sentCount.get() > 0 && sentCount.get() % transactionBatchSize == 0) {
-            LOG.info(threadName + " Committing transaction: " + transactions++);
+            LOG.info("{} Committing transaction: {}", threadName, transactions++);
             session.commit();
         }
 

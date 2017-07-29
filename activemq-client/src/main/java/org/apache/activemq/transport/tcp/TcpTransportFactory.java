@@ -95,7 +95,7 @@ public class TcpTransportFactory extends TransportFactory {
             try {
                 transport = TransportLoggerSupport.createTransportLogger(transport, tcpTransport.getLogWriterName(), tcpTransport.isDynamicManagement(), tcpTransport.isStartLogging(), tcpTransport.getJmxPort());
             } catch (Throwable e) {
-                LOG.error("Could not create TransportLogger object for: " + tcpTransport.getLogWriterName() + ", reason: " + e, e);
+                LOG.error("Could not create TransportLogger object for: {}, reason: {}", tcpTransport.getLogWriterName(), e, e);
             }
         }
 

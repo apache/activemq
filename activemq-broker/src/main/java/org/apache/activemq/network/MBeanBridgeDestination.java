@@ -72,7 +72,7 @@ public class MBeanBridgeDestination {
                 outboundDestinationViewMap.put(destination, networkDestinationContainer);
                 networkDestinationView.messageSent();
             } catch (Exception e) {
-                LOG.warn("Failed to register " + destination, e);
+                LOG.warn("Failed to register {}", destination, e);
             }
         } else {
             networkDestinationContainer.view.messageSent();
@@ -96,7 +96,7 @@ public class MBeanBridgeDestination {
                 inboundDestinationViewMap.put(destination, networkDestinationContainer);
                 networkDestinationView.messageSent();
             } catch (Exception e) {
-                LOG.warn("Failed to register " + destination, e);
+                LOG.warn("Failed to register {}", destination, e);
             }
         } else {
             networkDestinationContainer.view.messageSent();

@@ -144,7 +144,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     @Override
     public void run() {
-        LOG.trace("Consumer thread starting for: " + toString());
+        LOG.trace("Consumer thread starting for: {}", this);
         while (!isStopped()) {
             try {
                 Command command = commandChannel.read();
@@ -154,34 +154,34 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 try {
                     stop();
                 } catch (Exception e2) {
-                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: {} while closing: {}. Now Closed", this, e2, e2);
                 }
             } catch (SocketException e) {
                 // DatagramSocket closed
-                LOG.debug("Socket closed: " + e, e);
+                LOG.debug("Socket closed: {}", e, e);
                 try {
                     stop();
                 } catch (Exception e2) {
-                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: {} while closing: {}. Now Closed", this, e2, e2);
                 }
             } catch (EOFException e) {
                 // DataInputStream closed
-                LOG.debug("Socket closed: " + e, e);
+                LOG.debug("Socket closed: {}", e, e);
                 try {
                     stop();
                 } catch (Exception e2) {
-                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: {} while closing: {}. Now Closed", this, e2, e2);
                 }
             } catch (Exception e) {
                 try {
                     stop();
                 } catch (Exception e2) {
-                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: {} while closing: {}. Now Closed", this, e2, e2);
                 }
                 if (e instanceof IOException) {
                     onException((IOException)e);
                 } else {
-                    LOG.error("Caught: " + e, e);
+                    LOG.error("Caught: {}", e, e);
                     e.printStackTrace();
                 }
             }

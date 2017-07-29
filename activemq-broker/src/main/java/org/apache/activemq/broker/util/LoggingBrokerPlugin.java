@@ -70,7 +70,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
      * @org.apache.xbean.InitMethod
      */
     public void afterPropertiesSet() throws Exception {
-        LOG.info("Created LoggingBrokerPlugin: {}", this.toString());
+        LOG.info("Created LoggingBrokerPlugin: {}", this);
     }
 
     public boolean isLogAll() {

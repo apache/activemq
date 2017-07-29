@@ -118,7 +118,7 @@ public class LogWriterFinder {
         if (in == null) {
             in = LogWriterFinder.class.getClassLoader().getResourceAsStream(uri);
             if (in == null) {
-                log.error("Could not find log writer for resource: " + uri);
+                log.error("Could not find log writer for resource: {}", uri);
                 throw new IOException("Could not find log writer for resource: " + uri);
             }
         }

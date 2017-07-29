@@ -52,12 +52,12 @@ public class ReloadableProperties {
                 invertedProps = null;
                 invertedValueProps = null;
                 if (key.isDebug()) {
-                    LOG.debug("Load of: " + key);
+                    LOG.debug("Load of: {}", key);
                 }
             } catch (IOException e) {
-                LOG.error("Failed to load: " + key + ", reason:" + e.getLocalizedMessage());
+                LOG.error("Failed to load: {}, reason:{}", key, e.getLocalizedMessage());
                 if (key.isDebug()) {
-                    LOG.debug("Load of: " + key + ", failure exception" + e);
+                    LOG.debug("Load of: {}, failure exception{}", key, e);
                 }
             }
             reloadTime = System.currentTimeMillis();

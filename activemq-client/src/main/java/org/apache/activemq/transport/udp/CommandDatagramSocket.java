@@ -83,9 +83,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
         if (answer != null) {
             answer.setFrom(from);
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Channel: " + name + " about to process: " + answer);
-            }
+            LOG.debug("Channel: {} about to process: {}", name, answer);
         }
         return answer;
     }
@@ -218,9 +216,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
             byte[] data = (byte[])buffer;
             sendWriteBuffer(commandId, replayAddress, data, true);
         } else {
-            if (LOG.isWarnEnabled()) {
-                LOG.warn("Request for buffer: " + commandId + " is no longer present");
-            }
+            LOG.warn("Request for buffer: {} is no longer present", commandId);
         }
     }
 

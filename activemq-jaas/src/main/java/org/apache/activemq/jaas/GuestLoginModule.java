@@ -72,7 +72,7 @@ public class GuestLoginModule implements LoginModule {
         principals.add(new GroupPrincipal(groupName));
         
         if (debug) {
-            LOG.debug("Initialized debug=" + debug + " guestUser=" + userName + " guestGroup=" + groupName);
+            LOG.debug("Initialized debug={} guestUser={} guestGroup={}", debug, userName, groupName);
         }
 
     }
@@ -96,7 +96,7 @@ public class GuestLoginModule implements LoginModule {
              }
         }
         if (debug) {
-            LOG.debug("Guest login " + loginSucceeded);
+            LOG.debug("Guest login {}", loginSucceeded);
         }
         return loginSucceeded;
     }

@@ -69,7 +69,7 @@ public final class XPathExpression implements BooleanExpression {
                 setupFeatures(builderFactory);
                 builder = builderFactory.newDocumentBuilder();
             } catch (Throwable e) {
-                LOG.warn("Invalid " + XPathEvaluator.class.getName() + " implementation: " + cn + ", reason: " + e, e);
+                LOG.warn("Invalid {} implementation: {}, reason: {}", XPathEvaluator.class.getName(), cn, e, e);
                 cn = DEFAULT_EVALUATOR_CLASS_NAME;
                 try {
                     m = getXPathEvaluatorConstructor(cn);

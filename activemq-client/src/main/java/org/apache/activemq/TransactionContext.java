@@ -458,7 +458,7 @@ public class TransactionContext implements XAResource {
         }
 
         if (rollbackOnly) {
-            LOG.warn("prepare of: " + x + " failed because it was marked rollback only; typically due to failover with pending acks");
+            LOG.warn("prepare of: {} failed because it was marked rollback only; typically due to failover with pending acks", x);
             throw new XAException(XAException.XA_RBINTEGRITY);
         }
 
@@ -487,7 +487,7 @@ public class TransactionContext implements XAResource {
             return response.getResult();
 
         } catch (JMSException e) {
-            LOG.warn("prepare of: " + x + " failed with: " + e, e);
+            LOG.warn("prepare of: {} failed with: {}", x, e, e);
             List<TransactionContext> l;
             synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {
                 l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
@@ -571,7 +571,7 @@ public class TransactionContext implements XAResource {
         }
 
         if (rollbackOnly) {
-             LOG.warn("commit of: " + x + " failed because it was marked rollback only; typically due to failover with pending acks");
+             LOG.warn("commit of: {} failed because it was marked rollback only; typically due to failover with pending acks", x);
              throw new XAException(XAException.XA_RBINTEGRITY);
          }
 
@@ -601,7 +601,7 @@ public class TransactionContext implements XAResource {
             }
 
         } catch (JMSException e) {
-            LOG.warn("commit of: " + x + " failed with: " + e, e);
+            LOG.warn("commit of: {} failed with: {}", x, e, e);
             if (onePhase) {
                 List<TransactionContext> l;
                 synchronized(ENDED_XA_TRANSACTION_CONTEXTS) {

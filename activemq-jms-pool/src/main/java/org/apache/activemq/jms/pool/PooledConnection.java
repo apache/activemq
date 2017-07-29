@@ -230,7 +230,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
             try {
                 tempQueue.delete();
             } catch (JMSException ex) {
-                LOG.info("failed to delete Temporary Queue \"" + tempQueue.toString() + "\" on closing pooled connection: " + ex.getMessage());
+                LOG.info("failed to delete Temporary Queue \"{}\" on closing pooled connection: {}", tempQueue, ex.getMessage());
             }
         }
         connTempQueues.clear();
@@ -239,7 +239,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
             try {
                 tempTopic.delete();
             } catch (JMSException ex) {
-                LOG.info("failed to delete Temporary Topic \"" + tempTopic.toString() + "\" on closing pooled connection: " + ex.getMessage());
+                LOG.info("failed to delete Temporary Topic \"{}\" on closing pooled connection: {}", tempTopic, ex.getMessage());
             }
         }
         connTempTopics.clear();
@@ -256,7 +256,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
             try {
                 session.close();
             } catch (JMSException ex) {
-                LOG.info("failed to close laoned Session \"" + session + "\" on closing pooled connection: " + ex.getMessage());
+                LOG.info("failed to close laoned Session \"{}\" on closing pooled connection: {}", session, ex.getMessage());
             }
         }
         loanedSessions.clear();

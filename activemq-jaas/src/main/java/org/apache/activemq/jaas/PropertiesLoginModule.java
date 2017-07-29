@@ -94,7 +94,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         loginSucceeded = true;
 
         if (debug) {
-            LOG.debug("login " + user);
+            LOG.debug("login {}", user);
         }
         return loginSucceeded;
     }
@@ -119,7 +119,7 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         clear();
 
         if (debug) {
-            LOG.debug("commit, result: " + result);
+            LOG.debug("commit, result: {}", result);
         }
         return result;
     }

@@ -66,7 +66,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
     }
 
     protected void doStart() throws Exception {
-        LOG.info("Listening for connections at: " + getConnectURI());
+        LOG.info("Listening for connections at: {}", getConnectURI());
         runner = new Thread(null, this, "ActiveMQ Transport Server: " + toString(), stackSize);
         runner.setDaemon(daemon);
         runner.setPriority(ThreadPriorities.BROKER_MANAGEMENT);

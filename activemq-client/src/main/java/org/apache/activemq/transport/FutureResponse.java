@@ -57,9 +57,7 @@ public class FutureResponse {
     }
 
     private InterruptedIOException dealWithInterrupt(InterruptedException e) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Operation interrupted: " + e, e);
-        }
+        LOG.debug("Operation interrupted: {}", e, e);
         InterruptedIOException interruptedIOException = new InterruptedIOException(e.getMessage());
         interruptedIOException.initCause(e);
         try {

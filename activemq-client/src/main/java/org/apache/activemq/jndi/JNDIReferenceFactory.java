@@ -74,7 +74,7 @@ public class JNDIReferenceFactory implements ObjectFactory {
                 result = store;
             }
         } else {
-            log.error("Object " + object + " is not a reference - cannot load");
+            log.error("Object {} is not a reference - cannot load", object);
             throw new RuntimeException("Object " + object + " is not a reference");
         }
         return result;

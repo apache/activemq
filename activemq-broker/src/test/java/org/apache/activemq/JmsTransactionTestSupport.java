@@ -161,7 +161,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
         TextMessage message = session.createTextMessage("Batch Message");
         for (int j = 0; j < batchCount; j++) {
-            LOG.info("Producing bacth " + j + " of " + batchSize + " messages");
+            LOG.info("Producing bacth {} of {} messages", j, batchSize);
 
             beginTx();
             for (int i = 0; i < batchSize; i++) {
@@ -169,7 +169,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
             }
             messageSent();
             commitTx();
-            LOG.info("Consuming bacth " + j + " of " + batchSize + " messages");
+            LOG.info("Consuming bacth {} of {} messages", j, batchSize);
 
             beginTx();
             for (int i = 0; i < batchSize; i++) {
@@ -215,13 +215,13 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         LOG.info("About to consume message 1");
         Message message = consumer.receive(1000);
         messages.add(message);
-        LOG.info("Received: " + message);
+        LOG.info("Received: {}", message);
 
         // receives the second message
         LOG.info("About to consume message 2");
         message = consumer.receive(4000);
         messages.add(message);
-        LOG.info("Received: " + message);
+        LOG.info("Received: {}", message);
 
         // validates that the rollbacked was not consumed
         commitTx();
@@ -250,7 +250,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         LOG.info("About to consume message 1");
         Message message = consumer.receive(1000);
         messages.add(message);
-        LOG.info("Received: " + message);
+        LOG.info("Received: {}", message);
 
         // validates that the rollbacked was not consumed
         commitTx();
@@ -291,13 +291,13 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         beginTx();
         Message message = consumer.receive(1000);
         messages.add(message);
-        LOG.info("Received: " + message);
+        LOG.info("Received: {}", message);
 
         // receives the second message
         LOG.info("About to consume message 2");
         message = consumer.receive(4000);
         messages.add(message);
-        LOG.info("Received: " + message);
+        LOG.info("Received: {}", message);
 
         // validates that the rollbacked was not consumed
         commitTx();
@@ -339,13 +339,13 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         beginTx();
         Message message = consumer.receive(1000);
         messages.add(message);
-        LOG.info("Received: " + message);
+        LOG.info("Received: {}", message);
 
         // receives the second message
         LOG.info("About to consume message 2");
         message = consumer.receive(4000);
         messages.add(message);
-        LOG.info("Received: " + message);
+        LOG.info("Received: {}", message);
 
         // validates that the rollbacked was not consumed
         commitTx();
@@ -375,8 +375,8 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         producer.send(outbound[1]);
         commitTx();
 
-        LOG.info("Sent 0: " + outbound[0]);
-        LOG.info("Sent 1: " + outbound[1]);
+        LOG.info("Sent 0: {}", outbound[0]);
+        LOG.info("Sent 1: {}", outbound[1]);
 
         ArrayList<Message> messages = new ArrayList<Message>();
         beginTx();
@@ -426,8 +426,8 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         producer.send(outbound[1]);
         commitTx();
 
-        LOG.info("Sent 0: " + outbound[0]);
-        LOG.info("Sent 1: " + outbound[1]);
+        LOG.info("Sent 0: {}", outbound[0]);
+        LOG.info("Sent 1: {}", outbound[1]);
 
         ArrayList<Message> messages = new ArrayList<Message>();
         beginTx();
@@ -483,7 +483,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
             LOG.info("About to consume message 1");
             Message message = consumer.receive(1000);
             assertNotNull(message);
-            LOG.info("Received: " + message);
+            LOG.info("Received: {}", message);
         }
 
         // validates that the rollbacked was not consumed
@@ -546,8 +546,8 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         producer.send(outbound[0]);
         producer.send(outbound[1]);
         commitTx();
-        LOG.info("Sent 0: " + outbound[0]);
-        LOG.info("Sent 1: " + outbound[1]);
+        LOG.info("Sent 0: {}", outbound[0]);
+        LOG.info("Sent 1: {}", outbound[1]);
 
         beginTx();
         TextMessage message = (TextMessage)consumer.receive(1000);
@@ -560,7 +560,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
         // Create a new consumer
         consumer = resourceProvider.createConsumer(session, destination);
-        LOG.info("Created consumer: " + consumer);
+        LOG.info("Created consumer: {}", consumer);
 
         beginTx();
         message = (TextMessage)consumer.receive(1000);
@@ -589,7 +589,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
             message.setStringProperty("foo", "def");
             fail("Cannot change properties of the object!");
         } catch (JMSException e) {
-            LOG.info("Caught expected exception: " + e, e);
+            LOG.info("Caught expected exception: {}", e, e);
         }
         body.clear();
         body.add("This should never be seen!");
@@ -610,7 +610,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         assertTrue("Should be an object message but was: " + message, message instanceof ObjectMessage);
         ObjectMessage objectMessage = (ObjectMessage)message;
         List<String> body = (List<String>)objectMessage.getObject();
-        LOG.info("Received body: " + body);
+        LOG.info("Received body: {}", body);
 
         assertEquals("Size of list should be 1", 1, body.size());
         assertEquals("element 0 of list", "First", body.get(0));

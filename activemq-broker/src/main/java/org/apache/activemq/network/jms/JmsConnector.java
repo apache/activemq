@@ -493,7 +493,7 @@ public abstract class JmsConnector implements Service {
             return;
         }
 
-        LOG.info("JmsConnector handling loss of connection [{}]", connection.toString());
+        LOG.info("JmsConnector handling loss of connection [{}]", connection);
 
         // TODO - How do we handle the re-wiring of replyToBridges in this case.
         replyToBridges.clear();

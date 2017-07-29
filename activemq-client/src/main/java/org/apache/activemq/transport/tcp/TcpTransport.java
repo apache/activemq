@@ -208,7 +208,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     @Override
     public void run() {
-        LOG.trace("TCP consumer thread for " + this + " starting");
+        LOG.trace("TCP consumer thread for {} starting", this);
         this.runnerThread=Thread.currentThread();
         try {
             while (!isStopped()) {
@@ -461,8 +461,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 LOG.warn("Socket buffer size was set to {}; Skipping this setting as the size must be a positive number.", socketBufferSize);
             }
         } catch (SocketException se) {
-            LOG.warn("Cannot set socket buffer size = " + socketBufferSize);
-            LOG.debug("Cannot set socket buffer size. Reason: " + se.getMessage() + ". This exception is ignored.", se);
+            LOG.warn("Cannot set socket buffer size = {}", socketBufferSize);
+            LOG.debug("Cannot set socket buffer size. Reason: {}. This exception is ignored.", se.getMessage(), se);
         }
         sock.setSoTimeout(soTimeout);
 
@@ -731,15 +731,11 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             // other reasons, emit a warning.
             if ((this.trafficClass >> 2) == (resultTrafficClass >> 2)
                     && (this.trafficClass & 3) != (resultTrafficClass & 3)) {
-                LOG.warn("Attempted to set the Traffic Class to "
-                    + this.trafficClass + " but the result Traffic Class was "
-                    + resultTrafficClass + ". Please check that your system "
-                    + "allows you to set the ECN bits (the first two bits).");
+                LOG.warn("Attempted to set the Traffic Class to {} but the result Traffic Class was {}. Please check that your system "
+                    + "allows you to set the ECN bits (the first two bits).", this.trafficClass, resultTrafficClass);
             } else {
-                LOG.warn("Attempted to set the Traffic Class to "
-                    + this.trafficClass + " but the result Traffic Class was "
-                    + resultTrafficClass + ". Please check that your system "
-                         + "supports java.net.setTrafficClass.");
+                LOG.warn("Attempted to set the Traffic Class to {} but the result Traffic Class was {}. Please check that your system "
+                         + "supports java.net.setTrafficClass.", this.trafficClass, resultTrafficClass);
             }
             return false;
         }

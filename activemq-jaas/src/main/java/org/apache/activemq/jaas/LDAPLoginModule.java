@@ -218,7 +218,7 @@ public class LDAPLoginModule implements LoginModule {
             NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(USER_BASE), filter, constraints);
 
             if (results == null || !results.hasMore()) {
-                log.warn("User " + username + " not found in LDAP.");
+                log.warn("User {} not found in LDAP.", username);
                 throw new FailedLoginException("User " + username + " not found in LDAP.");
             }
 

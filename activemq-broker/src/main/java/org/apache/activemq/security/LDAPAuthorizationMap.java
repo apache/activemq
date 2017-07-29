@@ -432,7 +432,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
                 String roleName = iter.next();
                 LdapName ldapname = new LdapName(roleName);
                 Rdn rdn = ldapname.getRdn(ldapname.size() - 1);
-                LOG.debug("Found role: [" + rdn.getValue().toString() + "]");
+                LOG.debug("Found role: [{}]", rdn.getValue());
                 roles.add(new GroupPrincipal(rdn.getValue().toString()));
             }
             return roles;

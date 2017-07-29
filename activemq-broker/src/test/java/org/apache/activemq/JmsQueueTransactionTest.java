@@ -67,8 +67,8 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         producer.send(outbound[1]);
         commitTx();
 
-        LOG.info("Sent 0: " + outbound[0]);
-        LOG.info("Sent 1: " + outbound[1]);
+        LOG.info("Sent 0: {}", outbound[0]);
+        LOG.info("Sent 1: {}", outbound[1]);
 
         ArrayList<Message> messages = new ArrayList<Message>();
         beginTx();
@@ -187,7 +187,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         // There should be no more.
         boolean tooMany = false;
         while (enumeration.hasMoreElements()) {
-            LOG.info("Got extra message: " + ((TextMessage)enumeration.nextElement()).getText());
+            LOG.info("Got extra message: {}", ((TextMessage)enumeration.nextElement()).getText());
             tooMany = true;
         }
         assertFalse(tooMany);

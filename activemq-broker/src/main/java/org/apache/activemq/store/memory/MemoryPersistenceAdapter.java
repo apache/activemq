@@ -186,7 +186,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter, NoLocalSubs
                 return (MemoryMessageStore) delegate;
             }
         }
-        LOG.warn("Expected an instance of MemoryMessageStore but was: " + value);
+        LOG.warn("Expected an instance of MemoryMessageStore but was: {}", value);
         return null;
     }
 

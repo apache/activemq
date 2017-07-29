@@ -97,10 +97,10 @@ public class ProducerEventSource implements Service, MessageListener {
                     fireProducerEvent(new ProducerStoppedEvent(this, destination, (ProducerId)removeInfo.getObjectId(), count));
                 }
             } else {
-                LOG.warn("Unknown command: " + command);
+                LOG.warn("Unknown command: {}", command);
             }
         } else {
-            LOG.warn("Unknown message type: " + message + ". Message ignored");
+            LOG.warn("Unknown message type: {}. Message ignored", message);
         }
     }
 
@@ -111,9 +111,9 @@ public class ProducerEventSource implements Service, MessageListener {
                 Number n = (Number)value;
                 return n.intValue();
             }
-            LOG.warn("No producerCount header available on the message: " + message);
+            LOG.warn("No producerCount header available on the message: {}", message);
         } catch (Exception e) {
-            LOG.warn("Failed to extract producerCount from message: " + message + ".Reason: " + e, e);
+            LOG.warn("Failed to extract producerCount from message: {}. Reason: {}", message, e, e);
         }
         return count;
     }

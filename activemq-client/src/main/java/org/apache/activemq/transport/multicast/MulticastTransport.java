@@ -109,7 +109,7 @@ public class MulticastTransport extends UdpTransport {
         socket.setLoopbackMode(loopBackMode);
         socket.setTimeToLive(timeToLive);
 
-        LOG.debug("Joining multicast address: " + getMulticastAddress());
+        LOG.debug("Joining multicast address: {}", getMulticastAddress());
         socket.joinGroup(getMulticastAddress());
         socket.setSoTimeout((int)keepAliveInterval);
 

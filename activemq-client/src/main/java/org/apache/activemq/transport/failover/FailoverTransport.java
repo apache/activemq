@@ -316,10 +316,10 @@ public class FailoverTransport implements CompositeTransport {
                     URI uri = new URI(reconnectStr);
                     if (isReconnectSupported()) {
                         reconnect(uri);
-                        LOG.info("Reconnected to: " + uri);
+                        LOG.info("Reconnected to: {}", uri);
                     }
                 } catch (Exception e) {
-                    LOG.error("Failed to handle ConnectionControl reconnect to " + reconnectStr, e);
+                    LOG.error("Failed to handle ConnectionControl reconnect to {}", reconnectStr, e);
                 }
             }
         }
@@ -338,14 +338,14 @@ public class FailoverTransport implements CompositeTransport {
                         URI uri = new URI(str);
                         list.add(uri);
                     } catch (Exception e) {
-                        LOG.error("Failed to parse broker address: " + str, e);
+                        LOG.error("Failed to parse broker address: {}", str, e);
                     }
                 }
                 if (list.isEmpty() == false) {
                     try {
                         updateURIs(rebalance, list.toArray(new URI[list.size()]));
                     } catch (IOException e) {
-                        LOG.error("Failed to update transport URI's from: " + newTransports, e);
+                        LOG.error("Failed to update transport URI's from: {}", newTransports, e);
                     }
                 }
             }
@@ -561,7 +561,7 @@ public class FailoverTransport implements CompositeTransport {
                 URI uri = new URI(str);
                 priorityList.add(uri);
             } catch (Exception e) {
-                LOG.error("Failed to parse broker address: " + str, e);
+                LOG.error("Failed to parse broker address: {}", str, e);
             }
         }
     }

@@ -176,7 +176,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
                 loadPageFile();
                 LOG.info("Update from legacy Scheduler store completed successfully.");
             } catch (Throwable t) {
-                LOG.warn("Index corrupted. Recovering the index through journal replay. Cause: {}", t.toString());
+                LOG.warn("Index corrupted. Recovering the index through journal replay. Cause: {}", (Object) t);
                 LOG.debug("Index load failure", t);
 
                 // try to recover index

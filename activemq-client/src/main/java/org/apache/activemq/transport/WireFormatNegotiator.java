@@ -78,9 +78,7 @@ public class WireFormatNegotiator extends TransportFilter {
     public void sendWireFormat() throws IOException {
         try {
             WireFormatInfo info = wireFormat.getPreferedWireFormatInfo();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Sending: " + info);
-            }
+            LOG.debug("Sending: {}", info);
             sendWireFormat(info);
         } finally {
             wireInfoSentDownLatch.countDown();
@@ -126,16 +124,12 @@ public class WireFormatNegotiator extends TransportFilter {
     }
 
     public void negociate(WireFormatInfo info) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Received WireFormat: " + info);
-        }
+        LOG.debug("Received WireFormat: {}", info);
 
         try {
             wireInfoSentDownLatch.await();
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(this + " before negotiation: " + wireFormat);
-            }
+            LOG.debug("{} before negotiation: {}", this, wireFormat);
             if (!info.isValid()) {
                 onException(new IOException("Remote wire format magic is invalid"));
             } else if (info.getVersion() < minimumVersion) {
@@ -148,9 +142,7 @@ public class WireFormatNegotiator extends TransportFilter {
                 socket.setTcpNoDelay(wireFormat.isTcpNoDelayEnabled());
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(this + " after negotiation: " + wireFormat);
-            }
+            LOG.debug("{} after negotiation: {}", this, wireFormat);
 
         } catch (IOException e) {
             onException(e);

@@ -78,7 +78,7 @@ public class GenericResourceManager {
                 LOGGER.info("Resource manager is unrecoverable");
             }
         } catch (NoClassDefFoundError e) {
-            LOGGER.info("Resource manager is unrecoverable due to missing classes: " + e);
+            LOGGER.info("Resource manager is unrecoverable due to missing classes: {}", (Object) e);
         } catch (Throwable e) {
             LOGGER.warn("Error while recovering resource manager", e);
         }
@@ -159,7 +159,7 @@ public class GenericResourceManager {
                             }
                             final XASession session = xaConnection.createXASession();
                             xaConnection.start();
-                            LOGGER.debug("new namedXAResource's connection: " + xaConnection);
+                            LOGGER.debug("new namedXAResource's connection: {}", xaConnection);
 
                             return new ConnectionAndWrapperNamedXAResource(session.getXAResource(), getName(), xaConnection);
                         } catch (Exception e) {
@@ -174,10 +174,10 @@ public class GenericResourceManager {
                     public void returnNamedXAResource(NamedXAResource namedXaResource) {
                         if (namedXaResource instanceof ConnectionAndWrapperNamedXAResource) {
                             try {
-                                LOGGER.debug("closing returned namedXAResource's connection: " + ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection);
+                                LOGGER.debug("closing returned namedXAResource's connection: {}", ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection);
                                 ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection.close();
                             } catch (Exception ignored) {
-                                LOGGER.debug("failed to close returned namedXAResource: " + namedXaResource, ignored);
+                                LOGGER.debug("failed to close returned namedXAResource: {}", namedXaResource, ignored);
                             }
                         }
                     }

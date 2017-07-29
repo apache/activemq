@@ -136,9 +136,7 @@ public class ReliableTransport extends ResponseCorrelator {
 
                     if (keep) {
                         // lets add it to the list for later on
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Received out of order command which is being buffered for later: " + command);
-                        }
+                        LOG.debug("Received out of order command which is being buffered for later: {}", command);
                         commands.add(command);
                     }
                 } catch (IOException e) {
@@ -267,7 +265,7 @@ public class ReliableTransport extends ResponseCorrelator {
      * Lets attempt to replay the request as a command may have disappeared
      */
     protected void onMissingResponse(Command command, FutureResponse response) {
-        LOG.debug("Still waiting for response on: " + this + " to command: " + command + " sending replay message");
+        LOG.debug("Still waiting for response on: {} to command: {} sending replay message", this, command);
 
         int commandId = command.getCommandId();
         requestReplay(commandId, commandId);
@@ -282,9 +280,7 @@ public class ReliableTransport extends ResponseCorrelator {
             if (replayer == null) {
                 onException(new IOException("Cannot replay commands. No replayer property configured"));
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Processing replay command: " + command);
-            }
+            LOG.debug("Processing replay command: {}", command);
             getReplayBuffer().replayMessages(command.getFirstNakNumber(), command.getLastNakNumber(), replayer);
 
             // TODO we could proactively remove ack'd stuff from the replay

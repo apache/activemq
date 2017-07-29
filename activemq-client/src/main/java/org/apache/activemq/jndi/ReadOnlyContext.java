@@ -103,7 +103,7 @@ public class ReadOnlyContext implements Context, Serializable {
                 try {
                     internalBind(binding.getKey(), binding.getValue());
                 } catch (Throwable e) {
-                    LOG.error("Failed to bind " + binding.getKey() + "=" + binding.getValue(), e);
+                    LOG.error("Failed to bind {}={}", binding.getKey(), binding.getValue(), e);
                 }
             }
         }

@@ -99,9 +99,7 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
             configured = true;
         } else if (localWireFormatInfo != null && remoteWireFormatInfo != null) {
             if (!ignoreRemoteWireFormat) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Using min of local: " + localWireFormatInfo + " and remote: " + remoteWireFormatInfo);
-                }
+                LOG.debug("Using min of local: {} and remote: {}", localWireFormatInfo, remoteWireFormatInfo);
 
                 long readCheckTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
                 long writeCheckTime = writeCheckValueFromReadCheck(readCheckTime);
@@ -111,9 +109,7 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
                 setWriteCheckTime(writeCheckTime);
 
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Using local: " + localWireFormatInfo);
-                }
+                LOG.debug("Using local: {}", localWireFormatInfo);
 
                 long readCheckTime = localWireFormatInfo.getMaxInactivityDuration();
                 long writeCheckTime = writeCheckValueFromReadCheck(readCheckTime);

@@ -2034,10 +2034,8 @@ public class BrokerService implements Service {
             }
 
             if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
-                LOG.error("Store limit is " + storeLimit / (1024 * 1024) +
-                          " mb, whilst the max journal file size for the store is: " +
-                          maxJournalFileSize / (1024 * 1024) + " mb, " +
-                          "the store will not accept any data when used.");
+                LOG.error("Store limit is {} mb, whilst the max journal file size for the store is: {} mb, " +
+                          "the store will not accept any data when used.", storeLimit / (1024 * 1024), maxJournalFileSize / (1024 * 1024));
 
             }
         }
@@ -2067,10 +2065,8 @@ public class BrokerService implements Service {
                 long storeLimit = usage.getTempUsage().getLimit();
 
                 if (storeLimit > 0 && storeLimit < maxJournalFileSize) {
-                    LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
-                              " mb, whilst the max journal file size for the temporary store is: " +
-                              maxJournalFileSize / (1024 * 1024) + " mb, " +
-                              "the temp store will not accept any data when used.");
+                    LOG.error("Temporary Store limit is {} mb, whilst the max journal file size for the temporary store is: {} mb, " +
+                              "the temp store will not accept any data when used.", storeLimit / (1024 * 1024), maxJournalFileSize / (1024 * 1024));
                 }
             }
         }
@@ -2107,11 +2103,9 @@ public class BrokerService implements Service {
 
                 //To prevent changing too often, check threshold
                 if (newLimit - storeLimit >= diskUsageCheckRegrowThreshold) {
-                    LOG.info("Usable disk space has been increased, attempting to regrow " + storeName + " limit to "
-                            + percentLimit + "% of the partition size.");
+                    LOG.info("Usable disk space has been increased, attempting to regrow {} limit to {}% of the partition size.", storeName, percentLimit);
                     storeUsage.setLimit(newLimit);
-                    LOG.info(storeName + " limit has been increased to " + newLimit * 100 / totalSpace
-                            + "% (" + newLimit / oneMeg + " mb) of the partition size.");
+                    LOG.info("{} limit has been increased to {}% ({} mb) of the partition size.", storeName, newLimit * 100 / totalSpace, newLimit / oneMeg);
                 }
 
             //check if the limit is too large for the amount of usable space
@@ -2128,16 +2122,17 @@ public class BrokerService implements Service {
                 }
 
                 if (percentLimit > 0) {
-                    LOG.warn(storeName + " limit has been set to "
-                            + percentLimit + "% (" + bytePercentLimit / oneMeg + " mb)"
+                    LOG.warn("{} limit has been set to {}% ({} mb)"
                             + " of the partition size but there is not enough usable space."
                             + " The current store limit (which may have been adjusted by a"
-                            + " previous usage limit check) is set to (" + storeLimit / oneMeg + " mb)"
-                            + " but only " + totalUsableSpace * 100 / totalSpace + "% (" + totalUsableSpace / oneMeg + " mb)"
-                            + " is available - resetting limit");
+                            + " previous usage limit check) is set to ({} mb)"
+                            + " but only {}% ({} mb)"
+                            + " is available - resetting limit",
+                            storeName, percentLimit, bytePercentLimit / oneMeg,
+                            storeLimit / oneMeg, totalUsableSpace * 100 / totalSpace,
+                            totalUsableSpace / oneMeg);
                 } else {
-                    LOG.warn(message + " - resetting to maximum available disk space: " +
-                            totalUsableSpace / oneMeg + " mb");
+                    LOG.warn("{} - resetting to maximum available disk space: {} mb", message, totalUsableSpace / oneMeg);
                 }
                 storeUsage.setLimit(totalUsableSpace);
             }
@@ -2183,7 +2178,7 @@ public class BrokerService implements Service {
 
             if (adjustUsageLimits) {
                 usage.getMemoryUsage().setPercentOfJvmHeap(70);
-                LOG.warn(message + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
+                LOG.warn("{} mb - resetting to 70% of maximum available: {} mb", message, (usage.getMemoryUsage().getLimit() / (1024 * 1024)));
             } else {
                 LOG.error(message);
                 throw new ConfigurationException(message);
@@ -2217,10 +2212,10 @@ public class BrokerService implements Service {
                 long schedulerLimit = usage.getJobSchedulerUsage().getLimit();
                 long dirFreeSpace = schedulerDir.getUsableSpace();
                 if (schedulerLimit > dirFreeSpace) {
-                    LOG.warn("Job Scheduler Store limit is " + schedulerLimit / (1024 * 1024) +
-                             " mb, whilst the data directory: " + schedulerDir.getAbsolutePath() +
-                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to " +
-                            dirFreeSpace / (1024 * 1024) + " mb.");
+                    LOG.warn("Job Scheduler Store limit is {} mb, whilst the data directory: {} " +
+                             "only has {} mb of usable space - resetting to {} mb.",
+                             schedulerLimit / (1024 * 1024), schedulerDir.getAbsolutePath(),
+                             dirFreeSpace / (1024 * 1024), dirFreeSpace / (1024 * 1024));
                     usage.getJobSchedulerUsage().setLimit(dirFreeSpace);
                 }
             }
@@ -2312,7 +2307,7 @@ public class BrokerService implements Service {
                 ObjectName objectName = createNetworkConnectorObjectName(connector);
                 getManagementContext().unregisterMBean(objectName);
             } catch (Exception e) {
-                LOG.warn("Network Connector could not be unregistered from JMX due " + e.getMessage() + ". This exception is ignored.", e);
+                LOG.warn("Network Connector could not be unregistered from JMX due {}. This exception is ignored.", e.getMessage(), e);
             }
         }
     }
@@ -2396,7 +2391,7 @@ public class BrokerService implements Service {
                 regionBroker = new ManagedRegionBroker(this, getManagementContext(), getBrokerObjectName(),
                     getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor,getScheduler(),getExecutor());
             } catch(MalformedObjectNameException me){
-                LOG.warn("Cannot create ManagedRegionBroker due " + me.getMessage(), me);
+                LOG.warn("Cannot create ManagedRegionBroker due {}", me.getMessage(), me);
                 throw new IOException(me);
             }
         } else {
@@ -2587,7 +2582,7 @@ public class BrokerService implements Service {
 
     protected void logError(String message, Throwable e) {
         if (useLoggingForShutdownErrors) {
-            LOG.error("Failed to shut down: " + e);
+            LOG.error("Failed to shut down: {}", (Object) e);
         } else {
             System.err.println("Failed to shut down: " + e);
         }

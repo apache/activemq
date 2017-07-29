@@ -38,11 +38,11 @@ public class LRUCacheTest {
             }
             long duration = System.currentTimeMillis() - start;
             if (duration > max) {
-                LOG.info("count: " + count + ", new max=" + duration);
+                LOG.info("count: {}, new max={}", count, duration);
                 max = duration;
             }
             if (count % 100000000 == 0) {
-                LOG.info("count: " + count + ", max=" + max);
+                LOG.info("count: {}, max={}", count, max);
             }
         }
         assertEquals("size is still in order", 1000, underTest.size());

@@ -78,7 +78,7 @@ public abstract class AutoFailTestSupport extends TestCase {
                     // Check if the test was able to tear down succesfully,
                     // which usually means, it has finished its run.
                     if (!isTestSuccess.get()) {
-                        LOG.error("Test case has exceeded the maximum allotted time to run of: " + getMaxTestTime() + " ms.");
+                        LOG.error("Test case has exceeded the maximum allotted time to run of: {} ms.", getMaxTestTime());
                         dumpAllThreads(getName());
                         if (System.getProperty("org.apache.activemq.AutoFailTestSupport.disableSystemExit") == null) {
                             System.exit(EXIT_ERROR);

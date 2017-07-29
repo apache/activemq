@@ -210,8 +210,8 @@ public class FanoutTransport implements CompositeTransport {
 
                         URI uri = fanoutHandler.uri;
                         try {
-                            LOG.debug("Stopped: " + this);
-                            LOG.debug("Attempting connect to: " + uri);
+                            LOG.debug("Stopped: {}", this);
+                            LOG.debug("Attempting connect to: {}", uri);
                             Transport t = TransportFactory.compositeConnect(uri);
                             fanoutHandler.transport = t;
                             t.setTransportListener(fanoutHandler);
@@ -226,7 +226,7 @@ public class FanoutTransport implements CompositeTransport {
                             }
                             connectedCount++;
                         } catch (Exception e) {
-                            LOG.debug("Connect fail to: " + uri + ", reason: " + e);
+                            LOG.debug("Connect fail to: {}, reason: {}", uri, e);
 
                             if (fanoutHandler.transport != null) {
                                 ServiceSupport.dispose(fanoutHandler.transport);
@@ -234,7 +234,7 @@ public class FanoutTransport implements CompositeTransport {
                             }
 
                             if (maxReconnectAttempts > 0 && ++fanoutHandler.connectFailures >= maxReconnectAttempts) {
-                                LOG.error("Failed to connect to transport after: " + fanoutHandler.connectFailures + " attempt(s)");
+                                LOG.error("Failed to connect to transport after: {} attempt(s)", fanoutHandler.connectFailures);
                                 connectionFailure = e;
                                 reconnectMutex.notifyAll();
                                 return false;
@@ -268,7 +268,7 @@ public class FanoutTransport implements CompositeTransport {
         try {
             long reconnectDelay = closestReconnectDate - System.currentTimeMillis();
             if (reconnectDelay > 0) {
-                LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
+                LOG.debug("Waiting {} ms before attempting connection. ", reconnectDelay);
                 Thread.sleep(reconnectDelay);
             }
         } catch (InterruptedException e1) {
@@ -315,7 +315,7 @@ public class FanoutTransport implements CompositeTransport {
                     }
                 }
 
-                LOG.debug("Stopped: " + this);
+                LOG.debug("Stopped: {}", this);
                 ss.throwFirstException();
             }
         } finally {
@@ -372,7 +372,7 @@ public class FanoutTransport implements CompositeTransport {
 
                 // Wait for transport to be connected.
                 while (connectedCount < minAckCount && !disposed && connectionFailure == null) {
-                    LOG.debug("Waiting for at least " + minAckCount + " transports to be connected.");
+                    LOG.debug("Waiting for at least {} transports to be connected.", minAckCount);
                     reconnectMutex.wait(1000);
                 }
 

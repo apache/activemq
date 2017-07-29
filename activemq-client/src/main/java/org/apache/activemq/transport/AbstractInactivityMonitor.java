@@ -84,7 +84,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             long now = System.currentTimeMillis();
 
             if ((now - startTime) >= connectAttemptTimeout && connectCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
-                LOG.debug("No connection attempt made in time for {}! Throwing InactivityIOException.", AbstractInactivityMonitor.this.toString());
+                LOG.debug("No connection attempt made in time for {}! Throwing InactivityIOException.", AbstractInactivityMonitor.this);
                 try {
                     ASYNC_TASKS.execute(new Runnable() {
                         @Override

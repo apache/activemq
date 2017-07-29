@@ -68,7 +68,7 @@ public class CommandJoiner extends TransportFilter {
 
                     getTransportListener().onCommand(completeCommand);
                 } catch (IOException e) {
-                    LOG.warn("Failed to unmarshal partial command: " + command);
+                    LOG.warn("Failed to unmarshal partial command: {}", command, e);
                     getTransportListener().onException(e);
                 }
             }

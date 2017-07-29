@@ -383,7 +383,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         boolean found = false;
         for (String scheme : protocolVerifiers.keySet()) {
             if (protocolVerifiers.get(scheme).isProtocol(buffer)) {
-                LOG.debug("Detected protocol " + scheme);
+                LOG.debug("Detected protocol {}", scheme);
                 detectedWireFormatFactory = findWireFormatFactory(scheme, wireFormatOptions);
 
                 if (scheme.equals("default")) {

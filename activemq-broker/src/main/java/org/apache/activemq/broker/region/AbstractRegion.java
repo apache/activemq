@@ -245,8 +245,8 @@ public abstract class AbstractRegion implements Region {
                     rc.add(sub);
                 } catch (SecurityException e) {
                     if (sub.isWildcard()) {
-                        LOG.debug("Subscription denied for " + sub + " to destination " +
-                            dest.getActiveMQDestination() +  ": " + e.getMessage());
+                        LOG.debug("Subscription denied for {} to destination {}: {}",
+                                sub, dest.getActiveMQDestination(), e.getMessage());
                     } else {
                         throw e;
                     }
@@ -403,15 +403,15 @@ public abstract class AbstractRegion implements Region {
                     removeList.add(dest);
                 } catch (SecurityException e){
                     if (sub.isWildcard()) {
-                        LOG.debug("Subscription denied for " + sub + " to destination " +
-                            dest.getActiveMQDestination() + ": " + e.getMessage());
+                        LOG.debug("Subscription denied for {} to destination {}: {}",
+                                sub, dest.getActiveMQDestination(), e.getMessage());
                     } else {
                         // remove partial subscriptions
                         for (Destination remove : removeList) {
                             try {
                                 remove.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
                             } catch (Exception ex) {
-                                LOG.error("Error unsubscribing " + sub + " from " + remove + ": " + ex.getMessage(), ex);
+                                LOG.error("Error unsubscribing {} from {}: {}", sub, remove, ex.getMessage(), ex);
                             }
                         }
                         subscriptions.remove(info.getConsumerId());

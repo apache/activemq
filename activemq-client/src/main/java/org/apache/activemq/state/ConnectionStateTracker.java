@@ -83,9 +83,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 } else if (eldest.getValue() instanceof MessagePull) {
                     currentCacheSize -= MESSAGE_PULL_SIZE;
                 }
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("removing tracked message: " + eldest.getKey());
-                }
+                LOG.trace("removing tracked message: {}", eldest.getKey());
             }
             return result;
         }
@@ -236,9 +234,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 if (lastCommand instanceof TransactionInfo) {
                     TransactionInfo transactionInfo = (TransactionInfo) lastCommand;
                     if (transactionInfo.getType() == TransactionInfo.COMMIT_ONE_PHASE) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("rolling back potentially completed tx: " + transactionState.getId());
-                        }
+                        LOG.debug("rolling back potentially completed tx: {}", transactionState.getId());
                         toRollback.add(transactionInfo);
                         continue;
                     }
@@ -247,23 +243,17 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
             // replay short lived producers that may have been involved in the transaction
             for (ProducerState producerState : transactionState.getProducerStates().values()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("tx replay producer :" + producerState.getInfo());
-                }
+                LOG.debug("tx replay producer :{}", producerState.getInfo());
                 transport.oneway(producerState.getInfo());
             }
 
             for (Command command : transactionState.getCommands()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("tx replay: " + command);
-                }
+                LOG.debug("tx replay: {}", command);
                 transport.oneway(command);
             }
 
             for (ProducerState producerState : transactionState.getProducerStates().values()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("tx remove replayed producer :" + producerState.getInfo());
-                }
+                LOG.debug("tx remove replayed producer :{}", producerState.getInfo());
                 transport.oneway(producerState.getInfo().createRemoveCommand());
             }
         }
@@ -286,9 +276,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the connection's sessions
         for (Iterator iter2 = connectionState.getSessionStates().iterator(); iter2.hasNext();) {
             SessionState sessionState = (SessionState)iter2.next();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("session: " + sessionState.getInfo().getSessionId());
-            }
+            LOG.debug("session: {}", sessionState.getInfo().getSessionId());
             transport.oneway(sessionState.getInfo());
 
             if (restoreProducers) {
@@ -316,13 +304,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 infoToSend = consumerState.getInfo().copy();
                 connectionState.getRecoveringPullConsumers().put(infoToSend.getConsumerId(), consumerState.getInfo());
                 infoToSend.setPrefetchSize(0);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("restore consumer: " + infoToSend.getConsumerId() + " in pull mode pending recovery, overriding prefetch: " + consumerState.getInfo().getPrefetchSize());
-                }
+                LOG.debug("restore consumer: {} in pull mode pending recovery, overriding prefetch: {}", infoToSend.getConsumerId(), consumerState.getInfo().getPrefetchSize());
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("consumer: " + infoToSend.getConsumerId());
-            }
+            LOG.debug("consumer: {}", infoToSend.getConsumerId());
             transport.oneway(infoToSend);
         }
     }
@@ -336,9 +320,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the session's producers
         for (Iterator iter3 = sessionState.getProducerStates().iterator(); iter3.hasNext();) {
             ProducerState producerState = (ProducerState)iter3.next();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("producer: " + producerState.getInfo().getProducerId());
-            }
+            LOG.debug("producer: {}", producerState.getInfo().getProducerId());
             transport.oneway(producerState.getInfo());
         }
     }
@@ -354,9 +336,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         for (Iterator iter2 = connectionState.getTempDestinations().iterator(); iter2.hasNext();) {
             DestinationInfo info = (DestinationInfo)iter2.next();
             transport.oneway(info);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("tempDest: " + info.getDestination());
-            }
+            LOG.debug("tempDest: {}", info.getDestination());
         }
     }
 
@@ -746,15 +726,11 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 control.setPrefetch(entry.getValue().getPrefetchSize());
                 control.setDestination(entry.getValue().getDestination());
                 try {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("restored recovering consumer: " + control.getConsumerId() + " with: " + control.getPrefetch());
-                    }
+                    LOG.debug("restored recovering consumer: {} with: {}", control.getConsumerId(), control.getPrefetch());
                     transport.oneway(control);
                 } catch (Exception ex) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Failed to submit control for consumer: " + control.getConsumerId()
-                                + " with: " + control.getPrefetch(), ex);
-                    }
+                    LOG.debug("Failed to submit control for consumer: {} with: {}",
+                              control.getConsumerId(), control.getPrefetch(), ex);
                 }
             }
             stalledConsumers.clear();

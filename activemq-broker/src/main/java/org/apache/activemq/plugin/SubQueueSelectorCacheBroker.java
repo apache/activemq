@@ -100,7 +100,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             VirtualDestinationSelectorCacheView view = new VirtualDestinationSelectorCacheView(this);
             try {
                 objectName = BrokerMBeanSupport.createVirtualDestinationSelectorCacheName(broker.getBrokerObjectName(), "plugin", "virtualDestinationCache");
-                LOG.trace("virtualDestinationCacheSelector mbean name; " + objectName.toString());
+                LOG.trace("virtualDestinationCacheSelector mbean name: {}", objectName);
                 AnnotatedMBean.registerMBean(broker.getManagementContext(), view, objectName);
             } catch (Exception e) {
                 LOG.warn("JMX is enabled, but when installing the VirtualDestinationSelectorCache, couldn't install the JMX mbeans. Continuing without installing the mbeans.");
@@ -155,9 +155,9 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                     }
                 }
 
-                LOG.debug("adding new selector: into cache " + selector);
+                LOG.debug("adding new selector: into cache {}", selector);
                 selectors.add(selector);
-                LOG.debug("current selectors in cache: " + selectors);
+                LOG.debug("current selectors in cache: {}", selectors);
                 subSelectorCache.put(destinationName, selectors);
             }
         }
@@ -177,7 +177,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 Set<String> selectors = subSelectorCache.get(destinationName);
                 if (info.getSelector() == null && selectors.size() > 1) {
                     boolean removed = selectors.remove(MATCH_EVERYTHING);
-                    LOG.debug("A non-selector consumer has dropped. Removing the catchall matching pattern 'TRUE'. Successful? " + removed);
+                    LOG.debug("A non-selector consumer has dropped. Removing the catchall matching pattern 'TRUE'. Successful? {}", removed);
                 }
             }
 

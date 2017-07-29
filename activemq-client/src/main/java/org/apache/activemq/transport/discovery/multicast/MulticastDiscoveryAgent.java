@@ -163,9 +163,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 
             // Are we done trying to recover this guy?
             if (maxReconnectAttempts > 0 && failureCount > maxReconnectAttempts) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Max reconnect attempts of the " + serviceName + " service has been reached.");
-                }
+                LOG.debug("Max reconnect attempts of the {} service has been reached.", serviceName);
                 return false;
             }
 
@@ -174,9 +172,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 return false;
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Resuming event advertisement of the " + serviceName + " service.");
-            }
+            LOG.debug("Resuming event advertisement of the {} service.", serviceName);
             failed = false;
             return true;
         }
@@ -283,7 +279,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             }
             String type = getType();
             if (!type.endsWith(".")) {
-                LOG.warn("The type '" + type + "' should end with '.' to be a valid Discovery type");
+                LOG.warn("The type '{}' should end with '.' to be a valid Discovery type", type);
                 type += ".";
             }
             
@@ -291,8 +287,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 discoveryURI = new URI(DEFAULT_DISCOVERY_URI_STRING);
             }
             
-            if (LOG.isTraceEnabled()) 
-        	  	LOG.trace("start - discoveryURI = " + discoveryURI);        	  	        	  
+            LOG.trace("start - discoveryURI = {}", discoveryURI);        	  	        	  
         	  
         	  String myHost = discoveryURI.getHost();
         	  int    myPort = discoveryURI.getPort(); 
@@ -400,7 +395,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 // ignore
             } catch (IOException e) {
                 if (started.get()) {
-                    LOG.error("failed to process packet: " + e);
+                    LOG.error("failed to process packet: {}", (Object) e);
                 }
             }
         }
@@ -450,10 +445,10 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 // same error over and over.
                 if (reportAdvertizeFailed) {
                     reportAdvertizeFailed = false;
-                    LOG.error("Failed to advertise our service: " + payload, e);
+                    LOG.error("Failed to advertise our service: {}", payload, e);
                     if ("Operation not permitted".equals(e.getMessage())) {
                         LOG.error("The 'Operation not permitted' error has been know to be caused by improper firewall/network setup.  "
-                                  + "Please make sure that the OS is properly configured to allow multicast traffic over: " + mcast.getLocalAddress());
+                                  + "Please make sure that the OS is properly configured to allow multicast traffic over: {}", mcast.getLocalAddress());
                     }
                 }
             }

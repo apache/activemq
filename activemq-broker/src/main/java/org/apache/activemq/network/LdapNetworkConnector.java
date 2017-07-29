@@ -231,7 +231,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
             } catch (CommunicationException err) {
                 if (failover) {
                     this.ldapURI = getUri();
-                    LOG.error("connection error [{}], failover connection to [{}]", env.get(Context.PROVIDER_URL), this.ldapURI.toString());
+                    LOG.error("connection error [{}], failover connection to [{}]", env.get(Context.PROVIDER_URL), this.ldapURI);
                     env.put(Context.PROVIDER_URL, this.ldapURI.toString());
                     Thread.sleep(curReconnectDelay);
                     curReconnectDelay = Math.min(curReconnectDelay * 2, maxReconnectDelay);

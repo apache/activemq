@@ -55,7 +55,7 @@ public class TransactionTemplate {
             if (throwable == null) {
                 persistenceAdapter.commitTransaction(context);
             } else {
-                LOG.error("Having to Rollback - caught an exception: " + throwable);
+                LOG.error("Having to Rollback - caught an exception: {}", (Object) throwable);
                 persistenceAdapter.rollbackTransaction(context);
             }
         }

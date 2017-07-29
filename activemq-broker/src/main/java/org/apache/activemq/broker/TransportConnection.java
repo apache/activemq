@@ -304,7 +304,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 if (SERVICELOG.isDebugEnabled()) {
                     SERVICELOG.debug("Async error occurred: " + e, e);
                 } else {
-                    SERVICELOG.warn("Async error occurred: " + e);
+                    SERVICELOG.warn("Async error occurred: {}", (Object) e);
                 }
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
@@ -338,7 +338,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
 
             if (e instanceof SuppressReplyException || (e.getCause() instanceof SuppressReplyException)) {
-                LOG.info("Suppressing reply to: " + command + " on: " + e + ", cause: " + e.getCause());
+                LOG.info("Suppressing reply to: {} on: {}, cause: {}", command, e, e.getCause());
                 responseRequired = false;
             }
 

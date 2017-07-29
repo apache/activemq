@@ -101,10 +101,10 @@ public class ConsumerEventSource implements Service, MessageListener {
                     fireConsumerEvent(new ConsumerStoppedEvent(this, destination, (ConsumerId)removeInfo.getObjectId(), count));
                 }
             } else {
-                LOG.warn("Unknown command: " + command);
+                LOG.warn("Unknown command: {}", command);
             }
         } else {
-            LOG.warn("Unknown message type: " + message + ". Message ignored");
+            LOG.warn("Unknown message type: {}. Message ignored", message);
         }
     }
 
@@ -120,9 +120,9 @@ public class ConsumerEventSource implements Service, MessageListener {
                 Number n = (Number)value;
                 return n.intValue();
             }
-            LOG.warn("No consumerCount header available on the message: " + message);
+            LOG.warn("No consumerCount header available on the message: {}", message);
         } catch (Exception e) {
-            LOG.warn("Failed to extract consumerCount from message: " + message + ".Reason: " + e, e);
+            LOG.warn("Failed to extract consumerCount from message: {}. Reason: {}", message, e, e);
         }
         return count;
     }

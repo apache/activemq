@@ -82,7 +82,7 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
             if (transportListener != null) {
                 transportListener.onCommand(command);
             } else {
-                LOG.error("No transportListener available to process inbound command: " + command);
+                LOG.error("No transportListener available to process inbound command: {}", command);
             }
         }
     }
@@ -97,7 +97,7 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
             } catch (RuntimeException e2) {
                 // Handle any unexpected runtime exceptions by debug logging
                 // them.
-                LOG.debug("Unexpected runtime exception: " + e2, e2);
+                LOG.debug("Unexpected runtime exception: {}", e2, e2);
             }
         }
     }

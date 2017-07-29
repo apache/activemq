@@ -93,7 +93,7 @@ public class ServiceStopper {
 
     protected void logError(Object service, Throwable e) {
         Logger log = LoggerFactory.getLogger(service.getClass());
-        log.error("Could not stop service: " + service + ". Reason: " + e, e);
+        log.error("Could not stop service: {}. Reason: {}", service, e, e);
     }
 
 }

@@ -291,7 +291,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
                         long now = System.currentTimeMillis();
                         if (now >= nextWarn) {
-                            LOG.info("" + usage + ": " + logMessage + " (blocking for: " + (now - start) / 1000 + "s)");
+                            if (LOG.isInfoEnabled()) {
+                                LOG.info("" + usage + ": " + logMessage + " (blocking for: " + (now - start) / 1000 + "s)");
+                            }
                             nextWarn = now + 30000l;
                         }
                     }

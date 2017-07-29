@@ -806,7 +806,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         try {
                             session.sendAck(ackToSend,true);
                         } catch (JMSException e) {
-                            LOG.error(getConsumerId() + " failed to delivered acknowledgements", e);
+                            LOG.error("{} failed to delivered acknowledgements", getConsumerId(), e);
                         } finally {
                             deliveryingAcknowledgements.set(false);
                         }
@@ -1349,7 +1349,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (previouslyDeliveredMessages != null) {
             for (Entry<MessageId, Boolean> entry: previouslyDeliveredMessages.entrySet()) {
                 if (!entry.getValue()) {
-                    LOG.trace("rollback non redelivered: {}" + entry.getKey());
+                    LOG.trace("rollback non redelivered: {}", entry.getKey());
                     removeFromDeliveredMessages(entry.getKey());
                 }
             }

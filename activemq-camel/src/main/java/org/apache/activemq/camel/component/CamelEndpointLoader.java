@@ -98,7 +98,7 @@ public class CamelEndpointLoader implements CamelContextAware {
                             }
                         }
                     } catch (Exception e) {
-                        LOG.warn("Caught: " + e, e);
+                        LOG.warn("Caught: {}", e, e);
                     }
                 }
             });

@@ -118,12 +118,12 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                         getInternalSession().rollback();
                     } catch (JMSException e) {
                         invalidate = true;
-                        LOG.warn("Caught exception trying rollback() when putting session back into the pool, will invalidate. " + e, e);
+                        LOG.warn("Caught exception trying rollback() when putting session back into the pool, will invalidate. {}", e, e);
                     }
                 }
             } catch (JMSException ex) {
                 invalidate = true;
-                LOG.warn("Caught exception trying close() when putting session back into the pool, will invalidate. " + ex, ex);
+                LOG.warn("Caught exception trying close() when putting session back into the pool, will invalidate. {}", ex, ex);
             } finally {
                 consumers.clear();
                 browsers.clear();
@@ -140,13 +140,13 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                     try {
                         sessionHolder.close();
                     } catch (JMSException e1) {
-                        LOG.trace("Ignoring exception on close as discarding session: " + e1, e1);
+                        LOG.trace("Ignoring exception on close as discarding session: {}", e1, e1);
                     }
                 }
                 try {
                     sessionPool.invalidateObject(key, sessionHolder);
                 } catch (Exception e) {
-                    LOG.trace("Ignoring exception on invalidateObject as discarding session: " + e, e);
+                    LOG.trace("Ignoring exception on invalidateObject as discarding session: {}", e, e);
                 }
             } else {
                 try {

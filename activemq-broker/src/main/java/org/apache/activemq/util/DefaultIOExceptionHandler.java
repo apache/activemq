@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
     public void handle(IOException exception) {
         if (ignoreAllErrors) {
             allowIOResumption();
-            LOG.info("Ignoring IO exception, " + exception, exception);
+            LOG.info("Ignoring IO exception, {}", exception, exception);
             return;
         }
 
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
             while (cause != null && cause instanceof IOException) {
                 String message = cause.getMessage();
                 if (message != null && message.contains(noSpaceMessage)) {
-                    LOG.info("Ignoring no space left exception, " + exception, exception);
+                    LOG.info("Ignoring no space left exception, {}", exception, exception);
                     allowIOResumption();
                     return;
                 }
@@ -81,7 +81,7 @@ import org.slf4j.LoggerFactory;
                     }
 
                     if (message.contains(sqlExceptionMessage)) {
-                        LOG.info("Ignoring SQLException, " + exception, cause);
+                        LOG.info("Ignoring SQLException, {}", exception, cause);
                         return;
                     }
                 }
@@ -91,7 +91,7 @@ import org.slf4j.LoggerFactory;
 
         if (stopStartConnectors) {
             if (handlingException.compareAndSet(false, true)) {
-                LOG.info("Initiating stop/restart of transports on " + broker + " due to IO exception, " + exception, exception);
+                LOG.info("Initiating stop/restart of transports on {} due to IO exception, {}", broker, exception, exception);
 
                 new Thread("IOExceptionHandler: stop transports") {
                     @Override
@@ -99,7 +99,7 @@ import org.slf4j.LoggerFactory;
                         try {
                             ServiceStopper stopper = new ServiceStopper();
                             broker.stopAllConnectors(stopper);
-                            LOG.info("Successfully stopped transports on " + broker);
+                            LOG.info("Successfully stopped transports on {}", broker);
                         } catch (Exception e) {
                             LOG.warn("Failure occurred while stopping broker connectors", e);
                         } finally {
@@ -125,10 +125,10 @@ import org.slf4j.LoggerFactory;
                                                 }
                                             }
                                             broker.startAllConnectors();
-                                            LOG.info("Successfully restarted transports on " + broker);
+                                            LOG.info("Successfully restarted transports on {}", broker);
                                         }
                                     } catch (Exception e) {
-                                        LOG.warn("Stopping " + broker + " due to failure restarting transports", e);
+                                        LOG.warn("Stopping {} due to failure restarting transports", broker, e);
                                         stopBroker(e);
                                     } finally {
                                         handlingException.compareAndSet(true, false);
@@ -174,7 +174,7 @@ import org.slf4j.LoggerFactory;
     }
 
     private void stopBroker(Exception exception) {
-        LOG.info("Stopping " + broker + " due to exception, " + exception, exception);
+        LOG.info("Stopping {} due to exception, {}", broker, exception, exception);
         new Thread("IOExceptionHandler: stopping " + broker) {
             @Override
             public void run() {

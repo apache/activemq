@@ -122,7 +122,7 @@ public class TransportLoggerView implements TransportLoggerViewMBean {
         try {
         	AnnotatedMBean.registerMBean(this.managementContext, this, this.name);
         } catch (Exception e) {
-            log.error("Could not register MBean for TransportLoggerView " + id + "with name " + this.name.toString() + ", reason: " + e, e);
+            log.error("Could not register MBean for TransportLoggerView {} with name {}, reason: {}", id, this.name, e, e);
         }
 
     }
@@ -141,7 +141,7 @@ public class TransportLoggerView implements TransportLoggerViewMBean {
         try {
             this.managementContext.unregisterMBean(this.name);
         } catch (Exception e) {
-            log.error("Could not unregister MBean for TransportLoggerView " + id + "with name " + this.name.toString() + ", reason: " + e, e);
+            log.error("Could not unregister MBean for TransportLoggerView {} with name {}, reason: {}", id, this.name, e, e);
         }
     }
 
@@ -156,7 +156,7 @@ public class TransportLoggerView implements TransportLoggerViewMBean {
                     + JMXSupport.encodeObjectNamePart(TransportLogger.class.getSimpleName()
                             + " " + this.id + ";" + this.nextTransportName));
         } catch (Exception e) {
-            log.error("Could not create ObjectName for TransportLoggerView " + id + ", reason: " + e, e);
+            log.error("Could not create ObjectName for TransportLoggerView {}, reason: {}", id, e, e);
             return null;
         }
     }

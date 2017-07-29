@@ -589,7 +589,7 @@ public class ManagedRegionBroker extends RegionBroker {
             return topic.browse();
 
         } else {
-            LOG.warn("can't determine topic to browse for sub:" + view);
+            LOG.warn("can't determine topic to browse for sub:{}", view);
             return new Message[]{};
         }
     }

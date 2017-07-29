@@ -93,7 +93,7 @@ public class TransportLoggerFactory {
                 this.managementContext = null;
             }
         } catch (Exception e) {
-            LOG.error("TransportLoggerFactory could not be stopped, reason: " + e, e);
+            LOG.error("TransportLoggerFactory could not be stopped, reason: {}", e, e);
         }
 
     }
@@ -202,7 +202,7 @@ public class TransportLoggerFactory {
              this.managementContext.setConnectorPort(port);
              this.managementContext.start();
          } catch (Exception e) {
-             LOG.error("Management context could not be started, reason: " + e, e);
+             LOG.error("Management context could not be started, reason: {}", e, e);
          }
 
          try {
@@ -212,7 +212,7 @@ public class TransportLoggerFactory {
              this.transportLoggerControlCreated = true;
 
          } catch (Exception e) {
-             LOG.error("TransportLoggerControlMBean could not be registered, reason: " + e, e);
+             LOG.error("TransportLoggerControlMBean could not be registered, reason: {}", e, e);
          }
      }
 

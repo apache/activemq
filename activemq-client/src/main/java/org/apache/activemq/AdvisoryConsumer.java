@@ -56,7 +56,7 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
             try {
                 this.connection.asyncSendPacket(info.createRemoveCommand());
             } catch (JMSException e) {
-                LOG.debug("Failed to send remove command: " + e, e);
+                LOG.debug("Failed to send remove command: {}", e, e);
             }
             this.connection.removeDispatcher(info.getConsumerId());
             closed = true;
@@ -82,9 +82,7 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
             processDestinationInfo((DestinationInfo)o);
         } else {
             //This can happen across networks
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Unexpected message was dispatched to the AdvisoryConsumer: "+md);
-            }
+            LOG.debug("Unexpected message was dispatched to the AdvisoryConsumer: {}", md);
         }
 
     }

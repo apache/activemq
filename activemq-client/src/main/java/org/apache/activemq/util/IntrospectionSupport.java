@@ -370,7 +370,7 @@ public final class IntrospectionSupport {
                 }
                 map.put(field.getName(), o);
             } catch (Exception e) {
-                LOG.debug("Error getting field " + field + " on class " + startClass + ". This exception is ignored.", e);
+                LOG.debug("Error getting field {} on class {}. This exception is ignored.", field, startClass, e);
             }
         }
     }

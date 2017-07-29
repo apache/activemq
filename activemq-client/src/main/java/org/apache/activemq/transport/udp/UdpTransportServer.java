@@ -79,7 +79,7 @@ public class UdpTransportServer extends TransportServerSupport {
 
     @Override
     protected void doStart() throws Exception {
-        LOG.info("Starting " + this);
+        LOG.info("Starting {}", this);
 
         configuredTransport.setTransportListener(new TransportListener() {
             @Override
@@ -90,7 +90,7 @@ public class UdpTransportServer extends TransportServerSupport {
 
             @Override
             public void onException(IOException error) {
-                LOG.error("Caught: " + error, error);
+                LOG.error("Caught: {}", error, error);
             }
 
             @Override
@@ -119,7 +119,7 @@ public class UdpTransportServer extends TransportServerSupport {
             transport = transports.get(endpoint);
             if (transport == null) {
                 if (usingWireFormatNegotiation && !command.isWireFormatInfo()) {
-                    LOG.error("Received inbound server communication from: " + command.getFrom() + " expecting WireFormatInfo but was command: " + command);
+                    LOG.error("Received inbound server communication from: {} expecting WireFormatInfo but was command: {}", command.getFrom(), command);
                 } else {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Creating a new UDP server connection");
@@ -129,12 +129,12 @@ public class UdpTransportServer extends TransportServerSupport {
                         transport = configureTransport(transport);
                         transports.put(endpoint, transport);
                     } catch (IOException e) {
-                        LOG.error("Caught: " + e, e);
+                        LOG.error("Caught: {}", e, e);
                         getAcceptListener().onAcceptError(e);
                     }
                 }
             } else {
-                LOG.warn("Discarding duplicate command to server from: " + endpoint + " command: " + command);
+                LOG.warn("Discarding duplicate command to server from: {} command: {}", endpoint, command);
             }
         }
     }

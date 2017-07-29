@@ -160,7 +160,7 @@ public class ProxyConnector implements Service {
                 LOG.info("Stopping proxy.");
                 super.stop();
                 ProxyConnection dummy = new ProxyConnection(local, this);
-                LOG.debug("Removing proxyConnection {}", dummy.toString());
+                LOG.debug("Removing proxyConnection {}", dummy);
                 connections.remove(dummy);
             }
         };

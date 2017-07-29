@@ -41,7 +41,6 @@ public class ResponseCorrelator extends TransportFilter {
     private static final Logger LOG = LoggerFactory.getLogger(ResponseCorrelator.class);
     private final Map<Integer, FutureResponse> requestMap = new HashMap<Integer, FutureResponse>();
     private IntSequenceGenerator sequenceGenerator;
-    private final boolean debug = LOG.isDebugEnabled();
     private IOException error;
 
     public ResponseCorrelator(Transport next) {
@@ -108,9 +107,7 @@ public class ResponseCorrelator extends TransportFilter {
             if (future != null) {
                 future.set(response);
             } else {
-                if (debug) {
-                    LOG.debug("Received unexpected response: {" + command + "}for command id: " + response.getCorrelationId());
-                }
+                LOG.debug("Received unexpected response: {{}} for command id: {}", command, response.getCorrelationId());
             }
         } else {
             getTransportListener().onCommand(command);
