@@ -2163,7 +2163,7 @@ public class BrokerService implements Service {
     /**
      * Schedules a periodic task based on schedulePeriodForDiskLimitCheck to
      * update store and temporary store limits if the amount of available space
-     * plus current store size is less than the existin configured limit
+     * plus current store size is less than the existing configured limit
      */
     protected void scheduleDiskUsageLimitsCheck() throws IOException {
         if (schedulePeriodForDiskUsageCheck > 0 &&

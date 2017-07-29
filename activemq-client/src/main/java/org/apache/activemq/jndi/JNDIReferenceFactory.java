@@ -40,7 +40,7 @@ public class JNDIReferenceFactory implements ObjectFactory {
 
     /**
      * This will be called by a JNDIprovider when a Reference is retrieved from
-     * a JNDI store - and generates the orignal instance
+     * a JNDI store - and generates the original instance
      * 
      * @param object the Reference object
      * @param name the JNDI name
