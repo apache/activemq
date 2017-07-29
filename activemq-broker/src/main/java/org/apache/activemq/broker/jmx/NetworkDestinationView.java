@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NetworkDestinationView implements NetworkDestinationViewMBean {
-    private static final Logger LOG = LoggerFactory.getLogger(NetworkDestinationViewMBean.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NetworkDestinationView.class);
     private TimeStatisticImpl timeStatistic = new TimeStatisticImpl("networkEnqueue","network messages enqueued");
 
     private final String name;
