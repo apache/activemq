@@ -461,4 +461,4 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
     }
 
 
-    }
+}
