@@ -199,7 +199,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         if (filteredAdapter.getDestination() == matchAll && filteredAdapter.isPerDestination()) {
             filteredAdapter = addAdapter(filteredAdapter, destination);
             if (LOG.isTraceEnabled()) {
-                LOG.info("created per destination adapter for: " + destination  + ", " + result);
+                LOG.trace("created per destination adapter for: " + destination  + ", " + result);
             }
         }
         startAdapter(filteredAdapter.getPersistenceAdapter(), destination.getQualifiedName());
@@ -331,11 +331,11 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         if (adapterDir != null) {
             if (IOHelper.deleteFile(adapterDir)) {
                 if (LOG.isTraceEnabled()) {
-                    LOG.info("deleted per destination adapter directory for: " + destination);
+                    LOG.trace("deleted per destination adapter directory for: " + destination);
                 }
             } else {
                 if (LOG.isTraceEnabled()) {
-                    LOG.info("failed to deleted per destination adapter directory for: " + destination);
+                    LOG.trace("failed to deleted per destination adapter directory for: " + destination);
                 }
             }
         }
