@@ -806,7 +806,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         try {
                             session.sendAck(ackToSend,true);
                         } catch (JMSException e) {
-                            LOG.error("{} failed to delivered acknowledgements", getConsumerId(), e);
+                            LOG.error("{} failed to deliver acknowledgements", getConsumerId(), e);
                         } finally {
                             deliveryingAcknowledgements.set(false);
                         }

@@ -161,7 +161,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
         TextMessage message = session.createTextMessage("Batch Message");
         for (int j = 0; j < batchCount; j++) {
-            LOG.info("Producing bacth {} of {} messages", j, batchSize);
+            LOG.info("Producing batch {} of {} messages", j, batchSize);
 
             beginTx();
             for (int i = 0; i < batchSize; i++) {
@@ -169,7 +169,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
             }
             messageSent();
             commitTx();
-            LOG.info("Consuming bacth {} of {} messages", j, batchSize);
+            LOG.info("Consuming batch {} of {} messages", j, batchSize);
 
             beginTx();
             for (int i = 0; i < batchSize; i++) {
@@ -186,7 +186,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the rollbacked message was
+     * Sends a batch of messages and validates that the rolled-back message was
      * not consumed.
      *
      * @throws Exception
@@ -355,7 +355,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the rollbacked message was
+     * Sends a batch of messages and validates that the rolled-back message was
      * redelivered.
      *
      * @throws Exception
@@ -491,7 +491,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Perform the test that validates if the rollbacked message was redelivered
+     * Perform the test that validates if the rolled-back message was redelivered
      * multiple times.
      *
      * @throws Exception
@@ -503,7 +503,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the rollbacked message was
+     * Sends a batch of messages and validates that the rolled-back message was
      * not consumed. This test differs by setting the message prefetch to one.
      *
      * @throws Exception
@@ -514,7 +514,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and and validates that the rollbacked message
+     * Sends a batch of messages and and validates that the rolled-back message
      * was redelivered. This test differs by setting the message prefetch to
      * one.
      *

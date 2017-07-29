@@ -256,7 +256,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
             try {
                 session.close();
             } catch (JMSException ex) {
-                LOG.info("failed to close laoned Session \"{}\" on closing pooled connection: {}", session, ex.getMessage());
+                LOG.info("failed to close loaned Session \"{}\" on closing pooled connection: {}", session, ex.getMessage());
             }
         }
         loanedSessions.clear();

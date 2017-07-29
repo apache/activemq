@@ -184,7 +184,7 @@ public class IdGenerator {
     /**
      * From a generated id - return the seed (i.e. minus the count)
      *
-     * @param id the generated identifer
+     * @param id the generated identifier
      * @return the seed
      */
     public static String getSeedFromId(String id) {
