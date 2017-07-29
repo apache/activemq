@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class PropertiesLoader {
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesLoader.class);
-    static Map<FileNameKey, ReloadableProperties> staticCache = new HashMap<FileNameKey, ReloadableProperties>();
+    static final Map<FileNameKey, ReloadableProperties> staticCache = new HashMap<FileNameKey, ReloadableProperties>();
     protected boolean debug;
 
     public void init(Map options) {
