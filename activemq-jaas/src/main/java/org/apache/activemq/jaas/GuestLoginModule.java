@@ -50,7 +50,7 @@ public class GuestLoginModule implements LoginModule {
     private String userName = "guest";
     private String groupName = "guests";
     private Subject subject;
-    private boolean debug;
+    private transient boolean debug;
     private boolean credentialsInvalidate;
     private Set<Principal> principals = new HashSet<Principal>();
     private CallbackHandler callbackHandler;

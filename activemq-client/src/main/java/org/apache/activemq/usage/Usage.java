@@ -49,7 +49,7 @@ public abstract class Usage<T extends Usage> implements Service {
     private UsageCapacity limiter = new DefaultUsageCapacity();
     private int percentUsageMinDelta = 1;
     private final List<UsageListener> listeners = new CopyOnWriteArrayList<UsageListener>();
-    private final boolean debug = LOG.isDebugEnabled();
+    private final transient boolean debug = LOG.isDebugEnabled();
     private float usagePortion = 1.0f;
     private final List<T> children = new CopyOnWriteArrayList<T>();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();

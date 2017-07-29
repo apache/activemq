@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 public class PropertiesLoader {
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesLoader.class);
     static Map<FileNameKey, ReloadableProperties> staticCache = new HashMap<FileNameKey, ReloadableProperties>();
-    protected boolean debug;
+    protected transient boolean debug;
 
     public void init(Map options) {
         debug = booleanOption("debug", options);
@@ -59,7 +59,7 @@ public class PropertiesLoader {
         final String absPath;
         final boolean reload;
         private boolean decrypt;
-        private boolean debug;
+        private transient boolean debug;
 
         public FileNameKey(String nameProperty, String fallbackName, Map options) {
             this.file = new File(baseDir(options), stringOption(nameProperty, fallbackName, options));
