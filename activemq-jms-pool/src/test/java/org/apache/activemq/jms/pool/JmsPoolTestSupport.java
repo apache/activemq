@@ -43,7 +43,7 @@ public class JmsPoolTestSupport {
 
     @Before
     public void setUp() throws Exception {
-        LOG.info("========== start " + getTestName() + " ==========");
+        LOG.info("========== start {} ==========", getTestName());
     }
 
     @After
@@ -58,7 +58,7 @@ public class JmsPoolTestSupport {
             }
         }
 
-        LOG.info("========== tearDown " + getTestName() + " ==========");
+        LOG.info("========== tearDown {} ==========", getTestName());
     }
 
     public String getTestName() {
