@@ -259,7 +259,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             }
         } else {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Message received since last read check, resetting flag: ");
+                LOG.trace("Message received since last read check, resetting flag: {}", this);
             }
         }
         commandReceived.set(false);

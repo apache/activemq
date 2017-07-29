@@ -54,7 +54,7 @@ public class JmsPoolTestSupport {
                 brokerService.waitUntilStopped();
                 brokerService = null;
             } catch (Exception ex) {
-                LOG.warn("Suppress error on shutdown: {}", ex);
+                LOG.warn("Suppress error on shutdown: {}", (Object)ex);
             }
         }
 
