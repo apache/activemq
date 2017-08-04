@@ -63,16 +63,24 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
             // Set the TCCL since it seems JAAS needs it to find the login module classes.
             ClassLoader original = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(JaasAuthenticationBroker.class.getClassLoader());
-
+            SecurityContext securityContext = null;
             try {
-                SecurityContext s = authenticate(info.getUserName(), info.getPassword(), null);
-                context.setSecurityContext(s);
-                securityContexts.add(s);
+                securityContext = authenticate(info.getUserName(), info.getPassword(), null);
+                context.setSecurityContext(securityContext);
+                securityContexts.add(securityContext);
+                super.addConnection(context, info);
+            } catch (Exception error) {
+                if (securityContext != null) {
+                    securityContexts.remove(securityContext);
+                }
+                context.setSecurityContext(null);
+                throw error;
             } finally {
                 Thread.currentThread().setContextClassLoader(original);
             }
+        } else {
+            super.addConnection(context, info);
         }
-        super.addConnection(context, info);
     }
 
     @Override
