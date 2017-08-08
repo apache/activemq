@@ -1787,6 +1787,8 @@ public class BrokerService implements Service {
                 this.tempDataStore = (PListStore) getClass().getClassLoader().loadClass(clazz).newInstance();
                 this.tempDataStore.setDirectory(getTmpDataDirectory());
                 configureService(tempDataStore);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Kahadb class PListStoreImpl not found. Add activemq-kahadb jar or set persistent to false on BrokerService.", e);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
