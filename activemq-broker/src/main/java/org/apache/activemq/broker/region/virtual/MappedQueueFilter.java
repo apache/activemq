@@ -48,8 +48,9 @@ public class MappedQueueFilter extends DestinationFilter {
         // recover messages for first consumer only
         boolean noSubs = getConsumers().isEmpty();
 
-        // for virtual consumer wildcard dests, only subscribe to exact match to ensure no duplicates
-        if (sub.getActiveMQDestination().compareTo(next.getActiveMQDestination()) == 0) {
+        // for virtual consumer wildcard dests, only subscribe to exact match or non wildcard dests to ensure no duplicates
+        int match = sub.getActiveMQDestination().compareTo(next.getActiveMQDestination());
+        if (match == 0 || (!next.getActiveMQDestination().isPattern() && match == 1)) {
             super.addSubscription(context, sub);
         }
         if (noSubs && !getConsumers().isEmpty()) {
