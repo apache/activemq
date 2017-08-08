@@ -65,6 +65,7 @@
       <bundle>mvn:io.netty/netty-common/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport-native-epoll/${qpid-jms-netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-transport-native-unix-common/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-buffer/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-codec/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-codec-http/${qpid-jms-netty-version}</bundle>
