@@ -16,20 +16,11 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.DestinationInterceptor;
-import org.apache.activemq.broker.region.virtual.VirtualDestination;
-import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
-import org.apache.activemq.broker.region.virtual.VirtualTopic;
-import org.apache.activemq.leveldb.LevelDBStore;
-import org.apache.activemq.store.kahadb.KahaDBStore;
-import org.apache.activemq.util.MessageIdList;
-
-import javax.jms.MessageConsumer;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.leveldb.LevelDBStore;
 
 public class SingleBrokerVirtualDestinationsWithWildcardLevelDBTest extends SingleBrokerVirtualDestinationsWithWildcardTest {
 

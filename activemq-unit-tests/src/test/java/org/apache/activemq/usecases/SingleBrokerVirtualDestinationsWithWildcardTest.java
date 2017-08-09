@@ -64,10 +64,10 @@ public class SingleBrokerVirtualDestinationsWithWildcardTest extends JmsMultiple
         startAllBrokers();
 
         sendReceive("local.test.1", true, "Consumer.a.local.test.1", false, 1, 1);
-        sendReceive("local.test.1", true, "Consumer.a.local.test.>", false, 1, 1);
+        sendReceive("local.test.1", true, "Consumer.a.local.test.>", false, 1, 2);
         sendReceive("local.test.1.2", true, "Consumer.a.local.test.>", false, 1, 1);
         sendReceive("global.test.1", true, "Consumer.a.global.test.1", false, 1, 1);
-        sendReceive("global.test.1", true, "Consumer.a.global.test.>", false, 1, 1);
+        sendReceive("global.test.1", true, "Consumer.a.global.test.>", false, 1, 2);
         sendReceive("global.test.1.2", true, "Consumer.a.global.test.>", false, 1, 1);
 
         destroyAllBrokers();
