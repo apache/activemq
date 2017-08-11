@@ -93,6 +93,7 @@ import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFilter;
+import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IdGenerator;
@@ -323,6 +324,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     }
                 } finally {
                     ServiceStopper ss = new ServiceStopper();
+                    stopFailoverTransport(remoteBroker);
                     ss.stop(remoteBroker);
                     ss.stop(localBroker);
                     ss.stop(duplexInboundLocalBroker);
@@ -338,6 +340,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
 
             LOG.info("{} bridge to {} stopped", configuration.getBrokerName(), remoteBrokerName);
+        }
+    }
+
+    private void stopFailoverTransport(Transport transport) {
+        FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
+        if (failoverTransport != null) {
+            // may be blocked on write, in which case stop will block
+            try {
+                failoverTransport.handleTransportFailure(new IOException("Bridge stopped"));
+            } catch (InterruptedException ignored) {}
         }
     }
 
