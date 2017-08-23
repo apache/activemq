@@ -115,8 +115,11 @@ public class StompSubscription {
                 }
             }
 
-            if (!unconsumedMessage.isEmpty()) {
+            // For individual Ack we already sent an Ack that will be applied on commit
+            // we don't send a second standard Ack as that would produce an error.
+            if (!unconsumedMessage.isEmpty() && ackMode == CLIENT_ACK) {
                 ack = new MessageAck(unconsumedMessage.getLast(), MessageAck.STANDARD_ACK_TYPE, unconsumedMessage.size());
+                ack.setTransactionId(transactionId);
                 unconsumedMessage.clear();
             }
         }

@@ -1197,4 +1197,73 @@ public class Stomp11Test extends StompTestSupport {
         String receipt = stompConnection.receiveFrame();
         assertTrue(receipt.contains("RECEIPT"));
     }
+
+    @Test(timeout = 60000)
+    public void testAckMessagesInTransactionOutOfOrderWithTXClientAck() throws Exception {
+        doTestAckMessagesInTransactionOutOfOrderWithTXClientAck("client");
+    }
+
+    @Test(timeout = 60000)
+    public void testAckMessagesInTransactionOutOfOrderWithTXClientIndividualAck() throws Exception {
+        doTestAckMessagesInTransactionOutOfOrderWithTXClientAck("client-individual");
+    }
+
+    public void doTestAckMessagesInTransactionOutOfOrderWithTXClientAck(String ackMode) throws Exception {
+        MessageProducer producer = session.createProducer(queue);
+        producer.send(session.createTextMessage("Message 1"));
+        producer.send(session.createTextMessage("Message 2"));
+        producer.close();
+
+        String frame = "STOMP\n" + "login:system\n" + "passcode:manager\n" +
+            "accept-version:1.1\n" + "host:localhost\n" + "client-id:test\n" + "\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        String f = stompConnection.receiveFrame();
+        assertTrue(f.startsWith("CONNECTED"));
+
+        final QueueViewMBean queueView = getProxyToQueue(getQueueName());
+        assertEquals(2, queueView.getQueueSize());
+
+        frame = "BEGIN\n" + "transaction: tx1\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+            "id:12345\n" + "ack:" + ackMode + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        StompFrame receivedFirst = stompConnection.receive();
+        assertTrue(receivedFirst.getAction().equals("MESSAGE"));
+        StompFrame receivedSecond = stompConnection.receive();
+        assertTrue(receivedSecond.getAction().equals("MESSAGE"));
+
+        // ack second, then first message
+        frame = "ACK\n" + "transaction: tx1\n" + "subscription:12345\n" + "message-id:" +
+                receivedSecond.getHeaders().get("message-id") + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        frame = "ACK\n" + "transaction: tx1\n" + "subscription:12345\n" + "message-id:" +
+                receivedFirst.getHeaders().get("message-id") + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        // commit transaction
+        frame = "COMMIT\n" + "receipt:1\n" + "transaction: tx1\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        String receipt = stompConnection.receiveFrame();
+        LOG.debug("Receipt Frame = {}", receipt);
+        assertTrue(receipt.contains("RECEIPT"));
+
+        assertTrue("Message not ack'd", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return queueView.getQueueSize() == 0;
+            }
+        }));
+
+        String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+            "receipt:1\n" + "id:12345\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(unsub);
+
+        receipt = stompConnection.receiveFrame();
+        assertTrue(receipt.contains("RECEIPT"));
+    }
 }
