@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
     @Override
     public void handle(IOException exception) {
-        if (ignoreAllErrors) {
+        if (!broker.isStarted() || ignoreAllErrors) {
             allowIOResumption();
             LOG.info("Ignoring IO exception, " + exception, exception);
             return;
@@ -167,7 +167,9 @@ import org.slf4j.LoggerFactory;
 
     protected void allowIOResumption() {
         try {
-            broker.getPersistenceAdapter().allowIOResumption();
+            if (broker.getPersistenceAdapter() != null) {
+                broker.getPersistenceAdapter().allowIOResumption();
+            }
         } catch (IOException e) {
             LOG.warn("Failed to allow IO resumption", e);
         }
