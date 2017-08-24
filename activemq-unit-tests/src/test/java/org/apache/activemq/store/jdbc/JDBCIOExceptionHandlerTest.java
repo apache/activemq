@@ -28,6 +28,7 @@ import javax.jms.Connection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ft.SyncCreateDataSource;
+import org.apache.activemq.bugs.embedded.ThreadExplorer;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
@@ -99,6 +100,47 @@ public class JDBCIOExceptionHandlerTest {
         factory = new ActiveMQConnectionFactory(connectionUri);
 
         return broker;
+    }
+
+    @Test
+    public void testStartWithDatabaseDown() throws Exception {
+        BrokerService broker = new BrokerService();
+
+        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        EmbeddedDataSource embeddedDataSource = (EmbeddedDataSource) jdbc.getDataSource();
+        // create a wrapper to EmbeddedDataSource to allow the connection be
+        // reestablished to derby db
+        dataSource = new ReconnectingEmbeddedDataSource(new SyncCreateDataSource(embeddedDataSource));
+        dataSource.stopDB();
+        jdbc.setDataSource(dataSource);
+
+        jdbc.setLockKeepAlivePeriod(1000l);
+        LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
+        leaseDatabaseLocker.setHandleStartException(true);
+        leaseDatabaseLocker.setLockAcquireSleepInterval(2000l);
+        jdbc.setLocker(leaseDatabaseLocker);
+
+        broker.setPersistenceAdapter(jdbc);
+        LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+        ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+        ioExceptionHandler.setStopStartConnectors(true);
+        broker.setIoExceptionHandler(ioExceptionHandler);
+        try {
+            broker.start();
+            fail("Broker should have been stopped!");
+        } catch (Exception e) {
+            Thread.sleep(5000);
+            assertTrue("Broker should have been stopped!", broker.isStopped());
+            Thread[] threads = ThreadExplorer.listThreads();
+            for (int i = 0; i < threads.length; i++) {
+                if (threads[i].getName().startsWith("IOExceptionHandler")) {
+                    fail("IOExceptionHanlder still active");
+                }
+            }
+        } finally {
+            dataSource = null;
+            broker = null;
+        }
     }
 
     /*
@@ -223,6 +265,7 @@ public class JDBCIOExceptionHandlerTest {
         } finally {
             LOG.debug("*** broker is stopping...");
             broker.stop();
+            broker.waitUntilStopped();
         }
     }
 

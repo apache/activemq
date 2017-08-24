@@ -65,6 +65,8 @@ public class JDBCIOExceptionHandlerMockeryTest {
 
         // simulate jdbc up between hasLock and checkpoint, so hasLock fails to verify
         context.checking(new Expectations() {{
+            allowing(brokerService).isStarted();
+            will(returnValue(true));
             allowing(brokerService).isRestartAllowed();
             will(returnValue(false));
             allowing(brokerService).setSystemExitOnShutdown(with(false));

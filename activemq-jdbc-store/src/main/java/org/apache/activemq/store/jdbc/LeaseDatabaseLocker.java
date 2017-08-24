@@ -91,7 +91,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
                                     + e, e);
                 }
                 if (handleStartException) {
-                    lockable.getBrokerService().handleIOException(IOExceptionSupport.create(e));
+                    throw e;
                 }
             } finally {
                 close(statement);
