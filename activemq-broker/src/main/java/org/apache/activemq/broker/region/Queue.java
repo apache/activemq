@@ -1026,6 +1026,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             if (memoryUsage != null) {
                 memoryUsage.stop();
             }
+            if (systemUsage.getStoreUsage() != null) {
+                systemUsage.getStoreUsage().stop();
+            }
             if (store != null) {
                 store.stop();
             }
