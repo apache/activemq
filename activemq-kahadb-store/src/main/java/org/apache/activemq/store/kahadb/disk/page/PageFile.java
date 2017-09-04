@@ -378,7 +378,7 @@ public class PageFile {
 
             File file = getMainPageFile();
             IOHelper.mkdirs(file.getParentFile());
-            writeFile = new RecoverableRandomAccessFile(file, "rw");
+            writeFile = new RecoverableRandomAccessFile(file, "rw", false);
             readFile = new RecoverableRandomAccessFile(file, "r");
 
             if (readFile.length() > 0) {
