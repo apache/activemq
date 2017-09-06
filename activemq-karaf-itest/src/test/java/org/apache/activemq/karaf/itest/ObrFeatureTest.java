@@ -62,31 +62,6 @@ public class ObrFeatureTest extends AbstractFeatureTest {
     }
 
     @Test(timeout = 5 * 60 * 1000)
-    public void testClientWithSpring31() throws Throwable {
-        testWithSpringVersion("3.1.4.RELEASE");
-    }
-
-    @Test(timeout = 5 * 60 * 1000)
-    public void testClientWithSpring32() throws Throwable {
-        testWithSpringVersion("3.2.18.RELEASE_1");
-    }
-
-    @Test(timeout = 5 * 60 * 1000)
-    public void testClientWithSpring40() throws Throwable {
-        testWithSpringVersion("4.0.7.RELEASE_3");
-    }
-
-    @Test(timeout = 5 * 60 * 1000)
-    public void testClientWithSpring41() throws Throwable {
-        testWithSpringVersion("4.1.9.RELEASE_1");
-    }
-
-    @Test(timeout = 5 * 60 * 1000)
-    public void testClientWithSpring42() throws Throwable {
-        testWithSpringVersion("4.2.9.RELEASE_1");
-    }
-
-    @Test(timeout = 5 * 60 * 1000)
     public void testClientWithSpring43() throws Throwable {
         testWithSpringVersion("4.3.5.RELEASE_1");
     }
@@ -94,17 +69,7 @@ public class ObrFeatureTest extends AbstractFeatureTest {
     private void testWithSpringVersion(String version) throws Exception, Throwable {
         featuresService.installFeature("spring", version);
         installAndAssertFeature("activemq-client");
-        verifyBundleInstalledAndRegisteredServices("activemq-osgi", 2);
-    }
-
-    private void verifyBundleInstalledAndRegisteredServices(final String bundleName,
-                                                           final int numberOfServices)
-        throws Exception {
-        Bundle bundle = getBundle(bundleName);
+        Bundle bundle = getBundle("activemq-osgi");
         Assert.assertEquals(Bundle.ACTIVE, bundle.getState());
-        // Assert that the bundle has registered some services via blueprint
-        Assert.assertNotNull(bundle.getRegisteredServices());
-        // Assert that the bundle has registered the correct number of services
-        Assert.assertEquals(numberOfServices, bundle.getRegisteredServices().length);
     }
 }

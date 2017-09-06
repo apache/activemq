@@ -75,10 +75,13 @@
       org.jvnet.jaxb2_commons*;resolution:=optional,
       org.xerial.snappy*;resolution:=optional,
       groovy.lang*;resolution:=optional,
+      groovy.util*;resolution:=optional,
+      groovy.xml*;resolution:=optional,
       org.codehaus.groovy*;resolution:=optional,
       org.apache.tools.ant*;resolution:=optional,
       org.apache.log4j*;resolution:=optional,
       org.json*;resolution:=optional,
+      org.slf4j.bridge*;resolution:=optional,
         *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
@@ -273,6 +276,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+        <version>3.3.0</version>
         <configuration>
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
