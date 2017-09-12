@@ -426,6 +426,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             msg.setPersistent(false);
             msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
             msg.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+
+            // Preserve original destination
+            msg.setOriginalDestination(msg.getDestination());
+
             msg.setDestination(replyTo);
             msg.setResponseRequired(false);
             msg.setProducerId(this.producerId);
