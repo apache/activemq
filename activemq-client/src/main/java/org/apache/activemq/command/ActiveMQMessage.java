@@ -776,4 +776,11 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     public void storeContentAndClear() {
         storeContent();
     }
+
+    @Override
+    protected boolean isContentMarshalled() {
+        //Always return true because ActiveMQMessage only has a content field
+        //which is already marshalled
+        return true;
+    }
 }

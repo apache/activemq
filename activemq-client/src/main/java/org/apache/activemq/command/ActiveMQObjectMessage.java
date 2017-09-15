@@ -129,6 +129,11 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     }
 
     @Override
+    public boolean isContentMarshalled() {
+        return content != null || object == null;
+    }
+
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
