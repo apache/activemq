@@ -671,17 +671,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         try {
 
             long start = System.currentTimeMillis();
-            Location afterProducerAudit = recoverProducerAudit();
-            Location afterAckMessageFile = recoverAckMessageFileMap();
+            boolean requiresJournalReplay = recoverProducerAudit();
+            requiresJournalReplay |= recoverAckMessageFileMap();
             Location lastIndoubtPosition = getRecoveryPosition();
-
-            if (afterProducerAudit != null && afterProducerAudit.equals(metadata.ackMessageFileMapLocation)) {
-                // valid checkpoint, possible recover from afterAckMessageFile
-                afterProducerAudit = null;
-            }
-            Location recoveryPosition = minimum(afterProducerAudit, afterAckMessageFile);
-            recoveryPosition = minimum(recoveryPosition, lastIndoubtPosition);
-
+            Location recoveryPosition = requiresJournalReplay ? journal.getNextLocation(null) : lastIndoubtPosition;
             if (recoveryPosition != null) {
                 int redoCounter = 0;
                 int dataFileRotationTracker = recoveryPosition.getDataFileId();
@@ -784,7 +777,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return min;
     }
 
-    private Location recoverProducerAudit() throws IOException {
+    private boolean recoverProducerAudit() throws IOException {
+        boolean requiresReplay = true;
         if (metadata.producerSequenceIdTrackerLocation != null) {
             try {
                 KahaProducerAuditCommand audit = (KahaProducerAuditCommand) load(metadata.producerSequenceIdTrackerLocation);
@@ -794,33 +788,30 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 metadata.producerSequenceIdTracker = (ActiveMQMessageAuditNoSync) objectIn.readObject();
                 metadata.producerSequenceIdTracker.setAuditDepth(maxAuditDepth);
                 metadata.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(maxNumProducers);
-                return getNextInitializedLocation(metadata.producerSequenceIdTrackerLocation);
+                requiresReplay = false;
             } catch (Exception e) {
                 LOG.warn("Cannot recover message audit", e);
-                return journal.getNextLocation(null);
             }
-        } else {
-            // got no audit stored so got to recreate via replay from start of the journal
-            return journal.getNextLocation(null);
         }
+        // got no audit stored so got to recreate via replay from start of the journal
+        return requiresReplay;
     }
 
     @SuppressWarnings("unchecked")
-    private Location recoverAckMessageFileMap() throws IOException {
+    private boolean recoverAckMessageFileMap() throws IOException {
+        boolean requiresReplay = true;
         if (metadata.ackMessageFileMapLocation != null) {
             try {
                 KahaAckMessageFileMapCommand audit = (KahaAckMessageFileMapCommand) load(metadata.ackMessageFileMapLocation);
                 ObjectInputStream objectIn = new ObjectInputStream(audit.getAckMessageFileMap().newInput());
                 metadata.ackMessageFileMap = (Map<Integer, Set<Integer>>) objectIn.readObject();
-                return getNextInitializedLocation(metadata.ackMessageFileMapLocation);
+                requiresReplay = false;
             } catch (Exception e) {
                 LOG.warn("Cannot recover ackMessageFileMap", e);
-                return journal.getNextLocation(null);
             }
-        } else {
-            // got no ackMessageFileMap stored so got to recreate via replay from start of the journal
-            return journal.getNextLocation(null);
         }
+        // got no ackMessageFileMap stored so got to recreate via replay from start of the journal
+        return requiresReplay;
     }
 
     protected void recoverIndex(Transaction tx) throws IOException {
