@@ -251,12 +251,16 @@ public class AmqpConnection implements AmqpProtocolConverter {
         if (protonConnection.getLocalState() != EndpointState.CLOSED) {
             // Using nano time since it is not related to the wall clock, which may change
             long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
-            rescheduleAt = protonTransport.tick(now) - now;
+            long deadline = protonTransport.tick(now);
             pumpProtonToSocket();
             if (protonTransport.isClosed()) {
-                rescheduleAt = 0;
                 LOG.debug("Transport closed after inactivity check.");
-                throw new InactivityIOException("Channel was inactive for to long");
+                throw new InactivityIOException("Channel was inactive for too long");
+            } else {
+                if(deadline != 0) {
+                    // caller treats 0 as no-work, ensure value is at least 1 as there was a deadline
+                    rescheduleAt = Math.max(deadline - now, 1);
+                }
             }
         }
 
@@ -835,8 +839,9 @@ public class AmqpConnection implements AmqpProtocolConverter {
         // Using nano time since it is not related to the wall clock, which may change
         long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
         long nextIdleCheck = protonTransport.tick(now);
-        if (nextIdleCheck > 0) {
-            long delay = nextIdleCheck - now;
+        if (nextIdleCheck != 0) {
+            // monitor treats <= 0 as no work, ensure value is at least 1 as there was a deadline
+            long delay = Math.max(nextIdleCheck - now, 1);
             LOG.trace("Connection keep-alive processing starts in: {}", delay);
             monitor.startKeepAliveTask(delay);
         } else {
