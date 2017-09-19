@@ -127,7 +127,7 @@ class DataFileAppender implements FileAppender {
         Journal.WriteCommand write = new Journal.WriteCommand(location, data, sync);
 
         WriteBatch batch = enqueue(write);
-        location.setLatch(batch.latch);
+        location.setBatch(batch);
         if (sync) {
             try {
                 batch.latch.await();
@@ -153,10 +153,8 @@ class DataFileAppender implements FileAppender {
         location.setType(type);
 
         Journal.WriteCommand write = new Journal.WriteCommand(location, data, onComplete);
+        location.setBatch(enqueue(write));
 
-        WriteBatch batch = enqueue(write);
-
-        location.setLatch(batch.latch);
         return location;
     }
 

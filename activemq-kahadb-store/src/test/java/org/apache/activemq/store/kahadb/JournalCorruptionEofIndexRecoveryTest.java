@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -46,8 +47,11 @@ import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -190,6 +194,58 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
         assertEquals("missing one message", 49, broker.getAdminView().getTotalMessageCount());
         assertEquals("Drain", 49, drainQueue(49));
+    }
+
+    @Test
+    public void testRecoveryAfterCorruptionMetadataLocation() throws Exception {
+        startBroker();
+
+        produceMessagesToConsumeMultipleDataFiles(50);
+
+        int numFiles = getNumberOfJournalFiles();
+
+        assertTrue("more than x files: " + numFiles, numFiles > 2);
+
+        broker.getPersistenceAdapter().checkpoint(true);
+        Location location = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getMetadata().producerSequenceIdTrackerLocation;
+
+        DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(Integer.valueOf(location.getDataFileId()));
+        RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
+        randomAccessFile.seek(location.getOffset());
+        randomAccessFile.writeInt(Integer.MAX_VALUE);
+        randomAccessFile.getChannel().force(true);
+
+        ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().close();
+        try {
+            broker.stop();
+            broker.waitUntilStopped();
+        } catch (Exception expected) {
+        } finally {
+            broker = null;
+        }
+
+        AtomicBoolean trappedExpectedLogMessage = new AtomicBoolean(false);
+        DefaultTestAppender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel() == Level.WARN
+                        && event.getRenderedMessage().contains("Cannot recover message audit")
+                        && event.getThrowableInformation().getThrowable().getLocalizedMessage().contains("Invalid location size")) {
+                    trappedExpectedLogMessage.set(true);
+                }
+            }
+        };
+        org.apache.log4j.Logger.getRootLogger().addAppender(appender);
+
+
+        try {
+            restartBroker(false);
+        } finally {
+            org.apache.log4j.Logger.getRootLogger().removeAppender(appender);
+        }
+
+        assertEquals("no missing message", 50, broker.getAdminView().getTotalMessageCount());
+        assertTrue("Did replay records on invalid location size", trappedExpectedLogMessage.get());
     }
 
     @Test

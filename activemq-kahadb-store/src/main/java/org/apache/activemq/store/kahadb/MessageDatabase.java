@@ -2132,6 +2132,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             Location location = store(new KahaProducerAuditCommand().setAudit(new Buffer(baos.toByteArray())), nullCompletionCallback);
             try {
                 location.getLatch().await();
+                if (location.getBatch().exception.get() != null) {
+                    throw location.getBatch().exception.get();
+                }
             } catch (InterruptedException e) {
                 throw new InterruptedIOException(e.toString());
             }
@@ -3135,7 +3138,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return index;
     }
 
-    private Journal createJournal() throws IOException {
+    protected Journal createJournal() throws IOException {
         Journal manager = new Journal();
         manager.setDirectory(directory);
         manager.setMaxFileLength(getJournalMaxFileLength());
