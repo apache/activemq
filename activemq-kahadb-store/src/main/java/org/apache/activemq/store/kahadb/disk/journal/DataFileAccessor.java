@@ -84,7 +84,9 @@ final class DataFileAccessor {
             } else {
                 file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
             }
-
+            if ((long)location.getOffset() + location.getSize() > dataFile.length) {
+                throw new IOException("Invalid location size: " + location + ", size: " + location.getSize());
+            }
             byte[] data = new byte[location.getSize() - Journal.RECORD_HEAD_SPACE];
             file.readFully(data);
             return new ByteSequence(data, 0, data.length);

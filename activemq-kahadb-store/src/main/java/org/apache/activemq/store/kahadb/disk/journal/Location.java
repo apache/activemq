@@ -36,7 +36,7 @@ public final class Location implements Comparable<Location> {
     private int offset = NOT_SET;
     private int size = NOT_SET;
     private byte type = NOT_SET_TYPE;
-    private CountDownLatch latch;
+    private DataFileAppender.WriteBatch batch;
 
     public Location() {
     }
@@ -114,11 +114,11 @@ public final class Location implements Comparable<Location> {
     }
 
     public CountDownLatch getLatch() {
-        return latch;
+        return batch.latch;
     }
 
-    public void setLatch(CountDownLatch latch) {
-        this.latch = latch;
+    public void setBatch(DataFileAppender.WriteBatch batch) {
+        this.batch = batch;
     }
 
     public int compareTo(Location o) {
@@ -142,4 +142,7 @@ public final class Location implements Comparable<Location> {
         return dataFileId ^ offset;
     }
 
+    public DataFileAppender.WriteBatch getBatch() {
+        return batch;
+    }
 }
