@@ -122,42 +122,42 @@ public abstract class ArithmeticExpression extends BinaryExpression {
     protected Number plus(Number left, Number right) {
         switch (numberType(left, right)) {
         case INTEGER:
-            return new Integer(left.intValue() + right.intValue());
+            return left.intValue() + right.intValue();
         case LONG:
-            return new Long(left.longValue() + right.longValue());
+            return left.longValue() + right.longValue();
         default:
-            return new Double(left.doubleValue() + right.doubleValue());
+            return left.doubleValue() + right.doubleValue();
         }
     }
 
     protected Number minus(Number left, Number right) {
         switch (numberType(left, right)) {
         case INTEGER:
-            return new Integer(left.intValue() - right.intValue());
+            return left.intValue() - right.intValue();
         case LONG:
-            return new Long(left.longValue() - right.longValue());
+            return left.longValue() - right.longValue();
         default:
-            return new Double(left.doubleValue() - right.doubleValue());
+            return left.doubleValue() - right.doubleValue();
         }
     }
 
     protected Number multiply(Number left, Number right) {
         switch (numberType(left, right)) {
         case INTEGER:
-            return new Integer(left.intValue() * right.intValue());
+            return left.intValue() * right.intValue();
         case LONG:
-            return new Long(left.longValue() * right.longValue());
+            return left.longValue() * right.longValue();
         default:
-            return new Double(left.doubleValue() * right.doubleValue());
+            return left.doubleValue() * right.doubleValue();
         }
     }
 
     protected Number divide(Number left, Number right) {
-        return new Double(left.doubleValue() / right.doubleValue());
+        return left.doubleValue() / right.doubleValue();
     }
 
     protected Number mod(Number left, Number right) {
-        return new Double(left.doubleValue() % right.doubleValue());
+        return left.doubleValue() % right.doubleValue();
     }
 
     private int numberType(Number left, Number right) {

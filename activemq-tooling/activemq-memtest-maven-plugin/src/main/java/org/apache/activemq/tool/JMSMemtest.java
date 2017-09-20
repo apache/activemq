@@ -82,16 +82,16 @@ public class JMSMemtest {
 
     public JMSMemtest(Properties settings) {
         url = settings.getProperty("url");
-        topic = new Boolean(settings.getProperty("topic")).booleanValue();
-        durable = new Boolean(settings.getProperty("durable")).booleanValue();
-        connectionCheckpointSize = new Integer(settings.getProperty("connectionCheckpointSize")).intValue();
-        producerCount = new Integer(settings.getProperty("producerCount")).intValue();
-        consumerCount = new Integer(settings.getProperty("consumerCount")).intValue();
-        messageCount = new Integer(settings.getProperty("messageCount")).intValue();
-        messageSize = new Integer(settings.getProperty("messageSize")).intValue();
-        prefetchSize = new Integer(settings.getProperty("prefetchSize")).intValue();
-        checkpointInterval = new Integer(settings.getProperty("checkpointInterval")).intValue() * 1000;
-        producerCount = new Integer(settings.getProperty("producerCount")).intValue();
+        topic = new Boolean(settings.getProperty("topic"));
+        durable = new Boolean(settings.getProperty("durable"));
+        connectionCheckpointSize = new Integer(settings.getProperty("connectionCheckpointSize"));
+        producerCount = new Integer(settings.getProperty("producerCount"));
+        consumerCount = new Integer(settings.getProperty("consumerCount"));
+        messageCount = new Integer(settings.getProperty("messageCount"));
+        messageSize = new Integer(settings.getProperty("messageSize"));
+        prefetchSize = new Integer(settings.getProperty("prefetchSize"));
+        checkpointInterval = new Integer(settings.getProperty("checkpointInterval")) * 1000;
+        producerCount = new Integer(settings.getProperty("producerCount"));
         reportName = settings.getProperty("reportName");
         destinationName = settings.getProperty("destinationName");
         reportDirectory = settings.getProperty("reportDirectory");

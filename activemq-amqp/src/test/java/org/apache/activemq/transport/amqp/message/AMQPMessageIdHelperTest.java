@@ -104,7 +104,7 @@ public class AMQPMessageIdHelperTest {
      */
     @Test
     public void testToBaseMessageIdStringWithStringBeginningWithEncodingPrefixForLong() {
-        String longStringMessageId = AMQPMessageIdHelper.AMQP_ULONG_PREFIX + Long.valueOf(123456789L);
+        String longStringMessageId = AMQPMessageIdHelper.AMQP_ULONG_PREFIX + 123456789L;
         String expected = AMQPMessageIdHelper.AMQP_STRING_PREFIX + longStringMessageId;
 
         String baseMessageIdString = messageIdHelper.toBaseMessageIdString(longStringMessageId);

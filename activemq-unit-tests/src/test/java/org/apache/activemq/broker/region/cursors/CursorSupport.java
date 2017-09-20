@@ -87,10 +87,10 @@ public abstract class CursorSupport extends CombinationTestSupport {
 
 
     public void initCombosForTestSendWhilstConsume() {
-        addCombinationValues("MESSAGE_COUNT", new Object[] {Integer.valueOf(400),
-                                                           Integer.valueOf(500)});
-        addCombinationValues("PREFETCH_SIZE", new Object[] {Integer.valueOf(100),
-                Integer.valueOf(50)});
+        addCombinationValues("MESSAGE_COUNT", new Object[] {400,
+                                                           500});
+        addCombinationValues("PREFETCH_SIZE", new Object[] {100,
+                50});
     }
 
     public void testSendWhilstConsume() throws Exception {

@@ -318,7 +318,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return result.isDone() && result.get().booleanValue();
+                return result.isDone() && result.get();
             }
         }, TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(50));
 
@@ -369,14 +369,14 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
                     fail("seconds call to Connection.createSession() was supposed" +
                          "to raise an JMSException as internal session pool" +
                          "is exhausted. This did not happen and indiates a problem");
-                    return new Boolean(false);
+                    return Boolean.FALSE;
                 } catch (JMSException ex) {
                     if (ex.getCause().getClass() == java.util.NoSuchElementException.class) {
                         // expected, ignore but log
                         LOG.info("Caught expected " + ex);
                     } else {
                         LOG.error(ex);
-                        return new Boolean(false);
+                        return Boolean.FALSE;
                     }
                 } finally {
                     if (one != null) {
@@ -388,7 +388,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
                 }
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
-                return new Boolean(false);
+                return Boolean.FALSE;
             } finally {
                 if (cf != null) {
                     cf.stop();
@@ -396,7 +396,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
             }
 
             // all good, test succeeded
-            return new Boolean(true);
+            return Boolean.TRUE;
         }
     }
 }

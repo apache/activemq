@@ -690,43 +690,43 @@ public class ActiveMQStreamMessageTest extends TestCase {
             byte testByte = (byte)2;
             msg.writeByte(testByte);
             msg.reset();
-            assertTrue(((Byte)msg.readObject()).byteValue() == testByte);
+            assertTrue((Byte) msg.readObject() == testByte);
             msg.clearBody();
 
             short testShort = 3;
             msg.writeShort(testShort);
             msg.reset();
-            assertTrue(((Short)msg.readObject()).shortValue() == testShort);
+            assertTrue((Short) msg.readObject() == testShort);
             msg.clearBody();
 
             int testInt = 4;
             msg.writeInt(testInt);
             msg.reset();
-            assertTrue(((Integer)msg.readObject()).intValue() == testInt);
+            assertTrue((Integer) msg.readObject() == testInt);
             msg.clearBody();
 
             long testLong = 6L;
             msg.writeLong(testLong);
             msg.reset();
-            assertTrue(((Long)msg.readObject()).longValue() == testLong);
+            assertTrue((Long) msg.readObject() == testLong);
             msg.clearBody();
 
             float testFloat = 6.6f;
             msg.writeFloat(testFloat);
             msg.reset();
-            assertTrue(((Float)msg.readObject()).floatValue() == testFloat);
+            assertTrue((Float) msg.readObject() == testFloat);
             msg.clearBody();
 
             double testDouble = 7.7d;
             msg.writeDouble(testDouble);
             msg.reset();
-            assertTrue(((Double)msg.readObject()).doubleValue() == testDouble);
+            assertTrue((Double) msg.readObject() == testDouble);
             msg.clearBody();
 
             char testChar = 'z';
             msg.writeChar(testChar);
             msg.reset();
-            assertTrue(((Character)msg.readObject()).charValue() == testChar);
+            assertTrue((Character) msg.readObject() == testChar);
             msg.clearBody();
 
             byte[] data = new byte[50];
@@ -743,7 +743,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
             msg.clearBody();
             msg.writeBoolean(true);
             msg.reset();
-            assertTrue(((Boolean)msg.readObject()).booleanValue());
+            assertTrue((Boolean) msg.readObject());
 
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
@@ -754,10 +754,10 @@ public class ActiveMQStreamMessageTest extends TestCase {
     public void testClearBody() throws JMSException {
         ActiveMQStreamMessage streamMessage = new ActiveMQStreamMessage();
         try {
-            streamMessage.writeObject(new Long(2));
+            streamMessage.writeObject(2L);
             streamMessage.clearBody();
             assertFalse(streamMessage.isReadOnlyBody());
-            streamMessage.writeObject(new Long(2));
+            streamMessage.writeObject(2L);
             streamMessage.readObject();
             fail("should throw exception");
         } catch (MessageNotReadableException mnwe) {
@@ -974,14 +974,14 @@ public class ActiveMQStreamMessageTest extends TestCase {
             ActiveMQStreamMessage message = new ActiveMQStreamMessage();
             message.clearBody();
             message.writeObject("test");
-            message.writeObject(new Character('a'));
-            message.writeObject(new Boolean(false));
-            message.writeObject(new Byte((byte) 2));
-            message.writeObject(new Short((short) 2));
-            message.writeObject(new Integer(2));
-            message.writeObject(new Long(2l));
-            message.writeObject(new Float(2.0f));
-            message.writeObject(new Double(2.0d));
+            message.writeObject('a');
+            message.writeObject(Boolean.FALSE);
+            message.writeObject((byte) 2);
+            message.writeObject((short) 2);
+            message.writeObject(2);
+            message.writeObject(2L);
+            message.writeObject(2.0f);
+            message.writeObject(2.0d);
         }catch(Exception e) {
             fail(e.getMessage());
         }

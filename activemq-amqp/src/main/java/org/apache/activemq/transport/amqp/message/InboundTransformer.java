@@ -90,7 +90,7 @@ public abstract class InboundTransformer {
             jms.setBooleanProperty(JMS_AMQP_HEADER, true);
 
             if (header.getDurable() != null) {
-                jms.setPersistent(header.getDurable().booleanValue());
+                jms.setPersistent(header.getDurable());
             }
 
             if (header.getPriority() != null) {

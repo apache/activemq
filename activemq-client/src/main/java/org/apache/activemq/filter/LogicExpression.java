@@ -39,11 +39,11 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
             public Object evaluate(MessageEvaluationContext message) throws JMSException {
 
                 Boolean lv = (Boolean)left.evaluate(message);
-                if (lv != null && lv.booleanValue()) {
+                if (lv != null && lv) {
                     return Boolean.TRUE;
                 }
                 Boolean rv = (Boolean)right.evaluate(message);
-                if (rv != null && rv.booleanValue()) {
+                if (rv != null && rv) {
                     return Boolean.TRUE;
                 }
                 if (lv == null || rv == null) {
@@ -65,11 +65,11 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
 
                 Boolean lv = (Boolean)left.evaluate(message);
 
-                if (lv != null && !lv.booleanValue()) {
+                if (lv != null && !lv) {
                     return Boolean.FALSE;
                 }
                 Boolean rv = (Boolean)right.evaluate(message);
-                if (rv != null && !rv.booleanValue()) {
+                if (rv != null && !rv) {
                     return Boolean.FALSE;
                 }
                 if (lv == null || rv == null) {

@@ -60,9 +60,9 @@ public class JMSMessageTest extends JmsTestSupport {
     public void initCombos() {
         addCombinationValues("connectURL", new Object[] {"vm://localhost?marshal=false",
                                                          "vm://localhost?marshal=true"});
-        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT),
-                                                           Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE)});
+        addCombinationValues("deliveryMode", new Object[] {DeliveryMode.NON_PERSISTENT,
+                                                           DeliveryMode.PERSISTENT});
+        addCombinationValues("destinationType", new Object[] {ActiveMQDestination.QUEUE_TYPE});
     }
 
     public void testTextMessage() throws Exception {

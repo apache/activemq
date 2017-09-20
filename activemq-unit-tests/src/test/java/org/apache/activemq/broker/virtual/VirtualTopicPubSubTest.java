@@ -46,7 +46,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
     }
 
     public void initCombosForTestVirtualTopicCreation() {
-        addCombinationValues("ackMode", new Object[] {new Integer(Session.AUTO_ACKNOWLEDGE), new Integer(Session.CLIENT_ACKNOWLEDGE) });
+        addCombinationValues("ackMode", new Object[] {Session.AUTO_ACKNOWLEDGE, Session.CLIENT_ACKNOWLEDGE});
     }
 
     private boolean doneTwice = false;

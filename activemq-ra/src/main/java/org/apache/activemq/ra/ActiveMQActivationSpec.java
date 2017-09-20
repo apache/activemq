@@ -552,11 +552,11 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     public boolean isUseRAManagedTransactionEnabled() {
-        return Boolean.valueOf(useRAManagedTransaction).booleanValue();
+        return Boolean.valueOf(useRAManagedTransaction);
     }
 
     public boolean getNoLocalBooleanValue() {
-        return Boolean.valueOf(noLocal).booleanValue();
+        return Boolean.valueOf(noLocal);
     }
 
     public String getEnableBatch() {
@@ -573,7 +573,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     public boolean getEnableBatchBooleanValue() {
-        return Boolean.valueOf(enableBatch).booleanValue();
+        return Boolean.valueOf(enableBatch);
     }
 
     public int getMaxMessagesPerBatchIntValue() {

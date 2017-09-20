@@ -289,13 +289,13 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
             // Set prefetch policy for factory
             if (servletContext.getInitParameter(CONNECTION_FACTORY_PREFETCH_PARAM) != null) {
-                int prefetch = Integer.valueOf(getInitParameter(servletContext, CONNECTION_FACTORY_PREFETCH_PARAM)).intValue();
+                int prefetch = Integer.valueOf(getInitParameter(servletContext, CONNECTION_FACTORY_PREFETCH_PARAM));
                 amqfactory.getPrefetchPolicy().setAll(prefetch);
             }
 
             // Set optimize acknowledge setting
             if (servletContext.getInitParameter(CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM) != null) {
-                boolean optimizeAck = Boolean.valueOf(getInitParameter(servletContext, CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM)).booleanValue();
+                boolean optimizeAck = Boolean.valueOf(getInitParameter(servletContext, CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM));
                 amqfactory.setOptimizeAcknowledge(optimizeAck);
             }
 

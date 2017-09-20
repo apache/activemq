@@ -207,7 +207,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                     Iterator<Map.Entry<Long, List<JobLocation>>> iter = index.iterator(tx, start);
                     while (iter.hasNext()) {
                         Map.Entry<Long, List<JobLocation>> next = iter.next();
-                        if (next != null && next.getKey().longValue() <= finish) {
+                        if (next != null && next.getKey() <= finish) {
                             for (JobLocation jl : next.getValue()) {
                                 ByteSequence bs = getPayload(jl.getLocation());
                                 Job job = new JobImpl(jl, bs);
@@ -571,7 +571,7 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
         List<Long> keys = new ArrayList<>();
         for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx, start); i.hasNext();) {
             Map.Entry<Long, List<JobLocation>> entry = i.next();
-            if (entry.getKey().longValue() <= finish) {
+            if (entry.getKey() <= finish) {
                 keys.add(entry.getKey());
             } else {
                 break;

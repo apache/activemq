@@ -216,7 +216,7 @@ public class MessageTransformationTest {
 
         Message incomingMessage = Proton.message();
 
-        incomingMessage.setBody(new AmqpValue(new Boolean(true)));
+        incomingMessage.setBody(new AmqpValue(Boolean.TRUE));
 
         EncodedMessage encoded = encode(incomingMessage);
         InboundTransformer inboundTransformer = getInboundTransformer();

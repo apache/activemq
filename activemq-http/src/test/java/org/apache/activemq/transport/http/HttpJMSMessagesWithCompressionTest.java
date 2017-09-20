@@ -185,7 +185,7 @@ public class HttpJMSMessagesWithCompressionTest {
     @Test
     public void testObjectMessage() throws Exception {
         executeTest(new MessageCommand<ObjectMessage>() {
-            private Long value = new Long(101);
+            private Long value = 101L;
 
             public ObjectMessage createMessage(Session session) throws JMSException {
                 return session.createObjectMessage(value);
@@ -200,7 +200,7 @@ public class HttpJMSMessagesWithCompressionTest {
     @Test
     public void testStreamMessage() throws Exception {
         executeTest(new MessageCommand<StreamMessage>() {
-            private Long value = new Long(1013);
+            private Long value = 1013L;
 
             public StreamMessage createMessage(Session session) throws JMSException {
                 StreamMessage message = session.createStreamMessage();

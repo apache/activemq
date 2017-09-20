@@ -53,7 +53,7 @@ public class AMQ1282 extends TestCase {
     public void testUnmappedBooleanMessage() throws JMSException {
         Object expected;
         try {
-            expected = Boolean.valueOf(null);
+            expected = (Boolean) null;
         } catch (Exception ex) {
             expected = ex;
         }
@@ -68,7 +68,7 @@ public class AMQ1282 extends TestCase {
     public void testUnmappedIntegerMessage() throws JMSException {
         Object expected;
         try {
-            expected = Integer.valueOf(null);
+            expected = (Integer) null;
         } catch (Exception ex) {
             expected = ex;
         }
@@ -84,7 +84,7 @@ public class AMQ1282 extends TestCase {
     public void testUnmappedShortMessage() throws JMSException {
         Object expected;
         try {
-            expected = Short.valueOf(null);
+            expected = (Short) null;
         } catch (Exception ex) {
             expected = ex;
         }
@@ -100,7 +100,7 @@ public class AMQ1282 extends TestCase {
     public void testUnmappedLongMessage() throws JMSException {
         Object expected;
         try {
-            expected = Long.valueOf(null);
+            expected = (Long) null;
         } catch (Exception ex) {
             expected = ex;
         }
@@ -141,7 +141,7 @@ public class AMQ1282 extends TestCase {
     public void testUnmappedByteMessage() throws JMSException {
         Object expected;
         try {
-            expected = Byte.valueOf(null);
+            expected = (Byte) null;
         } catch (Exception ex) {
             expected = ex;
         }
@@ -157,7 +157,7 @@ public class AMQ1282 extends TestCase {
     public void testUnmappedDoubleMessage() throws JMSException {
         Object expected;
         try {
-            expected = Double.valueOf(null);
+            expected = (Double) null;
         } catch (Exception ex) {
             expected = ex;
         }
@@ -173,7 +173,7 @@ public class AMQ1282 extends TestCase {
     public void testUnmappedFloatMessage() throws JMSException {
         Object expected;
         try {
-            expected = Float.valueOf(null);
+            expected = (Float) null;
         } catch (Exception ex) {
             expected = ex;
         }

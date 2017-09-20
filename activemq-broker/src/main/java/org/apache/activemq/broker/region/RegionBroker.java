@@ -733,7 +733,7 @@ public class RegionBroker extends EmptyBroker {
         boolean stamped = false;
         if (message.getProperty(ORIGINAL_EXPIRATION) == null) {
             long expiration = message.getExpiration();
-            message.setProperty(ORIGINAL_EXPIRATION, new Long(expiration));
+            message.setProperty(ORIGINAL_EXPIRATION, expiration);
             stamped = true;
         }
         return stamped;

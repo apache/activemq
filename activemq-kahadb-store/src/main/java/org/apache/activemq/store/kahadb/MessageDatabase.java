@@ -1587,13 +1587,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private void recordAckMessageReferenceLocation(Location ackLocation, Location messageLocation) {
-        Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(Integer.valueOf(ackLocation.getDataFileId()));
+        Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(ackLocation.getDataFileId());
         if (referenceFileIds == null) {
             referenceFileIds = new HashSet<>();
             referenceFileIds.add(messageLocation.getDataFileId());
             metadata.ackMessageFileMap.put(ackLocation.getDataFileId(), referenceFileIds);
         } else {
-            Integer id = Integer.valueOf(messageLocation.getDataFileId());
+            Integer id = messageLocation.getDataFileId();
             if (!referenceFileIds.contains(id)) {
                 referenceFileIds.add(id);
             }
@@ -2568,15 +2568,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     for (Long sequenceId : pendingAcks) {
                         Long current = rc.messageReferences.get(sequenceId);
                         if (current == null) {
-                            current = new Long(0);
+                            current = 0L;
                         }
 
                         // We always add a trailing empty entry for the next position to start from
                         // so we need to ensure we don't count that as a message reference on reload.
                         if (!sequenceId.equals(lastPendingAck)) {
-                            current = current.longValue() + 1;
+                            current = current + 1;
                         } else {
-                            current = Long.valueOf(0L);
+                            current = 0L;
                         }
 
                         rc.messageReferences.put(sequenceId, current);
@@ -2811,9 +2811,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         Long count = sd.messageReferences.get(messageSequence);
         if (count == null) {
-            count = Long.valueOf(0L);
+            count = 0L;
         }
-        count = count.longValue() + 1;
+        count = count + 1;
         sd.messageReferences.put(messageSequence, count);
     }
 
@@ -2836,7 +2836,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             // one which is a placeholder for the next incoming message and
             // no value was added to the message references table.
             if (count != null) {
-                count = count.longValue() + 1;
+                count = count + 1;
                 sd.messageReferences.put(ackPosition, count);
             }
         }
@@ -2862,11 +2862,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             Long count = sd.messageReferences.get(messageSequence);
             if (count == null) {
-                count = Long.valueOf(0L);
+                count = 0L;
             }
-            count = count.longValue() + 1;
+            count = count + 1;
             sd.messageReferences.put(messageSequence, count);
-            sd.messageReferences.put(messageSequence + 1, Long.valueOf(0L));
+            sd.messageReferences.put(messageSequence + 1, 0L);
         }
     }
 
@@ -2883,9 +2883,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             for(Long sequenceId : sequences) {
                 Long references = sd.messageReferences.get(sequenceId);
                 if (references != null) {
-                    references = references.longValue() - 1;
+                    references = references - 1;
 
-                    if (references.longValue() > 0) {
+                    if (references > 0) {
                         sd.messageReferences.put(sequenceId, references);
                     } else {
                         sd.messageReferences.remove(sequenceId);
@@ -2938,9 +2938,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 // Check if the message is reference by any other subscription.
                 Long count = sd.messageReferences.get(messageSequence);
                 if (count != null) {
-                    long references = count.longValue() - 1;
+                    long references = count - 1;
                     if (references > 0) {
-                        sd.messageReferences.put(messageSequence, Long.valueOf(references));
+                        sd.messageReferences.put(messageSequence, references);
                         return;
                     } else {
                         sd.messageReferences.remove(messageSequence);
@@ -3592,13 +3592,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         void setBatch(Transaction tx, Long sequence) throws IOException {
             if (sequence != null) {
-                Long nextPosition = new Long(sequence.longValue() + 1);
+                Long nextPosition = sequence + 1;
                 lastDefaultKey = sequence;
-                cursor.defaultCursorPosition = nextPosition.longValue();
+                cursor.defaultCursorPosition = nextPosition;
                 lastHighKey = sequence;
-                cursor.highPriorityCursorPosition = nextPosition.longValue();
+                cursor.highPriorityCursorPosition = nextPosition;
                 lastLowKey = sequence;
-                cursor.lowPriorityCursorPosition = nextPosition.longValue();
+                cursor.lowPriorityCursorPosition = nextPosition;
             }
         }
 
@@ -3627,13 +3627,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         void stoppedIterating() {
             if (lastDefaultKey!=null) {
-                cursor.defaultCursorPosition=lastDefaultKey.longValue()+1;
+                cursor.defaultCursorPosition= lastDefaultKey +1;
             }
             if (lastHighKey!=null) {
-                cursor.highPriorityCursorPosition=lastHighKey.longValue()+1;
+                cursor.highPriorityCursorPosition= lastHighKey +1;
             }
             if (lastLowKey!=null) {
-                cursor.lowPriorityCursorPosition=lastLowKey.longValue()+1;
+                cursor.lowPriorityCursorPosition= lastLowKey +1;
             }
             lastDefaultKey = null;
             lastHighKey = null;

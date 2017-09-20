@@ -556,7 +556,7 @@ public class ManagementContext implements Service {
             mbeanServer.registerMBean(cl.newInstance(), namingServiceObjectName);
 
             // set the naming port
-            Attribute attr = new Attribute("Port", Integer.valueOf(connectorPort));
+            Attribute attr = new Attribute("Port", connectorPort);
             mbeanServer.setAttribute(namingServiceObjectName, attr);
         } catch(ClassNotFoundException e) {
             LOG.debug("Probably not using JRE 1.4: {}", e.getLocalizedMessage());

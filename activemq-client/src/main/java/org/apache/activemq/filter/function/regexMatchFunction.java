@@ -121,7 +121,7 @@ public class regexMatchFunction implements FilterFunction {
                 //  point in the candidate (see Matcher#find()).
                 //
 
-                return Boolean.valueOf(match_eng.find());
+                return match_eng.find();
             }
         }
 

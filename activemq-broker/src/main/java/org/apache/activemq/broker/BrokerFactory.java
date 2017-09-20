@@ -112,6 +112,6 @@ public final class BrokerFactory {
         if( value==null ) {
             return true;
         }
-        return value.booleanValue();
+        return value;
     }
 }

@@ -129,7 +129,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
 
             try {
                 jmxConnection.invoke(brokerObjName, "terminateJVM", new Object[] {
-                    Integer.valueOf(0)
+                        0
                 }, new String[] {
                     "int"
                 });

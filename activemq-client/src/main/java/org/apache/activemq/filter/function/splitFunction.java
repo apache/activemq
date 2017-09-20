@@ -77,7 +77,7 @@ public class splitFunction implements FilterFunction {
 
             limit = (Integer) expr.getArgument(2).evaluate(message_ctx);
 
-            result = src.split(split_pat, limit.intValue());
+            result = src.split(split_pat, limit);
         } else {
             result = src.split(split_pat);
         }

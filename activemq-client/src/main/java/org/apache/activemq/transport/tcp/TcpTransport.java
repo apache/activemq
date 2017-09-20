@@ -467,7 +467,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         sock.setSoTimeout(soTimeout);
 
         if (keepAlive != null) {
-            sock.setKeepAlive(keepAlive.booleanValue());
+            sock.setKeepAlive(keepAlive);
         }
 
         if (soLinger > -1) {
@@ -476,7 +476,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             sock.setSoLinger(false, 0);
         }
         if (tcpNoDelay != null) {
-            sock.setTcpNoDelay(tcpNoDelay.booleanValue());
+            sock.setTcpNoDelay(tcpNoDelay);
         }
         if (!this.trafficClassSet) {
             this.trafficClassSet = setTrafficClass(sock);

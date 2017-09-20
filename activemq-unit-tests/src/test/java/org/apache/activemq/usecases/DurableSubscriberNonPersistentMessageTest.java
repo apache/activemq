@@ -150,7 +150,7 @@ public class DurableSubscriberNonPersistentMessageTest extends TestCase {
                 public boolean isSatisified() throws Exception {
                     Integer pendingQueueSize = (Integer) mbeanServer.getAttribute(new ObjectName(theJmxObject), "PendingQueueSize");
                     LOG.info("pendingQueueSize = " + pendingQueueSize);
-                    return pendingQueueSize.intValue() == 0;
+                    return pendingQueueSize == 0;
                 }
             }));
 
@@ -159,7 +159,7 @@ public class DurableSubscriberNonPersistentMessageTest extends TestCase {
                 public boolean isSatisified() throws Exception {
                     Long cursorMemoryUsage = (Long) mbeanServer.getAttribute(new ObjectName(theJmxObject), "CursorMemoryUsage");
                     LOG.info("cursorMemoryUsage = " + cursorMemoryUsage);
-                    return cursorMemoryUsage.longValue() == 0L;
+                    return cursorMemoryUsage == 0L;
                 }
             }));
 

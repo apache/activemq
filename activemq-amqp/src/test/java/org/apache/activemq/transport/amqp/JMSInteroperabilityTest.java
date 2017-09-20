@@ -124,7 +124,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         outbound.setDoubleProperty("Double", nDouble);
         outbound.setStringProperty("String", "test");
         outbound.setLongProperty("Long", nLong);
-        outbound.setObjectProperty("BooleanObject", Boolean.valueOf(bool));
+        outbound.setObjectProperty("BooleanObject", bool);
 
         openwireProducer.send(outbound);
 
@@ -208,7 +208,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         outbound.setDoubleProperty("Double", nDouble);
         outbound.setStringProperty("String", "test");
         outbound.setLongProperty("Long", nLong);
-        outbound.setObjectProperty("BooleanObject", Boolean.valueOf(bool));
+        outbound.setObjectProperty("BooleanObject", bool);
 
         amqpProducer.send(outbound);
 

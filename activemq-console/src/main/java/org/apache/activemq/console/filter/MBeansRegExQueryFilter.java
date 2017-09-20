@@ -58,9 +58,9 @@ public class MBeansRegExQueryFilter extends RegExQueryFilter {
             Method method = this.getClass().getDeclaredMethod("matches", new Class[] {
                 data.getClass(), Map.class
             });
-            return ((Boolean)method.invoke(this, new Object[] {
-                data, regex
-            })).booleanValue();
+            return (Boolean) method.invoke(this, new Object[]{
+                    data, regex
+            });
         } catch (NoSuchMethodException e) {
             return false;
         }

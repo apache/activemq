@@ -27,7 +27,7 @@ public final class PerformanceStatisticsUtil {
         long sum = 0;
         if (numList != null) {
             for (Iterator i = numList.iterator(); i.hasNext();) {
-                sum += ((Long)i.next()).longValue();
+                sum += (Long) i.next();
             }
         } else {
             sum = -1;
@@ -39,7 +39,7 @@ public final class PerformanceStatisticsUtil {
         long min = Long.MAX_VALUE;
         if (numList != null) {
             for (Iterator i = numList.iterator(); i.hasNext();) {
-                min = Math.min(((Long)i.next()).longValue(), min);
+                min = Math.min((Long) i.next(), min);
             }
         } else {
             min = -1;
@@ -51,7 +51,7 @@ public final class PerformanceStatisticsUtil {
         long max = Long.MIN_VALUE;
         if (numList != null) {
             for (Iterator i = numList.iterator(); i.hasNext();) {
-                max = Math.max(((Long)i.next()).longValue(), max);
+                max = Math.max((Long) i.next(), max);
             }
         } else {
             max = -1;
@@ -66,7 +66,7 @@ public final class PerformanceStatisticsUtil {
             long totalTP = 0;
             for (Iterator i = numList.iterator(); i.hasNext();) {
                 sampleCount++;
-                totalTP += ((Long)i.next()).longValue();
+                totalTP += (Long) i.next();
             }
             return (double)totalTP / (double)sampleCount;
         } else {
@@ -85,7 +85,7 @@ public final class PerformanceStatisticsUtil {
             long sampleTP;
             for (Iterator i = numList.iterator(); i.hasNext();) {
                 sampleCount++;
-                sampleTP = ((Long)i.next()).longValue();
+                sampleTP = (Long) i.next();
                 if (sampleTP != minTP && sampleTP != maxTP) {
                     totalTP += sampleTP;
                 }

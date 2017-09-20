@@ -185,7 +185,7 @@ public class LDAPLoginModule implements LoginModule {
         	return false;
 
         userSearchMatchingFormat = new MessageFormat(getLDAPPropertyValue(USER_SEARCH_MATCHING));
-        userSearchSubtreeBool = Boolean.valueOf(getLDAPPropertyValue(USER_SEARCH_SUBTREE)).booleanValue();
+        userSearchSubtreeBool = Boolean.valueOf(getLDAPPropertyValue(USER_SEARCH_SUBTREE));
 
         try {
 
@@ -309,8 +309,8 @@ public class LDAPLoginModule implements LoginModule {
         boolean roleSearchSubtreeBool;
         boolean expandRolesBool;
         roleSearchMatchingFormat = new MessageFormat(getLDAPPropertyValue(ROLE_SEARCH_MATCHING));
-        roleSearchSubtreeBool = Boolean.valueOf(getLDAPPropertyValue(ROLE_SEARCH_SUBTREE)).booleanValue();
-        expandRolesBool = Boolean.valueOf(getLDAPPropertyValue(EXPAND_ROLES)).booleanValue();
+        roleSearchSubtreeBool = Boolean.valueOf(getLDAPPropertyValue(ROLE_SEARCH_SUBTREE));
+        expandRolesBool = Boolean.valueOf(getLDAPPropertyValue(EXPAND_ROLES));
         
         if (list == null) {
             list = new ArrayList<String>();
