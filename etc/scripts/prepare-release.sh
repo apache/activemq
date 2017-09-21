@@ -26,7 +26,7 @@ error () {
    echo ""
    echo "$@"
    echo ""
-   echo "Usage: ./prepare-release.sh repo-url version"
+   echo "Usage: ./prepare-release.sh repo-url version [target-dir (defaults to version, must not exist)]"
    echo ""
    echo "example:"
    echo "./prepare-release.sh https://repo1.maven.org/maven2 5.15.0"
@@ -62,15 +62,16 @@ doDownload () {
   sha512sum $theFile > $theFile.sha512
 }
 
-if [ "$#" != 2 ]; then
+if [ "$#" -lt 2 ]; then
   error "Cannot match arguments"
 fi
 
 release=$2
-target="activemq-$2"
+target=${3-$2}
+echo "Target Directory: $target"
 
 if [ -d $target ]; then
-  cd $target
+  error "Directory $target already exists, stopping"
 else
   echo "Directory $target does not exist, creating"
   mkdir $target
@@ -85,7 +86,7 @@ doDownload $binRepoURL apache-activemq-$release-bin.zip
 doDownload $binRepoURL apache-activemq-$release-bin.tar.gz
 
 echo ""
-echo "--- Download Complate for Release $2 Artifacts are in $target---"
+echo "--- Download Complete for Release $2 Artifacts are in $target---"
 echo ""
 echo "Validating all MD5 checksum files"
 md5sum -c *.md5
