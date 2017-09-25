@@ -1487,6 +1487,7 @@
             <exclude>**/stomp.js</exclude>
             <exclude>**/__init__.py</exclude>
             <exclude>**/webapp/decorators/footer.jsp</exclude>
+            <exclude>**/docs/img/logo.svg</exclude>
           </excludes>
         </configuration>
       </plugin>
