@@ -25,7 +25,7 @@ import org.apache.activemq.state.CommandVisitor;
  *
  *
  */
-public class MessagePull extends BaseCommand {
+public class MessagePull extends BaseCommand implements TransientInitializer {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.MESSAGE_PULL;
 
@@ -141,5 +141,12 @@ public class MessagePull extends BaseCommand {
 
     public void setAlwaysSignalDone(boolean alwaysSignalDone) {
         this.alwaysSignalDone = alwaysSignalDone;
+    }
+
+    @Override
+    public void initTransients() {
+        quantity = 1;
+        alwaysSignalDone = false;
+        tracked = false;
     }
 }
