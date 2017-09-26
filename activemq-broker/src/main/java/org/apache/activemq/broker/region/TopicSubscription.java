@@ -281,24 +281,18 @@ public class TopicSubscription extends AbstractSubscription {
                 throw new JMSException("Poison ack cannot be transacted: " + ack);
             }
             updateStatsOnAck(context, ack);
-            if (getPrefetchSize() != 0) {
-                decrementPrefetchExtension(ack.getMessageCount());
-            }
+            contractPrefetchExtension(ack.getMessageCount());
         } else if (ack.isIndividualAck()) {
             updateStatsOnAck(context, ack);
-            if (getPrefetchSize() != 0 && ack.isInTransaction()) {
-                incrementPrefetchExtension(ack.getMessageCount());
+            if (ack.isInTransaction()) {
+                expandPrefetchExtension(1);
             }
         } else if (ack.isExpiredAck()) {
             updateStatsOnAck(ack);
-            if (getPrefetchSize() != 0) {
-                incrementPrefetchExtension(ack.getMessageCount());
-            }
+            contractPrefetchExtension(ack.getMessageCount());
         } else if (ack.isDeliveredAck()) {
             // Message was delivered but not acknowledged: update pre-fetch counters.
-            if (getPrefetchSize() != 0) {
-                incrementPrefetchExtension(ack.getMessageCount());
-            }
+           expandPrefetchExtension(ack.getMessageCount());
         } else if (ack.isRedeliveredAck()) {
             // No processing for redelivered needed
             return;
@@ -314,14 +308,13 @@ public class TopicSubscription extends AbstractSubscription {
             context.getTransaction().addSynchronization(new Synchronization() {
 
                 @Override
-                public void beforeEnd() {
-                    if (getPrefetchSize() != 0) {
-                        decrementPrefetchExtension(ack.getMessageCount());
-                    }
+                public void afterRollback() {
+                    contractPrefetchExtension(ack.getMessageCount());
                 }
 
                 @Override
                 public void afterCommit() throws Exception {
+                    contractPrefetchExtension(ack.getMessageCount());
                     updateStatsOnAck(ack);
                     dispatchMatched();
                 }
@@ -417,29 +410,9 @@ public class TopicSubscription extends AbstractSubscription {
                 if (ack.isExpiredAck()) {
                     destination.getDestinationStatistics().getExpired().add(ack.getMessageCount());
                 }
-            }
-        }
-    }
-
-    private void incrementPrefetchExtension(int amount) {
-        if (!isUsePrefetchExtension()) {
-            return;
-        }
-        while (true) {
-            int currentExtension = prefetchExtension.get();
-            int newExtension = Math.max(0, currentExtension + amount);
-            if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
-                break;
-            }
-        }
-    }
-
-    private void decrementPrefetchExtension(int amount) {
-        while (true) {
-            int currentExtension = prefetchExtension.get();
-            int newExtension = Math.max(0, currentExtension - amount);
-            if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
-                break;
+                if (!ack.isInTransaction()) {
+                    contractPrefetchExtension(1);
+                }
             }
         }
     }

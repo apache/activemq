@@ -1681,6 +1681,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         if (!added || browser.atMax()) {
                             browser.decrementQueueRef();
                             browserDispatches.remove(browserDispatch);
+                        } else {
+                            wakeup();
                         }
                     } catch (Exception e) {
                         LOG.warn("exception on dispatch to browser: {}", browserDispatch.getBrowser(), e);

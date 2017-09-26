@@ -19,6 +19,7 @@ package org.apache.activemq.usecases;
 import junit.framework.Test;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.DestinationStatistics;
@@ -98,45 +99,75 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         verifyDestinationDlq(destination, numMessagesToSend, view);
     }
 
-    public void testExpiredMessages_onTopic_withPrefetchExtension() throws Exception {
-        final ActiveMQDestination destination = new ActiveMQTopic("test");
-        final int numMessagesToSend = 10000;
-
+    public void testClientAckInflight_onTopic_withPrefetchExtension() throws Exception {
         usePrefetchExtension = true;
+        doTestClientAckInflight_onTopic_checkPrefetchExtension();
+    }
 
+    public void testClientAckInflight_onTopic_withOutPrefetchExtension() throws Exception {
+        usePrefetchExtension = false;
+        doTestClientAckInflight_onTopic_checkPrefetchExtension();
+    }
+
+    public void doTestClientAckInflight_onTopic_checkPrefetchExtension() throws Exception {
+        final ActiveMQDestination destination = new ActiveMQTopic("test");
         buildBroker(destination);
 
-        verifyMessageExpirationOnDestination(destination, numMessagesToSend);
-        // We don't check the DLQ because non-persistent messages on topics are discarded instead.
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+                "failover://"+brokerUri);
+        ActiveMQPrefetchPolicy prefetchTwo = new ActiveMQPrefetchPolicy();
+        prefetchTwo.setAll(6);
+        factory.setPrefetchPolicy(prefetchTwo);
+        connection = factory.createConnection();
+        connection.start();
+        session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        produce(10, destination);
+
+        Message m = null;
+        for (int i=0; i<5; i++) {
+            m = consumer.receive(4000);
+        }
+        assertNotNull(m);
 
         final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
 
         assertTrue("prefetch extension was not incremented",
-            subscriptions.stream().
-                filter(s -> s instanceof TopicSubscription).
-                mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
-                allMatch(e -> e > 0));
-    }
+                subscriptions.stream().
+                        filter(s -> s instanceof TopicSubscription).
+                        mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
+                        allMatch(e -> usePrefetchExtension ? e > 1 : e == 0));
 
-    public void testExpiredMessages_onTopic_withoutPrefetchExtension() throws Exception {
-        final ActiveMQDestination destination = new ActiveMQTopic("test");
-        final int numMessagesToSend = 10000;
+        m.acknowledge();
 
-        usePrefetchExtension = false;
-
-        buildBroker(destination);
-
-        verifyMessageExpirationOnDestination(destination, numMessagesToSend);
-        // We don't check the DLQ because non-persistent messages on topics are discarded instead.
-
-        final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
-
-        assertTrue("prefetch extension was incremented",
+        assertTrue("prefetch extension was not incremented",
                 subscriptions.stream().
                         filter(s -> s instanceof TopicSubscription).
                         mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
                         allMatch(e -> e == 0));
+
     }
+
+    private void produce(int num, ActiveMQDestination destination) throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+                "failover://"+brokerUri);
+        Connection connection = factory.createConnection();
+        connection.start();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        producer = session.createProducer(destination);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        int i = 0;
+        while (i++ < num) {
+            Message message = useTextMessage ? session
+                    .createTextMessage("test") : session
+                    .createObjectMessage("test");
+            producer.send(message);
+        }
+        connection.close();
+    }
+
 
     private void buildBroker(ActiveMQDestination destination) throws Exception {
         broker = createBroker(deleteAllMessages, usePrefetchExtension, 100, destination);
