@@ -259,6 +259,7 @@
             <configuration>
               <includes>
                 <include>**/ActiveMQBrokerNdCamelFeatureTest.*</include>
+                <include>**/ActiveMQAMQPBrokerFeatureTest.*</include>
               </includes>
             </configuration>
           </plugin>
