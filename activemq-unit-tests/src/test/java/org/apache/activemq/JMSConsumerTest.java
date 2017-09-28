@@ -48,6 +48,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,7 +252,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
 
-        assertTrue("prefetch extension back to 0",
+        assertTrue("prefetch extension..",
                 subscriptions.stream().
                         filter(s -> s instanceof TopicSubscription).
                         mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
@@ -260,11 +261,15 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
         message.acknowledge();
 
-        assertTrue("prefetch extension back to 0",
-                subscriptions.stream().
+        assertTrue("prefetch extension back to 0", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return subscriptions.stream().
                         filter(s -> s instanceof TopicSubscription).
                         mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
-                        allMatch(e -> e == 0));
+                        allMatch(e -> e == 0);
+            }
+        }));
 
     }
 
@@ -299,11 +304,15 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
         message.acknowledge();
 
-        assertTrue("prefetch extension back to 0",
-                subscriptions.stream().
+        assertTrue("prefetch extension back to 0", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return subscriptions.stream().
                         filter(s -> s instanceof QueueSubscription).
                         mapToInt(s -> ((QueueSubscription)s).getPrefetchExtension().get()).
-                        allMatch(e -> e == 0));
+                        allMatch(e -> e == 0);
+            }
+        }));
     }
 
     public void initCombosForTestDurableConsumerSelectorChange() {
