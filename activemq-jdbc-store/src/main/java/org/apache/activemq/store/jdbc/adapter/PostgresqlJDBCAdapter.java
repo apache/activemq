@@ -43,7 +43,7 @@ public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {
     @Override
     public void setStatements(Statements statements) {
         statements.setBinaryDataType("BYTEA");
-        statements.setDropAckPKAlterStatementEnd("DROP CONSTRAINT \"" + statements.getTablePrefix().toLowerCase()+getAcksPkName() + "\"");
+        statements.setDropAckPKAlterStatementEnd("DROP CONSTRAINT \"" + statements.getTablePrefix().toLowerCase() + getAcksPkName() + "\"");
         super.setStatements(statements);
     }
 
