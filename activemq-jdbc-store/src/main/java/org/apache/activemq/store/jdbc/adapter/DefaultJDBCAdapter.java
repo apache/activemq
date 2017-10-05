@@ -93,7 +93,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    private boolean messageTableAlreadyExists(TransactionContext transactionContext) {
+    protected boolean messageTableAlreadyExists(TransactionContext transactionContext) {
         boolean alreadyExists = false;
         ResultSet rs = null;
         try {
@@ -106,7 +106,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return alreadyExists;
     }
 
-    private void executeStatement(TransactionContext transactionContext, String createStatement, boolean ignoreStatementExecutionFailure) throws IOException {
+    protected void executeStatement(TransactionContext transactionContext, String createStatement, boolean ignoreStatementExecutionFailure) throws IOException {
         Statement statement = null;
         try {
             LOG.debug("Executing SQL: " + createStatement);

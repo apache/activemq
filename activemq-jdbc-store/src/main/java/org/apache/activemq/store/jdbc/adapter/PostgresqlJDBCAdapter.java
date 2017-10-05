@@ -16,7 +16,11 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import org.apache.activemq.store.jdbc.Statements;
+import org.apache.activemq.store.jdbc.TransactionContext;
 
 /**
  * Implements all the default JDBC operations that are used
@@ -53,5 +57,31 @@ public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {
 
     public void setAcksPkName(String acksPkName) {
         this.acksPkName = acksPkName;
+    }
+
+    @Override
+    public void doCreateTables(TransactionContext transactionContext) throws SQLException, IOException {
+        // Check to see if the table already exists. If it does, then don't log warnings during startup.
+        // Need to run the scripts anyways since they may contain ALTER statements that upgrade a previous version of the table
+        boolean messageTableAlreadyExists = this.messageTableAlreadyExists(transactionContext);
+
+        for (String createStatement : this.statements.getCreateSchemaStatements()) {
+            // This will fail usually since the tables will be
+            // created already.
+            super.executeStatement(transactionContext, createStatement, messageTableAlreadyExists);
+        }
+    }
+
+    protected boolean messageTableAlreadyExists(TransactionContext transactionContext) {
+        boolean alreadyExists = false;
+        ResultSet rs = null;
+        try {
+            rs = transactionContext.getConnection().getMetaData().getTables(null, null, this.statements.getFullMessageTableName().toLowerCase(), new String[] { "TABLE" });
+            alreadyExists = rs.next();
+        } catch (Throwable ignore) {
+        } finally {
+            close(rs);
+        }
+        return alreadyExists;
     }
 }
