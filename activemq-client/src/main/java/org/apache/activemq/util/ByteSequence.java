@@ -75,7 +75,11 @@ public class ByteSequence {
 
     public void reset() {
         length = remaining();
-        System.arraycopy(data, offset, data, 0, length);
+        if (length > 0) {
+            System.arraycopy(data, offset, data, 0, length);
+        } else {
+            length = 0;
+        }
         offset = 0;
     }
 

@@ -627,7 +627,13 @@ public class Journal {
     private void ensureAvailable(ByteSequence bs, RandomAccessFile reader, int required) throws IOException {
         if (bs.remaining() < required) {
             bs.reset();
-            bs.setLength(bs.length + reader.read(bs.data, bs.length, bs.data.length - bs.length));
+            int read = reader.read(bs.data, bs.length, bs.data.length - bs.length);
+            if (read < 0) {
+                if (bs.remaining() == 0) {
+                    throw new EOFException("request for " + required + " bytes reached EOF");
+                }
+            }
+            bs.setLength(bs.length + read);
         }
     }
 
