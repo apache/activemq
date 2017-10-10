@@ -567,10 +567,11 @@ public class Journal {
     }
 
     private int checkBatchRecord(ByteSequence bs, RandomAccessFile reader) throws IOException {
-
+        ensureAvailable(bs, reader, EOF_RECORD.length);
         if (bs.startsWith(EOF_RECORD)) {
             return 0; // eof
         }
+        ensureAvailable(bs, reader, BATCH_CONTROL_RECORD_SIZE);
         try (DataByteArrayInputStream controlIs = new DataByteArrayInputStream(bs)) {
 
             // Assert that it's a batch record.
@@ -620,6 +621,13 @@ public class Journal {
             }
 
             return size;
+        }
+    }
+
+    private void ensureAvailable(ByteSequence bs, RandomAccessFile reader, int required) throws IOException {
+        if (bs.remaining() < required) {
+            bs.reset();
+            bs.setLength(bs.length + reader.read(bs.data, bs.length, bs.data.length - bs.length));
         }
     }
 
