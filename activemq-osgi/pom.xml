@@ -162,10 +162,8 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
-      <version>${project.version}</version>
       <exclusions>
-        <exclusion>
-          <groupId>org.apache.activemq</groupId>
+      <exclusion>
           <artifactId>activemq-all</artifactId>
         </exclusion>
       </exclusions>
@@ -211,7 +209,7 @@
       </resource>
     </resources>
     <plugins>
-      <!-- get camel core blueprint schema info -->
+      <!-- get camel core spring schema info -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -223,7 +221,15 @@
             </goals>
             <configuration>
               <artifactItems>
-                <!-- only camel-blueprint is supported with XML in OSGi with Camel -->
+                <artifactItem>
+                  <groupId>org.apache.camel</groupId>
+                  <artifactId>camel-spring</artifactId>
+                  <version>${camel-version}</version>
+                  <type>jar</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${basedir}/target/extra-resources/</outputDirectory>
+                  <includes>camel-spring.xsd</includes>
+                </artifactItem>
                 <artifactItem>
                   <groupId>org.apache.camel</groupId>
                   <artifactId>camel-blueprint</artifactId>
