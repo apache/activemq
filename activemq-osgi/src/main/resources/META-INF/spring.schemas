@@ -57,6 +57,8 @@ http\://activemq.apache.org/schema/core/activemq-core-5.14.5.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.15.0.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.15.1.xsd=activemq.xsd
 
+http\://camel.apache.org/schema/spring/camel-spring.xsd=camel-spring.xsd
+
 http\://www.springframework.org/schema/beans/spring-beans-2.0.xsd=org/springframework/beans/factory/xml/spring-beans-2.0.xsd
 http\://www.springframework.org/schema/beans/spring-beans-2.5.xsd=org/springframework/beans/factory/xml/spring-beans-2.5.xsd
 http\://www.springframework.org/schema/beans/spring-beans-3.0.xsd=org/springframework/beans/factory/xml/spring-beans-3.0.xsd
