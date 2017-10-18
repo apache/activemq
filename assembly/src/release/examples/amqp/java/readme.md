@@ -1,6 +1,6 @@
 ## Overview
 
-This is an example of how use the Java JMS api with ActiveMQ via the AMQP protocol.
+This is an example of how to use the Java JMS api with ActiveMQ via the AMQP protocol.
 
 ## Prereqs
 
