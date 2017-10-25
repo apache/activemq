@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadb;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -72,9 +73,9 @@ public class KahaDBTransactionStore implements TransactionStore {
     }
 
     public class Tx {
-        private final ArrayList<AddMessageCommand> messages = new ArrayList<AddMessageCommand>();
+        private final List<AddMessageCommand> messages = Collections.synchronizedList(new ArrayList<AddMessageCommand>());
 
-        private final ArrayList<RemoveMessageCommand> acks = new ArrayList<RemoveMessageCommand>();
+        private final List<RemoveMessageCommand> acks = Collections.synchronizedList(new ArrayList<RemoveMessageCommand>());
 
         public void add(AddMessageCommand msg) {
             messages.add(msg);
@@ -248,8 +249,13 @@ public class KahaDBTransactionStore implements TransactionStore {
     public Tx getTx(Object txid) {
         Tx tx = inflightTransactions.get(txid);
         if (tx == null) {
-            tx = new Tx();
-            inflightTransactions.put(txid, tx);
+            synchronized (inflightTransactions) {
+                tx = inflightTransactions.get(txid);
+                if (tx == null) {
+                    tx = new Tx();
+                    inflightTransactions.put(txid, tx);
+                }
+            }
         }
         return tx;
     }

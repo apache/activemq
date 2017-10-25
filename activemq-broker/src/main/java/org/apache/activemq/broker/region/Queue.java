@@ -608,6 +608,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+    private volatile ResourceAllocationException sendMemAllocationException = null;
     @Override
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
@@ -641,10 +642,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
                 }
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
-                    throw new ResourceAllocationException("Usage Manager Memory Limit reached. Stopping producer ("
-                            + message.getProducerId() + ") to prevent flooding "
-                            + getActiveMQDestination().getQualifiedName() + "."
-                            + " See http://activemq.apache.org/producer-flow-control.html for more info");
+                    ResourceAllocationException resourceAllocationException = sendMemAllocationException;
+                    if (resourceAllocationException == null) {
+                        synchronized (this) {
+                            resourceAllocationException = sendMemAllocationException;
+                            if (resourceAllocationException == null) {
+                                sendMemAllocationException = resourceAllocationException = new ResourceAllocationException("Usage Manager Memory Limit reached on "
+                                        + getActiveMQDestination().getQualifiedName() + "."
+                                        + " See http://activemq.apache.org/producer-flow-control.html for more info");
+                            }
+                        }
+                    }
+                    throw resourceAllocationException;
                 }
 
                 // We can avoid blocking due to low usage if the producer is
