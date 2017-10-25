@@ -58,7 +58,7 @@ public class DuplicateFromStoreTest {
     protected final static int NUM_PRODUCERS = 100;
     protected final static int NUM_CONSUMERS = 20;
 
-    protected final static int NUM_MSGS = 40000;
+    protected final static int NUM_MSGS = 20000;
     protected final static int CONSUMER_SLEEP = 0;
     protected final static int PRODUCER_SLEEP = 10;
 
@@ -85,6 +85,7 @@ public class DuplicateFromStoreTest {
         policy.setMemoryLimit(10 * 1024 * 1024); // 10 MB
         policy.setExpireMessagesPeriod(0);
         policy.setEnableAudit(false); // allow any duplicates from the store to bubble up to the q impl
+        policy.setQueuePrefetch(100);
         PolicyMap policies = new PolicyMap();
         policies.put(dest, policy);
         broker.setDestinationPolicy(policies);
