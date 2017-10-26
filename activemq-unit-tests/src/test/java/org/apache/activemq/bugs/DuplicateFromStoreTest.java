@@ -66,6 +66,8 @@ public class DuplicateFromStoreTest {
     public static CountDownLatch consumersFinished = new CountDownLatch(NUM_CONSUMERS );
 
     public AtomicInteger totalMessagesToSend = new AtomicInteger(NUM_MSGS);
+    public AtomicInteger totalMessagesSent = new AtomicInteger(NUM_MSGS);
+
     public AtomicInteger totalReceived = new AtomicInteger(0);
 
     public int messageSize = 16*1000;
@@ -92,7 +94,7 @@ public class DuplicateFromStoreTest {
 
         // configure <systemUsage>
         MemoryUsage memoryUsage = new MemoryUsage();
-        memoryUsage.setPercentOfJvmHeap(70);
+        memoryUsage.setPercentOfJvmHeap(50);
 
         StoreUsage storeUsage = new StoreUsage();
         storeUsage.setLimit(8 * 1024 * 1024 * 1024); // 8 gb
@@ -133,7 +135,7 @@ public class DuplicateFromStoreTest {
 
         LOG.info("All producers and consumers got started. Awaiting their termination");
         producersFinished.await(100, TimeUnit.MINUTES);
-        LOG.info("All producers have terminated.");
+        LOG.info("All producers have terminated. remaining to send: " + totalMessagesToSend.get() + ", sent:" + totalMessagesSent.get());
 
         consumersFinished.await(100, TimeUnit.MINUTES);
         LOG.info("All consumers have terminated.");
@@ -232,6 +234,7 @@ public class DuplicateFromStoreTest {
                 // send message
                 while (totalMessagesToSend.decrementAndGet() >= 0) {
                     producer.send(message);
+                    totalMessagesSent.incrementAndGet();
                     log.debug("Sent message: " + counter);
                     counter++;
 
@@ -241,7 +244,7 @@ public class DuplicateFromStoreTest {
                     Thread.sleep(PRODUCER_SLEEP);
                 }
             } catch (Exception ex) {
-                log.error(ex.getMessage());
+                log.error(ex.toString());
                 return;
             } finally {
                 try {
@@ -313,10 +316,10 @@ public class DuplicateFromStoreTest {
                         TextMessage textMessage = (TextMessage) message2;
                         String text = textMessage.getText();
                         log.debug("Received: " + text.substring(0, 50));
+                    } else if (totalReceived.get() < NUM_MSGS) {
+                        log.error("Received message of unsupported type. Expecting TextMessage. count: " + totalReceived.get());
                     } else {
-                        if (totalReceived.get() < NUM_MSGS) {
-                            log.error("Received message of unsupported type. Expecting TextMessage. " + message2);
-                        }
+                        // all done
                         break;
                     }
                     if (message2 != null) {

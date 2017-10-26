@@ -314,7 +314,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (sendFailIfNoSpace != -1) {
             destination.getSystemUsage().setSendFailIfNoSpace(isSendFailIfNoSpace());
         }
-        if (sendFailIfNoSpaceAfterTimeout != 0) {
+        if (sendFailIfNoSpaceAfterTimeout != -1) {
             destination.getSystemUsage().setSendFailIfNoSpaceAfterTimeout(getSendFailIfNoSpaceAfterTimeout());
         }
     }

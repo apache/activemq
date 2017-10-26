@@ -206,7 +206,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             if (messagesWaitingForSpace.remove(timeout.message.getMessageId()) != null) {
                                 ExceptionResponse response = new ExceptionResponse(
                                         new ResourceAllocationException(
-                                                "Usage Manager Memory Limit reached. Stopping producer ("
+                                                "Usage Manager Memory Limit Wait Timeout. Stopping producer ("
                                                         + timeout.message.getProducerId()
                                                         + ") to prevent flooding "
                                                         + getActiveMQDestination().getQualifiedName()
