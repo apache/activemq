@@ -156,7 +156,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         // make sure the message isn't delivered early
         Thread.sleep(2000);
         assertEquals(latch.getCount(), COUNT);
-        latch.await(5, TimeUnit.SECONDS);
+        latch.await(10, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), 0);
         connection.close();
     }
@@ -225,7 +225,7 @@ public class JmsSchedulerTest extends JobSchedulerTestSupport {
         connection.start();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(destination);
-        Message msg = consumer.receive(5000);
+        Message msg = consumer.receive(10000);
         assertNotNull("Didn't receive the message", msg);
 
         //send another message
