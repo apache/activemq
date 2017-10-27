@@ -54,6 +54,7 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -178,6 +179,52 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue("use cache", queueNew.isUseCache());
         assertTrue("cache enabled", queueNew.isCacheEnabled());
         assertEquals("no forwards", 0, queueNew.getForwardCount());
+    }
+
+    public void testMoveFromDLQImmediateDLQ() throws Exception {
+
+        RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
+        redeliveryPolicy.setMaximumRedeliveries(0);
+        ((ActiveMQConnectionFactory)connectionFactory).setRedeliveryPolicy(redeliveryPolicy);
+        Connection connection = connectionFactory.createConnection();
+
+        // populate
+        useConnection(connection);
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination dest = session.createQueue(getDestinationString());
+        MessageConsumer consumer = session.createConsumer(dest);
+        consumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                try {
+                    System.out.println("Received: " + message + " on " + message.getJMSDestination());
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                }
+                throw new RuntimeException("Horrible exception");
+            }});
+
+
+        ObjectName dlqQueueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME );
+        QueueViewMBean dlq = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, dlqQueueViewMBeanName, QueueViewMBean.class, true);
+
+        assertTrue("messagees on dlq", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return MESSAGE_COUNT == dlq.getQueueSize();
+            }
+        }));
+
+        dlq.retryMessages();
+
+        assertTrue("messagees on dlq after retry", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Dlq size: " + dlq.getQueueSize());
+                return MESSAGE_COUNT == dlq.getQueueSize();
+            }
+        }));
     }
 
     //Show broken behaviour https://issues.apache.org/jira/browse/AMQ-5752"
