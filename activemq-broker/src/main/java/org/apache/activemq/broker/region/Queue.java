@@ -1462,18 +1462,33 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      * @throws Exception
      */
     public boolean moveMessageTo(ConnectionContext context, QueueMessageReference m, ActiveMQDestination dest) throws Exception {
-        BrokerSupport.resend(context, m.getMessage(), dest);
-        removeMessage(context, m);
-        messagesLock.writeLock().lock();
+        Set<Destination> destsToPause = regionBroker.getDestinations(dest);
         try {
-            messages.rollback(m.getMessageId());
-            if (isDLQ()) {
-                DeadLetterStrategy stratagy = getDeadLetterStrategy();
-                stratagy.rollback(m.getMessage());
+            for (Destination d: destsToPause) {
+                if (d instanceof Queue) {
+                    ((Queue)d).pauseDispatch();
+                }
+            }
+            BrokerSupport.resend(context, m.getMessage(), dest);
+            removeMessage(context, m);
+            messagesLock.writeLock().lock();
+            try {
+                messages.rollback(m.getMessageId());
+                if (isDLQ()) {
+                    DeadLetterStrategy stratagy = getDeadLetterStrategy();
+                    stratagy.rollback(m.getMessage());
+                }
+            } finally {
+                messagesLock.writeLock().unlock();
             }
         } finally {
-            messagesLock.writeLock().unlock();
+            for (Destination d: destsToPause) {
+                if (d instanceof Queue) {
+                    ((Queue)d).resumeDispatch();
+                }
+            }
         }
+
         return true;
     }
 
