@@ -1475,8 +1475,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             try {
                 messages.rollback(m.getMessageId());
                 if (isDLQ()) {
-                    DeadLetterStrategy stratagy = getDeadLetterStrategy();
-                    stratagy.rollback(m.getMessage());
+                    DeadLetterStrategy strategy = getDeadLetterStrategy();
+                    strategy.rollback(m.getMessage());
                 }
             } finally {
                 messagesLock.writeLock().unlock();
@@ -1560,6 +1560,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             throw new Exception("Retry of message is only possible on Dead Letter Queues!");
         }
         int restoredCounter = 0;
+        // ensure we deal with a snapshot to avoid potential duplicates in the event of messages
+        // getting immediate dlq'ed
+        long numberOfRetryAttemptsToCheckAllMessagesOnce = this.destinationStatistics.getMessages().getCount();
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         do {
             doPageIn(true);
@@ -1571,6 +1574,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
             List<MessageReference> list = new ArrayList<MessageReference>(set);
             for (MessageReference ref : list) {
+                numberOfRetryAttemptsToCheckAllMessagesOnce--;
                 if (ref.getMessage().getOriginalDestination() != null) {
 
                     moveMessageTo(context, (QueueMessageReference)ref, ref.getMessage().getOriginalDestination());
@@ -1580,7 +1584,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
             }
-        } while (set.size() < this.destinationStatistics.getMessages().getCount() && set.size() < maximumMessages);
+        } while (numberOfRetryAttemptsToCheckAllMessagesOnce > 0 && set.size() < this.destinationStatistics.getMessages().getCount());
         return restoredCounter;
     }
 

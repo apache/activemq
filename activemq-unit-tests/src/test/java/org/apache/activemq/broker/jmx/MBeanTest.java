@@ -206,22 +206,26 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             }});
 
 
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
         ObjectName dlqQueueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME );
         QueueViewMBean dlq = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, dlqQueueViewMBeanName, QueueViewMBean.class, true);
 
-        assertTrue("messagees on dlq", Wait.waitFor(new Wait.Condition() {
+        assertTrue("messages on dlq", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+                LOG.info("Dlq size: " + dlq.getQueueSize() + ", qSize: " + queue.getQueueSize());
                 return MESSAGE_COUNT == dlq.getQueueSize();
             }
         }));
 
         dlq.retryMessages();
 
-        assertTrue("messagees on dlq after retry", Wait.waitFor(new Wait.Condition() {
+        assertTrue("messages on dlq after retry", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                LOG.info("Dlq size: " + dlq.getQueueSize());
+                LOG.info("Dlq size: " + dlq.getQueueSize() + ", qSize: " + queue.getQueueSize());
                 return MESSAGE_COUNT == dlq.getQueueSize();
             }
         }));
