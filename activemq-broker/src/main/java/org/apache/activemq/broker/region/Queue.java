@@ -2029,38 +2029,43 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             } finally {
                 messagesLock.writeLock().unlock();
             }
-            // Only add new messages, not already pagedIn to avoid multiple
-            // dispatch attempts
-            pagedInMessagesLock.writeLock().lock();
-            try {
-                if(isPrioritizedMessages()) {
-                    resultList = new PrioritizedPendingList();
-                } else {
-                    resultList = new OrderedPendingList();
-                }
-                for (QueueMessageReference ref : result) {
-                    if (!pagedInMessages.contains(ref)) {
-                        pagedInMessages.addMessageLast(ref);
-                        resultList.addMessageLast(ref);
+
+            if (count > 0) {
+                // Only add new messages, not already pagedIn to avoid multiple
+                // dispatch attempts
+                pagedInMessagesLock.writeLock().lock();
+                try {
+                    if (isPrioritizedMessages()) {
+                        resultList = new PrioritizedPendingList();
                     } else {
-                        ref.decrementReferenceCount();
-                        // store should have trapped duplicate in it's index, or cursor audit trapped insert
-                        // or producerBrokerExchange suppressed send.
-                        // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
-                        LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
-                        if (store != null) {
-                            ConnectionContext connectionContext = createConnectionContext();
-                            dropMessage(ref);
-                            if (gotToTheStore(ref.getMessage())) {
-                                LOG.debug("Duplicate message {} from cursor, removing from store", this, ref.getMessage());
-                                store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
+                        resultList = new OrderedPendingList();
+                    }
+                    for (QueueMessageReference ref : result) {
+                        if (!pagedInMessages.contains(ref)) {
+                            pagedInMessages.addMessageLast(ref);
+                            resultList.addMessageLast(ref);
+                        } else {
+                            ref.decrementReferenceCount();
+                            // store should have trapped duplicate in it's index, or cursor audit trapped insert
+                            // or producerBrokerExchange suppressed send.
+                            // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
+                            LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
+                            if (store != null) {
+                                ConnectionContext connectionContext = createConnectionContext();
+                                dropMessage(ref);
+                                if (gotToTheStore(ref.getMessage())) {
+                                    LOG.debug("Duplicate message {} from cursor, removing from store", this, ref.getMessage());
+                                    store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
+                                }
+                                broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from cursor for " + destination));
                             }
-                            broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from cursor for " + destination));
                         }
                     }
+                } finally {
+                    pagedInMessagesLock.writeLock().unlock();
                 }
-            } finally {
-                pagedInMessagesLock.writeLock().unlock();
+            } else if (!messages.hasSpace() && isFlowControlLogRequired()) {
+                LOG.warn("{} cursor blocked, no space available to page in messages; usage: {}", this, this.systemUsage.getMemoryUsage());
             }
         } else {
             // Avoid return null list, if condition is not validated
