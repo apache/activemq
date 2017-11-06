@@ -56,12 +56,16 @@ public class ConduitBridge extends DemandForwardingBridge {
     }
 
     protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info, boolean isForcedDurable) {
-        // search through existing subscriptions and see if we have a match
-        if (info.isNetworkSubscription()) {
+        //If a network subscription and a queue check if isConduitNetworkQueueSubscriptions is true
+        //If true then we want to try and conduit
+        //For topics we always want to conduit regardless of network subscription or not
+        if (info.isNetworkSubscription() && info.getDestination().isQueue() &&
+                !configuration.isConduitNetworkQueueSubscriptions()) {
             return false;
         }
         boolean matched = false;
 
+        // search through existing subscriptions and see if we have a match
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             DestinationFilter filter = DestinationFilter.parseFilter(ds.getLocalInfo().getDestination());
             if (canConduit(ds) && filter.matches(info.getDestination())) {
@@ -86,9 +90,13 @@ public class ConduitBridge extends DemandForwardingBridge {
     }
 
     // we want to conduit statically included consumers which are local networkSubs
-    // but we don't want to conduit remote network subs i.e. (proxy proxy) consumers
+    // but we don't want to conduit remote network queue subs i.e. (proxy proxy) consumers
+    // unless isConduitNetworkQueueSubscriptions is true
+    // We always want to conduit topic subscriptions
     private boolean canConduit(DemandSubscription ds) {
-        return ds.isStaticallyIncluded() || !ds.getRemoteInfo().isNetworkSubscription();
+        return ds.isStaticallyIncluded() || ds.getRemoteInfo().getDestination().isTopic() ||
+                !ds.getRemoteInfo().isNetworkSubscription() ||
+                (ds.getRemoteInfo().getDestination().isQueue() && configuration.isConduitNetworkQueueSubscriptions());
     }
 
     @Override
