@@ -29,6 +29,11 @@ import org.apache.activemq.command.ConsumerInfo;
 public class NetworkBridgeConfiguration {
 
     private boolean conduitSubscriptions = true;
+    /**
+     * Whether or not network subscriptions on queues are eligible to be conduit
+     * Default is false
+     */
+    private boolean conduitNetworkQueueSubscriptions;
     private boolean useVirtualDestSubs;
     private boolean dynamicOnly;
     private boolean syncDurableSubs;
@@ -83,6 +88,14 @@ public class NetworkBridgeConfiguration {
      */
     public void setConduitSubscriptions(boolean conduitSubscriptions) {
         this.conduitSubscriptions = conduitSubscriptions;
+    }
+
+    public boolean isConduitNetworkQueueSubscriptions() {
+        return conduitNetworkQueueSubscriptions;
+    }
+
+    public void setConduitNetworkQueueSubscriptions(boolean conduitNetworkQueueSubscriptions) {
+        this.conduitNetworkQueueSubscriptions = conduitNetworkQueueSubscriptions;
     }
 
     /**

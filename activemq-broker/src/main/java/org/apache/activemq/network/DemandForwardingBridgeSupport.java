@@ -661,6 +661,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
+    /**
+     * Checks whether or not this consumer is a direct bridge network subscription
+     * @param info
+     * @return
+     */
+    protected boolean isBridgeNS(ConsumerInfo info) {
+        return (info.getSubscriptionName() != null && info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)) &&
+                (info.getClientId() == null || info.getClientId().startsWith(configuration.getName()));
+    }
+
     protected void serviceRemoteCommand(Command command) {
         if (!disposed.get()) {
             try {
@@ -694,7 +704,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                                 for (ConsumerInfo info : subInfo.getSubscriptionInfos()) {
                                                     //re-add any process any non-NC consumers that match the
                                                     //dynamicallyIncludedDestinations list
-                                                    if((info.getSubscriptionName() == null || !info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)) &&
+                                                    //Also re-add network consumers that are not part of this direct
+                                                    //bridge (proxy of proxy bridges)
+                                                    if((info.getSubscriptionName() == null || !isBridgeNS(info)) &&
                                                             NetworkBridgeUtils.matchesDestinations(dynamicallyIncludedDestinations, info.getDestination())) {
                                                         serviceRemoteConsumerAdvisory(info);
                                                     }
@@ -986,7 +998,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             localBroker.oneway(sending);
 
             //remove subscriber from map
-            i.remove();
+            if (i != null) {
+                i.remove();
+            }
         }
     }
 
@@ -1072,7 +1086,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
             subscriptionMapByRemoteId.remove(sub.getRemoteInfo().getConsumerId());
 
-            // continue removal in separate thread to free up this thread for outstanding responses
+            // continue removal in separate thread to free up tshis thread for outstanding responses
             // Serialize with removeDestination operations so that removeSubs are serialized with
             // removeDestinations such that all removeSub advisories are generated
             serialExecutor.execute(new Runnable() {
@@ -1080,7 +1094,18 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 public void run() {
                     sub.waitForCompletion();
                     try {
-                        localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
+                        //If removing a network durable subscription that still has durable remote subs
+                        //make sure we cleanup the durable subscription properly - necessary when using
+                        //durable subscriptions and 3 or more brokers
+                        if (configuration.isConduitSubscriptions() &&
+                                sub.getLocalInfo().getSubscriptionName() != null &&
+                                sub.getLocalInfo().getSubscriptionName().startsWith(DURABLE_SUB_PREFIX) &&
+                                sub.getDurableRemoteSubs().size() > 0) {
+                            sub.getDurableRemoteSubs().clear();
+                            cleanupDurableSub(sub, null);
+                        } else {
+                            localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
+                        }
                     } catch (IOException e) {
                         LOG.warn("failed to deliver remove command for local subscription, for remote {}", sub.getRemoteInfo().getConsumerId(), e);
                     }
@@ -1315,13 +1340,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             for (ActiveMQDestination dest : dests) {
                 if (isPermissableDestination(dest)) {
                     DemandSubscription sub = createDemandSubscription(dest, null);
-                    sub.setStaticallyIncluded(true);
-                    try {
-                        addSubscription(sub);
-                    } catch (IOException e) {
-                        LOG.error("Failed to add static destination {}", dest, e);
+                    if (sub != null) {
+                        sub.setStaticallyIncluded(true);
+                        try {
+                            addSubscription(sub);
+                        } catch (IOException e) {
+                            LOG.error("Failed to add static destination {}", dest, e);
+                        }
+                        LOG.trace("{}, bridging messages for static destination: {}", configuration.getBrokerName(), dest);
+                    } else {
+                        LOG.info("{}, static destination excluded: {}, demand already exists", configuration.getBrokerName(), dest);
                     }
-                    LOG.trace("{}, bridging messages for static destination: {}", configuration.getBrokerName(), dest);
                 } else {
                     LOG.info("{}, static destination excluded: {}", configuration.getBrokerName(), dest);
                 }
