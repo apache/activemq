@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.SubscriptionInfo;
@@ -80,7 +81,12 @@ public class ConduitBridge extends DemandForwardingBridge {
                         ds.addForcedDurableConsumer(info.getConsumerId());
                     }
                 } else {
-                    ds.getDurableRemoteSubs().add(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
+                	if (isProxyNSConsumer(info)) {
+                	    final BrokerId[] path = info.getBrokerPath();
+                	    addProxyNetworkSubscription(ds, path, info.getSubscriptionName());
+                	} else {
+                		ds.getDurableRemoteSubs().add(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
+                	}
                 }
                 matched = true;
                 // continue - we want interest to any existing DemandSubscriptions

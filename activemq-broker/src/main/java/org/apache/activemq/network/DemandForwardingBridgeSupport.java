@@ -36,6 +36,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.ObjectName;
 
@@ -94,7 +95,6 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.failover.FailoverTransport;
-import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -666,9 +666,50 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
      * @param info
      * @return
      */
-    protected boolean isBridgeNS(ConsumerInfo info) {
+    protected boolean isDirectBridgeConsumer(ConsumerInfo info) {
         return (info.getSubscriptionName() != null && info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)) &&
                 (info.getClientId() == null || info.getClientId().startsWith(configuration.getName()));
+    }
+
+    private boolean isProxyBridgeSubscription(SubscriptionInfo info) {
+        if (info.getSubcriptionName() != null && info.getClientId() != null) {
+            if (info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)
+                    && !info.getClientId().startsWith(configuration.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void addProxyNetworkSubscription(final DemandSubscription sub, final BrokerId[] path, String subName) {
+        if (sub != null && path.length > 1 && subName != null) {
+            String b1 = path[path.length-1].toString();
+            String b2 = path[path.length-2].toString();
+            final SubscriptionInfo newSubInfo = new SubscriptionInfo(b2 + "_inbound_" + b1, subName);
+            sub.getDurableRemoteSubs().add(newSubInfo);
+            sub.getNetworkDemandConsumerMap().computeIfAbsent(newSubInfo, v -> new AtomicInteger()).incrementAndGet();
+            LOG.debug("Adding proxy network subscription {} to demand subscription", newSubInfo);
+        } else {
+            LOG.debug("Skipping addProxyNetworkSubscription");
+        }
+    }
+
+    private String getProxyBridgeClientId(SubscriptionInfo info) {
+        String[] clientIdTokens = info.getClientId().split("_");
+        String newClientId = "";
+        if (clientIdTokens.length > 2) {
+            for (int j = clientIdTokens.length - 3; j < clientIdTokens.length; j++) {
+                newClientId += clientIdTokens[j];
+                if (j < clientIdTokens.length -1) {
+                    newClientId += "_";
+                }
+            }
+        }
+        return newClientId;
+    }
+
+    protected boolean isProxyNSConsumer(ConsumerInfo info) {
+        return info.getBrokerPath() != null && info.getBrokerPath().length > 1;
     }
 
     protected void serviceRemoteCommand(Command command) {
@@ -706,7 +747,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                                     //dynamicallyIncludedDestinations list
                                                     //Also re-add network consumers that are not part of this direct
                                                     //bridge (proxy of proxy bridges)
-                                                    if((info.getSubscriptionName() == null || !isBridgeNS(info)) &&
+                                                    if((info.getSubscriptionName() == null || !isDirectBridgeConsumer(info)) &&
                                                             NetworkBridgeUtils.matchesDestinations(dynamicallyIncludedDestinations, info.getDestination())) {
                                                         serviceRemoteConsumerAdvisory(info);
                                                     }
@@ -975,8 +1016,22 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
                 DemandSubscription ds = i.next();
                 boolean removed = ds.getDurableRemoteSubs().remove(subscriptionInfo);
+
                 if (removed) {
                     cleanupDurableSub(ds, i);
+                //If this is a proxy bridge subscription we need to try changing the clientId
+                } else if (!removed && isProxyBridgeSubscription(subscriptionInfo)){
+                    subscriptionInfo.setClientId(getProxyBridgeClientId(subscriptionInfo));
+                    if (ds.getDurableRemoteSubs().contains(subscriptionInfo)) {
+                        AtomicInteger count = ds.getNetworkDemandConsumerMap().computeIfAbsent(subscriptionInfo, v -> new AtomicInteger());
+                        count.decrementAndGet();
+                        //Only remove the durable remote sub if the count <= 0
+                        if (count.get() <= 0) {
+                            ds.getDurableRemoteSubs().remove(subscriptionInfo);
+                            ds.getNetworkDemandConsumerMap().remove(subscriptionInfo);
+                            cleanupDurableSub(ds, i);
+                        }
+                    }
                 }
             }
         }
@@ -984,6 +1039,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void cleanupDurableSub(final DemandSubscription ds,
             Iterator<DemandSubscription> i) throws IOException {
+
         if (ds != null && ds.getLocalDurableSubscriber() != null && ds.getDurableRemoteSubs().isEmpty()
                 && ds.getForcedDurableConsumersSize() == 0) {
             // deactivate subscriber
@@ -998,9 +1054,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             localBroker.oneway(sending);
 
             //remove subscriber from map
-            if (i != null) {
-                i.remove();
-            }
+            i.remove();
         }
     }
 
@@ -1094,18 +1148,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 public void run() {
                     sub.waitForCompletion();
                     try {
-                        //If removing a network durable subscription that still has durable remote subs
-                        //make sure we cleanup the durable subscription properly - necessary when using
-                        //durable subscriptions and 3 or more brokers
-                        if (configuration.isConduitSubscriptions() &&
-                                sub.getLocalInfo().getSubscriptionName() != null &&
-                                sub.getLocalInfo().getSubscriptionName().startsWith(DURABLE_SUB_PREFIX) &&
-                                sub.getDurableRemoteSubs().size() > 0) {
-                            sub.getDurableRemoteSubs().clear();
-                            cleanupDurableSub(sub, null);
-                        } else {
-                            localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
-                        }
+                        localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
                     } catch (IOException e) {
                         LOG.warn("failed to deliver remove command for local subscription, for remote {}", sub.getRemoteInfo().getConsumerId(), e);
                     }
@@ -1367,7 +1410,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 undoMapRegistration(sub);
             } else {
                 if (consumerInfo.isDurable()) {
-                    sub.getDurableRemoteSubs().add(new SubscriptionInfo(sub.getRemoteInfo().getClientId(), consumerInfo.getSubscriptionName()));
+                	if (isProxyNSConsumer(sub.getRemoteInfo())) {
+                		BrokerId[] path = sub.getRemoteInfo().getBrokerPath();
+                		addProxyNetworkSubscription(sub, path, consumerInfo.getSubscriptionName());
+                	} else {
+            			sub.getDurableRemoteSubs().add(new SubscriptionInfo(sub.getRemoteInfo().getClientId(), consumerInfo.getSubscriptionName()));
+            		}
                 }
                 addSubscription(sub);
                 LOG.debug("{} new demand subscription: {}", configuration.getBrokerName(), sub);

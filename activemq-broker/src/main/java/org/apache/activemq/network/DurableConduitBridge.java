@@ -142,12 +142,8 @@ public class DurableConduitBridge extends ConduitBridge {
             info.setSubscriptionName(getSubscriberName(info.getDestination()));
             // and override the consumerId with something unique so that it won't
             // be removed if the durable subscriber (at the other end) goes away
-            //Only do this for direct bridge consumers - proxy network consumers we don't
-            //want to replace the consumerId or cleanup won't happen properly
-            if (info.getBrokerPath().length == 1 || (info.getBrokerPath().length > 1 && info.getBrokerPath()[0] == remoteBrokerPath[0])) {
-                info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),
+           info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),
                                consumerIdGenerator.getNextSequenceId()));
-            }
         }
         info.setSelector(null);
         DemandSubscription demandSubscription = doCreateDemandSubscription(info);
