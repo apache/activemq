@@ -18,7 +18,10 @@ package org.apache.activemq.network;
 
 import java.net.URI;
 import java.util.HashMap;
-import org.apache.activemq.broker.Broker;
+import java.util.LinkedHashSet;
+import java.util.ServiceLoader;
+import java.util.Set;
+
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.URISupport;
@@ -28,13 +31,32 @@ import org.apache.activemq.util.URISupport;
  * 
  * 
  */
-public final class NetworkBridgeFactory {
+public final class NetworkBridgeFactory implements BridgeFactory {
+
+    public final static BridgeFactory INSTANCE = new NetworkBridgeFactory();
 
     private NetworkBridgeFactory() {
+
+    }
+
+    @Override
+    public DemandForwardingBridge createNetworkBridge(NetworkBridgeConfiguration configuration, Transport localTransport, Transport remoteTransport, NetworkBridgeListener listener) {
+        if (configuration.isConduitSubscriptions()) {
+            // dynamicOnly determines whether durables are auto bridged
+            return attachListener(new DurableConduitBridge(configuration, localTransport, remoteTransport), listener);
+        }
+        return attachListener(new DemandForwardingBridge(configuration, localTransport, remoteTransport), listener);
+    }
+
+    private DemandForwardingBridge attachListener(DemandForwardingBridge bridge, NetworkBridgeListener listener) {
+        if (listener != null) {
+            bridge.setNetworkBridgeListener(listener);
+        }
+        return bridge;
     }
 
     /**
-     * create a network bridge
+     * Create a network bridge
      * 
      * @param configuration
      * @param localTransport
@@ -42,20 +64,11 @@ public final class NetworkBridgeFactory {
      * @param listener
      * @return the NetworkBridge
      */
+    @Deprecated
     public static DemandForwardingBridge createBridge(NetworkBridgeConfiguration configuration,
                                                       Transport localTransport, Transport remoteTransport,
                                                       final NetworkBridgeListener listener) {
-        DemandForwardingBridge result = null;
-        if (configuration.isConduitSubscriptions()) {
-            // dynamicOnly determines whether durables are auto bridged
-            result = new DurableConduitBridge(configuration, localTransport, remoteTransport);
-        } else {
-            result = new DemandForwardingBridge(configuration, localTransport, remoteTransport);
-        }
-        if (listener != null) {
-            result.setNetworkBridgeListener(listener);
-        }
-        return result;
+        return INSTANCE.createNetworkBridge(configuration, localTransport, remoteTransport, listener);
     }
 
     public static Transport createLocalTransport(NetworkBridgeConfiguration configuration, URI uri) throws Exception {
@@ -74,4 +87,5 @@ public final class NetworkBridgeFactory {
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         return TransportFactory.connect(uri);
     }
+
 }
