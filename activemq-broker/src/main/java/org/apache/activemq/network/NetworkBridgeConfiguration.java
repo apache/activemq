@@ -78,6 +78,11 @@ public class NetworkBridgeConfiguration {
     private boolean checkDuplicateMessagesOnDuplex = false;
 
     /**
+     * Bridge factory implementation - by default backed by static factory, which is default implementation and will rely change.
+     */
+    private BridgeFactory bridgeFactory = NetworkBridgeFactory.INSTANCE;
+
+    /**
      * @return the conduitSubscriptions
      */
     public boolean isConduitSubscriptions() {
@@ -539,6 +544,14 @@ public class NetworkBridgeConfiguration {
 
     public boolean isUseVirtualDestSubs() {
         return useVirtualDestSubs;
+    }
+
+    public BridgeFactory getBridgeFactory() {
+        return bridgeFactory;
+    }
+
+    public void setBridgeFactory(BridgeFactory bridgeFactory) {
+        this.bridgeFactory = bridgeFactory;
     }
 
     /**
