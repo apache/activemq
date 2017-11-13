@@ -1442,7 +1442,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
                 MBeanNetworkListener listener = new MBeanNetworkListener(brokerService, config, brokerService.createDuplexNetworkConnectorObjectName(duplexName));
                 listener.setCreatedByDuplex(true);
-                duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteBridgeTransport, listener);
+                duplexBridge = config.getBridgeFactory().createNetworkBridge(config, localTransport, remoteBridgeTransport, listener);
                 duplexBridge.setBrokerService(brokerService);
                 //Need to set durableDestinations to properly restart subs when dynamicOnly=false
                 duplexBridge.setDurableDestinations(NetworkConnector.getDurableTopicDestinations(

@@ -21,11 +21,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -33,13 +31,11 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
-import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicRequestor;
 import javax.jms.TopicSession;
 
 import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -48,32 +44,26 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 
-public class SimpleNetworkTest {
+public class SimpleNetworkTest extends BaseNetworkTest {
 
     protected static final int MESSAGE_COUNT = 10;
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleNetworkTest.class);
 
     protected AbstractApplicationContext context;
-    protected Connection localConnection;
-    protected Connection remoteConnection;
-    protected BrokerService localBroker;
-    protected BrokerService remoteBroker;
-    protected Session localSession;
-    protected Session remoteSession;
     protected ActiveMQTopic included;
     protected ActiveMQTopic excluded;
     protected String consumerName = "durableSubs";
+
+    @Override
+    protected void doSetUp(boolean deleteAllMessages) throws Exception {
+        super.doSetUp(deleteAllMessages);
+
+        included = new ActiveMQTopic("include.test.bar");
+        excluded = new ActiveMQTopic("exclude.test.bar");
+    }
 
     // works b/c of non marshaling vm transport, the connection
     // ref from the client is used during the forward
@@ -362,76 +352,6 @@ public class SimpleNetworkTest {
         for (int i = 0; i < MESSAGE_COUNT / 2; i++) {
             assertNotNull("message count: " + i, remoteConsumer.receive(10000));
         }
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        doSetUp(true);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        doTearDown();
-    }
-
-    protected void doTearDown() throws Exception {
-        localConnection.close();
-        remoteConnection.close();
-        localBroker.stop();
-        remoteBroker.stop();
-    }
-
-    protected void doSetUp(boolean deleteAllMessages) throws Exception {
-        remoteBroker = createRemoteBroker();
-        remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
-        remoteBroker.start();
-        remoteBroker.waitUntilStarted();
-        localBroker = createLocalBroker();
-        localBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
-        localBroker.start();
-        localBroker.waitUntilStarted();
-        URI localURI = localBroker.getVmConnectorURI();
-        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);
-        fac.setAlwaysSyncSend(true);
-        fac.setDispatchAsync(false);
-        localConnection = fac.createConnection();
-        localConnection.setClientID("clientId");
-        localConnection.start();
-        URI remoteURI = remoteBroker.getVmConnectorURI();
-        fac = new ActiveMQConnectionFactory(remoteURI);
-        remoteConnection = fac.createConnection();
-        remoteConnection.setClientID("clientId");
-        remoteConnection.start();
-        included = new ActiveMQTopic("include.test.bar");
-        excluded = new ActiveMQTopic("exclude.test.bar");
-        localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        remoteSession = remoteConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    }
-
-    protected String getRemoteBrokerURI() {
-        return "org/apache/activemq/network/remoteBroker.xml";
-    }
-
-    protected String getLocalBrokerURI() {
-        return "org/apache/activemq/network/localBroker.xml";
-    }
-
-    protected BrokerService createBroker(String uri) throws Exception {
-        Resource resource = new ClassPathResource(uri);
-        BrokerFactoryBean factory = new BrokerFactoryBean(resource);
-        resource = new ClassPathResource(uri);
-        factory = new BrokerFactoryBean(resource);
-        factory.afterPropertiesSet();
-        BrokerService result = factory.getBroker();
-        return result;
-    }
-
-    protected BrokerService createLocalBroker() throws Exception {
-        return createBroker(getLocalBrokerURI());
-    }
-
-    protected BrokerService createRemoteBroker() throws Exception {
-        return createBroker(getRemoteBrokerURI());
     }
 
     protected void assertNetworkBridgeStatistics(final long expectedLocalSent, final long expectedRemoteSent) throws Exception {
