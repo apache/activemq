@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import javax.management.ObjectName;
 
@@ -492,7 +493,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                     localConnectionInfo = new ConnectionInfo();
                     localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-                    localClientId = configuration.getName() + "_" + remoteBrokerName + "_inbound_" + configuration.getBrokerName();
+                    localClientId = configuration.getName() + configuration.getClientIdToken() + remoteBrokerName + configuration.getClientIdToken() + "inbound" + configuration.getClientIdToken() + configuration.getBrokerName();
                     localConnectionInfo.setClientId(localClientId);
                     localConnectionInfo.setUserName(configuration.getUserName());
                     localConnectionInfo.setPassword(configuration.getPassword());
@@ -520,8 +521,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                         ConnectionInfo duplexLocalConnectionInfo = new ConnectionInfo();
                         duplexLocalConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-                        duplexLocalConnectionInfo.setClientId(configuration.getName() + "_" + remoteBrokerName + "_inbound_duplex_"
-                                + configuration.getBrokerName());
+                        duplexLocalConnectionInfo.setClientId(configuration.getName() + configuration.getClientIdToken() + remoteBrokerName + configuration.getClientIdToken() + "inbound" + configuration.getClientIdToken() + "duplex"
+                                + configuration.getClientIdToken() + configuration.getBrokerName());
                         duplexLocalConnectionInfo.setUserName(configuration.getUserName());
                         duplexLocalConnectionInfo.setPassword(configuration.getPassword());
 
@@ -609,7 +610,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
                 remoteConnectionInfo = new ConnectionInfo();
                 remoteConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-                remoteConnectionInfo.setClientId(configuration.getName() + "_" + configuration.getBrokerName() + "_outbound");
+                remoteConnectionInfo.setClientId(configuration.getName() + configuration.getClientIdToken() + configuration.getBrokerName() + configuration.getClientIdToken() + "outbound");
                 remoteConnectionInfo.setUserName(configuration.getUserName());
                 remoteConnectionInfo.setPassword(configuration.getPassword());
                 remoteBroker.oneway(remoteConnectionInfo);
@@ -685,7 +686,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (sub != null && path.length > 1 && subName != null) {
             String b1 = path[path.length-1].toString();
             String b2 = path[path.length-2].toString();
-            final SubscriptionInfo newSubInfo = new SubscriptionInfo(b2 + "_inbound_" + b1, subName);
+            final SubscriptionInfo newSubInfo = new SubscriptionInfo(b2 + configuration.getClientIdToken() + "inbound" + configuration.getClientIdToken() + b1, subName);
             sub.getDurableRemoteSubs().add(newSubInfo);
             sub.getNetworkDemandConsumerMap().computeIfAbsent(newSubInfo, v -> new AtomicInteger()).incrementAndGet();
             LOG.debug("Adding proxy network subscription {} to demand subscription", newSubInfo);
@@ -695,15 +696,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     private String getProxyBridgeClientId(SubscriptionInfo info) {
-        String[] clientIdTokens = info.getClientId().split("_");
-        String newClientId = "";
-        if (clientIdTokens.length > 2) {
-            for (int j = clientIdTokens.length - 3; j < clientIdTokens.length; j++) {
-                newClientId += clientIdTokens[j];
-                if (j < clientIdTokens.length -1) {
-                    newClientId += "_";
-                }
-            }
+        String newClientId = info.getClientId();
+        String[] clientIdTokens = newClientId != null ? newClientId.split(Pattern.quote(configuration.getClientIdToken())) : null;
+        if (clientIdTokens != null && clientIdTokens.length > 2) {
+            newClientId = clientIdTokens[clientIdTokens.length - 3] +  configuration.getClientIdToken() + "inbound"
+                    + configuration.getClientIdToken() +  clientIdTokens[clientIdTokens.length -1];
         }
         return newClientId;
     }

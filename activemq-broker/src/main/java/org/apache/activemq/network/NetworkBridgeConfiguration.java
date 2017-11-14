@@ -59,6 +59,7 @@ public class NetworkBridgeConfiguration {
     private String password;
     private String destinationFilter = null;
     private String name = "NC";
+    private String clientIdToken = "_";
 
     protected List<ActiveMQDestination> excludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
     protected List<ActiveMQDestination> dynamicallyIncludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
@@ -189,6 +190,14 @@ public class NetworkBridgeConfiguration {
      */
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
+    }
+
+    public String getClientIdToken() {
+        return clientIdToken;
+    }
+
+    public void setClientIdToken(String clientIdToken) {
+        this.clientIdToken = clientIdToken;
     }
 
     /**
