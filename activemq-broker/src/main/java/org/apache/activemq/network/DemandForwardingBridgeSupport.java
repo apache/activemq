@@ -36,7 +36,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import javax.management.ObjectName;
@@ -672,31 +671,53 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 (info.getClientId() == null || info.getClientId().startsWith(configuration.getName()));
     }
 
-    private boolean isProxyBridgeSubscription(SubscriptionInfo info) {
-        if (info.getSubcriptionName() != null && info.getClientId() != null) {
-            if (info.getSubscriptionName().startsWith(DURABLE_SUB_PREFIX)
-                    && !info.getClientId().startsWith(configuration.getName())) {
+    protected boolean isProxyBridgeSubscription(String clientId, String subName) {
+        if (subName != null && clientId != null) {
+            if (subName.startsWith(DURABLE_SUB_PREFIX) && !clientId.startsWith(configuration.getName())) {
                 return true;
             }
         }
         return false;
     }
 
-    protected void addProxyNetworkSubscription(final DemandSubscription sub, final BrokerId[] path, String subName) {
-        if (sub != null && path.length > 1 && subName != null) {
-            String b1 = path[path.length-1].toString();
-            String b2 = path[path.length-2].toString();
-            final SubscriptionInfo newSubInfo = new SubscriptionInfo(b2 + configuration.getClientIdToken() + "inbound" + configuration.getClientIdToken() + b1, subName);
-            sub.getDurableRemoteSubs().add(newSubInfo);
-            sub.getNetworkDemandConsumerMap().computeIfAbsent(newSubInfo, v -> new AtomicInteger()).incrementAndGet();
-            LOG.debug("Adding proxy network subscription {} to demand subscription", newSubInfo);
+    /**
+     * This scenaior is primarily used for durable sync on broker restarts
+     *
+     * @param sub
+     * @param clientId
+     * @param subName
+     */
+    protected void addProxyNetworkSubscriptionClientId(final DemandSubscription sub, final String clientId, String subName) {
+        if (clientId != null && sub != null && subName != null) {
+                String newClientId = getProxyBridgeClientId(clientId);
+                final SubscriptionInfo newSubInfo = new SubscriptionInfo(newClientId, subName);
+                sub.getDurableRemoteSubs().add(newSubInfo);
+                LOG.debug("Adding proxy network subscription {} to demand subscription", newSubInfo);
+
         } else {
             LOG.debug("Skipping addProxyNetworkSubscription");
         }
     }
 
-    private String getProxyBridgeClientId(SubscriptionInfo info) {
-        String newClientId = info.getClientId();
+    /**
+     * Add a durable remote proxy subscription when we can generate via the BrokerId path
+     * This is the most common scenario
+     *
+     * @param sub
+     * @param path
+     * @param subName
+     */
+    protected void addProxyNetworkSubscriptionBrokerPath(final DemandSubscription sub, final BrokerId[] path, String subName) {
+        if (sub != null && path.length > 1 && subName != null) {
+            String b1 = path[path.length-1].toString();
+            String b2 = path[path.length-2].toString();
+            final SubscriptionInfo newSubInfo = new SubscriptionInfo(b2 + configuration.getClientIdToken() + "inbound" + configuration.getClientIdToken() + b1, subName);
+            sub.getDurableRemoteSubs().add(newSubInfo);
+        }
+    }
+
+    private String getProxyBridgeClientId(String clientId) {
+        String newClientId = clientId;
         String[] clientIdTokens = newClientId != null ? newClientId.split(Pattern.quote(configuration.getClientIdToken())) : null;
         if (clientIdTokens != null && clientIdTokens.length > 2) {
             newClientId = clientIdTokens[clientIdTokens.length - 3] +  configuration.getClientIdToken() + "inbound"
@@ -705,8 +726,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return newClientId;
     }
 
-    protected boolean isProxyNSConsumer(ConsumerInfo info) {
+    protected boolean isProxyNSConsumerBrokerPath(ConsumerInfo info) {
         return info.getBrokerPath() != null && info.getBrokerPath().length > 1;
+    }
+
+    protected boolean isProxyNSConsumerClientId(String clientId) {
+        return clientId != null && clientId.split(Pattern.quote(configuration.getClientIdToken())).length > 3;
     }
 
     protected void serviceRemoteCommand(Command command) {
@@ -1008,27 +1033,25 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
            }
 
         } else if (data.getClass() == RemoveSubscriptionInfo.class) {
-            RemoveSubscriptionInfo info = ((RemoveSubscriptionInfo) data);
-            SubscriptionInfo subscriptionInfo = new SubscriptionInfo(info.getClientId(), info.getSubscriptionName());
+            final RemoveSubscriptionInfo info = ((RemoveSubscriptionInfo) data);
+            final SubscriptionInfo subscriptionInfo = new SubscriptionInfo(info.getClientId(), info.getSubscriptionName());
+            final boolean proxyBridgeSub = isProxyBridgeSubscription(subscriptionInfo.getClientId(),
+                    subscriptionInfo.getSubscriptionName());
             for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
                 DemandSubscription ds = i.next();
                 boolean removed = ds.getDurableRemoteSubs().remove(subscriptionInfo);
 
+                //If this is a proxy bridge subscription we need to try changing the clientId
+                if (!removed && proxyBridgeSub){
+                    subscriptionInfo.setClientId(getProxyBridgeClientId(subscriptionInfo.getClientId()));
+                    if (ds.getDurableRemoteSubs().contains(subscriptionInfo)) {
+                        ds.getDurableRemoteSubs().remove(subscriptionInfo);
+                        removed = true;
+                    }
+                }
+
                 if (removed) {
                     cleanupDurableSub(ds, i);
-                //If this is a proxy bridge subscription we need to try changing the clientId
-                } else if (!removed && isProxyBridgeSubscription(subscriptionInfo)){
-                    subscriptionInfo.setClientId(getProxyBridgeClientId(subscriptionInfo));
-                    if (ds.getDurableRemoteSubs().contains(subscriptionInfo)) {
-                        AtomicInteger count = ds.getNetworkDemandConsumerMap().computeIfAbsent(subscriptionInfo, v -> new AtomicInteger());
-                        count.decrementAndGet();
-                        //Only remove the durable remote sub if the count <= 0
-                        if (count.get() <= 0) {
-                            ds.getDurableRemoteSubs().remove(subscriptionInfo);
-                            ds.getNetworkDemandConsumerMap().remove(subscriptionInfo);
-                            cleanupDurableSub(ds, i);
-                        }
-                    }
                 }
             }
         }
@@ -1407,9 +1430,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 undoMapRegistration(sub);
             } else {
                 if (consumerInfo.isDurable()) {
-                	if (isProxyNSConsumer(sub.getRemoteInfo())) {
-                		BrokerId[] path = sub.getRemoteInfo().getBrokerPath();
-                		addProxyNetworkSubscription(sub, path, consumerInfo.getSubscriptionName());
+                    //Handle the demand generated by proxy network subscriptions
+                    //The broker path is case is normal
+                    if (isProxyNSConsumerBrokerPath(sub.getRemoteInfo())) {
+                        final BrokerId[] path = info.getBrokerPath();
+                        addProxyNetworkSubscriptionBrokerPath(sub, path, consumerInfo.getSubscriptionName());
+                    //This is the durable sync case on broker restart
+                    } else if (isProxyNSConsumerClientId(sub.getRemoteInfo().getClientId()) &&
+                            isProxyBridgeSubscription(info.getClientId(), info.getSubscriptionName())) {
+                		addProxyNetworkSubscriptionClientId(sub, sub.getRemoteInfo().getClientId(), consumerInfo.getSubscriptionName());
                 	} else {
             			sub.getDurableRemoteSubs().add(new SubscriptionInfo(sub.getRemoteInfo().getClientId(), consumerInfo.getSubscriptionName()));
             		}
