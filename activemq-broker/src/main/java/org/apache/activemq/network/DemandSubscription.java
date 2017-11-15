@@ -44,8 +44,6 @@ public class DemandSubscription {
     private final AtomicBoolean activeWaiter = new AtomicBoolean();
     private final Set<SubscriptionInfo> durableRemoteSubs = new CopyOnWriteArraySet<SubscriptionInfo>();
     private final Set<ConsumerId> forcedDurableConsumers = new CopyOnWriteArraySet<ConsumerId>();
-    //Used for proxy network consumers
-    private final Map<SubscriptionInfo, AtomicInteger> networkDemandConsumerMap = new ConcurrentHashMap<>();
     private SubscriptionInfo localDurableSubscriber;
 
     private NetworkBridgeFilter networkBridgeFilter;
@@ -85,10 +83,6 @@ public class DemandSubscription {
 
     public Set<SubscriptionInfo> getDurableRemoteSubs() {
         return durableRemoteSubs;
-    }
-
-    public Map<SubscriptionInfo, AtomicInteger> getNetworkDemandConsumerMap() {
-        return networkDemandConsumerMap;
     }
 
     /**

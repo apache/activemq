@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network;
 
+import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,7 @@ import junit.framework.Test;
 public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSupport {
 
     private boolean duplex = true;
+    private boolean deletePersistentMessagesOnStartup = true;
 
     @Override
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
@@ -59,6 +61,117 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         connector.setNetworkTTL(-1);
         connector.setClientIdToken("|");
         return connector;
+    }
+
+    public void testDurablePropagationBrokerRestartDuplex() throws Exception {
+        duplex = true;
+        testDurablePropagationBrokerRestart();
+    }
+
+    public void testDurablePropagationBrokerRestartOneWay() throws Exception {
+        duplex = false;
+        testDurablePropagationBrokerRestart();
+    }
+
+    protected void testDurablePropagationBrokerRestart() throws Exception {
+        deletePersistentMessagesOnStartup = true;
+
+        // Setup broker networks
+        bridgeBrokers("Broker_A_A", "Broker_B_B");
+        bridgeBrokers("Broker_B_B", "Broker_C_C");
+        bridgeBrokers("Broker_C_C", "Broker_D_D");
+        bridgeBrokers("Broker_D_D", "Broker_E_E");
+
+        if (!duplex) {
+            bridgeBrokers("Broker_B_B", "Broker_A_A");
+            bridgeBrokers("Broker_C_C", "Broker_B_B");
+            bridgeBrokers("Broker_D_D", "Broker_C_C");
+            bridgeBrokers("Broker_E_E", "Broker_D_D");
+        }
+
+        startAllBrokers();
+
+        // Setup destination
+        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+
+        // Setup consumers
+        Connection conn = brokers.get("Broker_A_A").factory.createConnection();
+        conn.setClientID("clientId1");
+        conn.start();
+        Session ses = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        MessageConsumer clientA2 = ses.createDurableSubscriber(dest, "subA2");
+
+        // let consumers propagate around the network
+        assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 1);
+        assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
+        assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 1);
+        assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, 1);
+        assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
+
+        //bring online a consumer on the other side
+        Connection conn2 = brokers.get("Broker_E_E").factory.createConnection();
+        conn2.setClientID("clientId2");
+        conn2.start();
+        Session ses2 = conn2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer clientE = ses2.createDurableSubscriber(dest, "subE");
+        MessageConsumer clientE2 = ses2.createDurableSubscriber(dest, "subE2");
+
+        // let consumers propagate around the network
+        assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
+        assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 2);
+        assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 2);
+        assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, 1);
+        assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
+
+        clientA.close();
+        clientA2.close();
+        clientE.close();
+        clientE2.close();
+
+        this.destroyAllBrokers();
+        deletePersistentMessagesOnStartup = false;
+        String options = new String("?persistent=true&useJmx=false");
+        createBroker(new URI("broker:(tcp://localhost:61616)/Broker_A_A" + options));
+        createBroker(new URI("broker:(tcp://localhost:61617)/Broker_B_B" + options));
+        createBroker(new URI("broker:(tcp://localhost:61618)/Broker_C_C" + options));
+        createBroker(new URI("broker:(tcp://localhost:61619)/Broker_D_D" + options));
+        createBroker(new URI("broker:(tcp://localhost:61620)/Broker_E_E" + options));
+        bridgeBrokers("Broker_A_A", "Broker_B_B");
+        bridgeBrokers("Broker_B_B", "Broker_C_C");
+        bridgeBrokers("Broker_C_C", "Broker_D_D");
+        bridgeBrokers("Broker_D_D", "Broker_E_E");
+        if (!duplex) {
+            bridgeBrokers("Broker_B_B", "Broker_A_A");
+            bridgeBrokers("Broker_C_C", "Broker_B_B");
+            bridgeBrokers("Broker_D_D", "Broker_C_C");
+            bridgeBrokers("Broker_E_E", "Broker_D_D");
+        }
+
+        startAllBrokers();
+
+        conn = brokers.get("Broker_A_A").factory.createConnection();
+        conn.setClientID("clientId1");
+        conn.start();
+        ses = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn2 = brokers.get("Broker_E_E").factory.createConnection();
+        conn2.setClientID("clientId2");
+        conn2.start();
+        ses2 = conn2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        //bring one online and leave others offline to test mixed
+        clientE = ses2.createDurableSubscriber(dest, "subE");
+        clientE.close();
+
+        ses.unsubscribe("subA");
+        ses.unsubscribe("subA2");
+        ses2.unsubscribe("subE");
+        ses2.unsubscribe("subE2");
+
+        assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
+        assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 0);
+        assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 0);
+        assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 0);
+        assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, 0);
     }
 
     public void testDurablePropagationDuplex() throws Exception {
@@ -552,7 +665,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
-        String options = new String("?persistent=false&useJmx=false");
+        String options = new String("?persistent=true&useJmx=false");
         createBroker(new URI("broker:(tcp://localhost:61616)/Broker_A_A" + options));
         createBroker(new URI("broker:(tcp://localhost:61617)/Broker_B_B" + options));
         createBroker(new URI("broker:(tcp://localhost:61618)/Broker_C_C" + options));
@@ -563,6 +676,8 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
     @Override
     protected void configureBroker(BrokerService broker) {
         broker.setBrokerId(broker.getBrokerName());
+        broker.setDeleteAllMessagesOnStartup(deletePersistentMessagesOnStartup);
+        broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "DurableFiveBrokerNetworkBridgeTest");
     }
 
     protected Session createSession(String broker) throws Exception {
