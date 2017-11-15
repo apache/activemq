@@ -74,8 +74,6 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
     }
 
     protected void testDurablePropagationBrokerRestart() throws Exception {
-        deletePersistentMessagesOnStartup = true;
-
         // Setup broker networks
         bridgeBrokers("Broker_A_A", "Broker_B_B");
         bridgeBrokers("Broker_B_B", "Broker_C_C");
@@ -665,6 +663,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
+        deletePersistentMessagesOnStartup = true;
         String options = new String("?persistent=true&useJmx=false");
         createBroker(new URI("broker:(tcp://localhost:61616)/Broker_A_A" + options));
         createBroker(new URI("broker:(tcp://localhost:61617)/Broker_B_B" + options));
