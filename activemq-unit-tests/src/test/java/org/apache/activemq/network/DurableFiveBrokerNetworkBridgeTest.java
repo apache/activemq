@@ -63,29 +63,14 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         return connector;
     }
 
-    public void testDurablePropagationBrokerRestartDuplex() throws Exception {
+    public void testDurablePropagationBrokerRestart() throws Exception {
         duplex = true;
-        testDurablePropagationBrokerRestart();
-    }
 
-    public void testDurablePropagationBrokerRestartOneWay() throws Exception {
-        duplex = false;
-        testDurablePropagationBrokerRestart();
-    }
-
-    protected void testDurablePropagationBrokerRestart() throws Exception {
         // Setup broker networks
         bridgeBrokers("Broker_A_A", "Broker_B_B");
         bridgeBrokers("Broker_B_B", "Broker_C_C");
         bridgeBrokers("Broker_C_C", "Broker_D_D");
         bridgeBrokers("Broker_D_D", "Broker_E_E");
-
-        if (!duplex) {
-            bridgeBrokers("Broker_B_B", "Broker_A_A");
-            bridgeBrokers("Broker_C_C", "Broker_B_B");
-            bridgeBrokers("Broker_D_D", "Broker_C_C");
-            bridgeBrokers("Broker_E_E", "Broker_D_D");
-        }
 
         startAllBrokers();
 
@@ -139,12 +124,6 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         bridgeBrokers("Broker_B_B", "Broker_C_C");
         bridgeBrokers("Broker_C_C", "Broker_D_D");
         bridgeBrokers("Broker_D_D", "Broker_E_E");
-        if (!duplex) {
-            bridgeBrokers("Broker_B_B", "Broker_A_A");
-            bridgeBrokers("Broker_C_C", "Broker_B_B");
-            bridgeBrokers("Broker_D_D", "Broker_C_C");
-            bridgeBrokers("Broker_E_E", "Broker_D_D");
-        }
 
         startAllBrokers();
 
