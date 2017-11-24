@@ -64,9 +64,9 @@ public class ManagementContext implements Service {
     public static final String DEFAULT_DOMAIN = "org.apache.activemq";
 
     static {
-        String option = Boolean.TRUE.toString();
+        String option = Boolean.FALSE.toString();
         try {
-            option = System.getProperty("org.apache.activemq.broker.jmx.createConnector", "true");
+            option = System.getProperty("org.apache.activemq.broker.jmx.createConnector", "false");
         } catch (Exception ex) {
         }
 
