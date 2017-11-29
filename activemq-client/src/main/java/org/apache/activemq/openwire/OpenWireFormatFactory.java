@@ -22,7 +22,7 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
 
 /**
- * 
+ *
  */
 public class OpenWireFormatFactory implements WireFormatFactory {
 
@@ -44,8 +44,10 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     private String host=null;
     private String providerName = ActiveMQConnectionMetaData.PROVIDER_NAME;
     private String providerVersion = ActiveMQConnectionMetaData.PROVIDER_VERSION;
-    private String platformDetails = ActiveMQConnectionMetaData.PLATFORM_DETAILS;
+    private String platformDetails = ActiveMQConnectionMetaData.DEFAULT_PLATFORM_DETAILS;
+    private boolean includePlatformDetails = false;
 
+    @Override
     public WireFormat createWireFormat() {
         WireFormatInfo info = new WireFormatInfo();
         info.setVersion(version);
@@ -65,6 +67,9 @@ public class OpenWireFormatFactory implements WireFormatFactory {
             }
             info.setProviderName(providerName);
             info.setProviderVersion(providerVersion);
+            if (includePlatformDetails) {
+                platformDetails = ActiveMQConnectionMetaData.PLATFORM_DETAILS;
+            }
             info.setPlatformDetails(platformDetails);
         } catch (Exception e) {
             IllegalStateException ise = new IllegalStateException("Could not configure WireFormatInfo");
@@ -189,5 +194,13 @@ public class OpenWireFormatFactory implements WireFormatFactory {
 
     public void setPlatformDetails(String platformDetails) {
         this.platformDetails = platformDetails;
+    }
+
+    public boolean isIncludePlatformDetails() {
+        return includePlatformDetails;
+    }
+
+    public void setIncludePlatformDetails(boolean includePlatformDetails) {
+        this.includePlatformDetails = includePlatformDetails;
     }
 }
