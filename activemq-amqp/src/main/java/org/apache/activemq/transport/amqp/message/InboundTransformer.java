@@ -149,7 +149,7 @@ public abstract class InboundTransformer {
 
         final ApplicationProperties ap = amqp.getApplicationProperties();
         if (ap != null) {
-            for (Map.Entry<String, Object> entry : ap.getValue().entrySet()) {
+            for (Map.Entry<String, Object> entry : ((Map<String, Object>) ap.getValue()).entrySet()) {
                 setProperty(jms,  entry.getKey(), entry.getValue());
             }
         }
