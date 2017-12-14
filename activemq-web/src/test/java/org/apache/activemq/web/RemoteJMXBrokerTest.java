@@ -58,6 +58,7 @@ public class RemoteJMXBrokerTest {
     public void startUp() throws Exception {
         brokerService = BrokerFactory.createBroker("broker:()/remoteBroker?useJmx=true");
         brokerService.getManagementContext().setConnectorPort(TestUtils.findOpenPort());
+        brokerService.getManagementContext().setCreateConnector(true);
         brokerService.start();
         brokerService.waitUntilStarted();
 
