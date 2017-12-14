@@ -17,6 +17,7 @@
 package org.apache.activemq.advisory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -42,6 +43,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
+import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -58,6 +60,7 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionId;
+import org.apache.activemq.filter.DestinationPath;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
@@ -604,7 +607,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
                 if(brokerConsumerDests.putIfAbsent(pair, info) == null) {
                     LOG.debug("Virtual consumer pair added: {} for consumer: {} ", pair, info);
-                    info.setDestination(virtualDestination.getVirtualDestination());
+                    setConsumerInfoVirtualDest(info, virtualDestination, activeMQDest);
                     ActiveMQTopic topic = AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(info.getDestination());
 
                     if (virtualDestinationConsumers.putIfAbsent(info, virtualDestination) == null) {
@@ -616,12 +619,51 @@ public class AdvisoryBroker extends BrokerFilter {
         //this is the case of a real consumer coming online
         } else {
             info = info.copy();
-            info.setDestination(virtualDestination.getVirtualDestination());
+            setConsumerInfoVirtualDest(info, virtualDestination, activeMQDest);
             ActiveMQTopic topic = AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(info.getDestination());
 
             if (virtualDestinationConsumers.putIfAbsent(info, virtualDestination) == null) {
                 LOG.debug("Virtual consumer added: {}, for virtual destination: {}", info, virtualDestination);
                 fireConsumerAdvisory(context, info.getDestination(), topic, info);
+            }
+        }
+    }
+
+    /**
+     * Sets the virtual destination on the ConsumerInfo
+     * If this is a VirtualTopic then the destination used will be the actual topic subscribed
+     * to in order to track demand properly
+     *
+     * @param info
+     * @param virtualDestination
+     * @param activeMQDest
+     */
+    private void setConsumerInfoVirtualDest(ConsumerInfo info, VirtualDestination virtualDestination, ActiveMQDestination activeMQDest) {
+        info.setDestination(virtualDestination.getVirtualDestination());
+        if (virtualDestination instanceof VirtualTopic) {
+            VirtualTopic vt = (VirtualTopic) virtualDestination;
+            String prefix = vt.getPrefix() != null ? vt.getPrefix() : "";
+            String postfix = vt.getPostfix() != null ? vt.getPostfix() : "";
+            if (prefix.endsWith(".")) {
+                prefix = prefix.substring(0, prefix.length() - 1);
+            }
+            if (postfix.startsWith(".")) {
+                postfix = postfix.substring(1, postfix.length());
+            }
+            ActiveMQDestination prefixDestination = prefix.length() > 0 ? new ActiveMQTopic(prefix) : null;
+            ActiveMQDestination postfixDestination = postfix.length() > 0 ? new ActiveMQTopic(postfix) : null;
+
+            String[] prefixPaths = prefixDestination != null ? prefixDestination.getDestinationPaths() : new String[] {};
+            String[] activeMQDestPaths = activeMQDest.getDestinationPaths();
+            String[] postfixPaths = postfixDestination != null ? postfixDestination.getDestinationPaths() : new String[] {};
+
+            //sanity check
+            if (activeMQDestPaths.length > prefixPaths.length + postfixPaths.length) {
+                String[] topicPath = Arrays.copyOfRange(activeMQDestPaths, 0 + prefixPaths.length,
+                        activeMQDestPaths.length - postfixPaths.length);
+
+                ActiveMQTopic newTopic = new ActiveMQTopic(DestinationPath.toString(topicPath));
+                info.setDestination(newTopic);
             }
         }
     }
