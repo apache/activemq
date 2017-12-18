@@ -18,7 +18,7 @@
 <beans
   xmlns="http://www.springframework.org/schema/beans"
   xmlns:amq="http://activemq.apache.org/schema/core"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance""
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="
     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
     http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
@@ -28,12 +28,12 @@
   <broker brokerName="web-console" useJmx="true" xmlns="http://activemq.apache.org/schema/core">
 
     <persistenceAdapter>
-      <kahaDB directory="target/kahadb"/>
+      <kahaDB directory="target/kahadb" />
     </persistenceAdapter>
 
     <transportConnectors>
-      <transportConnector name="openwire" uri="tcp://localhost:61616"/>
-      <transportConnector name="stomp" uri="stomp://localhost:61613"/>
+      <transportConnector name="openwire" uri="tcp://localhost:61616" />
+      <transportConnector name="stomp" uri="stomp://localhost:61613" />
     </transportConnectors>
 
   </broker>
