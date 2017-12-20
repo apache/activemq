@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import static org.junit.Assert.fail;
 
+import java.time.*;
 import java.util.Calendar;
 import java.util.List;
 import javax.jms.MessageFormatException;
@@ -338,11 +339,11 @@ public class CronParserTest {
     public void testGetNextCommaSeparated() throws MessageFormatException {
         String token = "3,5,7";
         // test minimum values
-        int next = CronParser.getNext(createEntry(token, 1, 10), 3);
+        int next = CronParser.getNext(createEntry(token, 1, 10), 3, null);
         assertEquals(2, next);
-        next = CronParser.getNext(createEntry(token, 1, 10), 8);
+        next = CronParser.getNext(createEntry(token, 1, 10), 8, null);
         assertEquals(4, next);
-        next = CronParser.getNext(createEntry(token, 1, 10), 1);
+        next = CronParser.getNext(createEntry(token, 1, 10), 1, null);
         assertEquals(2, next);
     }
 
@@ -350,24 +351,24 @@ public class CronParserTest {
     public void testGetNextRange() throws MessageFormatException {
         String token = "3-5";
         // test minimum values
-        int next = CronParser.getNext(createEntry(token, 1, 10), 3);
+        int next = CronParser.getNext(createEntry(token, 1, 10), 3, null);
         assertEquals(1, next);
-        next = CronParser.getNext(createEntry(token, 1, 10), 5);
+        next = CronParser.getNext(createEntry(token, 1, 10), 5, null);
         assertEquals(7, next);
-        next = CronParser.getNext(createEntry(token, 1, 10), 6);
+        next = CronParser.getNext(createEntry(token, 1, 10), 6, null);
         assertEquals(6, next);
-        next = CronParser.getNext(createEntry(token, 1, 10), 1);
+        next = CronParser.getNext(createEntry(token, 1, 10), 1, null);
         assertEquals(2, next);
     }
 
     @Test
     public void testGetNextExact() throws MessageFormatException {
         String token = "3";
-        int next = CronParser.getNext(createEntry(token, 0, 10), 2);
+        int next = CronParser.getNext(createEntry(token, 0, 10), 2, null);
         assertEquals(1, next);
-        next = CronParser.getNext(createEntry(token, 0, 10), 3);
+        next = CronParser.getNext(createEntry(token, 0, 10), 3, null);
         assertEquals(10, next);
-        next = CronParser.getNext(createEntry(token, 0, 10), 1);
+        next = CronParser.getNext(createEntry(token, 0, 10), 1, null);
         assertEquals(2, next);
     }
 
@@ -400,6 +401,26 @@ public class CronParserTest {
         assertEquals(list.get(2), "2");
         assertEquals(list.get(3), "3");
         assertEquals(list.get(4), "4");
+    }
+
+    //added tests from https://issues.apache.org/jira/browse/AMQ-6327
+    @Test
+    public void testGetNext() throws MessageFormatException {
+        testGetNextSingle("0 0 1 * *", "2016-04-15T00:00:00", "2016-05-01T00:00:00");
+        testGetNextSingle("0 0 1,15 * *", "2016-04-15T00:00:00", "2016-05-01T00:00:00");
+        testGetNextSingle("0 0 1 * *", "2016-05-15T00:00:00", "2016-06-01T00:00:00");
+        testGetNextSingle("0 0 1,15 * *", "2016-05-15T00:00:00", "2016-06-01T00:00:00");
+        testGetNextSingle("0 0 1 * *", "2016-06-15T00:00:00", "2016-07-01T00:00:00");
+        testGetNextSingle("0 0 1,15 * *", "2016-06-15T00:00:00", "2016-07-01T00:00:00");
+    }
+
+    private void testGetNextSingle(String cronExp, String now, String expected) throws MessageFormatException {
+
+        LocalDateTime nowDate = LocalDateTime.parse(now);
+        LocalDateTime expDate = LocalDateTime.parse(expected);
+        long next = CronParser.getNextScheduledTime(cronExp, nowDate.toInstant(OffsetDateTime.now().getOffset()).toEpochMilli());
+
+        assertEquals(expDate, LocalDateTime.ofInstant(Instant.ofEpochMilli(next), ZoneId.systemDefault()));
     }
 
     public void testGetNextScheduledTime() {
