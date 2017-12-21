@@ -151,8 +151,6 @@ public class CronParser {
 
             if (!isCurrent(dayOfWeek, currentDayOfWeek)) {
                 nextWeekDay = getNext(dayOfWeek, currentDayOfWeek, working);
-                System.out.println("nextWeekDay:"+nextCalendarDay);
-
             }
 
             if (!isCurrent(dayOfMonth, currentDayOfMonth)) {
