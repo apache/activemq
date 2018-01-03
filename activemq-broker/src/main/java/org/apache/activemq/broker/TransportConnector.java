@@ -455,8 +455,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         if (filter != null) {
             filter = filter.trim();
             if (filter.length() > 0) {
+                result = false;
                 StringTokenizer tokenizer = new StringTokenizer(filter, ",");
-                while (result && tokenizer.hasMoreTokens()) {
+                while (!result && tokenizer.hasMoreTokens()) {
                     String token = tokenizer.nextToken();
                     result = isMatchesClusterFilter(brokerName, token);
                 }
@@ -467,7 +468,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     private boolean isMatchesClusterFilter(String brokerName, String match) {
-        boolean result = true;
+        boolean result = false;
         if (brokerName != null && match != null && brokerName.length() > 0 && match.length() > 0) {
             result = Pattern.matches(match, brokerName);
         }
