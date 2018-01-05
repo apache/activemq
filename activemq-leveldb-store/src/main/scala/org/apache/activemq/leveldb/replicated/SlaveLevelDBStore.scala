@@ -27,7 +27,7 @@ import org.fusesource.hawtbuf.{Buffer, AsciiBuffer}
 import org.apache.activemq.leveldb.util._
 
 import FileSupport._
-import java.io.{IOException, RandomAccessFile, File}
+import java.io.{IOException, RandomAccessFile, File, StringWriter, PrintWriter}
 import scala.beans.BeanProperty
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 import javax.management.ObjectName
@@ -251,6 +251,10 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     override def onTransportFailure(error: IOException) {
       if( isStarted ) {
         warn("Unexpected session error: "+error)
+        debug("Stack trace:")
+        val sw = new StringWriter
+        error.printStackTrace(new PrintWriter(sw))
+        debug(sw.toString)
         queue.after(1, TimeUnit.SECONDS) {
           if( isStarted ) {
             restart_slave_connections
