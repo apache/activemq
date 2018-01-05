@@ -84,7 +84,7 @@ class ReplicationProtocolCodec extends AbstractProtocolCodec {
 
   def readReplicationFrame(action:AsciiBuffer):Action = new Action() {
     def apply = {
-      val data:Buffer = readUntil(0.toByte, 1024*64)
+      val data:Buffer = readUntil(0.toByte, 1024*64*4)
       if( data!=null ) {
         data.moveTail(-1);
         nextDecodeAction = readHeader
