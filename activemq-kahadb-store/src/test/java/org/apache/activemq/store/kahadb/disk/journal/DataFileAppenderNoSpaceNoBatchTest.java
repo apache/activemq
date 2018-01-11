@@ -183,7 +183,7 @@ public class DataFileAppenderNoSpaceNoBatchTest {
 
         boolean someExceptions = false;
         for (Location location: locations) {
-            someExceptions |= (location.getBatch().exception != null);
+            someExceptions |= (location.getException().get() != null);
         }
         assertTrue(someExceptions);
 

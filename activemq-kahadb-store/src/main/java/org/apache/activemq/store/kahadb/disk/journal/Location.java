@@ -20,6 +20,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Used as a location in the data store.
@@ -36,7 +37,8 @@ public final class Location implements Comparable<Location> {
     private int offset = NOT_SET;
     private int size = NOT_SET;
     private byte type = NOT_SET_TYPE;
-    private DataFileAppender.WriteBatch batch;
+    private CountDownLatch latch;
+    private AtomicReference<IOException> exception;
 
     public Location() {
     }
@@ -114,11 +116,12 @@ public final class Location implements Comparable<Location> {
     }
 
     public CountDownLatch getLatch() {
-        return batch.latch;
+        return latch;
     }
 
     public void setBatch(DataFileAppender.WriteBatch batch) {
-        this.batch = batch;
+        this.latch = batch.latch;
+        this.exception = batch.exception;
     }
 
     public int compareTo(Location o) {
@@ -142,7 +145,7 @@ public final class Location implements Comparable<Location> {
         return dataFileId ^ offset;
     }
 
-    public DataFileAppender.WriteBatch getBatch() {
-        return batch;
+    public AtomicReference<IOException> getException() {
+        return exception;
     }
 }
