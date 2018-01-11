@@ -24,7 +24,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SelectorWorker implements Runnable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SelectorWorker.class);
 
     private static final AtomicInteger NEXT_ID = new AtomicInteger();
 
@@ -73,7 +78,7 @@ public class SelectorWorker implements Runnable {
             try {
                 task.run();
             } catch (Throwable e) {
-                e.printStackTrace();
+                LOG.debug(e.getMessage(), e);
             }
         }
     }
@@ -142,7 +147,7 @@ public class SelectorWorker implements Runnable {
                 manager.onWorkerEmptyEvent(this);
                 selector.close();
             } catch (IOException ignore) {
-                ignore.printStackTrace();
+                LOG.debug(ignore.getMessage(), ignore);
             }
             Thread.currentThread().setName(origName);
         }
