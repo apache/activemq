@@ -65,6 +65,7 @@ public class ObjectMessageTest extends CamelSpringTestSupport {
         resultEmpty.expectedMessageCount(1);
         resultEmpty.assertIsNotSatisfied();
 
+        conn.close();
     }
 
     protected void assertCorrectObjectReceived(MockEndpoint result) {

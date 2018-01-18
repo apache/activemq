@@ -43,5 +43,6 @@ public class CamelDestinationExclusiveConsumerTest {
     public void testMocksAreValid() throws Exception {
         expectedEndpoint.expectedMessageCount(1);
         MockEndpoint.assertIsSatisfied(camelContext);
+        camelContext.stop();
     }
 }

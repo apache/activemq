@@ -66,6 +66,8 @@ public class CamelJmsTest extends CamelSpringTestSupport {
         result.assertIsSatisfied();
 
         LOG.info("Received message: " + result.getReceivedExchanges());
+
+        connection.close();
     }
 
     @Test
@@ -93,6 +95,8 @@ public class CamelJmsTest extends CamelSpringTestSupport {
         assertEquals("Message body", expectedBody, textMessage.getText());
 
         LOG.info("Received message: " + message);
+
+        connection.close();
     }
 
     protected int getExpectedRouteCount() {
