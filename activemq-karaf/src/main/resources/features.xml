@@ -18,7 +18,7 @@
 
 -->
 
-<features name="activemq-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.3.0">
+<features name="activemq-${project.version}">
 
     <repository>mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/features-core</repository>
 
