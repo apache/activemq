@@ -182,7 +182,7 @@ public class JmsTransactionCommitFailureTest {
         // Set failure flag on persistence adapter
         persistenceAdapter.setCommitFailureEnabled(true);
         try {
-            for (int i = 0; i < 1000; i++) {
+            for (int i = 0; i < 10; i++) {
                 try {
                     sendMessage(queueName, 2);
                 } catch (JMSException jmse) {
@@ -202,10 +202,44 @@ public class JmsTransactionCommitFailureTest {
         }
     }
 
+
+    @Test
+    public void testQueueMemoryLeakNoTx() throws Exception {
+        String queueName = "testMemoryLeak";
+
+        sendMessage(queueName, 1);
+
+        // Set failure flag on persistence adapter
+        persistenceAdapter.setCommitFailureEnabled(true);
+        try {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    sendMessage(queueName, 2, false);
+                } catch (JMSException jmse) {
+                    // Expected
+                }
+            }
+        } finally {
+            persistenceAdapter.setCommitFailureEnabled(false);
+        }
+        Destination destination = broker.getDestination(new ActiveMQQueue(queueName));
+        if (destination instanceof org.apache.activemq.broker.region.Queue) {
+            org.apache.activemq.broker.region.Queue queue = (org.apache.activemq.broker.region.Queue) destination;
+            Field listField = org.apache.activemq.broker.region.Queue.class.getDeclaredField("indexOrderedCursorUpdates");
+            listField.setAccessible(true);
+            List<?> list = (List<?>) listField.get(queue);
+            Assert.assertEquals(0, list.size());
+        }
+    }
+
     private void sendMessage(String queueName, int count) throws JMSException {
+        sendMessage(queueName, count, true);
+    }
+
+    private void sendMessage(String queueName, int count, boolean transacted) throws JMSException {
         Connection con = connectionFactory.createConnection();
         try {
-            Session session = con.createSession(true, Session.SESSION_TRANSACTED);
+            Session session = con.createSession(transacted, transacted ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
             try {
                 Queue destination = session.createQueue(queueName);
                 MessageProducer producer = session.createProducer(destination);
@@ -216,7 +250,9 @@ public class JmsTransactionCommitFailureTest {
                         message.setText("Message-" + messageCounter++);
                         producer.send(message);
                     }
-                    session.commit();
+                    if (transacted) {
+                        session.commit();
+                    }
                 } finally {
                     producer.close();
                 }

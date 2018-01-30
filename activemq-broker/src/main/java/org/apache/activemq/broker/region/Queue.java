@@ -774,11 +774,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    public void rollbackPendingCursorAdditions(MessageContext messageContext) {
+    public void rollbackPendingCursorAdditions(MessageId messageId) {
         synchronized (indexOrderedCursorUpdates) {
             for (int i = indexOrderedCursorUpdates.size() - 1; i >= 0; i--) {
                 MessageContext mc = indexOrderedCursorUpdates.get(i);
-                if (mc.message.getMessageId().equals(messageContext.message.getMessageId())) {
+                if (mc.message.getMessageId().equals(messageId)) {
                     indexOrderedCursorUpdates.remove(mc);
                     if (mc.onCompletion != null) {
                         mc.onCompletion.run();
@@ -854,7 +854,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         @Override
         public void afterRollback() throws Exception {
             if (store != null && messageContext.message.isPersistent()) {
-                rollbackPendingCursorAdditions(messageContext);
+                rollbackPendingCursorAdditions(messageContext.message.getMessageId());
             }
             messageContext.message.decrementReferenceCount();
         }
@@ -888,6 +888,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     // before restarting normal broker operations
                     resetNeeded = true;
                     pendingSends.decrementAndGet();
+                    rollbackPendingCursorAdditions(message.getMessageId());
                     throw e;
                 }
             }
