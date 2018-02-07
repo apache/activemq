@@ -29,6 +29,7 @@ import org.apache.activemq.util.ByteSequence;
 public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
 
     public static final Constructor STACK_TRACE_ELEMENT_CONSTRUCTOR;
+    private static final int MAX_EXCEPTION_MESSAGE_SIZE = 1024;
 
     static {
         Constructor constructor = null;
@@ -243,7 +244,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             int rc = 0;
             bs.writeBoolean(true);
             rc += tightMarshalString1(o.getClass().getName(), bs);
-            rc += tightMarshalString1(o.getMessage(), bs);
+            rc += tightMarshalString1(cutMessageIfNeeded(o.getMessage()), bs);
             if (wireFormat.isStackTraceEnabled()) {
                 rc += 2;
                 StackTraceElement[] stackTrace = o.getStackTrace();
@@ -264,7 +265,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
                                           BooleanStream bs) throws IOException {
         if (bs.readBoolean()) {
             tightMarshalString2(o.getClass().getName(), dataOut, bs);
-            tightMarshalString2(o.getMessage(), dataOut, bs);
+            tightMarshalString2(cutMessageIfNeeded(o.getMessage()), dataOut, bs);
             if (wireFormat.isStackTraceEnabled()) {
                 StackTraceElement[] stackTrace = o.getStackTrace();
                 dataOut.writeShort(stackTrace.length);
@@ -550,7 +551,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         dataOut.writeBoolean(o != null);
         if (o != null) {
             looseMarshalString(o.getClass().getName(), dataOut);
-            looseMarshalString(o.getMessage(), dataOut);
+            looseMarshalString(cutMessageIfNeeded(o.getMessage()), dataOut);
             if (wireFormat.isStackTraceEnabled()) {
                 StackTraceElement[] stackTrace = o.getStackTrace();
                 dataOut.writeShort(stackTrace.length);
@@ -640,5 +641,11 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             rc = new ByteSequence(t, 0, size);
         }
         return rc;
+    }
+    
+    protected String cutMessageIfNeeded(final String message) {
+        return (message.length() > MAX_EXCEPTION_MESSAGE_SIZE)?
+            message.substring(0, MAX_EXCEPTION_MESSAGE_SIZE - 3) + "..." : message;
+            
     }
 }
