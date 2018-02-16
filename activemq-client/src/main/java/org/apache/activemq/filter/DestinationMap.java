@@ -231,6 +231,10 @@ public class DestinationMap {
     @SuppressWarnings("rawtypes")
     //Used to filter out any child/unmatching entries
     private boolean isMatchOrParent(final ActiveMQDestination destination, final DestinationMapEntry entry) {
+        //If destination not set then do not filter out
+        if (entry.getDestination() == null) {
+            return true;
+        }
         final DestinationFilter filter = DestinationFilter.parseFilter(entry.getDestination());
         return destination.equals(entry.getDestination()) || filter.matches(destination);
     }
