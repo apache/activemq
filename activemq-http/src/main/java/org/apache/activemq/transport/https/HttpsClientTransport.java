@@ -75,4 +75,10 @@ public class HttpsClientTransport extends HttpClientTransport {
         }
 
     }
+
+    @Override
+    protected String getSystemPropertyPrefix() {
+        return "https.";
+    }
+
 }
