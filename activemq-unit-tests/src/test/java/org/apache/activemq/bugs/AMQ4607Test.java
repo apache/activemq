@@ -178,6 +178,95 @@ public class AMQ4607Test extends JmsMultipleBrokersTestSupport implements Uncaug
 
     }
 
+    public void testMigratingConsumerSelectorAwareTrue() throws Exception {
+        bridge("Broker0", "Broker1");
+        if (!duplex) bridge("Broker1", "Broker0");
+
+        ConditionalNetworkBridgeFilterFactory conditionalNetworkBridgeFilterFactory = new ConditionalNetworkBridgeFilterFactory();
+        conditionalNetworkBridgeFilterFactory.setReplayDelay(0);
+        conditionalNetworkBridgeFilterFactory.setReplayWhenNoConsumers(true);
+        conditionalNetworkBridgeFilterFactory.setSelectorAware(true);
+        brokers.get("Broker1").broker.getDestinationPolicy().getDefaultEntry().setNetworkBridgeFilterFactory(conditionalNetworkBridgeFilterFactory);
+
+        startAllBrokers();
+        this.waitForBridgeFormation();
+
+        Destination dest = createDestination("TEST.FOO", false);
+        sendMessages("Broker0", dest, 1);
+
+        assertExactMessageCount("Broker0", dest, 1, TIMEOUT);
+
+        MessageConsumer messageConsumerNoMatch = createConsumer("Broker1", dest, "DoNotConsume = 'true'");
+
+        assertExactConsumersConnect("Broker0", dest, 1, TIMEOUT);
+        assertExactConsumersConnect("Broker1", dest, 1, TIMEOUT);
+
+        assertExactMessageCount("Broker1", dest, 1, TIMEOUT);
+        assertExactMessageCount("Broker0", dest, 0, TIMEOUT);
+
+        // now consume the message
+        final String brokerId = "Broker0";
+        MessageConsumer messageConsumer = createConsumer(brokerId, dest);
+
+        assertExactConsumersConnect("Broker0", dest, 2, TIMEOUT);
+        assertExactConsumersConnect("Broker1", dest, 2, TIMEOUT);
+
+
+        assertTrue("Consumed ok", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return brokers.get(brokerId).allMessages.getMessageIds().size() == 1;
+            }
+        }));
+        messageConsumer.close();
+    }
+
+    public void testMigratingConsumerSelectorAwareFalse() throws Exception {
+        bridge("Broker0", "Broker1");
+        if (!duplex) bridge("Broker1", "Broker0");
+
+        ConditionalNetworkBridgeFilterFactory conditionalNetworkBridgeFilterFactory = new ConditionalNetworkBridgeFilterFactory();
+        conditionalNetworkBridgeFilterFactory.setReplayDelay(0);
+        conditionalNetworkBridgeFilterFactory.setReplayWhenNoConsumers(true);
+        conditionalNetworkBridgeFilterFactory.setSelectorAware(false);
+        brokers.get("Broker1").broker.getDestinationPolicy().getDefaultEntry().setNetworkBridgeFilterFactory(conditionalNetworkBridgeFilterFactory);
+
+        startAllBrokers();
+        this.waitForBridgeFormation();
+
+        Destination dest = createDestination("TEST.FOO", false);
+        sendMessages("Broker0", dest, 1);
+
+        assertExactMessageCount("Broker0", dest, 1, TIMEOUT);
+
+        MessageConsumer messageConsumerNoMatch = createConsumer("Broker1", dest, "DoNotConsume = 'true'");
+
+        assertExactConsumersConnect("Broker0", dest, 1, TIMEOUT);
+        assertExactConsumersConnect("Broker1", dest, 1, TIMEOUT);
+
+        assertExactMessageCount("Broker1", dest, 1, TIMEOUT);
+        assertExactMessageCount("Broker0", dest, 0, TIMEOUT);
+
+        // now try consume the message
+        final String brokerId = "Broker0";
+        MessageConsumer messageConsumer = createConsumer(brokerId, dest);
+
+        assertExactConsumersConnect("Broker0", dest, 2, TIMEOUT);
+        assertExactConsumersConnect("Broker1", dest, 2, TIMEOUT);
+
+        assertExactMessageCount("Broker1", dest, 1, TIMEOUT);
+        assertExactMessageCount("Broker0", dest, 0, TIMEOUT);
+
+        assertTrue("Consumed ok", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return brokers.get(brokerId).allMessages.getMessageIds().size() == 0;
+            }
+        }));
+        messageConsumer.close();
+    }
+
+
     protected void assertExactMessageCount(final String brokerName, Destination destination, final int count, long timeout) throws Exception {
         ManagementContext context = brokers.get(brokerName).broker.getManagementContext();
         final QueueViewMBean queueViewMBean = (QueueViewMBean) context.newProxyInstance(brokers.get(brokerName).broker.getAdminView().getQueues()[0], QueueViewMBean.class, false);
