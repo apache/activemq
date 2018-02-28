@@ -340,7 +340,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
                 return;
             }
             if (o instanceof MessageDispatch && ((MessageDispatch)o).getMessage() != null) {
-                fail("Received a message: "+((MessageDispatch)o).getMessage().getMessageId());
+                fail("Received a message: "+((MessageDispatch)o).getMessage().getMessageId() + " for: " + ((MessageDispatch)o).getMessage().getDestination().getPhysicalName());
             }
         }
     }

@@ -781,6 +781,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         try {
             long sequence = (Long)messageId.getEntryLocator();
             getAdapter().doCommitAddOp(c, preparedSequenceId, sequence);
+            messageId.setEntryLocator(preparedSequenceId);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit add: " + messageId + ". Reason: " + e, e);
