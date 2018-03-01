@@ -71,7 +71,7 @@ public class AMQ6815Test {
          brokerService.stop();
       }
 
-      @Test(timeout = 60000)
+      @Test(timeout = 120000)
       public void testHeapUsage() throws Exception {
          Runtime.getRuntime().gc();
          final long initUsedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
