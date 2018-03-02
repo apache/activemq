@@ -257,18 +257,26 @@ public class ProducerFlowControlTest extends JmsTestSupport {
 
     public void testDisableWarning() throws Exception {
         final AtomicInteger warnings = new AtomicInteger();
+        final AtomicInteger debugs = new AtomicInteger();
+
         Appender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Usage Manager Memory Limit")) {
-                    LOG.info("received  log message: " + event.getMessage());
+                if (event.getLevel().equals(Level.WARN) && event.getMessage().toString().contains("Usage Manager Memory Limit")) {
+                    LOG.info("received warn log message: " + event.getMessage());
                     warnings.incrementAndGet();
                 }
+                if (event.getLevel().equals(Level.DEBUG) && event.getMessage().toString().contains("Usage Manager Memory Limit")) {
+                    LOG.info("received debug log message: " + event.getMessage());
+                    debugs.incrementAndGet();
+                }
+
             }
         };
         org.apache.log4j.Logger log4jLogger =
                 org.apache.log4j.Logger.getLogger(Queue.class);
         log4jLogger.addAppender(appender);
+        log4jLogger.setLevel(Level.DEBUG);
         try {
             ConnectionFactory factory = createConnectionFactory();
             connection = (ActiveMQConnection)factory.createConnection();
@@ -287,6 +295,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
             connection.start();
             fillQueue(new ActiveMQQueue("SomeOtherQueueToPickUpNewPolicy"));
             assertEquals(0, warnings.get());
+            assertTrue(debugs.get() > 1);
 
         } finally {
             log4jLogger.removeAppender(appender);

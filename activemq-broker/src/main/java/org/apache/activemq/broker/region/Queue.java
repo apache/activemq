@@ -637,9 +637,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             fastProducer(context, producerInfo);
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
                 if (isFlowControlLogRequired()) {
-                    LOG.info("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                    LOG.warn("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
                                 memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
-
+                } else {
+                    LOG.debug("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                            memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
                 }
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
                     ResourceAllocationException resourceAllocationException = sendMemAllocationException;
@@ -2083,8 +2085,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 } finally {
                     pagedInMessagesLock.writeLock().unlock();
                 }
-            } else if (!messages.hasSpace() && isFlowControlLogRequired()) {
-                LOG.warn("{} cursor blocked, no space available to page in messages; usage: {}", this, this.systemUsage.getMemoryUsage());
+            } else if (!messages.hasSpace()) {
+                if (isFlowControlLogRequired()) {
+                    LOG.warn("{} cursor blocked, no space available to page in messages; usage: {}", this, this.systemUsage.getMemoryUsage());
+                } else {
+                    LOG.debug("{} cursor blocked, no space available to page in messages; usage: {}", this, this.systemUsage.getMemoryUsage());
+                }
             }
         } else {
             // Avoid return null list, if condition is not validated

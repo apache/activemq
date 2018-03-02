@@ -121,7 +121,7 @@ public class AMQ6463Test extends JmsTestSupport {
             public void doAppend(LoggingEvent event) {
                 if (event.getLevel().equals(Level.ERROR)) {
                     errors.incrementAndGet();
-                } else if (event.getLevel().equals(Level.INFO) && event.getRenderedMessage().contains("Usage Manager Memory Limit")) {
+                } else if (event.getLevel().equals(Level.WARN) && event.getRenderedMessage().contains("Usage Manager Memory Limit")) {
                     gotUsageBlocked.set(true);
                 }
             }
