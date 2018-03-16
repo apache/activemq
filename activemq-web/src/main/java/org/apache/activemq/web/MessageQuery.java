@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.web;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
@@ -27,19 +24,22 @@ import javax.jms.ObjectMessage;
 import javax.jms.QueueBrowser;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Allow the user to browse a message on a queue by its ID
- * 
- * 
+ *
+ *
  */
 public class MessageQuery extends QueueBrowseQuery {
 
     private String id;
     private Message message;
 
-    public MessageQuery(BrokerFacade brokerFacade, SessionPool sessionPool) throws JMSException {
-        super(brokerFacade, sessionPool);
+    public MessageQuery(BrokerFacade brokerFacade) throws JMSException {
+        super(brokerFacade);
     }
 
     public String getId() {
@@ -111,7 +111,7 @@ public class MessageQuery extends QueueBrowseQuery {
 
         return null;
     }
-    
+
     public boolean isDLQ() throws Exception {
     	return getQueueView().isDLQ();
     }
