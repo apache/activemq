@@ -290,7 +290,8 @@ class DFSLevelDBClient(val store:DFSLevelDBStore) extends LevelDBClient(store) {
 
       indexFileRefCounters.getOrElseUpdate(target.getName, new LongCounter()).incrementAndGet()
       using(dfs.create(target, true, 1024*32, dfsReplication.toShort, dfsBlockSize)) { os=>
-        JsonCodec.mapper.writeValue(os, mf)
+	var outputStream:OutputStream = os.asInstanceOf[OutputStream]
+        JsonCodec.mapper.writeValue(outputStream, mf)
       }
 
       snapshots += snapshot_id -> Snapshot(mf.current_manifest, Set(mf.files.toSeq:_*))
