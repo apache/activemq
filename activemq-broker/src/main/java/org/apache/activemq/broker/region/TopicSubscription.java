@@ -32,7 +32,6 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -72,6 +71,7 @@ public class TopicSubscription extends AbstractSubscription {
     protected ActiveMQMessageAudit audit;
     protected boolean active = false;
     protected boolean discarding = false;
+    private boolean useTopicSubscriptionInflightStats = true;
 
     //Used for inflight message size calculations
     protected final Object dispatchLock = new Object();
@@ -258,8 +258,10 @@ public class TopicSubscription extends AbstractSubscription {
                         synchronized(dispatchLock) {
                             matched.remove();
                             getSubscriptionStatistics().getDispatched().increment();
-                            dispatched.add(new DispatchedNode(node));
-                            getSubscriptionStatistics().getInflightMessageSize().addSize(node.getSize());
+                            if (isUseTopicSubscriptionInflightStats()) {
+                                dispatched.add(new DispatchedNode(node));
+                                getSubscriptionStatistics().getInflightMessageSize().addSize(node.getSize());
+                            }
                             node.decrementReferenceCount();
                         }
                         break;
@@ -382,43 +384,55 @@ public class TopicSubscription extends AbstractSubscription {
      * @param ack
      */
     private void updateStatsOnAck(final MessageAck ack) {
-        synchronized(dispatchLock) {
-            boolean inAckRange = false;
-            List<DispatchedNode> removeList = new ArrayList<>();
-            for (final DispatchedNode node : dispatched) {
-                MessageId messageId = node.getMessageId();
-                if (ack.getFirstMessageId() == null
-                        || ack.getFirstMessageId().equals(messageId)) {
-                    inAckRange = true;
+        //Allow disabling inflight stats to save memory usage
+        if (isUseTopicSubscriptionInflightStats()) {
+            synchronized(dispatchLock) {
+                boolean inAckRange = false;
+                List<DispatchedNode> removeList = new ArrayList<>();
+                for (final DispatchedNode node : dispatched) {
+                    MessageId messageId = node.getMessageId();
+                    if (ack.getFirstMessageId() == null
+                            || ack.getFirstMessageId().equals(messageId)) {
+                        inAckRange = true;
+                    }
+                    if (inAckRange) {
+                        removeList.add(node);
+                        if (ack.getLastMessageId().equals(messageId)) {
+                            break;
+                        }
+                    }
                 }
-                if (inAckRange) {
-                    removeList.add(node);
-                    if (ack.getLastMessageId().equals(messageId)) {
-                        break;
+
+                for (final DispatchedNode node : removeList) {
+                    dispatched.remove(node);
+                    getSubscriptionStatistics().getInflightMessageSize().addSize(-node.getSize());
+
+                    final Destination destination = node.getDestination();
+                    incrementStatsOnAck(destination, ack, 1);
+                    if (!ack.isInTransaction()) {
+                        contractPrefetchExtension(1);
                     }
                 }
             }
-
-            for (final DispatchedNode node : removeList) {
-                dispatched.remove(node);
-                getSubscriptionStatistics().getInflightMessageSize().addSize(-node.getSize());
-                getSubscriptionStatistics().getDequeues().increment();
-
-                final Destination destination = node.getDestination();
-                if (destination != null) {
-                    destination.getDestinationStatistics().getDequeues().increment();
-                    destination.getDestinationStatistics().getInflight().decrement();
-                    if (info.isNetworkSubscription()) {
-                        destination.getDestinationStatistics().getForwards().increment();
-                    }
-                    if (ack.isExpiredAck()) {
-                        destination.getDestinationStatistics().getExpired().increment();
-                    }
-                }
-                if (!ack.isInTransaction()) {
-                    contractPrefetchExtension(1);
-                }
+        } else {
+            if (singleDestination && destination != null) {
+                incrementStatsOnAck(destination, ack, ack.getMessageCount());
             }
+            if (!ack.isInTransaction()) {
+                contractPrefetchExtension(ack.getMessageCount());
+            }
+        }
+    }
+
+    private void incrementStatsOnAck(final Destination destination, final MessageAck ack, final int count) {
+        getSubscriptionStatistics().getDequeues().add(count);
+        destination.getDestinationStatistics().getDequeues().add(count);
+        destination.getDestinationStatistics().getInflight().subtract(count);
+        if (info.isNetworkSubscription()) {
+            destination.getDestinationStatistics().getForwards().add(count);
+        }
+        if (ack.isExpiredAck()) {
+            destination.getDestinationStatistics().getExpired().add(count);
         }
     }
 
@@ -653,8 +667,10 @@ public class TopicSubscription extends AbstractSubscription {
             md.setDestination(((Destination)node.getRegionDestination()).getActiveMQDestination());
             synchronized(dispatchLock) {
                 getSubscriptionStatistics().getDispatched().increment();
-                dispatched.add(new DispatchedNode(node));
-                getSubscriptionStatistics().getInflightMessageSize().addSize(node.getSize());
+                if (isUseTopicSubscriptionInflightStats()) {
+                    dispatched.add(new DispatchedNode(node));
+                    getSubscriptionStatistics().getInflightMessageSize().addSize(node.getSize());
+                }
             }
 
             // Keep track if this subscription is receiving messages from a single destination.
@@ -762,6 +778,14 @@ public class TopicSubscription extends AbstractSubscription {
         } catch(Exception e) {
             LOG.trace("Caught exception on dispatch after prefetch size change.");
         }
+    }
+
+    public boolean isUseTopicSubscriptionInflightStats() {
+        return useTopicSubscriptionInflightStats;
+    }
+
+    public void setUseTopicSubscriptionInflightStats(boolean useTopicSubscriptionInflightStats) {
+        this.useTopicSubscriptionInflightStats = useTopicSubscriptionInflightStats;
     }
 
     private static class DispatchedNode {

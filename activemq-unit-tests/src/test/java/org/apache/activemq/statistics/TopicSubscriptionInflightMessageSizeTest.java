@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.statistics;
 
+import static org.junit.Assert.assertTrue;
+
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -23,6 +25,9 @@ import javax.jms.MessageConsumer;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
+import org.junit.Assume;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -33,8 +38,8 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class TopicSubscriptionInflightMessageSizeTest extends AbstractInflightMessageSizeTest {
 
-    public TopicSubscriptionInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge) {
-        super(ackType, optimizeAcknowledge);
+    public TopicSubscriptionInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge, boolean useTopicSubscriptionInflightStats) {
+        super(ackType, optimizeAcknowledge, useTopicSubscriptionInflightStats);
     }
 
     @Override
@@ -55,6 +60,31 @@ public class TopicSubscriptionInflightMessageSizeTest extends AbstractInflightMe
     @Override
     protected ActiveMQDestination getActiveMQDestination() {
         return new ActiveMQTopic(destName);
+    }
+
+    @Test(timeout=15000)
+    public void testInflightMessageSizeDisabled() throws Exception {
+        Assume.assumeFalse(useTopicSubscriptionInflightStats);
+        sendMessages(10);
+
+        Thread.sleep(1000);
+
+        assertTrue("Inflight message size should be 0", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getSubscription().getInFlightMessageSize() == 0;
+            }
+        }));
+
+        receiveMessages(10);
+
+        Thread.sleep(1000);
+        assertTrue("Inflight message size should still be 0", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getSubscription().getInFlightMessageSize() == 0;
+            }
+        }));
     }
 
 }

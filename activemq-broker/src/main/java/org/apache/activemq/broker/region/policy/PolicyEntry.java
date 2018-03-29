@@ -103,6 +103,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private NetworkBridgeFilterFactory networkBridgeFilterFactory;
     private boolean doOptimzeMessageStorage = true;
     private int maxDestinations = -1;
+    private boolean useTopicSubscriptionInflightStats = true;
 
     /*
      * percentage of in-flight messages above which optimize message store is disabled
@@ -315,6 +316,7 @@ public class PolicyEntry extends DestinationMapEntry {
         configurePrefetch(subscription);
         subscription.setUsePrefetchExtension(isUsePrefetchExtension());
         subscription.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+        subscription.setUseTopicSubscriptionInflightStats(isUseTopicSubscriptionInflightStats());
         if (pendingMessageLimitStrategy != null) {
             int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);
             int consumerLimit = subscription.getInfo().getMaximumPendingMessageLimit();
@@ -1100,4 +1102,12 @@ public class PolicyEntry extends DestinationMapEntry {
     public String toString() {
         return "PolicyEntry [" + destination + "]";
     }
+    }
+
+    public boolean isUseTopicSubscriptionInflightStats() {
+        return useTopicSubscriptionInflightStats;
+    }
+
+    public void setUseTopicSubscriptionInflightStats(boolean useTopicSubscriptionInflightStats) {
+        this.useTopicSubscriptionInflightStats = useTopicSubscriptionInflightStats;
 }

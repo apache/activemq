@@ -38,6 +38,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
@@ -59,6 +61,7 @@ public abstract class AbstractInflightMessageSizeTest {
     protected Destination amqDestination;
     protected MessageConsumer consumer;
     protected int prefetch = 100;
+    protected boolean useTopicSubscriptionInflightStats;
     final protected int ackType;
     final protected boolean optimizeAcknowledge;
     final protected String destName = "testDest";
@@ -66,20 +69,29 @@ public abstract class AbstractInflightMessageSizeTest {
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                {ActiveMQSession.SESSION_TRANSACTED, true},
-                {ActiveMQSession.AUTO_ACKNOWLEDGE, true},
-                {ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, true},
-                {ActiveMQSession.CLIENT_ACKNOWLEDGE, true},
-                {ActiveMQSession.SESSION_TRANSACTED, false},
-                {ActiveMQSession.AUTO_ACKNOWLEDGE, false},
-                {ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, false},
-                {ActiveMQSession.CLIENT_ACKNOWLEDGE, false}
+                {ActiveMQSession.SESSION_TRANSACTED, true, true},
+                {ActiveMQSession.AUTO_ACKNOWLEDGE, true, true},
+                {ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, true, true},
+                {ActiveMQSession.CLIENT_ACKNOWLEDGE, true, true},
+                {ActiveMQSession.SESSION_TRANSACTED, false, true},
+                {ActiveMQSession.AUTO_ACKNOWLEDGE, false, true},
+                {ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, false, true},
+                {ActiveMQSession.CLIENT_ACKNOWLEDGE, false, true},
+                {ActiveMQSession.SESSION_TRANSACTED, true, false},
+                {ActiveMQSession.AUTO_ACKNOWLEDGE, true, false},
+                {ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, true, false},
+                {ActiveMQSession.CLIENT_ACKNOWLEDGE, true, false},
+                {ActiveMQSession.SESSION_TRANSACTED, false, false},
+                {ActiveMQSession.AUTO_ACKNOWLEDGE, false, false},
+                {ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, false, false},
+                {ActiveMQSession.CLIENT_ACKNOWLEDGE, false, false}
         });
     }
 
-    public AbstractInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge) {
+    public AbstractInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge, boolean useTopicSubscriptionInflightStats) {
         this.ackType = ackType;
         this.optimizeAcknowledge = optimizeAcknowledge;
+        this.useTopicSubscriptionInflightStats = useTopicSubscriptionInflightStats;
     }
 
     @Before
@@ -88,6 +100,12 @@ public abstract class AbstractInflightMessageSizeTest {
         brokerService.setDeleteAllMessagesOnStartup(true);
         TransportConnector tcp = brokerService
                 .addConnector("tcp://localhost:0");
+        PolicyEntry policy = new PolicyEntry();
+        policy.setUseTopicSubscriptionInflightStats(useTopicSubscriptionInflightStats);
+        PolicyMap pMap = new PolicyMap();
+        pMap.setDefaultEntry(policy);
+        brokerService.setDestinationPolicy(pMap);
+
         brokerService.start();
         //used to test optimizeAcknowledge works
         String optAckString = optimizeAcknowledge ? "?jms.optimizeAcknowledge=true&jms.optimizedAckScheduledAckInterval=2000" : "";
@@ -129,6 +147,8 @@ public abstract class AbstractInflightMessageSizeTest {
      */
     @Test(timeout=15000)
     public void testInflightMessageSize() throws Exception {
+        Assume.assumeTrue(useTopicSubscriptionInflightStats);
+
         final long size = sendMessages(10);
 
         assertTrue("Inflight message size should be greater than the content length sent", Wait.waitFor(new Wait.Condition() {
@@ -155,6 +175,8 @@ public abstract class AbstractInflightMessageSizeTest {
      */
     @Test(timeout=15000)
     public void testInflightMessageSizePrefetchFilled() throws Exception {
+        Assume.assumeTrue(useTopicSubscriptionInflightStats);
+
         final long size = sendMessages(prefetch);
 
         assertTrue("Inflight message size should be greater than content length", Wait.waitFor(new Wait.Condition() {
@@ -187,6 +209,8 @@ public abstract class AbstractInflightMessageSizeTest {
      */
     @Test(timeout=15000)
     public void testInflightMessageSizePrefetchNotFilled() throws Exception {
+        Assume.assumeTrue(useTopicSubscriptionInflightStats);
+
         final long size = sendMessages(prefetch - 10);
 
         assertTrue("Inflight message size should be greater than content length", Wait.waitFor(new Wait.Condition() {
@@ -227,6 +251,7 @@ public abstract class AbstractInflightMessageSizeTest {
      */
     @Test(timeout=15000)
     public void testInflightMessageSizeRollback() throws Exception {
+        Assume.assumeTrue(useTopicSubscriptionInflightStats);
         Assume.assumeTrue(ackType == ActiveMQSession.SESSION_TRANSACTED);
 
         final long size = sendMessages(10);
