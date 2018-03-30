@@ -1102,7 +1102,6 @@ public class PolicyEntry extends DestinationMapEntry {
     public String toString() {
         return "PolicyEntry [" + destination + "]";
     }
-    }
 
     public boolean isUseTopicSubscriptionInflightStats() {
         return useTopicSubscriptionInflightStats;
