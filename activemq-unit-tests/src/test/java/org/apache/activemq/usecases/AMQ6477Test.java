@@ -77,16 +77,18 @@ public class AMQ6477Test {
     private SubType subType;
     private boolean persistent;
 
-    protected enum SubType {QUEUE, TOPIC, DURABLE};
+    protected enum SubType {QUEUE, TOPIC, DURABLE}
 
     @Parameters(name="subType={0},isPersistent={1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
                 {SubType.QUEUE, false},
-                {SubType.TOPIC, false},
+                //Can only test PrefetchSubscriptions for now as TopicSubscriptions don't track the message
+                //references anymore that are dispatched
+               // {SubType.TOPIC, false},
                 {SubType.DURABLE, false},
                 {SubType.QUEUE, true},
-                {SubType.TOPIC, true},
+               // {SubType.TOPIC, true},
                 {SubType.DURABLE, true}
             });
     }
@@ -177,11 +179,9 @@ public class AMQ6477Test {
     protected List<MessageReference> getSubscriptionMessages(Subscription sub) throws Exception {
         Field dispatchedField = null;
         Field dispatchLockField = null;
-
-        if (sub instanceof TopicSubscription) {
-            dispatchedField = TopicSubscription.class.getDeclaredField("dispatched");
-            dispatchLockField = TopicSubscription.class.getDeclaredField("dispatchLock");
-        } else {
+        //Can only test PrefetchSubscriptions for now as TopicSubscriptions don't track the message
+        //references anymore that are dispatched
+        if (sub instanceof PrefetchSubscription) {
             dispatchedField = PrefetchSubscription.class.getDeclaredField("dispatched");
             dispatchLockField = PrefetchSubscription.class.getDeclaredField("dispatchLock");
         }
