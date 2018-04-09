@@ -19,7 +19,7 @@
 # Configuration file for running Apache Active MQ as standalone provider.
 #
 # This file overwrites the predefined settings of the sysv init-script.
-# You can also use alternate location for default settings -  
+# You can also use alternate location for default settings -
 # invoke the init-script without a argument an review help section "Configuration of this script"
 # /etc/default/activemq <activemq user home>/.activemqrc <activemq installation dir>/bin/env
 
@@ -35,6 +35,10 @@ ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+fi
+
+if [ -z "$ACTIVEMQ_OUT" ]; then
+   ACTIVEMQ_OUT="/dev/null"
 fi
 
 # Uncomment to enable audit logging
