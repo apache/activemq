@@ -334,7 +334,7 @@ invokeJar(){
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> $ACTIVEMQ_OUT 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > "${PIDFILE}";
               echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
