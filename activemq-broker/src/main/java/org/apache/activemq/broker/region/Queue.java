@@ -1869,12 +1869,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private void dropMessage(QueueMessageReference reference) {
         //use dropIfLive so we only process the statistics at most one time
         if (reference.dropIfLive()) {
+            getDestinationStatistics().getDequeues().increment();
+            getDestinationStatistics().getMessages().decrement();
             pagedInMessagesLock.writeLock().lock();
             try {
-                if (pagedInMessages.remove(reference) != null) {
-                    getDestinationStatistics().getDequeues().increment();
-                    getDestinationStatistics().getMessages().decrement();
-                }
+                pagedInMessages.remove(reference);
             } finally {
                 pagedInMessagesLock.writeLock().unlock();
             }
