@@ -1842,13 +1842,17 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             pagedInMessagesLock.writeLock().lock();
             try {
                 if (pagedInMessages.remove(reference) != null) {
-                    getDestinationStatistics().getDequeues().increment();
-                    getDestinationStatistics().getMessages().decrement();
+                    updateMetricsOnMessageDrop();
                 }
             } finally {
                 pagedInMessagesLock.writeLock().unlock();
             }
         }
+    }
+
+    private void updateMetricsOnMessageDrop() {
+        getDestinationStatistics().getDequeues().increment();
+        getDestinationStatistics().getMessages().decrement();
     }
 
     public void messageExpired(ConnectionContext context, MessageReference reference) {
@@ -2007,6 +2011,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         if (processExpired && ref.isExpired()) {
                             if (broker.isExpired(ref)) {
                                 messageExpired(createConnectionContext(), ref);
+
+                                //We need to update the metrics here because the drop message
+                                //method will only update if the message was removed from the
+                                //pagedInMessages list which won't happen in this case
+                                updateMetricsOnMessageDrop();
                             } else {
                                 ref.decrementReferenceCount();
                             }
