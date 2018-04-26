@@ -18,16 +18,12 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.TransactionBroker;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
@@ -36,12 +32,9 @@ import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.IndexListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ProxyMessageStore;
-import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.memory.MemoryTransactionStore;
-import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.transaction.Transaction;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.DataByteArrayInputStream;
 
@@ -56,9 +49,6 @@ import org.apache.activemq.util.DataByteArrayInputStream;
  */
 public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
-
-    private HashMap<ActiveMQDestination, MessageStore> topicStores = new HashMap<ActiveMQDestination, MessageStore>();
-    private HashMap<ActiveMQDestination, MessageStore> queueStores = new HashMap<ActiveMQDestination, MessageStore>();
 
     public JdbcMemoryTransactionStore(JDBCPersistenceAdapter jdbcPersistenceAdapter) {
         super(jdbcPersistenceAdapter);
@@ -333,35 +323,34 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
     }
 
     @Override
-    protected void onProxyTopicStore(ProxyTopicMessageStore proxyTopicMessageStore) {
-        topicStores.put(proxyTopicMessageStore.getDestination(), proxyTopicMessageStore.getDelegate());
-    }
-
-    @Override
-    protected void onProxyQueueStore(ProxyMessageStore proxyQueueMessageStore) {
-        queueStores.put(proxyQueueMessageStore.getDestination(), proxyQueueMessageStore.getDelegate());
-    }
-
-    @Override
     protected void onRecovered(Tx tx) {
         for (RemoveMessageCommand removeMessageCommand: tx.acks) {
             if (removeMessageCommand instanceof LastAckCommand) {
                 LastAckCommand lastAckCommand = (LastAckCommand) removeMessageCommand;
-                JDBCTopicMessageStore jdbcTopicMessageStore = (JDBCTopicMessageStore) topicStores.get(lastAckCommand.getMessageAck().getDestination());
+                JDBCTopicMessageStore jdbcTopicMessageStore = (JDBCTopicMessageStore) findMessageStore(lastAckCommand.getMessageAck().getDestination());
                 jdbcTopicMessageStore.pendingCompletion(lastAckCommand.getClientId(), lastAckCommand.getSubName(), lastAckCommand.getSequence(), lastAckCommand.getPriority());
                 lastAckCommand.setMessageStore(jdbcTopicMessageStore);
             } else {
-                // when reading the store we ignore messages with non null XIDs but should include those with XIDS starting in - (pending acks in an xa transaction),
-                // but the sql is non portable to match BLOB with LIKE etc
-                // so we make up for it when we recover the ack
-                ((JDBCPersistenceAdapter)persistenceAdapter).getBrokerService().getRegionBroker().getDestinationMap().get(removeMessageCommand.getMessageAck().getDestination()).getDestinationStatistics().getMessages().increment();
-                ((RecoveredRemoveMessageCommand)removeMessageCommand).setMessageStore(queueStores.get(removeMessageCommand.getMessageAck().getDestination()));
+                ((RecoveredRemoveMessageCommand)removeMessageCommand).setMessageStore(findMessageStore(removeMessageCommand.getMessageAck().getDestination()));
             }
         }
         for (AddMessageCommand addMessageCommand : tx.messages) {
-            ActiveMQDestination destination = addMessageCommand.getMessage().getDestination();
-            addMessageCommand.setMessageStore(destination.isQueue() ? queueStores.get(destination) : topicStores.get(destination));
+            addMessageCommand.setMessageStore(findMessageStore(addMessageCommand.getMessage().getDestination()));
         }
+    }
+
+    private MessageStore findMessageStore(ActiveMQDestination destination) {
+        ProxyMessageStore proxyMessageStore = null;
+        try {
+            if (destination.isQueue()) {
+                proxyMessageStore = (ProxyMessageStore) persistenceAdapter.createQueueMessageStore((ActiveMQQueue) destination);
+            } else {
+                proxyMessageStore = (ProxyMessageStore) persistenceAdapter.createTopicMessageStore((ActiveMQTopic) destination);
+            }
+        } catch (IOException error) {
+            throw new RuntimeException("Failed to find/create message store for destination: " + destination, error);
+        }
+        return proxyMessageStore.getDelegate();
     }
 
     @Override

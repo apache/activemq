@@ -850,9 +850,10 @@ public class Topic extends BaseDestination implements Task {
 
     /**
      * force a reread of the store - after transaction recovery completion
+     * @param pendingAdditionsCount
      */
     @Override
-    public void clearPendingMessages() {
+    public void clearPendingMessages(int pendingAdditionsCount) {
         dispatchLock.readLock().lock();
         try {
             for (DurableTopicSubscription durableTopicSubscription : durableSubscribers.values()) {

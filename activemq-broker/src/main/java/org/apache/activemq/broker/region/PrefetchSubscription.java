@@ -413,9 +413,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         Destination nodeDest = (Destination) node.getRegionDestination();
                         synchronized (dispatchLock) {
                             getSubscriptionStatistics().getDequeues().increment();
-                            dispatched.remove(node);
-                            getSubscriptionStatistics().getInflightMessageSize().addSize(-node.getSize());
-                            nodeDest.getDestinationStatistics().getInflight().decrement();
+                            if (dispatched.remove(node)) {
+                                // if consumer is removed, dispatched will be empty and inflight will
+                                // already have been adjusted
+                                getSubscriptionStatistics().getInflightMessageSize().addSize(-node.getSize());
+                                nodeDest.getDestinationStatistics().getInflight().decrement();
+                            }
                         }
                         contractPrefetchExtension(1);
                         nodeDest.wakeup();

@@ -3016,39 +3016,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private final LinkedHashMap<TransactionId, List<Operation>> inflightTransactions = new LinkedHashMap<>();
     @SuppressWarnings("rawtypes")
     protected final LinkedHashMap<TransactionId, List<Operation>> preparedTransactions = new LinkedHashMap<>();
-    protected final Set<String> ackedAndPrepared = new HashSet<>();
-    protected final Set<String> rolledBackAcks = new HashSet<>();
-
-    // messages that have prepared (pending) acks cannot be re-dispatched unless the outcome is rollback,
-    // till then they are skipped by the store.
-    // 'at most once' XA guarantee
-    public void trackRecoveredAcks(ArrayList<MessageAck> acks) {
-        this.indexLock.writeLock().lock();
-        try {
-            for (MessageAck ack : acks) {
-                ackedAndPrepared.add(ack.getLastMessageId().toProducerKey());
-            }
-        } finally {
-            this.indexLock.writeLock().unlock();
-        }
-    }
-
-    public void forgetRecoveredAcks(ArrayList<MessageAck> acks, boolean rollback) throws IOException {
-        if (acks != null) {
-            this.indexLock.writeLock().lock();
-            try {
-                for (MessageAck ack : acks) {
-                    final String id = ack.getLastMessageId().toProducerKey();
-                    ackedAndPrepared.remove(id);
-                    if (rollback) {
-                        rolledBackAcks.add(id);
-                    }
-                }
-            } finally {
-                this.indexLock.writeLock().unlock();
-            }
-        }
-    }
 
     @SuppressWarnings("rawtypes")
     private List<Operation> getInflightTx(KahaTransactionInfo info) {

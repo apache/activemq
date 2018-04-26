@@ -29,12 +29,10 @@ import org.apache.activemq.usage.MemoryUsage;
 /**
  * A simple proxy that delegates to another MessageStore.
  */
-public class ProxyTopicMessageStore implements TopicMessageStore {
-
-    final TopicMessageStore delegate;
+public class ProxyTopicMessageStore extends ProxyMessageStore implements TopicMessageStore  {
 
     public ProxyTopicMessageStore(TopicMessageStore delegate) {
-        this.delegate = delegate;
+        super(delegate);
     }
 
     public MessageStore getDelegate() {
@@ -83,40 +81,40 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
 
     @Override
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
-        return delegate.lookupSubscription(clientId, subscriptionName);
+        return ((TopicMessageStore)delegate).lookupSubscription(clientId, subscriptionName);
     }
 
     @Override
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
                             MessageId messageId, MessageAck ack) throws IOException {
-        delegate.acknowledge(context, clientId, subscriptionName, messageId, ack);
+        ((TopicMessageStore)delegate).acknowledge(context, clientId, subscriptionName, messageId, ack);
     }
 
     @Override
     public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
-        delegate.addSubscription(subscriptionInfo, retroactive);
+        ((TopicMessageStore)delegate).addSubscription(subscriptionInfo, retroactive);
     }
 
     @Override
     public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
-        delegate.deleteSubscription(clientId, subscriptionName);
+        ((TopicMessageStore)delegate).deleteSubscription(clientId, subscriptionName);
     }
 
     @Override
     public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
         throws Exception {
-        delegate.recoverSubscription(clientId, subscriptionName, listener);
+        ((TopicMessageStore)delegate).recoverSubscription(clientId, subscriptionName, listener);
     }
 
     @Override
     public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
                                     MessageRecoveryListener listener) throws Exception {
-        delegate.recoverNextMessages(clientId, subscriptionName, maxReturned, listener);
+        ((TopicMessageStore)delegate).recoverNextMessages(clientId, subscriptionName, maxReturned, listener);
     }
 
     @Override
     public void resetBatching(String clientId, String subscriptionName) {
-        delegate.resetBatching(clientId, subscriptionName);
+        ((TopicMessageStore)delegate).resetBatching(clientId, subscriptionName);
     }
 
     @Override
@@ -126,7 +124,7 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
 
     @Override
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
-        return delegate.getAllSubscriptions();
+        return ((TopicMessageStore)delegate).getAllSubscriptions();
     }
 
     @Override
@@ -136,7 +134,7 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
 
     @Override
     public int getMessageCount(String clientId, String subscriberName) throws IOException {
-        return delegate.getMessageCount(clientId, subscriberName);
+        return ((TopicMessageStore)delegate).getMessageCount(clientId, subscriberName);
     }
 
     @Override
@@ -230,11 +228,11 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     @Override
     public long getMessageSize(String clientId, String subscriberName)
             throws IOException {
-        return delegate.getMessageSize(clientId, subscriberName);
+        return ((TopicMessageStore)delegate).getMessageSize(clientId, subscriberName);
     }
 
     @Override
     public MessageStoreSubscriptionStatistics getMessageStoreSubStatistics() {
-        return delegate.getMessageStoreSubStatistics();
+        return ((TopicMessageStore)delegate).getMessageStoreSubStatistics();
     }
 }

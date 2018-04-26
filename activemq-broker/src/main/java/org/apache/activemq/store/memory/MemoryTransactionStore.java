@@ -107,11 +107,12 @@ public class MemoryTransactionStore implements TransactionStore {
                     cmd.run(ctx);
                 }
 
+                persistenceAdapter.commitTransaction(ctx);
+
             } catch (IOException e) {
                 persistenceAdapter.rollbackTransaction(ctx);
                 throw e;
             }
-            persistenceAdapter.commitTransaction(ctx);
         }
     }
 
@@ -267,13 +268,16 @@ public class MemoryTransactionStore implements TransactionStore {
         }
         Tx tx;
         if (wasPrepared) {
-            tx = preparedTransactions.remove(txid);
+            tx = preparedTransactions.get(txid);
         } else {
             tx = inflightTransactions.remove(txid);
         }
 
         if (tx != null) {
             tx.commit();
+        }
+        if (wasPrepared) {
+            preparedTransactions.remove(txid);
         }
         if (postCommit != null) {
             postCommit.run();

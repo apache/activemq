@@ -151,6 +151,7 @@ public class JDBCCommitExceptionTest extends TestCase {
     protected BrokerService createBroker() throws Exception {
 
         BrokerService broker = new BrokerService();
+        broker.setAdvisorySupport(false);
         jdbc = new BrokenPersistenceAdapter();
 
         jdbc.setUseLock(false);

@@ -48,6 +48,7 @@ public class JdbcXARecoveryBrokerTest extends XARecoveryBrokerTest {
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
         super.configureBroker(broker);
+        broker.setAdvisorySupport(false);
 
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
         jdbc.setDataSource(dataSource);

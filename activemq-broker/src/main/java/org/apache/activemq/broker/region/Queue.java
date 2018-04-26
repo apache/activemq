@@ -68,6 +68,7 @@ import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.broker.util.InsertionCountList;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
@@ -1248,7 +1249,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             QueueMessageReference ref = (QueueMessageReference) i.next();
             if (ref.isExpired() && (ref.getLockOwner() == null)) {
                 toExpire.add(ref);
-            } else if (l.contains(ref.getMessage()) == false) {
+            } else if (!ref.isAcked() && l.contains(ref.getMessage()) == false) {
                 l.add(ref.getMessage());
             }
         }
@@ -1326,9 +1327,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     @Override
-    public void clearPendingMessages() {
+    public void clearPendingMessages(int pendingAdditionsCount) {
         messagesLock.writeLock().lock();
         try {
+            final ActiveMQMessage dummyPersistent = new ActiveMQMessage();
+            dummyPersistent.setPersistent(true);
+            for (int i=0; i<pendingAdditionsCount; i++) {
+                try {
+                    // track the increase in the cursor size w/o reverting to the store
+                    messages.addMessageFirst(dummyPersistent);
+                } catch (Exception ignored) {
+                    LOG.debug("Unexpected exception on tracking pending message additions", ignored);
+                }
+            }
             if (resetNeeded) {
                 messages.gc();
                 messages.reset();

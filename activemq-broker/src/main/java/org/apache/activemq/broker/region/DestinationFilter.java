@@ -379,8 +379,8 @@ public class DestinationFilter implements Destination {
     }
 
     @Override
-    public void clearPendingMessages() {
-        next.clearPendingMessages();
+    public void clearPendingMessages(int pendingAdditionsCount) {
+        next.clearPendingMessages(0);
     }
 
     @Override

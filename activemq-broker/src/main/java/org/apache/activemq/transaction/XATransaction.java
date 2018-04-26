@@ -72,8 +72,8 @@ public class XATransaction extends Transaction {
         case PREPARED_STATE:
             // 2 phase commit, work done.
             // We would record commit here.
-            setStateFinished();
             storeCommit(getTransactionId(), true, preCommitTask, postCommitTask);
+            setStateFinished();
             break;
         default:
             illegalStateTransition("commit");
@@ -88,9 +88,21 @@ public class XATransaction extends Transaction {
         } catch (XAException xae) {
             throw xae;
         } catch (Throwable t) {
-            LOG.warn("Store COMMIT FAILED: ", t);
-            rollback();
-            XAException xae = newXAException("STORE COMMIT FAILED: Transaction rolled back", XAException.XA_RBOTHER);
+            LOG.warn("Store COMMIT FAILED: " + txid, t);
+            XAException xae = null;
+            if (wasPrepared) {
+                // report and await outcome
+                xae = newXAException("STORE COMMIT FAILED: " + t.getMessage(), XAException.XA_RETRY);
+                // fire rollback syncs to revert
+                doPostRollback();
+            } else {
+                try {
+                    rollback();
+                    xae = newXAException("STORE COMMIT FAILED: Transaction rolled back", XAException.XA_RBCOMMFAIL);
+                } catch (Throwable e) {
+                    xae = newXAException("STORE COMMIT FAILED: " + t.getMessage() +". Rolled failed:"  + e.getMessage(), XAException.XA_RBINTEGRITY);
+                }
+            }
             xae.initCause(t);
             throw xae;
         }

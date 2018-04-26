@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.jms.JMSException;
 import javax.transaction.xa.XAException;
 
-import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -64,6 +63,7 @@ public class TransactionBroker extends BrokerFilter {
     // The prepared XA transactions.
     private TransactionStore transactionStore;
     private Map<TransactionId, XATransaction> xaTransactions = new LinkedHashMap<TransactionId, XATransaction>();
+    final ConnectionContext context = new ConnectionContext();
 
     public TransactionBroker(Broker next, TransactionStore transactionStore) {
         super(next);
@@ -82,7 +82,6 @@ public class TransactionBroker extends BrokerFilter {
     public void start() throws Exception {
         transactionStore.start();
         try {
-            final ConnectionContext context = new ConnectionContext();
             context.setBroker(this);
             context.setInRecoveryMode(true);
             context.setTransactions(new ConcurrentHashMap<TransactionId, Transaction>());
@@ -128,12 +127,11 @@ public class TransactionBroker extends BrokerFilter {
 
     private void forceDestinationWakeupOnCompletion(ConnectionContext context, Transaction transaction,
                                                     ActiveMQDestination amqDestination, BaseCommand ack) throws Exception {
-        Destination destination =  addDestination(context, amqDestination, false);
-        registerSync(destination, transaction, ack);
+        registerSync(amqDestination, transaction, ack);
     }
 
-    private void registerSync(Destination destination, Transaction transaction, BaseCommand command) {
-        Synchronization sync = new PreparedDestinationCompletion(destination, command.isMessage());
+    private void registerSync(ActiveMQDestination destination, Transaction transaction, BaseCommand command) {
+        Synchronization sync = new PreparedDestinationCompletion(this, destination, command.isMessage());
         // ensure one per destination in the list
         Synchronization existing = transaction.findMatching(sync);
         if (existing != null) {
@@ -144,10 +142,12 @@ public class TransactionBroker extends BrokerFilter {
     }
 
     static class PreparedDestinationCompletion extends Synchronization {
-        final Destination destination;
+        private final TransactionBroker transactionBroker;
+        final ActiveMQDestination destination;
         final boolean messageSend;
         int opCount = 1;
-        public PreparedDestinationCompletion(final Destination destination, boolean messageSend) {
+        public PreparedDestinationCompletion(final TransactionBroker transactionBroker, ActiveMQDestination destination, boolean messageSend) {
+            this.transactionBroker = transactionBroker;
             this.destination = destination;
             // rollback relevant to acks, commit to sends
             this.messageSend = messageSend;
@@ -173,21 +173,23 @@ public class TransactionBroker extends BrokerFilter {
         @Override
         public void afterRollback() throws Exception {
             if (!messageSend) {
-                destination.clearPendingMessages();
+                Destination dest = transactionBroker.addDestination(transactionBroker.context, destination, false);
+                dest.clearPendingMessages(opCount);
+                dest.getDestinationStatistics().getMessages().add(opCount);
                 LOG.debug("cleared pending from afterRollback: {}", destination);
             }
         }
 
         @Override
         public void afterCommit() throws Exception {
+            Destination dest = transactionBroker.addDestination(transactionBroker.context, destination, false);
             if (messageSend) {
-                destination.clearPendingMessages();
-                destination.getDestinationStatistics().getEnqueues().add(opCount);
-                destination.getDestinationStatistics().getMessages().add(opCount);
+                dest.clearPendingMessages(opCount);
+                dest.getDestinationStatistics().getEnqueues().add(opCount);
+                dest.getDestinationStatistics().getMessages().add(opCount);
                 LOG.debug("cleared pending from afterCommit: {}", destination);
             } else {
-                destination.getDestinationStatistics().getDequeues().add(opCount);
-                destination.getDestinationStatistics().getMessages().subtract(opCount);
+                dest.getDestinationStatistics().getDequeues().add(opCount);
             }
         }
     }

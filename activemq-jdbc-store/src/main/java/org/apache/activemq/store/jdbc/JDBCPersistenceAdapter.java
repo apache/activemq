@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
@@ -84,7 +85,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     private WireFormat wireFormat = new OpenWireFormat();
     private Statements statements;
     private JDBCAdapter adapter;
-    private MemoryTransactionStore transactionStore;
+    private final JdbcMemoryTransactionStore transactionStore = new JdbcMemoryTransactionStore(this);
     private ScheduledFuture<?> cleanupTicket;
     private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
@@ -102,6 +103,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     protected LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
     protected int maxRows = DefaultJDBCAdapter.MAX_ROWS;
+    protected final HashMap<ActiveMQDestination, MessageStore> storeCache = new HashMap<>();
 
     {
         setLockKeepAlivePeriod(DEFAULT_LOCK_KEEP_ALIVE_PERIOD);
@@ -191,18 +193,26 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        MessageStore rc = new JDBCMessageStore(this, getAdapter(), wireFormat, destination, audit);
-        if (transactionStore != null) {
-            rc = transactionStore.proxy(rc);
+        MessageStore rc = storeCache.get(destination);
+        if (rc == null) {
+            MessageStore store = transactionStore.proxy(new JDBCMessageStore(this, getAdapter(), wireFormat, destination, audit));
+            rc = storeCache.putIfAbsent(destination, store);
+            if (rc == null) {
+                rc = store;
+            }
         }
         return rc;
     }
 
     @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
-        TopicMessageStore rc = new JDBCTopicMessageStore(this, getAdapter(), wireFormat, destination, audit);
-        if (transactionStore != null) {
-            rc = transactionStore.proxy(rc);
+        TopicMessageStore rc = (TopicMessageStore) storeCache.get(destination);
+        if (rc == null) {
+            TopicMessageStore store = transactionStore.proxy(new JDBCTopicMessageStore(this, getAdapter(), wireFormat, destination, audit));
+            rc = (TopicMessageStore) storeCache.putIfAbsent(destination, store);
+            if (rc == null) {
+                rc = store;
+            }
         }
         return rc;
     }
@@ -220,6 +230,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 LOG.error("Failed to remove consumer destination: " + destination, ioe);
             }
         }
+        storeCache.remove(destination);
     }
 
     private void removeConsumerDestination(ActiveMQQueue destination) throws IOException {
@@ -243,13 +254,11 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      */
     @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
+        storeCache.remove(destination);
     }
 
     @Override
     public TransactionStore createTransactionStore() throws IOException {
-        if (transactionStore == null) {
-            transactionStore = new JdbcMemoryTransactionStore(this);
-        }
         return this.transactionStore;
     }
 

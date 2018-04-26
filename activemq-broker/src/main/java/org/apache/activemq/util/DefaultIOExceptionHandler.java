@@ -120,7 +120,7 @@ import org.slf4j.LoggerFactory;
                                                 if (destination instanceof Queue) {
                                                     Queue queue = (Queue)destination;
                                                     if (queue.isResetNeeded()) {
-                                                        queue.clearPendingMessages();
+                                                        queue.clearPendingMessages(0);
                                                     }
                                                 }
                                             }

@@ -243,6 +243,7 @@ public class TransactionContext {
             updateLastAckStatement.close();
             updateLastAckStatement = null;
         }
+        completions.clear();
         connection.rollback();
     }
 

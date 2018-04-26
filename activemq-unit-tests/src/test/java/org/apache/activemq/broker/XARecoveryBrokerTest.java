@@ -698,8 +698,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // validate destination depth via jmx
         DestinationViewMBean destinationView = getProxyToDestination(destinationList(destination)[0]);
-        assertEquals("enqueue count does not see prepared acks", 4, destinationView.getQueueSize());
-        assertEquals("enqueue count does not see prepared acks", 0, destinationView.getDequeueCount());
+        assertEquals("enqueue count does not see prepared acks", 0, destinationView.getQueueSize());
+        assertEquals("dequeue count does not see prepared acks", 0, destinationView.getDequeueCount());
 
         connection.request(createCommitTransaction2Phase(connectionInfo, txid));
 
@@ -708,7 +708,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertEquals("there are no prepared tx", 0, dataArrayResponse.getData().length);
 
         assertEquals("enqueue count does not see commited acks", 0, destinationView.getQueueSize());
-        assertEquals("enqueue count does not see commited acks", 4, destinationView.getDequeueCount());
+        assertEquals("dequeue count does not see commited acks", 4, destinationView.getDequeueCount());
 
     }
 

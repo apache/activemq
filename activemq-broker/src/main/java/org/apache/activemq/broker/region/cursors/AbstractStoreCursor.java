@@ -79,7 +79,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public void rebase() {
-        resetSize();
         MessageId lastAdded = lastCachedIds[SYNC_ADD];
         if (lastAdded != null) {
             try {
@@ -397,7 +396,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
-        setCacheEnabled(false);
         size++;
     }
 

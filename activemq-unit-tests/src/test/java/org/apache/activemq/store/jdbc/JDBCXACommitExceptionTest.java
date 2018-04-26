@@ -17,13 +17,10 @@
 
 package org.apache.activemq.store.jdbc;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.XAConnection;
 import javax.jms.XASession;
 import javax.transaction.xa.XAException;
@@ -31,6 +28,9 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.apache.activemq.ActiveMQXAConnectionFactory;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.XATransactionId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-
+        onePhase = true;
         factory = new ActiveMQXAConnectionFactory(
             connectionUri + "?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected);
     }
@@ -128,5 +128,42 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
         return messagesReceived;
     }
 
+
+    public void testCommitSendErrorRecovery() throws Exception {
+
+        XAConnection connection = factory.createXAConnection();
+        connection.start();
+        XASession session = connection.createXASession();
+
+        Destination destination = session.createQueue("TEST");
+        MessageProducer producer = session.createProducer(destination);
+
+        XAResource resource = session.getXAResource();
+
+        Xid tid = createXid();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        ActiveMQMessage message = (ActiveMQMessage) session.createMessage();
+        message.setTransactionId(new XATransactionId(tid));
+        producer.send(message);
+
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.prepare(tid);
+
+        jdbc.setShouldBreak(true);
+        try {
+            resource.commit(tid, true);
+        } catch (Exception expected) {
+            expected.printStackTrace();
+        }
+
+        // recover
+        Xid[] recovered = resource.recover(XAResource.TMSTARTRSCAN);
+        resource.recover(XAResource.TMNOFLAGS);
+
+        jdbc.setShouldBreak(false);
+        resource.commit(recovered[0], false);
+
+        assertEquals("one enque", 1, ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
+    }
 
 }
