@@ -318,6 +318,7 @@ public class XACompletionTest extends TestSupport {
         resource.recover(XAResource.TMSTARTRSCAN);
         resource.recover(XAResource.TMNOFLAGS);
 
+        dumpMessages();
         Xid tid = createXid();
 
         resource.start(tid, XAResource.TMNOFLAGS);
@@ -341,6 +342,9 @@ public class XACompletionTest extends TestSupport {
         resource.prepare(tid);
 
         consumer.close();
+
+        LOG.info("after close");
+        dumpMessages();
 
         assertEquals("drain", 5, drainUnack(5, "TEST"));
 

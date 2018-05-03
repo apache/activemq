@@ -78,11 +78,12 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                 cmd.run(ctx);
             }
 
+            persistenceAdapter.commitTransaction(ctx);
+
         } catch ( IOException e ) {
             persistenceAdapter.rollbackTransaction(ctx);
             throw e;
         }
-        persistenceAdapter.commitTransaction(ctx);
 
         ctx.setXid(null);
         // setup for commit outcome
@@ -126,13 +127,15 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
             final Long preparedEntrySequence = (Long) message.getMessageId().getEntryLocator();
             TransactionContext c = jdbcPersistenceAdapter.getTransactionContext(context);
 
+            long newSequence;
             synchronized (jdbcMessageStore.pendingAdditions) {
-                message.getMessageId().setEntryLocator(jdbcPersistenceAdapter.getNextSequenceId());
-
+                newSequence = jdbcPersistenceAdapter.getNextSequenceId();
+                final long sequenceToSet = newSequence;
                 c.onCompletion(new Runnable() {
                     @Override
                     public void run() {
-                        message.getMessageId().setFutureOrSequenceLong(message.getMessageId().getEntryLocator());
+                        message.getMessageId().setEntryLocator(sequenceToSet);
+                        message.getMessageId().setFutureOrSequenceLong(sequenceToSet);
                     }
                 });
 
@@ -141,7 +144,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                 }
             }
 
-            jdbcPersistenceAdapter.commitAdd(context, message.getMessageId(), preparedEntrySequence);
+            jdbcPersistenceAdapter.commitAdd(context, message.getMessageId(), preparedEntrySequence, newSequence);
             jdbcMessageStore.onAdd(message, (Long)message.getMessageId().getEntryLocator(), message.getPriority());
         }
 
@@ -175,8 +178,9 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                             ((LastAckCommand)removeMessageCommand).rollback(ctx);
                         } else {
                             MessageId messageId = removeMessageCommand.getMessageAck().getLastMessageId();
+                            long sequence = (Long)messageId.getEntryLocator();
                             // need to unset the txid flag on the existing row
-                            ((JDBCPersistenceAdapter) persistenceAdapter).commitAdd(ctx, messageId, (Long)messageId.getEntryLocator());
+                            ((JDBCPersistenceAdapter) persistenceAdapter).commitAdd(ctx, messageId, sequence, sequence);
 
                             if (removeMessageCommand instanceof RecoveredRemoveMessageCommand) {
                                 ((JDBCMessageStore) removeMessageCommand.getMessageStore()).trackRollbackAck(((RecoveredRemoveMessageCommand) removeMessageCommand).getMessage());

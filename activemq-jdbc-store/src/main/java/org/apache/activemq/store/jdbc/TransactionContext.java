@@ -84,7 +84,7 @@ public class TransactionContext {
                 } catch (IllegalMonitorStateException oops) {
                     LOG.error("Thread does not hold the context lock on close of:"  + connection, oops);
                 }
-                close();
+                silentClose();
                 IOException ioe = IOExceptionSupport.create(e);
                 if (persistenceAdapter.getBrokerService() != null) {
                     persistenceAdapter.getBrokerService().handleIOException(ioe);
@@ -137,45 +137,39 @@ public class TransactionContext {
         } finally {
             try {
                 p.close();
-            } catch (Throwable e) {
-            }
+            } catch (Throwable ignored) {}
         }
     }
+
+    private void silentClose() {
+        silentClosePreparedStatements();
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (Throwable ignored) {}
+            connection = null;
+        }
+    }
+
 
     public void close() throws IOException {
         if (!inTx) {
             try {
-
-                /**
-                 * we are not in a transaction so should not be committing ??
-                 * This was previously commented out - but had adverse affects
-                 * on testing - so it's back!
-                 * 
-                 */
-                try {
+                // can be null for topic ops that bypass the store via existing cursor state
+                if (connection != null) {
+                    final boolean needsCommit = !connection.getAutoCommit();
                     executeBatch();
-                } finally {
-                    if (connection != null && !connection.getAutoCommit()) {
+                    if (needsCommit) {
                         connection.commit();
                     }
                 }
-
             } catch (SQLException e) {
                 JDBCPersistenceAdapter.log("Error while closing connection: ", e);
                 IOException ioe = IOExceptionSupport.create(e);
                 persistenceAdapter.getBrokerService().handleIOException(ioe);
                 throw ioe;
             } finally {
-                try {
-                    if (connection != null) {
-                        connection.close();
-                    }
-                } catch (Throwable e) {
-                    // ignore
-                    LOG.trace("Closing connection failed due: " + e.getMessage() + ". This exception is ignored.", e);
-                } finally {
-                    connection = null;
-                }
+                silentClose();
                 for (Runnable completion: completions) {
                     completion.run();
                 }
@@ -197,8 +191,9 @@ public class TransactionContext {
             throw new IOException("Not started.");
         }
         try {
+            final boolean needsCommit = !connection.getAutoCommit();
             executeBatch();
-            if (!connection.getAutoCommit()) {
+            if (needsCommit) {
                 connection.commit();
             }
         } catch (SQLException e) {
@@ -230,19 +225,23 @@ public class TransactionContext {
         }
     }
 
+    private PreparedStatement silentClosePreparedStatement(PreparedStatement preparedStatement) {
+        if (preparedStatement != null) {
+            try {
+                preparedStatement.close();
+            } catch (Throwable ignored) {}
+        }
+        return null;
+    }
+
+    private void silentClosePreparedStatements() {
+        addMessageStatement = silentClosePreparedStatement(addMessageStatement);
+        removedMessageStatement = silentClosePreparedStatement(removedMessageStatement);
+        updateLastAckStatement = silentClosePreparedStatement(updateLastAckStatement);
+    }
+
     private void doRollback() throws SQLException {
-        if (addMessageStatement != null) {
-            addMessageStatement.close();
-            addMessageStatement = null;
-        }
-        if (removedMessageStatement != null) {
-            removedMessageStatement.close();
-            removedMessageStatement = null;
-        }
-        if (updateLastAckStatement != null) {
-            updateLastAckStatement.close();
-            updateLastAckStatement = null;
-        }
+        silentClosePreparedStatements();
         completions.clear();
         connection.rollback();
     }

@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  */
 public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     protected static final Logger LOG = LoggerFactory.getLogger(XARecoveryBrokerTest.class);
-    public boolean prioritySupport = false;
+    public boolean prioritySupport = true;
 
     public void testPreparedJmxView() throws Exception {
 
@@ -712,7 +712,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     }
 
-    public void initCombosForTestTopicPersistentPreparedAcksNotLostOnRestart() {
+    public void x_initCombosForTestTopicPersistentPreparedAcksNotLostOnRestart() {
         addCombinationValues("prioritySupport", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
     }
 
