@@ -171,6 +171,11 @@ public class AmqpConnection implements AmqpProtocolConverter {
         int maxFrameSize = amqpWireFormat.getMaxAmqpFrameSize();
         if (maxFrameSize > AmqpWireFormat.NO_AMQP_MAX_FRAME_SIZE) {
             this.protonTransport.setMaxFrameSize(maxFrameSize);
+            try {
+                this.protonTransport.setOutboundFrameSizeLimit(maxFrameSize);
+            } catch (Throwable e) {
+                // Ignore if older proton-j was injected.
+            }
         }
 
         this.protonTransport.bind(this.protonConnection);
@@ -328,6 +333,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onAMQPData(Object command) throws Exception {
         Buffer frame;
