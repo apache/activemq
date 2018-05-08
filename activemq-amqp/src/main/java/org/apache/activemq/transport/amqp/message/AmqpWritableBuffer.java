@@ -18,11 +18,9 @@ package org.apache.activemq.transport.amqp.message;
 
 import java.nio.ByteBuffer;
 
+import org.apache.qpid.proton.codec.ReadableBuffer;
 import org.apache.qpid.proton.codec.WritableBuffer;
 
-/**
- *
- */
 public class AmqpWritableBuffer implements WritableBuffer {
 
     public final static int DEFAULT_CAPACITY = 4 * 1024;
@@ -146,6 +144,12 @@ public class AmqpWritableBuffer implements WritableBuffer {
     @Override
     public int limit() {
         return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public void put(ReadableBuffer src) {
+        ensureCapacity(position);
+        src.get(this);
     }
 
     /**
