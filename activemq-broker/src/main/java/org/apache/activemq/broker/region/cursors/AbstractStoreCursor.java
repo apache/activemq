@@ -384,7 +384,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             } else if (candidateOrSequenceLong != null &&
                     Long.compare(((Long) candidateOrSequenceLong), ((Long) lastCacheFutureOrSequenceLong)) > 0) {
                 lastCachedIds[index] = candidate;
-            } if (LOG.isTraceEnabled()) {
+            } else if (LOG.isTraceEnabled()) {
                 LOG.trace("no set last cached[" + index + "] current:" + lastCacheFutureOrSequenceLong + " <= than candidate: " + candidateOrSequenceLong+ ", " + this);
             }
         }
