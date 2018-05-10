@@ -45,6 +45,7 @@ public class VirtualTopic implements VirtualDestination {
     private boolean concurrentSend = false;
     private boolean transactedSend = false;
     private boolean dropOnResourceLimit = false;
+    private boolean setOriginalDestination = true;
 
     @Override
     public ActiveMQDestination getVirtualDestination() {
@@ -251,5 +252,13 @@ public class VirtualTopic implements VirtualDestination {
 
     public void setDropOnResourceLimit(boolean dropOnResourceLimit) {
         this.dropOnResourceLimit = dropOnResourceLimit;
+    }
+
+    public boolean isSetOriginalDestination() {
+        return setOriginalDestination;
+    }
+
+    public void setSetOriginalDestination(boolean setOriginalDestination) {
+        this.setOriginalDestination = setOriginalDestination;
     }
 }

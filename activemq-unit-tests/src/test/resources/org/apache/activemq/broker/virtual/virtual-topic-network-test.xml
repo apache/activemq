@@ -44,7 +44,9 @@
 				<amq:virtualDestinations>
 					<!-- Virtual topic policies -->
 					<!-- they should be local to avoid message duplicate -->
-					<amq:virtualTopic name="VirtualTopic.>" prefix="Consumer.*."/>
+					<amq:virtualTopic name="VirtualTopic.T1" prefix="Consumer.*."/>
+					<amq:virtualTopic name="VirtualTopic.T2" prefix="Consumer.*." setOriginalDestination="false"/>
+
 				</amq:virtualDestinations>
 			</amq:virtualDestinationInterceptor>
 		</amq:destinationInterceptors>
@@ -66,6 +68,7 @@
 		<amq:destinations>
 			<!-- topics -->
 			<amq:topic physicalName="VirtualTopic.T1" />
+			<amq:topic physicalName="VirtualTopic.T2" />
 		</amq:destinations>
 
 	</amq:broker>
@@ -109,6 +112,7 @@
 		<amq:destinations>
 			<!-- topics -->
 			<amq:topic physicalName="VirtualTopic.T1" />
+			<amq:topic physicalName="VirtualTopic.T2" />
 		</amq:destinations>
 
 	</amq:broker>

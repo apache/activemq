@@ -43,6 +43,8 @@ public class MessageDestinationVirtualTopicTest {
 
     private SimpleMessageListener listener2;
 
+    private SimpleMessageListener listener3;
+
     @Resource(name = "broker1")
     private BrokerService broker1;
 
@@ -78,8 +80,16 @@ public class MessageDestinationVirtualTopicTest {
         listener1 = new SimpleMessageListener();
         consumer1.setMessageListener(listener1);
 
+        // Create listener on Broker B1 for VT T2 witout setOriginalDest
+        Queue consumer3Queue = session1.createQueue("Consumer.A.VirtualTopic.T2");
+
+        // Bind listener on queue for consumer D
+        MessageConsumer consumerD = session1.createConsumer(consumer3Queue);
+        listener3 = new SimpleMessageListener();
+        consumerD.setMessageListener(listener3);
+
         // Create producer for topic, on B1
-        Topic virtualTopicT1 = session1.createTopic("VirtualTopic.T1");
+        Topic virtualTopicT1 = session1.createTopic("VirtualTopic.T1,VirtualTopic.T2");
         producer = session1.createProducer(virtualTopicT1);
     }
 
@@ -94,9 +104,10 @@ public class MessageDestinationVirtualTopicTest {
         init();
 
         // Create a monitor
-        CountDownLatch monitor = new CountDownLatch(2);
+        CountDownLatch monitor = new CountDownLatch(3);
         listener1.setCountDown(monitor);
         listener2.setCountDown(monitor);
+        listener3.setCountDown(monitor);
 
         LOG.info("Sending message");
         // Send a message on the topic
@@ -112,9 +123,13 @@ public class MessageDestinationVirtualTopicTest {
         String lastJMSDestination1 = listener1.getLastJMSDestination();
         System.err.println(lastJMSDestination1);
 
+        String lastJMSDestination3 = listener3.getLastJMSDestination();
+        System.err.println(lastJMSDestination3);
+
         // The destination names
         assertEquals("queue://Consumer.D.VirtualTopic.T1", lastJMSDestination2);
         assertEquals("queue://Consumer.C.VirtualTopic.T1", lastJMSDestination1);
+        assertEquals("topic://VirtualTopic.T2", lastJMSDestination3);
 
     }
 }

@@ -47,6 +47,7 @@ public class VirtualTopicInterceptor extends DestinationFilter {
     private final boolean concurrentSend;
     private final boolean transactedSend;
     private final boolean dropMessageOnResourceLimit;
+    private final boolean setOriginalDestination;
 
     private final LRUCache<ActiveMQDestination, ActiveMQQueue> cache = new LRUCache<ActiveMQDestination, ActiveMQQueue>();
 
@@ -58,6 +59,7 @@ public class VirtualTopicInterceptor extends DestinationFilter {
         this.concurrentSend = virtualTopic.isConcurrentSend();
         this.transactedSend = virtualTopic.isTransactedSend();
         this.dropMessageOnResourceLimit = virtualTopic.isDropOnResourceLimit();
+        this.setOriginalDestination = virtualTopic.isSetOriginalDestination();
     }
 
     public Topic getTopic() {
@@ -137,8 +139,10 @@ public class VirtualTopicInterceptor extends DestinationFilter {
 
     private Message copy(Message original, ActiveMQDestination target) {
         Message msg = original.copy();
-        msg.setDestination(target);
-        msg.setOriginalDestination(original.getDestination());
+        if (setOriginalDestination) {
+            msg.setDestination(target);
+            msg.setOriginalDestination(original.getDestination());
+        }
         return msg;
     }
 
