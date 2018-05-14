@@ -950,7 +950,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
                             @Override
                             public void afterRollback() throws Exception {
-                                LOG.trace("rollback {}", ack, new Throwable("here"));
+                                if (LOG.isTraceEnabled()) {
+                                    LOG.trace("rollback {}", ack, new Throwable("here"));
+                                }
                                 // ensure we don't filter this as a duplicate
                                 connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
 
