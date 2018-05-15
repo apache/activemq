@@ -45,7 +45,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     protected boolean enableAudit=true;
     protected ActiveMQMessageAudit audit;
     protected boolean useCache=true;
-    private boolean cacheEnabled=true;
+    protected boolean cacheEnabled=true;
     private boolean started=false;
     protected MessageReference last = null;
     protected final boolean prioritizedMessages;
