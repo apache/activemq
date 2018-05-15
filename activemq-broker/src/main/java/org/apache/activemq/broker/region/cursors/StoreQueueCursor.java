@@ -35,7 +35,6 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     private final Queue queue;
     private PendingMessageCursor nonPersistent;
     private final QueueStorePrefetch persistent;
-    private boolean started;
     private PendingMessageCursor currentCursor;
 
     /**
