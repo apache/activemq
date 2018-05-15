@@ -1373,7 +1373,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     private void forceCloseOnSecurityException(Throwable exception) {
-        LOG.trace("force close on security exception:" + this + ", transport=" + transport, exception);
+        LOG.trace("force close on security exception:{}, transport={}", this, transport, exception);
         onException(new IOException("Force close due to SecurityException on connect", exception));
     }
 
@@ -1933,8 +1933,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     }
                 });
             } else {
-                LOG.debug("Async client internal exception occurred with no exception listener registered: "
-                        + error, error);
+                LOG.debug("Async client internal exception occurred with no exception listener registered: {}",
+                        error, error);
             }
         }
     }
@@ -1961,7 +1961,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 });
 
             } else {
-                LOG.debug("Async exception with no exception listener: " + error, error);
+                LOG.debug("Async exception with no exception listener: {}", error, error);
             }
         }
     }
