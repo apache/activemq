@@ -1307,16 +1307,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     try {
                         QueueMessageReference r = (QueueMessageReference) ref;
                         removeMessage(c, r);
+                        messages.rollback(r.getMessageId());
                     } catch (IOException e) {
                     }
                 }
                 // don't spin/hang if stats are out and there is nothing left in the
                 // store
             } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
-
-            if (getMessages().getMessageAudit() != null) {
-                getMessages().getMessageAudit().clear();
-            }
 
             if (this.destinationStatistics.getMessages().getCount() > 0) {
                 LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
