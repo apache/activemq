@@ -380,7 +380,7 @@ public class DestinationFilter implements Destination {
 
     @Override
     public void clearPendingMessages(int pendingAdditionsCount) {
-        next.clearPendingMessages(0);
+        next.clearPendingMessages(pendingAdditionsCount);
     }
 
     @Override
