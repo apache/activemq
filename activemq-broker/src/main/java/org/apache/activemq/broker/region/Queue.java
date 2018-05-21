@@ -1207,9 +1207,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
 
         LOG.trace("max {}, alreadyPagedIn {}, messagesCount {}, memoryUsage {}%", new Object[]{max, alreadyPagedIn, messagesInQueue, memoryUsage.getPercentUsage()});
-        return (alreadyPagedIn < max)
+        return (alreadyPagedIn == 0 || (alreadyPagedIn < max)
                 && (alreadyPagedIn < messagesInQueue)
-                && messages.hasSpace();
+                && messages.hasSpace());
     }
 
     private void addAll(Collection<? extends MessageReference> refs, List<Message> l, int max,
