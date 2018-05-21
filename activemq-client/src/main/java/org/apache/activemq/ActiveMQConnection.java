@@ -117,7 +117,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQConnection.class);
 
-    public final ConcurrentMap<ActiveMQTempDestination, ActiveMQTempDestination> activeTempDestinations = new ConcurrentHashMap<ActiveMQTempDestination, ActiveMQTempDestination>();
+    public final ConcurrentMap<ActiveMQTempDestination, ActiveMQTempDestination> activeTempDestinations = new ConcurrentHashMap<>();
 
     protected boolean dispatchAsync=true;
     protected boolean alwaysSessionAsync = true;
@@ -170,13 +170,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private final AtomicBoolean closing = new AtomicBoolean(false);
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicBoolean transportFailed = new AtomicBoolean(false);
-    private final CopyOnWriteArrayList<ActiveMQSession> sessions = new CopyOnWriteArrayList<ActiveMQSession>();
-    private final CopyOnWriteArrayList<ActiveMQConnectionConsumer> connectionConsumers = new CopyOnWriteArrayList<ActiveMQConnectionConsumer>();
-    private final CopyOnWriteArrayList<TransportListener> transportListeners = new CopyOnWriteArrayList<TransportListener>();
+    private final CopyOnWriteArrayList<ActiveMQSession> sessions = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<ActiveMQConnectionConsumer> connectionConsumers = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<TransportListener> transportListeners = new CopyOnWriteArrayList<>();
 
     // Maps ConsumerIds to ActiveMQConsumer objects
-    private final ConcurrentMap<ConsumerId, ActiveMQDispatcher> dispatchers = new ConcurrentHashMap<ConsumerId, ActiveMQDispatcher>();
-    private final ConcurrentMap<ProducerId, ActiveMQMessageProducer> producers = new ConcurrentHashMap<ProducerId, ActiveMQMessageProducer>();
+    private final ConcurrentMap<ConsumerId, ActiveMQDispatcher> dispatchers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ProducerId, ActiveMQMessageProducer> producers = new ConcurrentHashMap<>();
     private final LongSequenceGenerator sessionIdGenerator = new LongSequenceGenerator();
     private final SessionId connectionSessionId;
     private final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
@@ -208,9 +208,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private int maxThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private RejectedExecutionHandler rejectedTaskHandler = null;
 
-    private List<String> trustedPackages = new ArrayList<String>();
+    private List<String> trustedPackages = new ArrayList<>();
     private boolean trustAllPackages = false;
-	private int connectResponseTimeout;
+    private int connectResponseTimeout;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -818,7 +818,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         // Allows the options on the destination to configure the consumerInfo
         if (info.getDestination().getOptions() != null) {
-            Map<String, String> options = new HashMap<String, String>(info.getDestination().getOptions());
+            Map<String, String> options = new HashMap<>(info.getDestination().getOptions());
             IntrospectionSupport.setProperties(this.info, options, "consumer.");
         }
 
@@ -1237,7 +1237,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         // Allows the options on the destination to configure the consumerInfo
         if (consumerInfo.getDestination().getOptions() != null) {
-            Map<String, String> options = new HashMap<String, String>(consumerInfo.getDestination().getOptions());
+            Map<String, String> options = new HashMap<>(consumerInfo.getDestination().getOptions());
             IntrospectionSupport.setProperties(consumerInfo, options, "consumer.");
         }
 
@@ -1340,11 +1340,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         } catch (Exception e) {
                             exception = e;
                         }
-                        if(exception!=null) {
+                        if (exception != null) {
                             if ( exception instanceof JMSException) {
                                 onComplete.onException((JMSException) exception);
                             } else {
-                                if (isClosed()||closing.get()) {
+                                if (isClosed() || closing.get()) {
                                     LOG.debug("Received an exception but connection is closing");
                                 }
                                 JMSException jmsEx = null;
@@ -1355,9 +1355,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                 }
                                 // dispose of transport for security exceptions on connection initiation
                                 if (exception instanceof SecurityException && command instanceof ConnectionInfo){
-                                    forceCloseOnSecurityException(exception);
+                                    try {
+                                        forceCloseOnSecurityException(exception);
+                                    } catch (Throwable t) {
+                                        // We throw the original error from the ExceptionResponse instead.
+                                    }
                                 }
-                                if (jmsEx !=null) {
+                                if (jmsEx != null) {
                                     onComplete.onException(jmsEx);
                                 }
                             }
@@ -1391,7 +1395,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     if (er.getException() instanceof JMSException) {
                         throw (JMSException)er.getException();
                     } else {
-                        if (isClosed()||closing.get()) {
+                        if (isClosed() || closing.get()) {
                             LOG.debug("Received an exception but connection is closing");
                         }
                         JMSException jmsEx = null;
@@ -1401,9 +1405,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                             LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
                         }
                         if (er.getException() instanceof SecurityException && command instanceof ConnectionInfo){
-                            forceCloseOnSecurityException(er.getException());
+                            try {
+                                forceCloseOnSecurityException(er.getException());
+                            } catch (Throwable t) {
+                                // We throw the original error from the ExceptionResponse instead.
+                            }
                         }
-                        if (jmsEx !=null) {
+                        if (jmsEx != null) {
                             throw jmsEx;
                         }
                     }
@@ -2570,10 +2578,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public int getConnectResponseTimeout() {
-    	return connectResponseTimeout;
+        return connectResponseTimeout;
     }
 
-	public void setConnectResponseTimeout(int connectResponseTimeout) {
-		this.connectResponseTimeout = connectResponseTimeout;
-	}
+    public void setConnectResponseTimeout(int connectResponseTimeout) {
+        this.connectResponseTimeout = connectResponseTimeout;
+    }
 }
