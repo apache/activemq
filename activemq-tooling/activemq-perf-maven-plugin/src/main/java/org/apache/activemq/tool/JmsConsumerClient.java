@@ -84,7 +84,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             LOG.info("Starting to synchronously receive messages for " + duration + " ms...");
             long endTime = System.currentTimeMillis() + duration;
 
-            while (System.currentTimeMillis() < endTime) {
+            while (System.currentTimeMillis() - endTime < 0) {
                 getJmsConsumer().receive();
                 incThroughput();
                 sleep();
