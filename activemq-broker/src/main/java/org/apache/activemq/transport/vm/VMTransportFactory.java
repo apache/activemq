@@ -191,7 +191,7 @@ public class VMTransportFactory extends TransportFactory {
             broker = registry.lookup(brokerName);
             if (broker == null || waitForStart > 0) {
                 final long expiry = System.currentTimeMillis() + waitForStart;
-                while ((broker == null || !broker.isStarted()) && expiry > System.currentTimeMillis()) {
+                while ((broker == null || !broker.isStarted()) && System.currentTimeMillis() - expiry < 0) {
                     long timeout = Math.max(0, expiry - System.currentTimeMillis());
                     if (broker == null) {
                         try {

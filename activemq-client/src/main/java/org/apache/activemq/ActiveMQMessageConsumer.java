@@ -1157,7 +1157,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         break;
                     }
                 }
-            } while (numberNotReplayed > 0 && expiry < System.currentTimeMillis());
+            } while (numberNotReplayed > 0 && expiry - System.currentTimeMillis() < 0);
         }
     }
 
