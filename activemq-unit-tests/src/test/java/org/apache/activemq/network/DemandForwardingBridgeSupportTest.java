@@ -20,6 +20,8 @@ import junit.framework.Test;
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.command.*;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Arrays;
 
 public class DemandForwardingBridgeSupportTest extends NetworkTestSupport {
@@ -110,13 +112,40 @@ public class DemandForwardingBridgeSupportTest extends NetworkTestSupport {
     // create sockets with max waiting value accepted
     @Override
     protected String getLocalURI() {
-        return "tcp://localhost:61616?connectionTimeout=2147483647";
+        int port = findFreePort();
+        return String.format("tcp://localhost:%d?connectionTimeout=2147483647", port);
     }
 
     @Override
     protected String getRemoteURI() {
-        return "tcp://localhost:61617?connectionTimeout=2147483647";
+        int port = findFreePort();
+        return String.format("tcp://localhost:%d?connectionTimeout=2147483647",port);
     }
+
+    private static int findFreePort() {
+        ServerSocket socket = null;
+        try {
+            socket = new ServerSocket(0);
+            socket.setReuseAddress(true);
+            int port = socket.getLocalPort();
+            try {
+                socket.close();
+            } catch (IOException e) {
+                // Ignore IOException on close()
+            }
+            return port;
+        } catch (IOException e) {
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        throw new IllegalStateException("Could not find a free TCP/IP port to start embedded Jetty HTTP Server on");
+    }
+
 
     @Override
     protected void setUp() throws Exception {
