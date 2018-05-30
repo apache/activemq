@@ -21,8 +21,12 @@ import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.CombinationTestSupport;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -39,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import javax.jms.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.activemq.TestSupport.getDestination;
@@ -149,6 +154,63 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
                         allMatch(e -> e == 0));
 
     }
+
+
+    public void testReceiveTimeoutRespectedWithExpiryProcessing() throws Exception {
+        final ActiveMQDestination destination = new ActiveMQQueue("test");
+        broker = new BrokerService();
+        broker.setBrokerName("localhost");
+        broker.setDestinations(new ActiveMQDestination[]{destination});
+        broker.setPersistenceAdapter(new MemoryPersistenceAdapter());
+
+        PolicyEntry defaultPolicy = new PolicyEntry();
+        defaultPolicy.setExpireMessagesPeriod(1000);
+        defaultPolicy.setMaxExpirePageSize(2000);
+        PolicyMap policyMap = new PolicyMap();
+        policyMap.setDefaultEntry(defaultPolicy);
+        broker.setDestinationPolicy(policyMap);
+        broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
+        broker.addConnector("tcp://localhost:0");
+        broker.setPlugins(new BrokerPlugin[] { new BrokerPluginSupport() {
+            @Override
+            public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription, Throwable poisonCause) {
+                try {
+                    LOG.info("Sleeping before delegation on sendToDeadLetterQueue");
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (Exception ignored) {}
+                return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
+            }
+        }});
+        broker.start();
+        broker.waitUntilStarted();
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+                "vm://localhost");
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setAll(0);
+        factory.setPrefetchPolicy(prefetchPolicy);
+        connection = factory.createConnection();
+        connection.start();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        producer = session.createProducer(destination);
+        producer.setTimeToLive(1000);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+
+        for (int i=0;i<10; i++) {
+            producer.send(session.createTextMessage("RTR"), DeliveryMode.PERSISTENT, 0, 2000);
+        }
+
+        consumer = session.createConsumer(new ActiveMQQueue("another-test"));
+
+        for (int i=0; i<10; i++) {
+            long timeStamp = System.currentTimeMillis();
+            consumer.receive(1000);
+            long duration = System.currentTimeMillis() - timeStamp;
+            LOG.info("Duration: " + i + " : " + duration);
+            assertTrue("Delay about 500: " + i + ", actual: " + duration, duration < 1500);
+        }
+    }
+
 
     private void produce(int num, ActiveMQDestination destination) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(

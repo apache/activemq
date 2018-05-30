@@ -39,6 +39,7 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -144,10 +145,21 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             asyncWakeup();
         }
     };
-    private final Runnable expireMessagesTask = new Runnable() {
+    private final AtomicBoolean expiryTaskInProgress = new AtomicBoolean(false);
+    private final Runnable expireMessagesWork = new Runnable() {
         @Override
         public void run() {
             expireMessages();
+            expiryTaskInProgress.set(false);
+        }
+    };
+
+    private final Runnable expireMessagesTask = new Runnable() {
+        @Override
+        public void run() {
+            if (expiryTaskInProgress.compareAndSet(false, true)) {
+                taskFactory.execute(expireMessagesWork);
+            }
         }
     };
 

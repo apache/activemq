@@ -2159,13 +2159,13 @@ public class BrokerService implements Service {
                 public void run() {
                     try {
                         checkStoreUsageLimits();
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         LOG.error("Failed to check persistent disk usage limits", e);
                     }
 
                     try {
                         checkTmpStoreUsageLimits();
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         LOG.error("Failed to check temporary store usage limits", e);
                     }
                 }

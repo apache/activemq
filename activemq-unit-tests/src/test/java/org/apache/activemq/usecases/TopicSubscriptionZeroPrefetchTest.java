@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -35,6 +36,8 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.junit.After;
 import org.junit.Assert;
@@ -256,6 +259,30 @@ public class TopicSubscriptionZeroPrefetchTest {
         Assert.assertNotNull("should have received a message the published message", consumedMessage);
     }
 
+    @Test(timeout = 420000)
+    public void testReceiveTimeoutRespectedWithExpiryProcessing() throws Exception {
+
+        ActiveMQTopic consumerDestination = new ActiveMQTopic(getTopicName() + "?consumer.prefetchSize=0");
+
+        for (int i=0; i<500; i++) {
+            consumer = session.createDurableSubscriber(consumerDestination, "mysub-" + i);
+            consumer.close();
+        }
+
+        for (int i=0;i<1000; i++) {
+            producer.send(session.createTextMessage("RTR"), DeliveryMode.PERSISTENT, 0, 5000);
+        }
+
+        consumer = session.createDurableSubscriber(consumerDestination, "mysub3");
+        for (int i=0; i<10; i++) {
+            long timeStamp = System.currentTimeMillis();
+            consumer.receive(1000);
+            long duration = System.currentTimeMillis() - timeStamp;
+            LOG.info("Duration: " + i + " : " + duration);
+            assertTrue("Delay about 500: " + i, duration < 1500);
+        }
+    }
+
     @After
     public void tearDown() throws Exception {
         consumer.close();
@@ -272,6 +299,13 @@ public class TopicSubscriptionZeroPrefetchTest {
         broker.setUseJmx(false);
         broker.setDeleteAllMessagesOnStartup(true);
         broker.addConnector("vm://localhost");
+        PolicyEntry policyEntry = new PolicyEntry();
+        policyEntry.setExpireMessagesPeriod(5000);
+        policyEntry.setMaxExpirePageSize(2000);
+        policyEntry.setUseCache(false);
+        PolicyMap policyMap = new PolicyMap();
+        policyMap.setDefaultEntry(policyEntry);
+        broker.setDestinationPolicy(policyMap);
         broker.start();
         broker.waitUntilStarted();
         return broker;
