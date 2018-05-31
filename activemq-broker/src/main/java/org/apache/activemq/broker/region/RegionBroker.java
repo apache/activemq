@@ -913,7 +913,7 @@ public class RegionBroker extends EmptyBroker {
                     log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimeoutBeforeGC());
                     try {
                         getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         LOG.error("Failed to remove inactive destination {}", dest, e);
                     }
                 }
