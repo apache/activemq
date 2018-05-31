@@ -306,7 +306,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
             adapter.removeQueueMessageStore(destination);
             removeMessageStore(adapter, destination);
-            destinationMap.removeAll(destination);
+            destinationMap.remove(destination, adapter);
         }
     }
 
@@ -321,7 +321,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
             adapter.removeTopicMessageStore(destination);
             removeMessageStore(adapter, destination);
-            destinationMap.removeAll(destination);
+            destinationMap.remove(destination, adapter);
         }
     }
 
