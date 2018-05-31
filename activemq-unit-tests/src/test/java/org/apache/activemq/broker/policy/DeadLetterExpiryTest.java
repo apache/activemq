@@ -36,6 +36,8 @@ import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 public class DeadLetterExpiryTest extends DeadLetterTest {
     private static final Logger LOG = LoggerFactory.getLogger(DeadLetterExpiryTest.class);
 
@@ -156,7 +158,8 @@ public class DeadLetterExpiryTest extends DeadLetterTest {
                 try {
                     QueueViewMBean queueViewMBean = getProxyToQueue("DLQ.auditConfigured");
                     LOG.info("Queue " + queueViewMBean.getName() + ", size:" + queueViewMBean.getQueueSize());
-                    return queueViewMBean.getQueueSize() == 4;
+                    // expiry across queues is no longer seralised on a single timertask thread AMQ-6979
+                    return queueViewMBean.getQueueSize() >= 2;
                 } catch (Exception expectedTillExpiry) {}
                 return false;
             }
