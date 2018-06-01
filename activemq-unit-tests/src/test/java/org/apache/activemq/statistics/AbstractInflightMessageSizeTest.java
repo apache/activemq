@@ -145,7 +145,7 @@ public abstract class AbstractInflightMessageSizeTest {
      * @throws javax.jms.JMSException
      * @throws InterruptedException
      */
-    @Test(timeout=15000)
+    @Test(timeout=31000)
     public void testInflightMessageSize() throws Exception {
         Assume.assumeTrue(useTopicSubscriptionInflightStats);
 
@@ -173,7 +173,7 @@ public abstract class AbstractInflightMessageSizeTest {
      *
      * @throws Exception
      */
-    @Test(timeout=15000)
+    @Test(timeout=31000)
     public void testInflightMessageSizePrefetchFilled() throws Exception {
         Assume.assumeTrue(useTopicSubscriptionInflightStats);
 
@@ -207,7 +207,7 @@ public abstract class AbstractInflightMessageSizeTest {
      *
      * @throws Exception
      */
-    @Test(timeout=15000)
+    @Test(timeout=31000)
     public void testInflightMessageSizePrefetchNotFilled() throws Exception {
         Assume.assumeTrue(useTopicSubscriptionInflightStats);
 
@@ -249,7 +249,7 @@ public abstract class AbstractInflightMessageSizeTest {
      * @throws javax.jms.JMSException
      * @throws InterruptedException
      */
-    @Test(timeout=15000)
+    @Test(timeout=31000)
     public void testInflightMessageSizeRollback() throws Exception {
         Assume.assumeTrue(useTopicSubscriptionInflightStats);
         Assume.assumeTrue(ackType == ActiveMQSession.SESSION_TRANSACTED);
