@@ -295,11 +295,16 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
 
-        assertTrue("prefetch extension..",
-                subscriptions.stream().
-                        filter(s -> s instanceof QueueSubscription).
-                        mapToInt(s -> ((QueueSubscription)s).getPrefetchExtension().get()).
-                        allMatch(e -> e == 4));
+        assertTrue("prefetch extension..", Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return subscriptions.stream().
+                                filter(s -> s instanceof QueueSubscription).
+                                mapToInt(s -> ((QueueSubscription)s).getPrefetchExtension().get()).
+                                allMatch(e -> e == 4);
+                    }
+                }));
+
 
         assertNull(consumer.receiveNoWait());
         message.acknowledge();
