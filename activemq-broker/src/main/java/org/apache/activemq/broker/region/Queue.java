@@ -1478,8 +1478,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             try {
                 messages.rollback(m.getMessageId());
                 if (isDLQ()) {
-                    DeadLetterStrategy strategy = getDeadLetterStrategy();
-                    strategy.rollback(m.getMessage());
+                    ActiveMQDestination originalDestination = m.getMessage().getOriginalDestination();
+                    if (originalDestination != null) {
+                        for (Destination destination : regionBroker.getDestinations(originalDestination)) {
+                            DeadLetterStrategy strategy = destination.getDeadLetterStrategy();
+                            strategy.rollback(m.getMessage());
+                        }
+                    }
                 }
             } finally {
                 messagesLock.writeLock().unlock();
