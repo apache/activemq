@@ -919,7 +919,9 @@ public class XACompletionTest extends TestSupport {
     }
 
     private Message regularBrowseFirst() throws Exception {
-        javax.jms.Connection connection = factory.createConnection();
+        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(connectionUri);
+        activeMQConnectionFactory.setWatchTopicAdvisories(false);
+        javax.jms.Connection connection = activeMQConnectionFactory.createConnection();
         try {
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -936,7 +938,9 @@ public class XACompletionTest extends TestSupport {
     }
 
     protected void sendMessages(int messagesExpected) throws Exception {
-        sendMessagesWith(factory, messagesExpected);
+        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(connectionUri);
+        activeMQConnectionFactory.setWatchTopicAdvisories(false);
+        sendMessagesWith(activeMQConnectionFactory, messagesExpected);
     }
 
     protected void sendMessagesWith(ConnectionFactory factory, int messagesExpected) throws Exception {

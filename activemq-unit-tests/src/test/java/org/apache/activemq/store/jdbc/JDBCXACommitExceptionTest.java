@@ -363,10 +363,10 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
         getAutoCommitErrors.add(10);
 
 
-        factory = new ActiveMQXAConnectionFactory(connectionUri);
+        ActiveMQConnectionFactory nonTxFactory = new ActiveMQConnectionFactory(connectionUri);
 
         for (int i = 0; i < 10; i++) {
-            XAConnection connection = factory.createXAConnection();
+            javax.jms.Connection connection = nonTxFactory.createConnection();
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
