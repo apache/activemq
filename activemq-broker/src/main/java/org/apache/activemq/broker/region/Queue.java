@@ -2117,12 +2117,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     LOG.debug("{} cursor blocked, no space available to page in messages; usage: {}", this, this.systemUsage.getMemoryUsage());
                 }
             }
-        } else {
-            // Avoid return null list, if condition is not validated
-            resultList = new OrderedPendingList();
         }
 
-        return resultList;
+        // Avoid return null list, if condition is not validated
+        return resultList != null ? resultList : new OrderedPendingList();
     }
 
     private final boolean haveRealConsumer() {
