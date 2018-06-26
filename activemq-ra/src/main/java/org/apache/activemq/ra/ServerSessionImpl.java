@@ -105,7 +105,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     }
 
     protected boolean isStale() {
-        return stale || !session.isRunning();
+        return stale || !session.isRunning() || !session.isClosed();
     }
 
     public MessageProducer getMessageProducer() throws JMSException {
@@ -159,13 +159,15 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      * @see java.lang.Runnable#run()
      */
     public void run() {
-        log.debug("Running");
+        log.debug("{} Running", this);
         currentBatchSize = 0;
         while (true) {
-            log.debug("run loop start");
+            log.debug("{} run loop", this);
             try {
                 InboundContextSupport.register(this);
-                if ( session.isRunning() ) {
+                if (session.isClosed()) {
+                    stale = true;
+                } else if (session.isRunning() ) {
                     session.run();
                 } else {
                     log.debug("JMS Session {} with unconsumed {} is no longer running (maybe due to loss of connection?), marking ServerSession as stale", session, session.getUnconsumedMessages().size());
@@ -174,9 +176,9 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             } catch (Throwable e) {
                 stale = true;
                 if ( log.isDebugEnabled() ) {
-                    log.debug("Endpoint {} failed to process message.", session, e);
+                    log.debug("Endpoint {} failed to process message.", this, e);
                 } else if ( log.isInfoEnabled() ) {
-                    log.info("Endpoint {} failed to process message. Reason: " + e.getMessage(), session);
+                    log.info("Endpoint {} failed to process message. Reason: " + e.getMessage(), this);
                 }
             } finally {
                 InboundContextSupport.unregister(this);
@@ -184,20 +186,23 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 synchronized (runControlMutex) {
                     // This endpoint may have gone stale due to error
                     if (stale) {
+                        log.debug("Session {} stale, removing from pool", this);
                         runningFlag = false;
                         pool.removeFromPool(this);
                         break;
                     }
                     if (!session.hasUncomsumedMessages()) {
                         runningFlag = false;
-                        log.debug("Session has no unconsumed message, returning to pool");
+                        log.debug("Session {} has no unconsumed message, returning to pool", this);
                         pool.returnToPool(this);
                         break;
+                    } else {
+                        log.debug("Session has session has more work to do b/c of unconsumed", this);
                     }
                 }
             }
         }
-        log.debug("Run finished");
+        log.debug("{} Run finished", this);
     }
 
     /**

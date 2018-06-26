@@ -194,7 +194,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
 
     public void returnToPool(ServerSessionImpl ss) {
         sessionLock.lock();
-            activeSessions.remove(ss);
+        activeSessions.remove(ss);
         try {
             // make sure we only return non-stale sessions to the pool
             if ( ss.isStale() ) {
@@ -226,7 +226,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         try {
             ActiveMQSession session = (ActiveMQSession)ss.getSession();
             List<MessageDispatch> l = session.getUnconsumedMessages();
-            if (!l.isEmpty()) {
+            if (!isClosing() && !l.isEmpty()) {
                 ActiveMQConnection connection = activeMQAsfEndpointWorker.getConnection();
                 if (connection != null) {
                     for (Iterator<MessageDispatch> i = l.iterator(); i.hasNext();) {
@@ -276,6 +276,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
 
     public void close() {
         closing.set(true);
+        LOG.debug("{} close", this);
         int activeCount = closeSessions();
         // we may have to wait erroneously 250ms if an
         // active session is removed during our wait and we
@@ -300,11 +301,16 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     protected int closeSessions() {
         sessionLock.lock();
         try {
+            List<ServerSessionImpl> alreadyClosedServerSessions = new ArrayList<>(activeSessions.size());
             for (ServerSessionImpl ss : activeSessions) {
                 try {
                     ActiveMQSession session = (ActiveMQSession) ss.getSession();
                     if (!session.isClosed()) {
                         session.close();
+                    } else {
+                        LOG.debug("Session {} already closed", session);
+                        alreadyClosedServerSessions.add(ss);
+
                     }
                 } catch (JMSException ignored) {
                     if (LOG.isDebugEnabled()) {
@@ -312,6 +318,11 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
                     }
                 }
             }
+            for (ServerSessionImpl ss : alreadyClosedServerSessions) {
+                removeFromPool(ss);
+            }
+            alreadyClosedServerSessions.clear();
+
             for (ServerSessionImpl ss : idleSessions) {
                 ss.close();
             }
