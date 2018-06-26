@@ -449,19 +449,9 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
                 ActiveMQMessage temp = null;
                 if (md.getMessage() != null) {
-
-                    // Topics can dispatch the same Message to more than one consumer
-                    // so we must copy to prevent concurrent read / write to the same
-                    // message object.
-                    if (md.getDestination().isTopic()) {
-                        synchronized (md.getMessage()) {
-                            temp = (ActiveMQMessage) md.getMessage().copy();
-                        }
-                    } else {
-                        temp = (ActiveMQMessage) md.getMessage();
-                    }
-
+                    temp = (ActiveMQMessage) md.getMessage();
                     if (!temp.getProperties().containsKey(JMS_AMQP_MESSAGE_FORMAT)) {
+                        temp = (ActiveMQMessage) md.getMessage().copy();
                         temp.setProperty(JMS_AMQP_MESSAGE_FORMAT, 0);
                     }
                 }
