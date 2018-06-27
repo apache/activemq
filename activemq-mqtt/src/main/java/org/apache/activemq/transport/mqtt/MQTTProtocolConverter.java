@@ -550,7 +550,7 @@ public class MQTTProtocolConverter {
                 command.messageId(), clientId, connectionInfo.getConnectionId(), msg.getMessageId());
         msg.setTimestamp(System.currentTimeMillis());
         msg.setPriority((byte) Message.DEFAULT_PRIORITY);
-        msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE && !command.retain());
+        msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE);
         msg.setIntProperty(QOS_PROPERTY_NAME, command.qos().ordinal());
         if (command.retain()) {
             msg.setBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAIN_PROPERTY, true);
