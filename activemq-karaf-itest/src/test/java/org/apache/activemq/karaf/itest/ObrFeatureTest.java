@@ -94,17 +94,11 @@ public class ObrFeatureTest extends AbstractFeatureTest {
     private void testWithSpringVersion(String version) throws Exception, Throwable {
         featuresService.installFeature("spring", version);
         installAndAssertFeature("activemq-client");
-        verifyBundleInstalledAndRegisteredServices("activemq-osgi", 2);
+        verifyBundleInstalled("activemq-client-osgi");
     }
 
-    private void verifyBundleInstalledAndRegisteredServices(final String bundleName,
-                                                           final int numberOfServices)
-        throws Exception {
+    private void verifyBundleInstalled(final String bundleName) throws Exception {
         Bundle bundle = getBundle(bundleName);
         Assert.assertEquals(Bundle.ACTIVE, bundle.getState());
-        // Assert that the bundle has registered some services via blueprint
-        Assert.assertNotNull(bundle.getRegisteredServices());
-        // Assert that the bundle has registered the correct number of services
-        Assert.assertEquals(numberOfServices, bundle.getRegisteredServices().length);
     }
 }

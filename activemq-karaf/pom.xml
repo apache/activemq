@@ -135,6 +135,18 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
           <execution>
+            <id>generate-osgi-compatible-project-version</id>
+            <goals>
+              <goal>regex-property</goal>
+            </goals>
+            <configuration>
+              <name>osgi.project.version</name>
+              <value>${project.version}</value>
+              <regex>-</regex>
+              <replacement>.</replacement>
+            </configuration>
+          </execution>
+          <execution>
             <id>attach-artifacts</id>
             <phase>package</phase>
             <goals>

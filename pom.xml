@@ -254,6 +254,7 @@
     <module>activemq-web</module>
     <module>activemq-partition</module>
     <module>activemq-osgi</module>
+    <module>activemq-client-osgi</module>
     <module>activemq-blueprint</module>
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>

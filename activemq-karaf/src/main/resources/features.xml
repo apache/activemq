@@ -38,7 +38,7 @@
     </feature>
 
     <feature name="activemq-camel" version="${project.version}" resolver="(obr)" start-level="50">
-        <feature version="${project.version}">activemq-client</feature>
+        <feature version="${project.version}">activemq</feature>
         <bundle>mvn:org.apache.activemq/activemq-camel/${project.version}</bundle>
         <feature version="${camel-version-range}">camel-jms</feature>
         <feature version="${camel-version-range}">camel</feature>
