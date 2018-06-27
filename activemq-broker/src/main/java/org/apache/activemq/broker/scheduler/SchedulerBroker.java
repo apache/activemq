@@ -337,8 +337,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
         }
 
-        getInternalScheduler().schedule(msg.getMessageId().toString(),
-            new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
+        String jobId = ID_GENERATOR.generateId();
+        getInternalScheduler().schedule(jobId,
+                new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
     }
 
     @Override
