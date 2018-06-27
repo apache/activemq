@@ -429,8 +429,6 @@ public class ServerSessionImplTest {
             assertTrue("[" + iteration + "] Pool close does not block", closeDone.await(10, TimeUnit.SECONDS));
             assertTrue("[" + iteration + "] Pool close ok", closeSuccess.await(10, TimeUnit.MILLISECONDS));
 
-            assertTrue("[" + iteration + "] not all delivered", messageCountRef.get().getCount() > 0);
-
             assertTrue("[" + iteration + "] sender complete", senderDone.await(30, TimeUnit.SECONDS));
         }
     }
