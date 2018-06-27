@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 public class SchedulerBroker extends BrokerFilter implements JobListener {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
+    private static final LongSequenceGenerator longGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final AtomicBoolean started = new AtomicBoolean();
     private final WireFormat wireFormat = new OpenWireFormat();
@@ -337,8 +338,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
         }
 
-        String jobId = ID_GENERATOR.generateId();
-        getInternalScheduler().schedule(jobId,
+        //job id should be unique for every job (Same format as MessageId)
+        MessageId jobId = new MessageId(messageSend.getMessageId().getProducerId(), longGenerator.getNextSequenceId());
+
+        getInternalScheduler().schedule(jobId.toString(),
                 new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
     }
 
