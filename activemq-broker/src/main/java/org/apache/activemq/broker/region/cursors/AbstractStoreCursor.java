@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -350,8 +351,20 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             final Object futureOrLong = candidate.getFutureOrSequenceLong();
             if (futureOrLong instanceof Future) {
                 Future future = (Future) futureOrLong;
-                if (future.isCancelled()) {
-                    it.remove();
+                if (future.isDone()) {
+                    if (future.isCancelled()) {
+                        it.remove();
+                    } else {
+                        // check for exception, we may be seeing old state
+                        try {
+                            future.get(0, TimeUnit.SECONDS);
+                            // stale; if we get a result next prune will see Long
+                        } catch (ExecutionException expected) {
+                            it.remove();
+                        } catch (Exception unexpected) {
+                            LOG.debug("{} unexpected exception verifying exception state of future", this, unexpected);
+                        }
+                    }
                 } else {
                     // we don't want to wait for work to complete
                     break;

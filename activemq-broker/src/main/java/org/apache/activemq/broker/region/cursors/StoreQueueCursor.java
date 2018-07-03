@@ -219,6 +219,11 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         this.nonPersistent = nonPersistent;
     }
 
+    /**
+     * @return the persistent Cursor
+     */
+    public PendingMessageCursor getPersistent() { return  this.persistent; }
+
     @Override
     public void setMaxBatchSize(int maxBatchSize) {
         persistent.setMaxBatchSize(maxBatchSize);
