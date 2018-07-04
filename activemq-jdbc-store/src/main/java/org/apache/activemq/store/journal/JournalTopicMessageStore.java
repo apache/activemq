@@ -188,8 +188,10 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
                 while (iterator.hasNext()) {
                     SubscriptionKey subscriptionKey = iterator.next();
                     MessageId identity = cpAckedLastAckLocations.get(subscriptionKey);
+                    MessageAck ack = new MessageAck();
+                    ack.setMessageID(identity);
                     longTermStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId,
-                                              subscriptionKey.subscriptionName, identity, null);
+                                              subscriptionKey.subscriptionName, identity, ack);
                 }
 
             }
