@@ -54,7 +54,7 @@
 </tr>
 </table>
 
-<h2>Queues:<c:if test="${null != param.QueueFilter && param.QueueFilter != ''}"> (filter='${param.QueueFilter}')</c:if></h2>
+<h2>Queues:<c:if test="${null != param.QueueFilter && param.QueueFilter != ''}"> (filter="<c:out value='${param.QueueFilter}'/>")</c:if></h2>
 
 <table id="queues" class="sortable autostripe">
 <thead>
