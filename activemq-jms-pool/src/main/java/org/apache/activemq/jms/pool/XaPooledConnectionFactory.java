@@ -43,7 +43,7 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
     private static final long serialVersionUID = -6545688026350913005L;
 
     private TransactionManager transactionManager;
-    private boolean tmFromJndi = false;
+    private Boolean tmFromJndi = false;
     private String tmJndiName = "java:/TransactionManager";
 
     public TransactionManager getTransactionManager() {
@@ -129,7 +129,7 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
         this.tmJndiName = tmJndiName;
     }
 
-    public boolean isTmFromJndi() {
+    public Boolean isTmFromJndi() {
         return tmFromJndi;
     }
 
@@ -138,7 +138,7 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
      *
      * @param tmFromJndi
      */
-    public void setTmFromJndi(boolean tmFromJndi) {
+    public void setTmFromJndi(Boolean tmFromJndi) {
         this.tmFromJndi = tmFromJndi;
     }
 }
