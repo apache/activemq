@@ -611,6 +611,7 @@ public class ProtocolConverter {
         }
 
         consumerInfo.setDestination(actualDest);
+        consumerInfo.setDispatchAsync(true);
 
         StompSubscription stompSubscription;
         if (!consumerInfo.isBrowser()) {
