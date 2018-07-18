@@ -18,10 +18,10 @@ package org.apache.activemq.util;
 
 public class JenkinsHash {
 
-    private static long INT_MASK = 0x00000000ffffffffL;
-    private static long BYTE_MASK = 0x00000000000000ffL;
+    private static final long INT_MASK = 0x00000000ffffffffL;
+    private static final long BYTE_MASK = 0x00000000000000ffL;
 
-    private static JenkinsHash _instance = new JenkinsHash();
+    private static final JenkinsHash _instance = new JenkinsHash();
 
     public static JenkinsHash getInstance() {
         return _instance;
