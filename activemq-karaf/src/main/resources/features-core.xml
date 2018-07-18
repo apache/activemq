@@ -47,7 +47,6 @@
       <feature>connector</feature>
       <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
-      <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
       <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
       <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
       <bundle dependency="true">mvn:commons-codec/commons-codec/1.9</bundle>
@@ -66,4 +65,11 @@
       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson-version}</bundle>
       <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
     </feature>
-  </features>
+
+    <feature name="activemq-karaf" description="ActiveMQ broker shell integration">
+        <feature version="${project.version}">activemq</feature>
+        <feature>shell</feature>
+        <feature>aries-blueprint</feature>
+        <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
+    </feature>
+</features>
