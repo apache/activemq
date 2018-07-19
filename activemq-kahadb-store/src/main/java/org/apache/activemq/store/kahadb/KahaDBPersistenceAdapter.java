@@ -547,6 +547,14 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         letter.setCheckForCorruptJournalFiles(checkForCorruptJournalFiles);
     }
 
+    public boolean isPurgeRecoveredXATransactions() {
+        return letter.isPurgeRecoveredXATransactions();
+    }
+
+    public void setPurgeRecoveredXATransactions(boolean purgeRecoveredXATransactions) {
+        letter.setPurgeRecoveredXATransactions(purgeRecoveredXATransactions);
+    }
+
     @Override
     public void setBrokerService(BrokerService brokerService) {
         super.setBrokerService(brokerService);
