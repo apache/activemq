@@ -272,6 +272,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean ignoreMissingJournalfiles = false;
     private int indexCacheSize = 10000;
     private boolean checkForCorruptJournalFiles = false;
+    private boolean purgeRecoveredXATransactions = false;
     private boolean checksumJournalFiles = true;
     protected boolean forceRecoverIndex = false;
     private boolean archiveCorruptedIndex = false;
@@ -747,6 +748,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             synchronized (preparedTransactions) {
                 for (TransactionId txId : preparedTransactions.keySet()) {
                     LOG.warn("Recovered prepared XA TX: [{}]", txId);
+                }
+
+                if (purgeRecoveredXATransactions){
+                    if (!preparedTransactions.isEmpty()){
+                        LOG.warn("Purging " +  preparedTransactions.size() + " recovered prepared XA TXs" );
+                        preparedTransactions.clear();
+                    }
                 }
             }
 
@@ -3338,6 +3346,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public void setCheckForCorruptJournalFiles(boolean checkForCorruptJournalFiles) {
         this.checkForCorruptJournalFiles = checkForCorruptJournalFiles;
+    }
+
+    public boolean isPurgeRecoveredXATransactions() {
+        return purgeRecoveredXATransactions;
+    }
+
+    public void setPurgeRecoveredXATransactions(boolean purgeRecoveredXATransactions) {
+        this.purgeRecoveredXATransactions = purgeRecoveredXATransactions;
     }
 
     public boolean isChecksumJournalFiles() {
