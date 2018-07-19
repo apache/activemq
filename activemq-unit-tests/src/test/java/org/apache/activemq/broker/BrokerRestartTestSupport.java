@@ -58,10 +58,13 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
      * @throws URISyntaxException
      */
     protected void restartBroker() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
-        broker = createRestartedBroker();
+        stopBroker();
         broker.start();
     }
 
+    protected void stopBroker() throws Exception {
+        broker.stop();
+        broker.waitUntilStopped();
+        broker = createRestartedBroker();
+    }
 }
