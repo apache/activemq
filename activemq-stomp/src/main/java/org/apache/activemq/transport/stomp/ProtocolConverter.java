@@ -257,9 +257,9 @@ public class ProtocolConverter {
                 onStompCommit(command);
             } else if (action.startsWith(Stomp.Commands.ABORT)) {
                 onStompAbort(command);
-            } else if (action.startsWith(Stomp.Commands.SUBSCRIBE)) {
+            } else if (action.startsWith(Stomp.Commands.SUBSCRIBE_PREFIX)) {
                 onStompSubscribe(command);
-            } else if (action.startsWith(Stomp.Commands.UNSUBSCRIBE)) {
+            } else if (action.startsWith(Stomp.Commands.UNSUBSCRIBE_PREFIX)) {
                 onStompUnsubscribe(command);
             } else if (action.startsWith(Stomp.Commands.CONNECT) ||
                        action.startsWith(Stomp.Commands.STOMP)) {
@@ -1031,6 +1031,10 @@ public class ProtocolConverter {
                     case Stomp.Commands.DISCONNECT:
                         result = action;
                         break;
+                    case Stomp.Commands.SUBSCRIBE_PREFIX:
+                        result = Stomp.Commands.SUBSCRIBE;
+                    case Stomp.Commands.UNSUBSCRIBE_PREFIX:
+                        result = Stomp.Commands.UNSUBSCRIBE;
                     default:
                         break;
                 }
