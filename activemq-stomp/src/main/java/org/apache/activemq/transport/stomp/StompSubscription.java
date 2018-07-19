@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -141,6 +142,8 @@ public class StompSubscription {
         ack.setDestination(consumerInfo.getDestination());
         ack.setConsumerId(consumerInfo.getConsumerId());
 
+        final ArrayList<String> acknowledgedMessages = new ArrayList<>();
+
         if (ackMode == CLIENT_ACK) {
             if (transactionId == null) {
                 ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
@@ -161,6 +164,7 @@ public class StompSubscription {
                         count++;
                     }
                 } else {
+                    acknowledgedMessages.add(id.toString());
                     iter.remove();
                     count++;
                 }
@@ -175,6 +179,7 @@ public class StompSubscription {
                 ack.setTransactionId(transactionId);
             }
 
+            this.protocolConverter.afterClientAck(this, acknowledgedMessages);
         } else if (ackMode == INDIVIDUAL_ACK) {
             ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
             ack.setMessageID(msgId);
@@ -186,6 +191,7 @@ public class StompSubscription {
                 dispatchedMessage.remove(msgId);
             }
         }
+
         return ack;
     }
 
