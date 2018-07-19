@@ -325,8 +325,12 @@ invokeJar(){
       DOIT_POSTFIX=" - $ACTIVEMQ_USER"
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
    fi
+
    # Execute java binary
    if [ -n "$TASK_TODO" ] && [ "$TASK_TODO" != "stop" ];then
+      if [ -z "$ACTIVEMQ_OUT" ]; then
+         ACTIVEMQ_OUT="/dev/null"
+      fi
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
