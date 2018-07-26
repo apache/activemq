@@ -59,7 +59,7 @@ public class MappedQueueFilter extends DestinationFilter {
             final Set<Destination> virtualDests = regionBroker.getDestinations(virtualDestination);
 
             final ActiveMQDestination newDestination = sub.getActiveMQDestination();
-            final BaseDestination regionDest = getBaseDestination((Destination) regionBroker.getDestinations(newDestination).toArray()[0]);
+            BaseDestination regionDest = null;
 
             for (Destination virtualDest : virtualDests) {
                 if (virtualDest.getActiveMQDestination().isTopic() &&
@@ -75,6 +75,9 @@ public class MappedQueueFilter extends DestinationFilter {
                             final Message copy = message.copy();
                             copy.setOriginalDestination(message.getDestination());
                             copy.setDestination(newDestination);
+                            if (regionDest == null) {
+                                regionDest = getBaseDestination((Destination) regionBroker.getDestinations(newDestination).toArray()[0]);
+                            }
                             copy.setRegionDestination(regionDest);
                             sub.addRecoveredMessage(context, newDestination.isQueue() ? new IndirectMessageReference(copy) : copy);
                         }
