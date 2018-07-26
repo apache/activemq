@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -60,13 +59,20 @@ public class DestinationMap {
      *         matching values.
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public synchronized Set get(ActiveMQDestination key) {
+    public Set get(ActiveMQDestination key) {
+        synchronized (this) {
+            return unsynchronizedGet(key);
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public Set unsynchronizedGet(ActiveMQDestination key) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             Set answer = new HashSet(destinations.length);
             for (int i = 0; i < destinations.length; i++) {
                 ActiveMQDestination childDestination = destinations[i];
-                Object value = get(childDestination);
+                Object value = unsynchronizedGet(childDestination);
                 if (value instanceof Set) {
                     answer.addAll((Set) value);
                 } else if (value != null) {
@@ -78,7 +84,13 @@ public class DestinationMap {
         return findWildcardMatches(key);
     }
 
-    public synchronized void put(ActiveMQDestination key, Object value) {
+    public void put(ActiveMQDestination key, Object value) {
+        synchronized (this) {
+            unsynchronizedPut(key, value);
+        }
+    }
+
+    public void unsynchronizedPut(ActiveMQDestination key, Object value) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             for (int i = 0; i < destinations.length; i++) {
@@ -95,7 +107,13 @@ public class DestinationMap {
     /**
      * Removes the value from the associated destination
      */
-    public synchronized void remove(ActiveMQDestination key, Object value) {
+    public void remove(ActiveMQDestination key, Object value) {
+        synchronized (this) {
+            unsynchronizedRemove(key, value);
+        }
+    }
+
+    public void unsynchronizedRemove(ActiveMQDestination key, Object value) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             for (int i = 0; i < destinations.length; i++) {
