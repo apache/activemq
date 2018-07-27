@@ -27,13 +27,9 @@ import java.util.Arrays;
 public class DemandForwardingBridgeSupportTest extends NetworkTestSupport {
 
     private DemandForwardingBridge bridge;
-
     private StubConnection producerConnection;
-
     private ProducerInfo producerInfo;
-
     private StubConnection consumerConnection;
-
     private SessionInfo consumerSessionInfo;
 
 
