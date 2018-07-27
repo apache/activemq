@@ -91,6 +91,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
             if (manager == null) {
                 throw new JMSException("No JCA ConnectionManager configured! Either enable UseInboundSessionEnabled or get your JCA container to configure one.");
             }
+
             return (Connection)manager.allocateConnection(factory, connectionRequestInfo);
         } catch (ResourceException e) {
             // Throw the root cause if it was a JMSException..
