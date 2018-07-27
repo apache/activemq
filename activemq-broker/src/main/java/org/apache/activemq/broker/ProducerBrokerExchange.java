@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.command.Message;
@@ -27,6 +23,10 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.state.ProducerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Holds internal state in the broker for a MessageProducer
@@ -213,7 +213,7 @@ public class ProducerBrokerExchange {
     }
 
     public int getPercentageBlocked() {
-        double value = flowControlInfo.getSendsBlocked() / flowControlInfo.getTotalSends();
+        double value = flowControlInfo.getTotalSends() == 0 ? 0 : flowControlInfo.getSendsBlocked() / flowControlInfo.getTotalSends();
         return (int) value * 100;
     }
 
