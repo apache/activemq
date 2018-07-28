@@ -76,20 +76,32 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
             if (getUserName() == null) {
                 setUserName(baseInfo.getUserName());
             }
-            if (getDurableTopicPrefetch() != null) {
+            if (getDurableTopicPrefetch() == null) {
                 setDurableTopicPrefetch(baseInfo.getDurableTopicPrefetch());
             }
-            if (getOptimizeDurableTopicPrefetch() != null) {
+            if (getOptimizeDurableTopicPrefetch() == null) {
                 setOptimizeDurableTopicPrefetch(baseInfo.getOptimizeDurableTopicPrefetch());
             }
-            if (getQueuePrefetch() != null) {
+            if (getQueuePrefetch() == null) {
                 setQueuePrefetch(baseInfo.getQueuePrefetch());
             }
-            if (getQueueBrowserPrefetch() != null) {
+            if (getQueueBrowserPrefetch() == null) {
                 setQueueBrowserPrefetch(baseInfo.getQueueBrowserPrefetch());
             }
-            if (getTopicPrefetch() != null) {
+            if (getTopicPrefetch() == null) {
                 setTopicPrefetch(baseInfo.getTopicPrefetch());
+            }
+            if (getKeyStore() == null) {
+                setKeyStore(baseInfo.getKeyStore());
+            }
+            if (getKeyStorePassword() == null) {
+                setKeyStorePassword(baseInfo.getKeyStorePassword());
+            }
+            if (getTrustStore() == null) {
+                setTrustStore(baseInfo.getTrustStore());
+            }
+            if (getTrustStorePassword() == null) {
+                setTrustStorePassword(baseInfo.getTrustStorePassword());
             }
         }
     }

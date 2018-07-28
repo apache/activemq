@@ -240,6 +240,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+    public enum PurgeRecoveredXATransactionStrategy {
+        NEVER,
+        COMMIT,
+        ROLLBACK;
+    }
+
     protected PageFile pageFile;
     protected Journal journal;
     protected Metadata metadata = new Metadata();
@@ -272,7 +278,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean ignoreMissingJournalfiles = false;
     private int indexCacheSize = 10000;
     private boolean checkForCorruptJournalFiles = false;
-    private boolean purgeRecoveredXATransactions = false;
+    protected PurgeRecoveredXATransactionStrategy purgeRecoveredXATransactionStrategy = PurgeRecoveredXATransactionStrategy.NEVER;
     private boolean checksumJournalFiles = true;
     protected boolean forceRecoverIndex = false;
     private boolean archiveCorruptedIndex = false;
@@ -746,14 +752,20 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             synchronized (preparedTransactions) {
-                for (TransactionId txId : preparedTransactions.keySet()) {
-                    LOG.warn("Recovered prepared XA TX: [{}]", txId);
-                }
-
-                if (purgeRecoveredXATransactions){
-                    if (!preparedTransactions.isEmpty()){
-                        LOG.warn("Purging " +  preparedTransactions.size() + " recovered prepared XA TXs" );
-                        preparedTransactions.clear();
+                Set<TransactionId> txIds = new LinkedHashSet<TransactionId>(preparedTransactions.keySet());
+                for (TransactionId txId : txIds) {
+                    switch (purgeRecoveredXATransactionStrategy){
+                        case NEVER:
+                            LOG.warn("Recovered prepared XA TX: [{}]", txId);
+                            break;
+                        case COMMIT:
+                            store(new KahaCommitCommand().setTransactionInfo(TransactionIdConversion.convert(txId)), false, null, null);
+                            LOG.warn("Recovered and Committing prepared XA TX: [{}]", txId);
+                            break;
+                        case ROLLBACK:
+                            store(new KahaRollbackCommand().setTransactionInfo(TransactionIdConversion.convert(txId)), false, null, null);
+                            LOG.warn("Recovered and Rolling Back prepared XA TX: [{}]", txId);
+                            break;
                     }
                 }
             }
@@ -3315,12 +3327,17 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         this.checkForCorruptJournalFiles = checkForCorruptJournalFiles;
     }
 
-    public boolean isPurgeRecoveredXATransactions() {
-        return purgeRecoveredXATransactions;
+    public PurgeRecoveredXATransactionStrategy getPurgeRecoveredXATransactionStrategyEnum() {
+        return purgeRecoveredXATransactionStrategy;
     }
 
-    public void setPurgeRecoveredXATransactions(boolean purgeRecoveredXATransactions) {
-        this.purgeRecoveredXATransactions = purgeRecoveredXATransactions;
+    public String getPurgeRecoveredXATransactionStrategy() {
+        return purgeRecoveredXATransactionStrategy.name();
+    }
+
+    public void setPurgeRecoveredXATransactionStrategy(String purgeRecoveredXATransactionStrategy) {
+        this.purgeRecoveredXATransactionStrategy = PurgeRecoveredXATransactionStrategy.valueOf(
+                purgeRecoveredXATransactionStrategy.trim().toUpperCase());
     }
 
     public boolean isChecksumJournalFiles() {
