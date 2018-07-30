@@ -1057,6 +1057,7 @@ public class FailoverTransport implements CompositeTransport {
                             return false;
                         } catch (Exception e) {
                             failure = e;
+                            LOG.error("Connect fail to: {}, error message: {}", uri, e.getMessage());
                             LOG.debug("Connect fail to: {}, reason: {}", uri, e);
                             if (transport != null) {
                                 try {
@@ -1286,6 +1287,7 @@ public class FailoverTransport implements CompositeTransport {
                     for (URI uri : updatedURIs) {
                         if (uri != null && !updated.contains(uri)) {
                             updated.add(uri);
+                            LOG.info("Adding new URI to transport: {}", uri);
                         }
                     }
                 }
