@@ -41,11 +41,15 @@ public class AMQPNativeOutboundTransformer implements OutboundTransformer {
     }
 
     static EncodedMessage transform(OutboundTransformer options, ActiveMQBytesMessage message) throws JMSException {
-        long messageFormat;
-        try {
-            messageFormat = message.getLongProperty(JMS_AMQP_MESSAGE_FORMAT);
-        } catch (MessageFormatException e) {
-            return null;
+        final long messageFormat;
+        if (message.propertyExists(JMS_AMQP_MESSAGE_FORMAT)) {
+            try {
+                messageFormat = message.getLongProperty(JMS_AMQP_MESSAGE_FORMAT);
+            } catch (MessageFormatException e) {
+                return null;
+            }
+        } else {
+            messageFormat = 0;
         }
 
         Binary encodedMessage = getBinaryFromMessageBody(message);
