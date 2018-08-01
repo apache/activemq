@@ -88,7 +88,6 @@ import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.codec.AMQPDefinedTypes;
 import org.apache.qpid.proton.codec.DecoderImpl;
 import org.apache.qpid.proton.codec.EncoderImpl;
-import org.fusesource.hawtbuf.UTF8Buffer;
 
 public class JMSMappingOutboundTransformer implements OutboundTransformer {
 
@@ -256,9 +255,6 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
         for (Map.Entry<String, Object> entry : entries.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            if (value instanceof UTF8Buffer) {
-                value = value.toString();
-            }
 
             if (key.startsWith(JMS_AMQP_PREFIX)) {
                 if (key.startsWith(NATIVE, JMS_AMQP_PREFIX_LENGTH)) {
