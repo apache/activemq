@@ -102,11 +102,17 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
     public static final byte TEMP_QUEUE_TYPE = 0x02;
     public static final byte TEMP_TOPIC_TYPE = 0x03;
 
+    private final UTF8BufferType utf8BufferEncoding;
+
     // For now Proton requires that we create a decoder to create an encoder
     private final DecoderImpl decoder = new DecoderImpl();
     private final EncoderImpl encoder = new EncoderImpl(decoder);
     {
         AMQPDefinedTypes.registerAllTypes(decoder, encoder);
+
+        utf8BufferEncoding = new UTF8BufferType(encoder, decoder);
+
+        encoder.register(utf8BufferEncoding);
     }
 
     @Override
@@ -159,7 +165,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             }
             properties.setTo(destination.getQualifiedName());
             if (maMap == null) {
-                maMap = new HashMap<Symbol, Object>();
+                maMap = new HashMap<>();
             }
             maMap.put(JMS_DEST_TYPE_MSG_ANNOTATION, destinationType(destination));
         }
@@ -170,7 +176,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             }
             properties.setReplyTo(replyTo.getQualifiedName());
             if (maMap == null) {
-                maMap = new HashMap<Symbol, Object>();
+                maMap = new HashMap<>();
             }
             maMap.put(JMS_REPLY_TO_TYPE_MSG_ANNOTATION, destinationType(replyTo));
         }
@@ -276,7 +282,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     continue;
                 } else if (key.startsWith(MESSAGE_ANNOTATION_PREFIX, JMS_AMQP_PREFIX_LENGTH)) {
                     if (maMap == null) {
-                        maMap = new HashMap<Symbol, Object>();
+                        maMap = new HashMap<>();
                     }
                     String name = key.substring(JMS_AMQP_MESSAGE_ANNOTATION_PREFIX.length());
                     maMap.put(Symbol.valueOf(name), value);
@@ -307,14 +313,14 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                     continue;
                 } else if (key.startsWith(DELIVERY_ANNOTATION_PREFIX, JMS_AMQP_PREFIX_LENGTH)) {
                     if (daMap == null) {
-                        daMap = new HashMap<Symbol, Object>();
+                        daMap = new HashMap<>();
                     }
                     String name = key.substring(JMS_AMQP_DELIVERY_ANNOTATION_PREFIX.length());
                     daMap.put(Symbol.valueOf(name), value);
                     continue;
                 } else if (key.startsWith(FOOTER_PREFIX, JMS_AMQP_PREFIX_LENGTH)) {
                     if (footerMap == null) {
-                        footerMap = new HashMap<Object, Object>();
+                        footerMap = new HashMap<>();
                     }
                     String name = key.substring(JMS_AMQP_FOOTER_PREFIX.length());
                     footerMap.put(name, value);
@@ -328,7 +334,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
             // The property didn't map into any other slot so we store it in the
             // Application Properties section of the message.
             if (apMap == null) {
-                apMap = new HashMap<String, Object>();
+                apMap = new HashMap<>();
             }
             apMap.put(key, value);
         }
@@ -409,7 +415,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
         } else if (messageType == CommandTypes.ACTIVEMQ_MAP_MESSAGE) {
             body = new AmqpValue(getMapFromMessageBody((ActiveMQMapMessage) message));
         } else if (messageType == CommandTypes.ACTIVEMQ_STREAM_MESSAGE) {
-            ArrayList<Object> list = new ArrayList<Object>();
+            ArrayList<Object> list = new ArrayList<>();
             final ActiveMQStreamMessage m = (ActiveMQStreamMessage) message;
             try {
                 while (true) {

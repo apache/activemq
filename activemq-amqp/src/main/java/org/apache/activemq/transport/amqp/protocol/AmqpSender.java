@@ -17,7 +17,6 @@
 package org.apache.activemq.transport.amqp.protocol;
 
 import static org.apache.activemq.transport.amqp.AmqpSupport.toLong;
-import static org.apache.activemq.transport.amqp.message.AmqpMessageSupport.JMS_AMQP_MESSAGE_FORMAT;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -449,11 +448,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
                 ActiveMQMessage temp = null;
                 if (md.getMessage() != null) {
-                    temp = (ActiveMQMessage) md.getMessage();
-                    if (!temp.getProperties().containsKey(JMS_AMQP_MESSAGE_FORMAT)) {
-                        temp = (ActiveMQMessage) md.getMessage().copy();
-                        temp.setProperty(JMS_AMQP_MESSAGE_FORMAT, 0);
-                    }
+                    temp = (ActiveMQMessage) md.getMessage().copy();
                 }
 
                 final ActiveMQMessage jms = temp;
