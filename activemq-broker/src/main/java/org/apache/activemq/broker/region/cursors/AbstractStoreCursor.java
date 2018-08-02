@@ -148,7 +148,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             // if the index suppressed it (original still present), or whether it was stored and needs to be removed
             Object possibleFuture = message.getMessageId().getFutureOrSequenceLong();
             if (possibleFuture instanceof Future) {
-                ((Future) possibleFuture).get();
+                try {
+                    ((Future) possibleFuture).get();
+                } catch (Exception okToErrorOrCancelStoreOp) {}
             }
             // need to access again after wait on future
             Object sequence = message.getMessageId().getFutureOrSequenceLong();
