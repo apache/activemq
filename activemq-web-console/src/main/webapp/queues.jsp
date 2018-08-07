@@ -46,7 +46,7 @@
 <div>
 <form action="queues.jsp" method="get">
     <label name="destination">Queue Name Filter</label>
-    <input type="text" name="QueueFilter" value="${param.QueueFilter}"/>
+    <input type="text" name="QueueFilter" value="<c:out value='${param.QueueFilter}'/>"/>
 
     <input type="submit" value="Filter"/>
 </form>
