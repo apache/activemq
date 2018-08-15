@@ -841,7 +841,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public ConnectionContext createConnectionContext() {
-        ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
+        ConnectionContext answer = new ConnectionContext();
         answer.setBroker(this.broker);
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
         answer.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);

@@ -452,15 +452,19 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + newDestination);
 
-        queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        QueueViewMBean queueNew = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
         int movedSize = MESSAGE_COUNT-3;
-        assertEquals("Unexpected number of messages ",movedSize,queue.getQueueSize());
+        assertEquals("Unexpected number of messages ",movedSize,queueNew.getQueueSize());
 
         // now lets remove them by selector
-        queue.removeMatchingMessages("counter > 2");
+        queueNew.removeMatchingMessages("counter > 2");
 
-        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
-        assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
+        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queueNew.getQueueSize());
+        assertEquals("dest has no memory usage", 0, queueNew.getMemoryPercentUsage());
+        assertEquals("dest has 0 memory usage", 0, queueNew.getMemoryUsageByteCount());
+
+        queue.purge();
+        assertEquals("dest has 0 memory usage", 0, queue.getMemoryUsageByteCount());
     }
 
     public void testCopyMessagesBySelector() throws Exception {
@@ -478,17 +482,47 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + newDestination);
 
-        queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        QueueViewMBean queueTwo = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
-        LOG.info("Queue: " + queueViewMBeanName + " now has: " + queue.getQueueSize() + " message(s)");
-        assertEquals("Expected messages in a queue: " + queueViewMBeanName, MESSAGE_COUNT-3, queue.getQueueSize());
+        LOG.info("Queue: " + queueViewMBeanName + " now has: " + queueTwo.getQueueSize() + " message(s)");
+        assertEquals("Expected messages in a queue: " + queueViewMBeanName, MESSAGE_COUNT-3, queueTwo.getQueueSize());
         // now lets remove them by selector
-        queue.removeMatchingMessages("counter > 2");
+        queueTwo.removeMatchingMessages("counter > 2");
 
-        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
-        assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
+        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queueTwo.getQueueSize());
+        assertEquals("dest has no memory usage", 0, queueTwo.getMemoryPercentUsage());
+        assertEquals("dest has 0 memory usage", 0, queueTwo.getMemoryUsageByteCount());
+
+        queue.purge();
+        assertEquals("dest has 0 memory usage", 0, queue.getMemoryUsageByteCount());
     }
 
+    public void testSelectorBrowseUsage() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        final String someSelectorExp = "JMSType = '22'";
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        queue.browse(someSelectorExp);
+        queue.purge();
+        assertEquals("dest has 0 memory usage", 0, queue.getMemoryUsageByteCount());
+
+        connection.close();
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+        queue.browseMessages(someSelectorExp);
+        queue.purge();
+        assertEquals("dest has 0 memory usage", 0, queue.getMemoryUsageByteCount());
+
+        connection.close();
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+        queue.browseAsTable(someSelectorExp);
+        queue.purge();
+        assertEquals("dest has 0 memory usage", 0, queue.getMemoryUsageByteCount());
+    }
 
     public void testCopyPurgeCopyBack() throws Exception {
         connection = connectionFactory.createConnection();
