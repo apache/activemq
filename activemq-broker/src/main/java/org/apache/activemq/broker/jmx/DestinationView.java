@@ -51,7 +51,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
-import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.util.URISupport;
@@ -213,7 +213,7 @@ public class DestinationView implements DestinationViewMBean {
         Message[] messages = destination.browse();
         ArrayList<CompositeData> c = new ArrayList<CompositeData>();
 
-        MessageEvaluationContext ctx = new MessageEvaluationContext();
+        NonCachedMessageEvaluationContext ctx = new NonCachedMessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
         BooleanExpression selectorExpression = selector == null ? null : SelectorParser.parse(selector);
 
@@ -256,7 +256,7 @@ public class DestinationView implements DestinationViewMBean {
         Message[] messages = destination.browse();
         ArrayList<Object> answer = new ArrayList<Object>();
 
-        MessageEvaluationContext ctx = new MessageEvaluationContext();
+        NonCachedMessageEvaluationContext ctx = new NonCachedMessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
         BooleanExpression selectorExpression = selector == null ? null : SelectorParser.parse(selector);
 
@@ -297,7 +297,7 @@ public class DestinationView implements DestinationViewMBean {
         TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] { "JMSMessageID" });
         TabularDataSupport rc = new TabularDataSupport(tt);
 
-        MessageEvaluationContext ctx = new MessageEvaluationContext();
+        NonCachedMessageEvaluationContext ctx = new NonCachedMessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
         BooleanExpression selectorExpression = selector == null ? null : SelectorParser.parse(selector);
 

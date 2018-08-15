@@ -25,7 +25,7 @@ import javax.jms.Message;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.BooleanExpression;
-import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -170,10 +170,11 @@ public class UnknownHandlingSelectorTest {
     protected void assertSelector(String text, boolean matches) throws JMSException {
         BooleanExpression selector = SelectorParser.parse(text);
         assertTrue("Created a valid selector", selector != null);
-        MessageEvaluationContext context = new MessageEvaluationContext();
+        NonCachedMessageEvaluationContext context = new NonCachedMessageEvaluationContext();
         context.setMessageReference((org.apache.activemq.command.Message)message);
         boolean value = selector.matches(context);
         assertEquals("Selector for: " + text, matches, value);
+        assertEquals("ref 0", 0, ((ActiveMQMessage)message).getReferenceCount());
     }
 
     private static String not(String selector) {

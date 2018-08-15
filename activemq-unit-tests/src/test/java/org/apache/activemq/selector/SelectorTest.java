@@ -405,7 +405,9 @@ public class SelectorTest extends TestCase {
         MessageEvaluationContext context = new MessageEvaluationContext();
         context.setMessageReference((org.apache.activemq.command.Message)message);
         boolean value = selector.matches(context);
+        context.clear();
         assertEquals("Selector for: " + text, expected, value);
+        assertEquals("ref 0", 0, ((ActiveMQMessage)message).getReferenceCount());
     }
 
     protected Message createMessage(String subject) throws JMSException {

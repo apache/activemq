@@ -84,8 +84,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
         Queue queue = (Queue) broker.getRegionBroker().getDestinationMap().get(
                 destination);
 
-        ConnectionContext context = new ConnectionContext(
-                new NonCachedMessageEvaluationContext());
+        ConnectionContext context = new ConnectionContext();
         context.setBroker(broker.getBroker());
         context.getMessageEvaluationContext().setDestination(destination);
 
@@ -133,8 +132,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
         Queue queue = (Queue) broker.getRegionBroker().getDestinationMap().get(
                 destination);
 
-        ConnectionContext context = new ConnectionContext(
-                new NonCachedMessageEvaluationContext());
+        ConnectionContext context = new ConnectionContext();
         context.setBroker(broker.getBroker());
         context.getMessageEvaluationContext().setDestination(destination);
 
@@ -179,8 +177,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
         Queue queue = (Queue) broker.getRegionBroker().getDestinationMap().get(
                 destination);
 
-        ConnectionContext context = new ConnectionContext(
-                new NonCachedMessageEvaluationContext());
+        ConnectionContext context = new ConnectionContext();
         context.setBroker(broker.getBroker());
         context.getMessageEvaluationContext().setDestination(destination);
 

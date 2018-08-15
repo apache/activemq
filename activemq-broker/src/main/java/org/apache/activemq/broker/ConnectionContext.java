@@ -27,6 +27,7 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ConnectionState;
@@ -64,7 +65,7 @@ public class ConnectionContext {
     private XATransactionId xid;
 
     public ConnectionContext() {
-        this.messageEvaluationContext = new MessageEvaluationContext();
+        this.messageEvaluationContext = new NonCachedMessageEvaluationContext();
     }
 
     public ConnectionContext(MessageEvaluationContext messageEvaluationContext) {
