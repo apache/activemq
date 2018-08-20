@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 
@@ -81,6 +82,7 @@ public class NetworkBridgeConfiguration {
      * Bridge factory implementation - by default backed by static factory, which is default implementation and will rely change.
      */
     private BridgeFactory bridgeFactory = NetworkBridgeFactory.INSTANCE;
+    private SslContext sslContext;
 
     /**
      * @return the conduitSubscriptions
@@ -567,4 +569,11 @@ public class NetworkBridgeConfiguration {
         this.useVirtualDestSubs = useVirtualDestSubs;
     }
 
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
 }

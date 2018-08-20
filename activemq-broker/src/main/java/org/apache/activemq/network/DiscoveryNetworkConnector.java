@@ -123,7 +123,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             Transport localTransport;
             try {
                 // Allows the transport to access the broker's ssl configuration.
-                SslContext.setCurrentSslContext(getBrokerService().getSslContext());
+                if (getSslContext() != null) {
+                    SslContext.setCurrentSslContext(getSslContext());
+                } else {
+                    SslContext.setCurrentSslContext(getBrokerService().getSslContext());
+                }
                 try {
                     remoteTransport = TransportFactory.connect(connectUri);
                 } catch (Exception e) {
