@@ -121,7 +121,7 @@ public class AMQ4126Test {
 
     public void openwireConnectTo(String connectorName, String username, String password) throws Exception {
         URI brokerURI = broker.getConnectorByName(connectorName).getConnectUri();
-        String uri = "ssl://" + brokerURI.getHost() + ":" + brokerURI.getPort();
+        String uri = "ssl://" + brokerURI.getHost() + ":" + brokerURI.getPort() + "?socket.verifyHostName=false";
         ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory(uri);
         cf.setTrustStore("org/apache/activemq/security/broker1.ks");
         cf.setTrustStorePassword("password");

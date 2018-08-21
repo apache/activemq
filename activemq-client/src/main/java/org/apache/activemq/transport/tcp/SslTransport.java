@@ -17,11 +17,14 @@
 package org.apache.activemq.transport.tcp;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
@@ -42,6 +45,8 @@ import org.apache.activemq.wireformat.WireFormat;
  * unexpected situations may occur.
  */
 public class SslTransport extends TcpTransport {
+
+    private Boolean verifyHostName = null;
 
     /**
      * Connect to a remote node such as a Broker.
@@ -71,6 +76,37 @@ public class SslTransport extends TcpTransport {
             props.put("host", remoteLocation.getHost());
             IntrospectionSupport.setProperties(this.socket, props);
         }
+    }
+
+    @Override
+    protected void initialiseSocket(Socket sock) throws SocketException, IllegalArgumentException {
+        //This needs to default to null because this transport class is used for both a server transport
+        //and a client connection and if we default it to a value it might override the transport server setting
+        //that was configured inside TcpTransportServer
+
+        //The idea here is that if this is a server transport then verifyHostName will be set by the setter
+        //below and not be null (if using transport.verifyHostName) but if a client uses socket.verifyHostName
+        //then it will be null and we can check socketOptions
+
+        //Unfortunately we have to do this to stay consistent because every other SSL option on the client
+        //side is configured using socket. but this particular option isn't actually part of the socket
+        //so it makes it tricky
+        if (verifyHostName == null) {
+            if (socketOptions != null && socketOptions.containsKey("verifyHostName")) {
+                verifyHostName = Boolean.parseBoolean(socketOptions.get("verifyHostName").toString());
+                socketOptions.remove("verifyHostName");
+            } else {
+                verifyHostName = true;
+            }
+        }
+
+        if (verifyHostName) {
+            SSLParameters sslParams = new SSLParameters();
+            sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+            ((SSLSocket)this.socket).setSSLParameters(sslParams);
+        }
+
+        super.initialiseSocket(sock);
     }
 
     /**
@@ -106,6 +142,10 @@ public class SslTransport extends TcpTransport {
             connectionInfo.setTransportContext(getPeerCertificates());
         }
         super.doConsume(command);
+    }
+
+    public void setVerifyHostName(Boolean verifyHostName) {
+        this.verifyHostName = verifyHostName;
     }
 
     /**

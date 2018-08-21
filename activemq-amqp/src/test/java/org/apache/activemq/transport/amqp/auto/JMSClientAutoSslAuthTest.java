@@ -79,7 +79,7 @@ public class JMSClientAutoSslAuthTest extends JMSClientTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
-        return "?transport.needClientAuth=true";
+        return "?transport.needClientAuth=true&transport.verifyHostName=false";
     }
 
 

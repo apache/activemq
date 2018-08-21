@@ -36,12 +36,12 @@
     </sslContext>
 
     <transportConnectors>
-      <transportConnector name="stomp+ssl+special" uri="stomp+ssl://0.0.0.0:0?needClientAuth=true" />
-      <transportConnector name="stomp+ssl" uri="stomp+ssl://0.0.0.0:0?transport.needClientAuth=true" />
-      <transportConnector name="stomp+nio+ssl+special" uri="stomp+nio+ssl://0.0.0.0:0?needClientAuth=true" />
-      <transportConnector name="stomp+nio+ssl" uri="stomp+nio+ssl://0.0.0.0:0?transport.needClientAuth=true" />
-      <transportConnector name="mqtt+ssl" uri="mqtt+ssl://0.0.0.0:0?transport.needClientAuth=true" />
-      <transportConnector name="mqtt+nio+ssl" uri="mqtt+nio+ssl://0.0.0.0:0?transport.needClientAuth=true" />
+      <transportConnector name="stomp+ssl+special" uri="stomp+ssl://0.0.0.0:0?needClientAuth=true&amp;transport.verifyHostName=false" />
+      <transportConnector name="stomp+ssl" uri="stomp+ssl://0.0.0.0:0?transport.needClientAuth=true&amp;transport.verifyHostName=false" />
+      <transportConnector name="stomp+nio+ssl+special" uri="stomp+nio+ssl://0.0.0.0:0?needClientAuth=true&amp;transport.verifyHostName=false" />
+      <transportConnector name="stomp+nio+ssl" uri="stomp+nio+ssl://0.0.0.0:0?transport.needClientAuth=true&amp;transport.verifyHostName=false" />
+      <transportConnector name="mqtt+ssl" uri="mqtt+ssl://0.0.0.0:0?transport.needClientAuth=true&amp;transport.verifyHostName=false" />
+      <transportConnector name="mqtt+nio+ssl" uri="mqtt+nio+ssl://0.0.0.0:0?transport.needClientAuth=true&amp;transport.verifyHostName=false" />
     </transportConnectors>
 
   </broker>

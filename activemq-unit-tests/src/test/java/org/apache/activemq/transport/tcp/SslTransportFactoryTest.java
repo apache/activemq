@@ -33,10 +33,12 @@ public class SslTransportFactoryTest extends TestCase {
     private SslTransportFactory factory;
     private boolean verbose;
 
+    @Override
     protected void setUp() throws Exception {
         factory = new SslTransportFactory();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -95,6 +97,12 @@ public class SslTransportFactoryTest extends TestCase {
             for (int j = 0; j < 5; ++j) {
                 // -1 since the option range is [-1,1], not [0,2].
                 optionSettings[j] = getMthNaryDigit(i, j, 3) - 1;
+
+                //We now always set options to a default we default verifyHostName to true
+                //so we setSSLParameters so make the not set value = 0
+                if (optionSettings[j] == -1) {
+                    optionSettings[j] = 0;
+                }
 
                 if (optionSettings[j] != -1) {
                     options.put(optionNames[j], optionSettings[j] == 1 ? "true" : "false");

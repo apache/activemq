@@ -30,11 +30,11 @@ import javax.jms.Session;
 
 @SuppressWarnings("javadoc")
 public class NIOSSLWindowSizeTest extends TestCase {
-	
+
     BrokerService broker;
     Connection connection;
     Session session;
-    
+
     public static final String KEYSTORE_TYPE = "jks";
     public static final String PASSWORD = "password";
     public static final String SERVER_KEYSTORE = "src/test/resources/server.keystore";
@@ -46,7 +46,7 @@ public class NIOSSLWindowSizeTest extends TestCase {
     public static final int MESSAGE_SIZE = 65536;
 
     byte[] messageData;
-    
+
     @Override
     protected void setUp() throws Exception {
         System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
@@ -59,19 +59,19 @@ public class NIOSSLWindowSizeTest extends TestCase {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
-        TransportConnector connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true");
+        TransportConnector connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false");
         broker.start();
         broker.waitUntilStarted();
-        
+
         messageData = new byte[MESSAGE_SIZE];
         for (int i = 0; i < MESSAGE_SIZE;  i++)
         {
         	messageData[i] = (byte) (i & 0xff);
         }
-        
+
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("nio+ssl://localhost:" + connector.getConnectUri().getPort());
         connection = factory.createConnection();
-        session = connection.createSession(false,  Session.AUTO_ACKNOWLEDGE);        
+        session = connection.createSession(false,  Session.AUTO_ACKNOWLEDGE);
         connection.start();
     }
 
@@ -100,14 +100,14 @@ public class NIOSSLWindowSizeTest extends TestCase {
         	prod.send(msg);
         } finally {
         	prod.close();
-        }        
+        }
     	MessageConsumer cons = null;
-    	try 
+    	try
     	{
     		cons = session.createConsumer(dest);
     		assertNotNull(cons.receive(30000L));
         } finally {
         	cons.close();
-        }        
+        }
     }
 }
