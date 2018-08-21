@@ -103,8 +103,14 @@ public class AutoTransportConnectionsTest {
     }
 
     public void configureConnectorAndStart(String bindAddress) throws Exception {
+        if (bindAddress.contains("ssl")) {
+            bindAddress += bindAddress.contains("?") ? "&transport.verifyHostName=false" : "?transport.verifyHostName=false";
+        }
         connector = service.addConnector(bindAddress);
         connectionUri = connector.getPublishableConnectString();
+        if (connectionUri.contains("ssl")) {
+            connectionUri += connectionUri.contains("?") ? "&socket.verifyHostName=false" : "?socket.verifyHostName=false";
+        }
         service.start();
         service.waitUntilStarted();
     }

@@ -71,7 +71,7 @@ public class AMQ6599Test {
         brokerService.setPersistent(false);
 
         TransportConnector connector = brokerService.addConnector(protocol +
-                "://localhost:0?transport.soTimeout=3500");
+                "://localhost:0?transport.soTimeout=3500&transport.verifyHostName=false");
         connector.setName("connector");
         uri = connector.getPublishableConnectString();
 

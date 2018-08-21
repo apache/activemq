@@ -100,6 +100,7 @@ public class SslTransportServer extends TcpTransportServer {
      *
      * @throws IOException passed up from TcpTransportServer.
      */
+    @Override
     public void bind() throws IOException {
         super.bind();
         if (needClientAuth) {
@@ -119,6 +120,7 @@ public class SslTransportServer extends TcpTransportServer {
      * @return The newly return (SSL) Transport.
      * @throws IOException
      */
+    @Override
     protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
         return new SslTransport(format, (SSLSocket)socket);
     }
