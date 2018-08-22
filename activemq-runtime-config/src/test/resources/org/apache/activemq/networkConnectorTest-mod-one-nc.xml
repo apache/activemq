@@ -27,7 +27,12 @@
     </plugins>
 
     <networkConnectors>
-      <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="2" name="one" />
+      <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="2" name="one">
+        <sslContext>
+          <sslContext keyStorePassword="PPAA" trustStorePassword="PPBB" />
+        </sslContext>
+      </networkConnector>
+
     </networkConnectors>
   </broker>
 </beans>

@@ -89,6 +89,8 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         NetworkConnector modNetworkConnector = brokerService.getNetworkConnectors().get(0);
         assertEquals("got ttl update", 2, modNetworkConnector.getNetworkTTL());
 
+        assertNotNull("got ssl", modNetworkConnector.getSslContext());
+
         // apply again - ensure no change
         applyNewConfig(brokerConfig, configurationSeed + "-mod-one-nc", SLEEP);
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());

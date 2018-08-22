@@ -68,6 +68,10 @@
      <jxb:property name="Contents" />
    </jxb:bindings>
 
+   <jxb:bindings node="xs:element[@name='networkConnector']/xs:complexType/xs:choice/xs:choice/xs:element[@name='sslContext']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
    <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice/xs:choice/xs:element[@name='destinationInterceptors']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
    </jxb:bindings>
