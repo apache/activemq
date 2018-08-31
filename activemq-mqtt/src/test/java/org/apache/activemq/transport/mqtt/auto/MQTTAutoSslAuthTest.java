@@ -55,7 +55,7 @@ public class MQTTAutoSslAuthTest extends MQTTTestSupport  {
      */
     public MQTTAutoSslAuthTest(String protocol) {
         this.protocol = protocol;
-        protocolConfig = "transport.needClientAuth=true&transport.verifyHostName=false&";
+        protocolConfig = "transport.needClientAuth=true";
     }
 
     @Override

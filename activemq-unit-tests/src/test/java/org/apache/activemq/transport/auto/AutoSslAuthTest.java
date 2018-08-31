@@ -75,7 +75,7 @@ public class AutoSslAuthTest {
         BrokerService brokerService = new BrokerService();
         brokerService.setPersistent(false);
 
-        TransportConnector connector = brokerService.addConnector(protocol + "://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false");
+        TransportConnector connector = brokerService.addConnector(protocol + "://localhost:0?transport.needClientAuth=true");
         connector.setName("auto");
         uri = connector.getPublishableConnectString();
 
@@ -126,7 +126,7 @@ public class AutoSslAuthTest {
     @Test(timeout = 60000)
     public void testConnect() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        factory.setBrokerURL(uri + "?socket.verifyHostName=false");
+        factory.setBrokerURL(uri);
 
         //Create 5 connections to make sure all are properly set
         for (int i = 0; i < 5; i++) {

@@ -80,28 +80,28 @@ public class NIOSSLBasicTest {
 
     @Test
     public void basicConnector() throws Exception {
-        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false");
+        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
     }
 
     @Test
     public void enabledCipherSuites() throws Exception {
-        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false&transport.enabledCipherSuites=TLS_RSA_WITH_AES_256_CBC_SHA256&transport.verifyHostName=false");
+        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false&transport.enabledCipherSuites=TLS_RSA_WITH_AES_256_CBC_SHA256");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
     }
 
     @Test
     public void enabledProtocols() throws Exception {
-        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true&transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2&transport.verifyHostName=false");
+        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true&transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
     }
 
-    //Client/server is missing verifyHostName=false so it should fail as cert doesn't have right host name
+    //Client is missing verifyHostName=false so it should fail as cert doesn't have right host name
     @Test(expected = Exception.class)
-    public void verifyHostNameError() throws Exception {
+    public void verifyHostNameErrorClient() throws Exception {
         BrokerService broker = null;
         try {
             broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true");
@@ -112,7 +112,6 @@ public class NIOSSLBasicTest {
             }
         }
     }
-
 
     public void basicSendReceive(String uri) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(uri);
