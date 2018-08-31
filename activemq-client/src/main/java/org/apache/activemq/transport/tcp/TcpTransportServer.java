@@ -80,7 +80,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected int minmumWireFormatVersion;
     protected boolean useQueueForAccept = true;
     protected boolean allowLinkStealing;
-    protected boolean verifyHostName = true;
+    protected boolean verifyHostName = false;
 
     /**
      * trace=true -> the Transport stack where this TcpTransport object will be, will have a TransportLogger layer
@@ -176,6 +176,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             if (socket instanceof SSLServerSocket) {
                 if (transportOptions.containsKey("verifyHostName")) {
                     verifyHostName = Boolean.parseBoolean(transportOptions.get("verifyHostName").toString());
+                } else {
+                    transportOptions.put("verifyHostName", verifyHostName);
                 }
 
                 if (verifyHostName) {

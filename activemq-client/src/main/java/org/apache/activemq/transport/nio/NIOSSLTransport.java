@@ -57,7 +57,7 @@ public class NIOSSLTransport extends NIOTransport {
     protected boolean wantClientAuth;
     protected String[] enabledCipherSuites;
     protected String[] enabledProtocols;
-    protected boolean verifyHostName = true;
+    protected boolean verifyHostName = false;
 
     protected SSLContext sslContext;
     protected SSLEngine sslEngine;

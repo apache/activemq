@@ -47,7 +47,7 @@ public class NetworkReconnectSslNioTest {
         remote.setSslContext(sslContext);
         remote.setUseJmx(false);
         remote.setPersistent(false);
-        final TransportConnector transportConnector = remote.addConnector("nio+ssl://0.0.0.0:0?transport.verifyHostName=false");
+        final TransportConnector transportConnector = remote.addConnector("nio+ssl://0.0.0.0:0");
         remote.start();
 
         BrokerService local = new BrokerService();

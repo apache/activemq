@@ -171,7 +171,7 @@
     </systemUsage>
 
     <transportConnectors>
-        <transportConnector name="openwire+ssl-2" uri="ssl://0.0.0.0:61626?transport.closeAsync=false&amp;transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2&amp;transport.needClientAuth=true&amp;transport.verifyHostName=false"/>
+        <transportConnector name="openwire+ssl-2" uri="ssl://0.0.0.0:61626?transport.closeAsync=false&amp;transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2&amp;transport.needClientAuth=true"/>
     </transportConnectors>
   </broker>
 </beans>

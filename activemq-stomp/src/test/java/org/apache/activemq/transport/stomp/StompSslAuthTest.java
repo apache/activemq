@@ -54,7 +54,7 @@ public class StompSslAuthTest extends StompTest {
 
     @Override
     public void addOpenWireConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("ssl://0.0.0.0:0?transport.needClientAuth=true&transport.verifyHostName=false");
+        TransportConnector connector = brokerService.addConnector("ssl://0.0.0.0:0?transport.needClientAuth=true");
         cf = new ActiveMQConnectionFactory(connector.getPublishableConnectString() + "?socket.verifyHostName=false");
     }
 

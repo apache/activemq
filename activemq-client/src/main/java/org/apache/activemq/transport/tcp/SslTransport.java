@@ -96,6 +96,7 @@ public class SslTransport extends TcpTransport {
                 verifyHostName = Boolean.parseBoolean(socketOptions.get("verifyHostName").toString());
                 socketOptions.remove("verifyHostName");
             } else {
+                //If null and not set then this is a client so default to true
                 verifyHostName = true;
             }
         }
