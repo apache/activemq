@@ -1489,6 +1489,7 @@
             <exclude>**/__init__.py</exclude>
             <exclude>**/webapp/decorators/footer.jsp</exclude>
             <exclude>**/docs/img/logo.svg</exclude>
+            <exclude>**/testJdbcConfig/**/*</exclude>
           </excludes>
         </configuration>
       </plugin>
