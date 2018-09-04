@@ -1488,6 +1488,7 @@
             <exclude>**/stomp.js</exclude>
             <exclude>**/__init__.py</exclude>
             <exclude>**/webapp/decorators/footer.jsp</exclude>
+            <exclude>**/testJdbcConfig/**/*</exclude>
           </excludes>
         </configuration>
       </plugin>
