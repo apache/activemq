@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.15.6-SNAPSHOT</version>
+  <version>5.15.6</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -269,7 +269,7 @@
     <connection>scm:git:http://git-wip-us.apache.org/repos/asf/activemq.git</connection>
     <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/activemq.git</developerConnection>
     <url>https://fisheye6.atlassian.com/browse/~br=master/activemq-git</url>
-    <tag>activemq-5.15.0</tag>
+    <tag>activemq-5.15.6</tag>
   </scm>
 
   <dependencyManagement>
