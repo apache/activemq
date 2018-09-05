@@ -16,20 +16,29 @@
  */
 package org.apache.activemq.osgi;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
 import org.apache.camel.blueprint.CamelContextFactoryBean;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -38,18 +47,30 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.Resource;
 
-public class ActiveMQServiceFactory implements ManagedServiceFactory {
+@Component(name = "ActiveMQ Server Controller", configurationPid = "org.apache.activemq.server", configurationPolicy = ConfigurationPolicy.REQUIRE)
+public class ActiveMQServiceFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQServiceFactory.class);
 
     BundleContext bundleContext;
-    HashMap<String, BrokerService> brokers = new HashMap<String, BrokerService>();
+    HashMap<String, BrokerService> brokers = new HashMap<>();
+    List<ServiceTracker> trackers = new ArrayList<>();
 
-    @Override
-    public String getName() {
-        return "ActiveMQ Server Controller";
+    @Activate
+    public void activate(BundleContext bctx, Map<String, ?> properties) throws Exception {
+        bundleContext = bctx;
+        updated(properties);
+    }
+
+    @Deactivate
+    public void deactivate() throws Exception {
+        trackers.forEach((tracker) -> {
+            tracker.close();
+        });
+        destroy();
     }
 
     public Map<String, BrokerService> getBrokersMap() {
@@ -57,8 +78,8 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
     }
 
     @SuppressWarnings("rawtypes")
-    @Override
-    synchronized public void updated(String pid, Dictionary properties) throws ConfigurationException {
+    public void updated(Map<String, ?> properties) throws ConfigurationException {
+        String pid = (String) properties.get("service.pid");
 
         // First stop currently running broker (if any)
         deleted(pid);
@@ -72,79 +93,128 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             throw new ConfigurationException("broker-name", "Property must be set");
         }
 
-        LOG.info("Starting broker " + name);
+        Set<String> serviceNames = Collections.emptySet();
+        String services = (String) properties.get("services");
+        if (services != null) {
+            serviceNames = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(services.split(";"))));
+        }
+        Map<String, Object> serviceObjects = new HashMap<>();
 
-        try {
-            Thread.currentThread().setContextClassLoader(BrokerService.class.getClassLoader());
-            Resource resource = Utils.resourceFromString(config);
+        BrokerCallback callback = new BrokerCallback() {
+            @Override
+            public synchronized void addService(String serviceName, Object serviceObject) {
+                LOG.info("Add service dependency " + serviceName + " for "+ name);
+                serviceObjects.put(serviceName, serviceObject);
+            }
 
-            ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
-                    new String[]{resource.getURL().toExternalForm()}, false);
+            @Override
+            public synchronized void removeService(String serviceName) {
+                LOG.info("Remove service dependency " + serviceName + " for "+ name);
+                serviceObjects.remove(serviceName);
+            }
 
-            if (isCamelContextFactoryBeanExist()) {
+            @Override
+            public synchronized void startBroker() throws ConfigurationException {
+                LOG.info("Starting broker " + name);
 
-                ctx.addBeanFactoryPostProcessor(new BeanFactoryPostProcessor() {
+                try {
+                    Thread.currentThread().setContextClassLoader(BrokerService.class.getClassLoader());
+                    Resource resource = Utils.resourceFromString(config);
 
-                    @Override
-                    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+                    ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(new GenericApplicationContext());
 
-                        beanFactory.addBeanPostProcessor(new BeanPostProcessor() {
+                    if (isCamelContextFactoryBeanExist()) {
+
+                        ctx.addBeanFactoryPostProcessor(new BeanFactoryPostProcessor() {
 
                             @Override
-                            public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-                                if (bean instanceof CamelContextFactoryBean) {
-                                    ((CamelContextFactoryBean) bean).setBundleContext(bundleContext);
-                                }
-                                return bean;
-                            }
+                            public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 
-                            @Override
-                            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-                                return bean;
+                                beanFactory.addBeanPostProcessor(new BeanPostProcessor() {
+
+                                    @Override
+                                    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+                                        if (bean instanceof CamelContextFactoryBean) {
+                                            ((CamelContextFactoryBean) bean).setBundleContext(bundleContext);
+                                        }
+                                        return bean;
+                                    }
+
+                                    @Override
+                                    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+                                        return bean;
+                                    }
+                                });
                             }
                         });
                     }
-                });
+
+                    // Handle properties in configuration
+                    PropertyPlaceholderConfigurer configurator = new PropertyPlaceholderConfigurer();
+
+                    Properties props = new Properties();
+                    props.putAll(properties);
+
+                    configurator.setProperties(props);
+                    configurator.setIgnoreUnresolvablePlaceholders(true);
+
+                    ctx.addBeanFactoryPostProcessor(configurator);
+ 
+                    GenericApplicationContext parentCtx = GenericApplicationContext.class.cast(ctx.getParent());
+                    ConfigurableListableBeanFactory beanFactory = parentCtx.getBeanFactory();
+                    serviceObjects.entrySet().forEach((entry) -> {
+                        beanFactory.registerSingleton(entry.getKey(), entry.getValue());
+                    });
+                    ctx.setConfigLocation(resource.getURL().toExternalForm());
+
+                    parentCtx.refresh();
+                    ctx.refresh();
+
+                    // Start the broker
+                    BrokerService broker = ctx.getBean(BrokerService.class);
+                    if (broker == null) {
+                        throw new ConfigurationException(null, "Broker not defined");
+                    }
+                    // TODO deal with multiple brokers
+
+                    SpringBrokerContext brokerContext = new SpringBrokerContext();
+                    brokerContext.setConfigurationUrl(resource.getURL().toExternalForm());
+                    brokerContext.setApplicationContext(ctx);
+                    broker.setBrokerContext(brokerContext);
+
+                    broker.setStartAsync(true);
+                    broker.start();
+                    if (!broker.isSlave())
+                        broker.waitUntilStarted();
+                    brokers.put(pid, broker);
+                } catch (Exception e) {
+                    throw new ConfigurationException(null, "Cannot start the broker", e);
+                }
             }
 
-            // Handle properties in configuration
-            PropertyPlaceholderConfigurer configurator = new PropertyPlaceholderConfigurer();
-
-            // convert dictionary to properties. Is there a better way?
-            Properties props = new Properties();
-            Enumeration<?> elements = properties.keys();
-            while (elements.hasMoreElements()) {
-                Object key = elements.nextElement();
-                props.put(key, properties.get(key));
+            @Override
+            public synchronized void stopBroker() {
+                deleted(pid);
             }
+        };
 
-            configurator.setProperties(props);
-            configurator.setIgnoreUnresolvablePlaceholders(true);
+        if (serviceNames.isEmpty()) {
+            callback.startBroker();
+        } else {
+            LOG.info("Waiting for dependencies");
 
-            ctx.addBeanFactoryPostProcessor(configurator);
-
-            ctx.refresh();
-
-            // Start the broker
-            BrokerService broker = ctx.getBean(BrokerService.class);
-            if (broker == null) {
-                throw new ConfigurationException(null, "Broker not defined");
+            DependencyTrackerCustomizer dtc = new DependencyTrackerCustomizer(bundleContext, serviceNames, callback);
+            for (String key : serviceNames) {
+                try {
+                    String filter = "(osgi.jndi.service.name=" + key + ")";
+                    ServiceTracker tracker = new ServiceTracker(bundleContext, bundleContext.createFilter(filter), dtc);
+                    tracker.open();
+                    trackers.add(tracker);
+                } catch (InvalidSyntaxException e) {
+                    throw new ConfigurationException(null, "Cannot start the broker", e);
+                }
             }
-            // TODO deal with multiple brokers
-
-            SpringBrokerContext brokerContext = new SpringBrokerContext();
-            brokerContext.setConfigurationUrl(resource.getURL().toExternalForm());
-            brokerContext.setApplicationContext(ctx);
-            broker.setBrokerContext(brokerContext);
-
-            broker.setStartAsync(true);
-            broker.start();
-
-            if (!broker.isSlave())
-                broker.waitUntilStarted();
-            brokers.put(pid, broker);
-        } catch (Exception e) {
-            throw new ConfigurationException(null, "Cannot start the broker", e);
+>>>>>>> AMQ-6805: Add new implementation based on OSGi Declarative Services to make OSGi services available for broker configuration
         }
     }
 
@@ -157,8 +227,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
         }
     }
 
-    @Override
-    synchronized public void deleted(String pid) {
+    public void deleted(String pid) {
         BrokerService broker = brokers.get(pid);
         if (broker == null) {
             return;
@@ -172,17 +241,9 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
         }
     }
 
-    synchronized public void destroy() {
-        for (String broker : brokers.keySet()) {
+    public void destroy() {
+        brokers.keySet().forEach((broker) -> {
             deleted(broker);
-        }
-    }
-
-    public BundleContext getBundleContext() {
-        return bundleContext;
-    }
-
-    public void setBundleContext(BundleContext bundleContext) {
-        this.bundleContext = bundleContext;
+        });
     }
 }

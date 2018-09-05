@@ -47,6 +47,10 @@ public class ActiveMQBrokerRuntimeConfigTest extends AbstractFeatureTest {
     @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
     	assertBrokerStarted();
+        JMSTester jms = new JMSTester();
+        jms.produceAndConsume(sessionFactory);
+        jms.tempSendReceive();
+        jms.close();
         assertMemoryLimit("3145728");
 
         // ensure update will be reflected in OS fs modified window
@@ -59,6 +63,10 @@ public class ActiveMQBrokerRuntimeConfigTest extends AbstractFeatureTest {
         copyFile(new File(karafDir + "/data/tmp/modified-config.xml"), target);
         System.err.println("new mod at: " + new Date(target.lastModified()));
 
+        jms = new JMSTester();
+        jms.produceAndConsume(sessionFactory);
+        jms.tempSendReceive();
+        jms.close();
         assertMemoryLimit("4194304");
     }
 
