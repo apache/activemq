@@ -160,7 +160,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter {
                 String destinationName = info.getDestination().getQualifiedName();
                 Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
                 if (info.getSelector() == null && selectors.size() > 1) {
-                    boolean removed = selectors.remove(MATCH_EVERYTHING);
+                    boolean removed = subSelectorCache.removeSelector(destinationName, MATCH_EVERYTHING);
                     LOG.debug("A non-selector consumer has dropped. Removing the catchall matching pattern 'TRUE'. Successful? " + removed);
                 }
             }
