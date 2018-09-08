@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.plugin;
 
+import static org.apache.activemq.plugin.PeriodicallyFlushedFileSubSelectorCache.MAX_PERSIST_INTERVAL;
 import static org.apache.activemq.plugin.SubQueueSelectorCacheBroker.MAX_PERSIST_INTERVAL;
 
 import java.io.File;
@@ -43,9 +44,11 @@ public class SubQueueSelectorCacheBrokerPlugin implements BrokerPlugin {
 
     @Override
     public Broker installPlugin(Broker broker) throws Exception {
-        SubQueueSelectorCacheBroker rc = new SubQueueSelectorCacheBroker(broker, persistFile);
+        PeriodicallyFlushedFileSubSelectorCache subSelectorCache =
+                new PeriodicallyFlushedFileSubSelectorCache(persistFile);
+        subSelectorCache.setPersistInterval(persistInterval);
+        SubQueueSelectorCacheBroker rc = new SubQueueSelectorCacheBroker(broker, subSelectorCache);
         rc.setSingleSelectorPerDestination(singleSelectorPerDestination);
-        rc.setPersistInterval(persistInterval);
         rc.setIgnoreWildcardSelectors(ignoreWildcardSelectors);
         return rc;
     }

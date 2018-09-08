@@ -17,16 +17,9 @@
 package org.apache.activemq.plugin;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * https://issues.apache.org/activemq/browse/AMQ-3004
  * http://mail-archives.apache.org/mod_mbox/activemq-users/201011.mbox/%3C8A013711-2613-450A-A487-379E784AF1D6@homeaway.co.uk%3E
  */
-public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnable {
+public class SubQueueSelectorCacheBroker extends BrokerFilter {
     private static final Logger LOG = LoggerFactory.getLogger(SubQueueSelectorCacheBroker.class);
     public static final String MATCH_EVERYTHING = "TRUE";
 
@@ -66,31 +59,19 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
      * The subscription's selector cache. We cache compiled expressions keyed
      * by the target destination.
      */
-    private ConcurrentMap<String, Set<String>> subSelectorCache = new ConcurrentHashMap<String, Set<String>>();
+    private final SubSelectorCache subSelectorCache;
 
-    private final File persistFile;
     private boolean singleSelectorPerDestination = false;
     private boolean ignoreWildcardSelectors = false;
     private ObjectName objectName;
 
-    private boolean running = true;
-    private final Thread persistThread;
-    private long persistInterval = MAX_PERSIST_INTERVAL;
-    public static final long MAX_PERSIST_INTERVAL = 600000;
-    private static final String SELECTOR_CACHE_PERSIST_THREAD_NAME = "SelectorCachePersistThread";
-
     /**
      * Constructor
      */
-    public SubQueueSelectorCacheBroker(Broker next, final File persistFile) {
+    public SubQueueSelectorCacheBroker(Broker next, final SubSelectorCache subSelectorCache) {
         super(next);
-        this.persistFile = persistFile;
-        LOG.info("Using persisted selector cache from[{}]", persistFile);
+        this.subSelectorCache = subSelectorCache;
 
-        readCache();
-
-        persistThread = new Thread(this, SELECTOR_CACHE_PERSIST_THREAD_NAME);
-        persistThread.start();
         enableJmx();
     }
 
@@ -109,13 +90,16 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     }
 
     @Override
+    public void start() throws Exception {
+        subSelectorCache.start();
+        super.start();
+    }
+
+    @Override
     public void stop() throws Exception {
-        running = false;
-        if (persistThread != null) {
-            persistThread.interrupt();
-            persistThread.join();
-        }
+        subSelectorCache.stop();
         unregisterMBeans();
+        super.stop();
     }
 
     private void unregisterMBeans() {
@@ -140,9 +124,9 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
             if (!(ignoreWildcardSelectors && hasWildcards(selector))) {
 
-                Set<String> selectors = subSelectorCache.get(destinationName);
+                Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
                 if (selectors == null) {
-                    selectors = Collections.synchronizedSet(new HashSet<String>());
+                    selectors = new HashSet<>(1);
                 } else if (singleSelectorPerDestination && !MATCH_EVERYTHING.equals(selector)) {
                     // in this case, we allow only ONE selector. But we don't count the catch-all "null/TRUE" selector
                     // here, we always allow that one. But only one true selector.
@@ -158,7 +142,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 LOG.debug("adding new selector: into cache " + selector);
                 selectors.add(selector);
                 LOG.debug("current selectors in cache: " + selectors);
-                subSelectorCache.put(destinationName, selectors);
+                subSelectorCache.putSelectorsForDestination(destinationName, selectors);
             }
         }
 
@@ -174,7 +158,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
             if (singleSelectorPerDestination) {
                 String destinationName = info.getDestination().getQualifiedName();
-                Set<String> selectors = subSelectorCache.get(destinationName);
+                Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
                 if (info.getSelector() == null && selectors.size() > 1) {
                     boolean removed = selectors.remove(MATCH_EVERYTHING);
                     LOG.debug("A non-selector consumer has dropped. Removing the catchall matching pattern 'TRUE'. Successful? " + removed);
@@ -185,73 +169,11 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         super.removeConsumer(context, info);
     }
 
-    @SuppressWarnings("unchecked")
-    private void readCache() {
-        if (persistFile != null && persistFile.exists()) {
-            try {
-                try (FileInputStream fis = new FileInputStream(persistFile);) {
-                    ObjectInputStream in = new ObjectInputStream(fis);
-                    try {
-                        subSelectorCache = (ConcurrentHashMap<String, Set<String>>) in.readObject();
-                    } catch (ClassNotFoundException ex) {
-                        LOG.error("Invalid selector cache data found. Please remove file.", ex);
-                    } finally {
-                        in.close();
-                    }
-                }
-            } catch (IOException ex) {
-                LOG.error("Unable to read persisted selector cache...it will be ignored!", ex);
-            }
-        }
-    }
-
-    /**
-     * Persist the selector cache.
-     */
-    private void persistCache() {
-        LOG.debug("Persisting selector cache....");
-        try {
-            FileOutputStream fos = new FileOutputStream(persistFile);
-            try {
-                ObjectOutputStream out = new ObjectOutputStream(fos);
-                try {
-                    out.writeObject(subSelectorCache);
-                } finally {
-                    out.flush();
-                    out.close();
-                }
-            } catch (IOException ex) {
-                LOG.error("Unable to persist selector cache", ex);
-            } finally {
-                fos.close();
-            }
-        } catch (IOException ex) {
-            LOG.error("Unable to access file[{}]", persistFile, ex);
-        }
-    }
-
     /**
      * @return The JMS selector for the specified {@code destination}
      */
     public Set<String> getSelector(final String destination) {
-        return subSelectorCache.get(destination);
-    }
-
-    /**
-     * Persist the selector cache every {@code MAX_PERSIST_INTERVAL}ms.
-     *
-     * @see java.lang.Runnable#run()
-     */
-    @Override
-    public void run() {
-        while (running) {
-            try {
-                Thread.sleep(persistInterval);
-            } catch (InterruptedException ex) {
-            }
-
-            persistCache();
-        }
+        return subSelectorCache.selectorsForDestination(destination);
     }
 
     public boolean isSingleSelectorPerDestination() {
@@ -264,35 +186,15 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @SuppressWarnings("unchecked")
     public Set<String> getSelectorsForDestination(String destinationName) {
-        if (subSelectorCache.containsKey(destinationName)) {
-            return new HashSet<String>(subSelectorCache.get(destinationName));
-        }
-
-        return Collections.EMPTY_SET;
-    }
-
-    public long getPersistInterval() {
-        return persistInterval;
-    }
-
-    public void setPersistInterval(long persistInterval) {
-        this.persistInterval = persistInterval;
+        return subSelectorCache.selectorsForDestination(destinationName);
     }
 
     public boolean deleteSelectorForDestination(String destinationName, String selector) {
-        if (subSelectorCache.containsKey(destinationName)) {
-            Set<String> cachedSelectors = subSelectorCache.get(destinationName);
-            return cachedSelectors.remove(selector);
-        }
-
-        return false;
+        return subSelectorCache.removeSelector(destinationName, selector);
     }
 
     public boolean deleteAllSelectorsForDestination(String destinationName) {
-        if (subSelectorCache.containsKey(destinationName)) {
-            Set<String> cachedSelectors = subSelectorCache.get(destinationName);
-            cachedSelectors.clear();
-        }
+        subSelectorCache.removeSelectorsForDestination(destinationName);
         return true;
     }
 
