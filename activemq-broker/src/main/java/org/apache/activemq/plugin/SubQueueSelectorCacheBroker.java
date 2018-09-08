@@ -186,7 +186,8 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter {
 
     @SuppressWarnings("unchecked")
     public Set<String> getSelectorsForDestination(String destinationName) {
-        return subSelectorCache.selectorsForDestination(destinationName);
+        Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
+        return selectors == null ? Collections.emptySet() : selectors;
     }
 
     public boolean deleteSelectorForDestination(String destinationName, String selector) {

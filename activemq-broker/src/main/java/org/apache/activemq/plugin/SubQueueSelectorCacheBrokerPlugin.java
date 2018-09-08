@@ -17,12 +17,11 @@
 package org.apache.activemq.plugin;
 
 import static org.apache.activemq.plugin.PeriodicallyFlushedFileSubSelectorCache.MAX_PERSIST_INTERVAL;
-import static org.apache.activemq.plugin.SubQueueSelectorCacheBroker.MAX_PERSIST_INTERVAL;
-
-import java.io.File;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
+
+import java.io.File;
 
 /**
  * A plugin which allows the caching of the selector from a subscription queue.
