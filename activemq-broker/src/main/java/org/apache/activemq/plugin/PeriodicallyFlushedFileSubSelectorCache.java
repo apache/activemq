@@ -2,6 +2,7 @@ package org.apache.activemq.plugin;
 
 import static org.apache.activemq.plugin.SubQueueSelectorCacheBroker.MATCH_EVERYTHING;
 
+import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class PeriodicallyFlushedFileSubSelectorCache implements SubSelectorCache
             return Collections.emptySet();
         }
 
-        return Collections.unmodifiableSet(selectors);
+        return ImmutableSet.copyOf(selectors);
     }
 
     @Override
