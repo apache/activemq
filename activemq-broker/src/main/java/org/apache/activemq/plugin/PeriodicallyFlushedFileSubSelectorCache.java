@@ -126,14 +126,11 @@ public class PeriodicallyFlushedFileSubSelectorCache implements SubSelectorCache
     private void readCache() {
         if (persistFile != null && persistFile.exists()) {
             try {
-                try (FileInputStream fis = new FileInputStream(persistFile);) {
-                    ObjectInputStream in = new ObjectInputStream(fis);
-                    try {
+                try (FileInputStream fis = new FileInputStream(persistFile)) {
+                    try (ObjectInputStream in = new ObjectInputStream(fis)) {
                         subSelectorCache = (ConcurrentHashMap<String, Set<String>>) in.readObject();
                     } catch (ClassNotFoundException ex) {
                         LOG.error("Invalid selector cache data found. Please remove file.", ex);
-                    } finally {
-                        in.close();
                     }
                 }
             } catch (IOException ex) {
