@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.plugin;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +32,7 @@ import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.VirtualDestinationSelectorCacheView;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,26 +121,17 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter {
             String selector = info.getSelector() == null ? MATCH_EVERYTHING : info.getSelector();
 
             if (!(ignoreWildcardSelectors && hasWildcards(selector))) {
-
-                Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
-                if (selectors == null) {
-                    selectors = new HashSet<>(1);
-                } else if (singleSelectorPerDestination && !MATCH_EVERYTHING.equals(selector)) {
+                if (singleSelectorPerDestination && !MATCH_EVERYTHING.equals(selector)) {
                     // in this case, we allow only ONE selector. But we don't count the catch-all "null/TRUE" selector
                     // here, we always allow that one. But only one true selector.
-                    boolean containsMatchEverything = selectors.contains(MATCH_EVERYTHING);
-                    selectors.clear();
-
-                    // put back the MATCH_EVERYTHING selector
-                    if (containsMatchEverything) {
-                        selectors.add(MATCH_EVERYTHING);
-                    }
+                    subSelectorCache.replaceSelectorsExceptForMatchEverything(destinationName, selector);
+                } else {
+                    subSelectorCache.addSelectorForDestination(destinationName, selector);
                 }
 
+                Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
                 LOG.debug("adding new selector: into cache " + selector);
-                selectors.add(selector);
                 LOG.debug("current selectors in cache: " + selectors);
-                subSelectorCache.putSelectorsForDestination(destinationName, selectors);
             }
         }
 
@@ -151,6 +140,12 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter {
 
     static boolean hasWildcards(String selector) {
         return WildcardFinder.hasWildcards(selector);
+    }
+
+    @Override
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+        subSelectorCache.removeSelectorsForDestination(destination.getQualifiedName());
+        super.removeDestination(context, destination, timeout);
     }
 
     @Override
@@ -186,8 +181,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter {
 
     @SuppressWarnings("unchecked")
     public Set<String> getSelectorsForDestination(String destinationName) {
-        Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
-        return selectors == null ? Collections.emptySet() : selectors;
+        return subSelectorCache.selectorsForDestination(destinationName);
     }
 
     public boolean deleteSelectorForDestination(String destinationName, String selector) {

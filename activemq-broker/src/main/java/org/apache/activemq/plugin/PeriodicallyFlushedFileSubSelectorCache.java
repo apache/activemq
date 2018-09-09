@@ -1,5 +1,7 @@
 package org.apache.activemq.plugin;
 
+import static org.apache.activemq.plugin.SubQueueSelectorCacheBroker.MATCH_EVERYTHING;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,10 +60,10 @@ public class PeriodicallyFlushedFileSubSelectorCache implements SubSelectorCache
         Set<String> selectors = subSelectorCache.get(destination);
 
         if (selectors == null) {
-            return null;
+            return Collections.emptySet();
         }
 
-        return new HashSet<>(selectors);
+        return Collections.unmodifiableSet(selectors);
     }
 
     @Override
@@ -82,8 +85,26 @@ public class PeriodicallyFlushedFileSubSelectorCache implements SubSelectorCache
     }
 
     @Override
-    public void putSelectorsForDestination(String destination, Set<String> selectors) {
-        subSelectorCache.put(destination, new HashSet<>(selectors));
+    public void replaceSelectorsExceptForMatchEverything(String destinationName, String selector) {
+        Set<String> selectors = subSelectorCache.get(destinationName);
+
+        if (selectors != null) {
+            boolean containsMatchEverything = selectors.contains(MATCH_EVERYTHING);
+            selectors.clear();
+
+            // put back the match everything selector
+            if (containsMatchEverything) {
+                selectors.add(MATCH_EVERYTHING);
+            }
+        }
+
+        addSelectorForDestination(destinationName, selector);
+    }
+
+    @Override
+    public void addSelectorForDestination(String destinationName, String selector) {
+        subSelectorCache.putIfAbsent(destinationName, Collections.synchronizedSet(new HashSet<>()));
+        subSelectorCache.get(destinationName).add(selector);
     }
 
     @Override
