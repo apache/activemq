@@ -18,6 +18,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * Simple {@link SubSelectorCache} which uses a {@link File} for persistence.
+ *
+ * <p>Cache is flushed to file periodically based on {@link #getPersistInterval()}.
+ * Failures to flush are only logged.
+ */
 public class PeriodicallyFlushedFileSubSelectorCache implements SubSelectorCache, Runnable {
     public static final long MAX_PERSIST_INTERVAL = 600000;
 
