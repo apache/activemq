@@ -129,9 +129,12 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter {
                     subSelectorCache.addSelectorForDestination(destinationName, selector);
                 }
 
-                Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
                 LOG.debug("adding new selector: into cache " + selector);
-                LOG.debug("current selectors in cache: " + selectors);
+
+                if (LOG.isDebugEnabled()) {
+                    Set<String> selectors = subSelectorCache.selectorsForDestination(destinationName);
+                    LOG.debug("current selectors in cache: " + selectors);
+                }
             }
         }
 
