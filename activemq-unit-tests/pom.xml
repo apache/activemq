@@ -770,6 +770,7 @@
                 <exclude>org/apache/activemq/broker/jmx/MBeanTest.*</exclude>
                 <exclude>org/apache/activemq/broker/jmx/PurgeTest.*</exclude>
                 <exclude>org/apache/activemq/broker/mKahaDBXARecoveryBrokerTest.*</exclude>
+                <exclude>org/apache/activemq/broker/KahaDBXARecoveryBrokerTest.*</exclude>
                 <exclude>org/apache/activemq/broker/policy/AbortSlowConsumerTest.*</exclude>
                 <exclude>org/apache/activemq/broker/region/DestinationGCTest.*</exclude>
                 <exclude>org/apache/activemq/broker/region/DestinationRemoveRestartTest.*</exclude>
