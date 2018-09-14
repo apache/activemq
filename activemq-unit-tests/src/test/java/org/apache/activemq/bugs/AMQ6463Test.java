@@ -63,10 +63,10 @@ public class AMQ6463Test extends JmsTestSupport {
 
         TextMessage message = session.createTextMessage("test msg");
         final int numMessages = 20;
-        long time = 5;
+
         message.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, "* * * * *");
-        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
-        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 5);
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, 0);
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 0);
         message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, numMessages - 1);
 
         producer.send(message);
@@ -78,14 +78,14 @@ public class AMQ6463Test extends JmsTestSupport {
             public boolean isSatisified() throws Exception {
                 return gotUsageBlocked.get();
             }
-        }));
+        }, 60000));
 
         MessageConsumer consumer = session.createConsumer(queueA);
         TextMessage msg;
         for (int idx = 0; idx < numMessages; ++idx) {
-        	msg = (TextMessage) consumer.receive(10000);
-        	assertNotNull("received: " + idx, msg);
-        	msg.acknowledge();
+            msg = (TextMessage) consumer.receive(10000);
+            assertNotNull("received: " + idx, msg);
+            msg.acknowledge();
         }
         assertTrue("no errors in the log", errors.get() == 0);
         assertTrue("got blocked message", gotUsageBlocked.get());
@@ -98,6 +98,8 @@ public class AMQ6463Test extends JmsTestSupport {
         service.setUseJmx(false);
         service.setSchedulerSupport(true);
         service.setDeleteAllMessagesOnStartup(true);
+
+        service.getSystemUsage().getMemoryUsage().setLimit(512);
 
         // Setup a destination policy where it takes only 1 message at a time.
         PolicyMap policyMap = new PolicyMap();
@@ -131,7 +133,7 @@ public class AMQ6463Test extends JmsTestSupport {
 
         super.setUp();
     }
-    
+
     protected void tearDown() throws Exception {
         org.apache.log4j.Logger rootLogger = org.apache.log4j.Logger.getRootLogger();
         rootLogger.removeAppender(appender);
