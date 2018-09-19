@@ -114,6 +114,13 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
             return true;
         }
 
+        // check if the value is greater than the bigger sequence value and if it's not adjacent to it
+        // in this case, we are sure that the value should be add to the tail of the sequence.
+        if (sequence.isBiggerButNotAdjacentToLast(value)) {
+            addLast(new Sequence(value));
+            return true;
+        }
+
         sequence = getHead();
         while (sequence != null) {
 
