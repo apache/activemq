@@ -94,7 +94,7 @@ public class AMQ3625Test {
         Logger.getRootLogger().addAppender(appender);
         
         String connectURI = broker1.getConnectorByName("openwire").getConnectUri().toString();
-        connectURI = connectURI.replace("?needClientAuth=true", "");
+        connectURI = connectURI.replace("?needClientAuth=true", "?verifyHostName=false");
         broker2.addNetworkConnector("static:(" + connectURI + ")").start();
         
         Thread.sleep(10 * 1000);
