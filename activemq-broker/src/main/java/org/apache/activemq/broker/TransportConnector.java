@@ -74,7 +74,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private int maximumProducersAllowedPerConnection = Integer.MAX_VALUE;
     private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
     private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
-    private boolean allowLinkStealing;
+    private boolean warnOnRemoteClose = false;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
 
@@ -123,7 +123,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setMaximumConsumersAllowedPerConnection(getMaximumConsumersAllowedPerConnection());
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
-        rc.setAllowLinkStealing(isAllowLinkStealing());
+        rc.setWarnOnRemoteClose(isWarnOnRemoteClose());
         return rc;
     }
 
@@ -587,10 +587,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         return server.isAllowLinkStealing();
     }
 
-    public void setAllowLinkStealing (boolean allowLinkStealing) {
-        this.allowLinkStealing=allowLinkStealing;
-    }
-
     public boolean isAuditNetworkProducers() {
         return auditNetworkProducers;
     }
@@ -638,5 +634,13 @@ public class TransportConnector implements Connector, BrokerServiceAware {
      */
     public void setPublishedAddressPolicy(PublishedAddressPolicy publishedAddressPolicy) {
         this.publishedAddressPolicy = publishedAddressPolicy;
+    }
+
+    public boolean isWarnOnRemoteClose() {
+        return warnOnRemoteClose;
+    }
+
+    public void setWarnOnRemoteClose(boolean warnOnRemoteClose) {
+        this.warnOnRemoteClose = warnOnRemoteClose;
     }
 }
