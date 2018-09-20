@@ -32,7 +32,7 @@
     </sslContext>
 
     <transportConnectors>
-      <transportConnector name="openwire" uri="ssl://localhost:0?needClientAuth=true" />
+      <transportConnector name="openwire" uri="ssl://localhost:0?needClientAuth=true&amp;" />
     </transportConnectors>
 
   </broker>

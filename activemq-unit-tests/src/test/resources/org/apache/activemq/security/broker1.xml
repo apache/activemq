@@ -26,7 +26,7 @@
 
   
     <networkConnectors>
-      <networkConnector uri="static://(ssl://localhost:61618)"
+      <networkConnector uri="static://(ssl://localhost:61618?verifyHostName=false)"
          name="tobackbone"
          duplex="true"
          prefetchSize="1"
