@@ -66,29 +66,6 @@ public class AutoExposeQueuesInCamelTest extends EmbeddedBrokerTestSupport {
         assertEquals("Should have found an endpoint: "+ endpoints, 2, endpoints.size());
     }
 
-    public void testCompleter() throws Exception {
-        Thread.sleep(1000);
-        List<String> result = component.completeEndpointPath(null, "foo");
-        assertThat(result, is(Arrays.asList("foo.bar")));
-        result = component.completeEndpointPath(null, "queue:foo");
-        assertThat(result, is(Arrays.asList("foo.bar")));
-        result = component.completeEndpointPath(null, "topic:ch");
-        assertThat(result, is(Arrays.asList("cheese")));
-        result = component.completeEndpointPath(null, "ch");
-        assertTrue(result.isEmpty());
-        result = component.completeEndpointPath(null, "queue:ch");
-        assertTrue(result.isEmpty());
-        result = component.completeEndpointPath(null, "topic:foo");
-        assertTrue(result.isEmpty());
-
-        broker.getAdminView().addQueue("runtime");
-
-        Thread.sleep(1000);
-
-        result = component.completeEndpointPath(null, "run");
-        assertThat(result, is(Arrays.asList("runtime")));
-    }
-
     public <T> List<T> getEndpoints(CamelContext camelContext, Class<T> type) {
         List<T> answer = new ArrayList<T>();
         Collection<Endpoint> endpoints = camelContext.getEndpoints();
