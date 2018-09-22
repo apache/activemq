@@ -17,18 +17,17 @@
 package org.apache.activemq.camel.component;
 
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.jms.Connection;
 
 import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.DestinationSource;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.camel.CamelContext;
-import org.apache.camel.ComponentConfiguration;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.jms.JmsConfiguration;
-import org.apache.camel.spi.EndpointCompleter;
 import org.apache.camel.util.IntrospectionSupport;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
@@ -37,23 +36,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jms.connection.SingleConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 
-import javax.jms.Connection;
-
 /**
  * The <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
  */
-public class ActiveMQComponent extends JmsComponent implements EndpointCompleter {
+public class ActiveMQComponent extends JmsComponent {
     private final CopyOnWriteArrayList<SingleConnectionFactory> singleConnectionFactoryList =
-        new CopyOnWriteArrayList<SingleConnectionFactory>();
+            new CopyOnWriteArrayList<SingleConnectionFactory>();
     private final CopyOnWriteArrayList<Service> pooledConnectionFactoryServiceList =
-        new CopyOnWriteArrayList<Service>();
+            new CopyOnWriteArrayList<Service>();
     private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQComponent.class);
     private boolean exposeAllQueues;
     private CamelEndpointLoader endpointLoader;
 
     private EnhancedConnection connection;
     DestinationSource source;
-    boolean sourceInitialized = false;
 
     /**
      * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ Component</a>
@@ -101,14 +97,6 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setBrokerURL(brokerURL);
         }
-    }
-
-    /**
-     * @deprecated - use JmsComponent#setUsername(String)
-     * @see JmsComponent#setUsername(String)
-     */
-    public void setUserName(String userName) {
-        setUsername(userName);
     }
 
     public void setTrustAllPackages(boolean trustAllPackages) {
@@ -255,36 +243,6 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
     protected JmsConfiguration createConfiguration() {
         ActiveMQConfiguration answer = new ActiveMQConfiguration();
         answer.setActiveMQComponent(this);
-        return answer;
-    }
-
-    @Override
-    public List<String> completeEndpointPath(ComponentConfiguration componentConfiguration, String completionText) {
-        // try to initialize destination source only the first time
-        if (!sourceInitialized) {
-            createDestinationSource();
-            sourceInitialized = true;
-        }
-        ArrayList<String> answer = new ArrayList<String>();
-        if (source != null) {
-            Set candidates = source.getQueues();
-            String destinationName = completionText;
-            if (completionText.startsWith("topic:")) {
-                candidates = source.getTopics();
-                destinationName = completionText.substring(6);
-            } else if (completionText.startsWith("queue:")) {
-                destinationName = completionText.substring(6);
-            }
-
-            Iterator it = candidates.iterator();
-
-            while (it.hasNext()) {
-                ActiveMQDestination destination = (ActiveMQDestination) it.next();
-                if (destination.getPhysicalName().startsWith(destinationName)) {
-                    answer.add(destination.getPhysicalName());
-                }
-            }
-        }
         return answer;
     }
 
