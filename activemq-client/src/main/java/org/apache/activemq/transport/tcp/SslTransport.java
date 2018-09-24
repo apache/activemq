@@ -46,6 +46,10 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class SslTransport extends TcpTransport {
 
+    /**
+     * Default to null as there are different defaults between server and client, initialiseSocket
+     * for more details
+     */
     private Boolean verifyHostName = null;
 
     /**
@@ -80,18 +84,40 @@ public class SslTransport extends TcpTransport {
 
     @Override
     protected void initialiseSocket(Socket sock) throws SocketException, IllegalArgumentException {
-        //This needs to default to null because this transport class is used for both a server transport
-        //and a client connection and if we default it to a value it might override the transport server setting
-        //that was configured inside TcpTransportServer
-
-        //The idea here is that if this is a server transport then verifyHostName will be set by the setter
-        //below and not be null (if using transport.verifyHostName) but if a client uses socket.verifyHostName
-        //then it will be null and we can check socketOptions
-
-        //Unfortunately we have to do this to stay consistent because every other SSL option on the client
-        //side is configured using socket. but this particular option isn't actually part of the socket
-        //so it makes it tricky
+        /**
+         * This needs to default to null because this transport class is used for both a server transport
+         * and a client connection and we have different defaults for both.
+         * If we default it to a value it might override the transport server setting
+         * that was configured inside TcpTransportServer (which sets a default to false for server side)
+         *
+         * The idea here is that if this is a server transport then verifyHostName will be set by the setter
+         * and not be null as TcpTransportServer will set a default value of false (or a user will set it
+         * using transport.verifyHostName) but if this is a client connection the value will be null by default
+         * and will stay null if the user uses socket.verifyHostName to set the value or doesn't use the setter
+         * If it is null then we can check socketOptions for the value and if not set there then we can
+         * just set a default of true as this will be a client
+         *
+         * Unfortunately we have to do this to stay consistent because every other SSL option on the client
+         * side can be configured using socket. but this particular option isn't actually part of the socket
+         * so it makes it tricky from a user standpoint. For consistency sake I think it makes sense to allow
+         * using the socket. prefix that has been established so users do not get confused (as well as
+         * allow using no prefix which just calls the setter directly)
+         *
+         * Because of this there are actually two ways a client can configure this value, the client can either use
+         * socket.verifyHostName=<value> as mentioned or just simply use verifyHostName=<value> without using the socket.
+         * prefix and that will also work as the value will be set using the setter on the transport
+         *
+         * example server transport config:
+         *  ssl://localhost:61616?transport.verifyHostName=true
+         *
+         * example from client:
+         *  ssl://localhost:61616?verifyHostName=true
+         *                  OR
+         *  ssl://localhost:61616?socket.verifyHostName=true
+         *
+         */
         if (verifyHostName == null) {
+            //Check to see if the user included the value as part of socket options and if so then use that value
             if (socketOptions != null && socketOptions.containsKey("verifyHostName")) {
                 verifyHostName = Boolean.parseBoolean(socketOptions.get("verifyHostName").toString());
                 socketOptions.remove("verifyHostName");
