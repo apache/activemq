@@ -1768,7 +1768,7 @@ public class BrokerService implements Service {
      * @return the tempDataStore
      */
     public synchronized PListStore getTempDataStore() {
-        if (tempDataStore == null) {
+        if (tempDataStore == null && !hasStartException()) {
             if (!isPersistent()) {
                 return null;
             }
@@ -1931,7 +1931,7 @@ public class BrokerService implements Service {
 
         // If the user configured their own we use it even if persistence is disabled since
         // we don't know anything about their implementation.
-        if (jobSchedulerStore == null) {
+        if (jobSchedulerStore == null && !hasStartException()) {
 
             if (!isPersistent()) {
                 this.jobSchedulerStore = new InMemoryJobSchedulerStore();
