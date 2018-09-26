@@ -38,6 +38,8 @@ import org.apache.activemq.state.ProducerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.activemq.broker.region.BaseDestination.DUPLICATE_FROM_STORE_MSG_PREFIX;
+
 /**
  * Replace regular DLQ handling with redelivery via a resend to the original destination
  * after a delay
@@ -128,8 +130,8 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription, Throwable poisonCause) {
-        if (messageReference.isExpired()) {
-            // there are two uses of  sendToDeadLetterQueue, we are only interested in valid messages
+        if (messageReference.isExpired() || (poisonCause != null && poisonCause.getMessage() != null && poisonCause.getMessage().contains(DUPLICATE_FROM_STORE_MSG_PREFIX))) {
+            // there are three uses of  sendToDeadLetterQueue, we are only interested in valid messages
             return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
         } else {
             try {
