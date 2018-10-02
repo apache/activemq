@@ -105,7 +105,7 @@
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.6</zookeeper-version>
     <qpid-proton-version>0.29.0</qpid-proton-version>
-    <qpid-jms-version>0.36.0</qpid-jms-version>
+    <qpid-jms-version>0.37.0</qpid-jms-version>
     <qpid-jms-netty-version>4.1.28.Final</qpid-jms-netty-version>
     <qpid-jms-proton-version>0.29.0</qpid-jms-proton-version>
     <netty-all-version>4.1.28.Final</netty-all-version>

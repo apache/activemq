@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.client;
 
 import java.io.IOException;
+import java.nio.BufferOverflowException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -457,7 +458,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
             try {
                 encodedSize = message.encode(encodeBuffer, 0, encodeBuffer.length);
                 break;
-            } catch (java.nio.BufferOverflowException e) {
+            } catch (BufferOverflowException | IndexOutOfBoundsException e) {
                 encodeBuffer = new byte[encodeBuffer.length * 2];
             }
         }
