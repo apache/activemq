@@ -1408,6 +1408,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         } finally {
             indexLock.writeLock().unlock();
         }
+        for (Operation op: inflightTx) {
+            recordAckMessageReferenceLocation(location, op.getLocation());
+        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -1417,6 +1420,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             List<Operation> tx = inflightTransactions.remove(key);
             if (tx != null) {
                 preparedTransactions.put(key, tx);
+                for (Operation op: tx) {
+                    recordAckMessageReferenceLocation(location, op.getLocation());
+                }
             }
         }
     }
@@ -1429,6 +1435,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             updates = inflightTransactions.remove(key);
             if (updates == null) {
                 updates = preparedTransactions.remove(key);
+            }
+        }
+        if (updates != null) {
+            for(Operation op : updates) {
+                recordAckMessageReferenceLocation(location, op.getLocation());
             }
         }
     }
