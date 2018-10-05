@@ -1401,6 +1401,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 public void execute(Transaction tx) throws IOException {
                     for (Operation op : messagingTx) {
                         op.execute(tx);
+                        recordAckMessageReferenceLocation(location, op.getLocation());
                     }
                 }
             });
@@ -1417,6 +1418,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             List<Operation> tx = inflightTransactions.remove(key);
             if (tx != null) {
                 preparedTransactions.put(key, tx);
+                for (Operation op: tx) {
+                    recordAckMessageReferenceLocation(location, op.getLocation());
+                }
             }
         }
     }
@@ -1429,6 +1433,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             updates = inflightTransactions.remove(key);
             if (updates == null) {
                 updates = preparedTransactions.remove(key);
+            }
+        }
+        if (updates != null) {
+            for(Operation op : updates) {
+                recordAckMessageReferenceLocation(location, op.getLocation());
             }
         }
     }
