@@ -392,7 +392,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                         messageSend.setExpiration(expiration);
                     }
                     messageSend.setTimestamp(newTimeStamp);
-                    LOG.debug("Set message {} timestamp from {} to {}", new Object[]{ messageSend.getMessageId(), oldTimestamp, newTimeStamp });
+                    LOG.debug("Set message {} timestamp from {} to {}", messageSend.getMessageId(), oldTimestamp, newTimeStamp);
                 }
             }
 

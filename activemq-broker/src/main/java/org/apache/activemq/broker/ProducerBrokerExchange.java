@@ -144,20 +144,17 @@ public class ProducerBrokerExchange {
                 long lastStoredForMessageProducer = getStoredSequenceIdForMessage(messageSend.getMessageId());
                 if (producerSequenceId <= lastStoredForMessageProducer) {
                     canDispatch = false;
-                    LOG.warn("suppressing duplicate message send [{}] from network producer with producerSequence [{}] less than last stored: {}", new Object[]{
-                            (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastStoredForMessageProducer
-                    });
+                    LOG.warn("suppressing duplicate message send [{}] from network producer with producerSequence [{}] less than last stored: {}",
+                            (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastStoredForMessageProducer);
                 }
             } else if (producerSequenceId <= lastSendSequenceNumber.get()) {
                 canDispatch = false;
                 if (messageSend.isInTransaction()) {
-                    LOG.warn("suppressing duplicated message send [{}] with producerSequenceId [{}] <= last stored: {}", new Object[]{
-                            (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastSendSequenceNumber
-                    });
+                    LOG.warn("suppressing duplicated message send [{}] with producerSequenceId [{}] <= last stored: {}",
+                            (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastSendSequenceNumber);
                 } else {
-                    LOG.debug("suppressing duplicated message send [{}] with producerSequenceId [{}] <= last stored: {}", new Object[]{
-                            (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastSendSequenceNumber
-                    });
+                    LOG.debug("suppressing duplicated message send [{}] with producerSequenceId [{}] <= last stored: {}",
+                            (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastSendSequenceNumber);
 
                 }
             } else {

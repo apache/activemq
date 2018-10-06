@@ -743,7 +743,7 @@ public class BrokerService implements Service {
         brokerId = broker.getBrokerId();
 
         // need to log this after creating the broker so we have its id and name
-        LOG.info("Apache ActiveMQ {} ({}, {}) is starting", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId });
+        LOG.info("Apache ActiveMQ {} ({}, {}) is starting", getBrokerVersion(), getBrokerName(), brokerId);
         broker.start();
 
         if (isUseJmx()) {
@@ -770,7 +770,7 @@ public class BrokerService implements Service {
 
         startAllConnectors();
 
-        LOG.info("Apache ActiveMQ {} ({}, {}) started", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
+        LOG.info("Apache ActiveMQ {} ({}, {}) started", getBrokerVersion(), getBrokerName(), brokerId);
         LOG.info("For help or more information please see: http://activemq.apache.org");
 
         getBroker().brokerServiceStarted();
@@ -833,7 +833,7 @@ public class BrokerService implements Service {
             }.start();
         }
 
-        LOG.info("Apache ActiveMQ {} ({}, {}) is shutting down", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId} );
+        LOG.info("Apache ActiveMQ {} ({}, {}) is shutting down", getBrokerVersion(), getBrokerName(), brokerId);
 
         removeShutdownHook();
         if (this.scheduler != null) {
@@ -893,9 +893,9 @@ public class BrokerService implements Service {
         this.destinationFactory = null;
 
         if (startDate != null) {
-            LOG.info("Apache ActiveMQ {} ({}, {}) uptime {}", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId, getUptime()});
+            LOG.info("Apache ActiveMQ {} ({}, {}) uptime {}", getBrokerVersion(), getBrokerName(), brokerId, getUptime());
         }
-        LOG.info("Apache ActiveMQ {} ({}, {}) is shutdown", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
+        LOG.info("Apache ActiveMQ {} ({}, {}) is shutdown", getBrokerVersion(), getBrokerName(), brokerId);
 
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
@@ -957,9 +957,8 @@ public class BrokerService implements Service {
             if (pollInterval <= 0) {
                 pollInterval = 30;
             }
-            LOG.info("Stop gracefully with connectorName: {} queueName: {} timeout: {} pollInterval: {}", new Object[]{
-                    connectorName, queueName, timeout, pollInterval
-            });
+            LOG.info("Stop gracefully with connectorName: {} queueName: {} timeout: {} pollInterval: {}",
+                    connectorName, queueName, timeout, pollInterval);
             TransportConnector connector;
             for (int i = 0; i < transportConnectors.size(); i++) {
                 connector = transportConnectors.get(i);

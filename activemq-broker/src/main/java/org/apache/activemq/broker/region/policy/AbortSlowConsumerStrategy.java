@@ -152,9 +152,9 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                 if (LOG.isTraceEnabled()) {
                     for (Subscription subscription : subscriptions) {
                         LOG.trace("Connection {} being aborted because of slow consumer: {} on destination: {}",
-                                  new Object[] { connection.getConnectionId(),
-                                                 subscription.getConsumerInfo().getConsumerId(),
-                                                 subscription.getActiveMQDestination() });
+                                connection.getConnectionId(),
+                                subscription.getConsumerInfo().getConsumerId(),
+                                subscription.getActiveMQDestination());
                     }
                 }
 
