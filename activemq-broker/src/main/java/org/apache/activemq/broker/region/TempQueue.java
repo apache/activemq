@@ -84,7 +84,8 @@ public class TempQueue extends Queue{
     @Override
     public void dispose(ConnectionContext context) throws IOException {
         if (this.destinationStatistics.getMessages().getCount() > 0) {
-            LOG.info("{} on dispose, purge of {} pending messages: {}", new Object[]{ getActiveMQDestination().getQualifiedName(), this.destinationStatistics.getMessages().getCount(), messages });
+            LOG.info("{} on dispose, purge of {} pending messages: {}", getActiveMQDestination().getQualifiedName(),
+                    this.destinationStatistics.getMessages().getCount(), messages);
             // we may want to capture these message ids in an advisory
         }
         try {

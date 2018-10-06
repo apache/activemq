@@ -57,12 +57,12 @@ public class PriorityNetworkDispatchPolicy extends SimpleDispatchPolicy {
                                 // higher priority matching sub exists
                                 highestPrioritySub = false;
                                 LOG.debug("ignoring lower priority: {} [{}, {}] in favour of: {} [{}, {}]",
-                                        new Object[]{ candidate,
-                                                candidate.getConsumerInfo().getNetworkConsumerIds(),
-                                                candidate.getConsumerInfo().getNetworkConsumerIds(),
-                                                sub,
-                                                sub.getConsumerInfo().getNetworkConsumerIds(),
-                                                sub.getConsumerInfo().getNetworkConsumerIds() });
+                                        candidate,
+                                        candidate.getConsumerInfo().getNetworkConsumerIds(),
+                                        candidate.getConsumerInfo().getNetworkConsumerIds(),
+                                        sub,
+                                        sub.getConsumerInfo().getNetworkConsumerIds(),
+                                        sub.getConsumerInfo().getNetworkConsumerIds());
                             }
                         }
                     }

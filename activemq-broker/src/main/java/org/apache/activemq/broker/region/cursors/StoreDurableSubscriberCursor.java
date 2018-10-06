@@ -199,7 +199,10 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                     if (prioritizedMessages && immediatePriorityDispatch && tsp.isPaging()) {
                         if (msg.getPriority() > tsp.getLastRecoveredPriority()) {
                             tsp.recoverMessage(node.getMessage(), true);
-                            LOG.trace("cached high priority ({} message: {}, current paged batch priority: {}, cache size: {}", new Object[]{ msg.getPriority(), msg.getMessageId(), tsp.getLastRecoveredPriority(), tsp.batchList.size()});
+                            LOG.trace(
+                                    "cached high priority ({} message: {}, current paged batch priority: {}, cache size: {}",
+                                    msg.getPriority(), msg.getMessageId(), tsp.getLastRecoveredPriority(),
+                                    tsp.batchList.size());
                         }
                     }
                 }

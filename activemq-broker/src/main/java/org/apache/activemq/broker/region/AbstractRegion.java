@@ -338,7 +338,7 @@ public abstract class AbstractRegion implements Region {
     @Override
     @SuppressWarnings("unchecked")
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.debug("{} adding consumer: {} for destination: {}", new Object[]{ broker.getBrokerName(), info.getConsumerId(), info.getDestination() });
+        LOG.debug("{} adding consumer: {} for destination: {}", broker.getBrokerName(), info.getConsumerId(), info.getDestination());
         ActiveMQDestination destination = info.getDestination();
         if (destination != null && !destination.isPattern() && !destination.isComposite()) {
             // lets auto-create the destination
@@ -460,7 +460,7 @@ public abstract class AbstractRegion implements Region {
     @Override
     @SuppressWarnings("unchecked")
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.debug("{} removing consumer: {} for destination: {}", new Object[]{ broker.getBrokerName(), info.getConsumerId(), info.getDestination() });
+        LOG.debug("{} removing consumer: {} for destination: {}", broker.getBrokerName(), info.getConsumerId(), info.getDestination());
 
         Subscription sub = subscriptions.remove(info.getConsumerId());
         // The sub could be removed elsewhere - see ConnectionSplitBroker
@@ -685,7 +685,7 @@ public abstract class AbstractRegion implements Region {
                     entry.configurePrefetch(sub);
                 }
             }
-            LOG.debug("setting prefetch: {}, on subscription: {}; resulting value: {}", new Object[]{ control.getPrefetch(), control.getConsumerId(), sub.getConsumerInfo().getPrefetchSize()});
+            LOG.debug("setting prefetch: {}, on subscription: {}; resulting value: {}", control.getPrefetch(), control.getConsumerId(), sub.getConsumerInfo().getPrefetchSize());
             try {
                 lookup(consumerExchange.getConnectionContext(), control.getDestination(),false).wakeup();
             } catch (Exception e) {

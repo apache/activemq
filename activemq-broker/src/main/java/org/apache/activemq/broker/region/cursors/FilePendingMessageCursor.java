@@ -443,8 +443,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             long start = 0;
             if (LOG.isTraceEnabled()) {
                 start = System.currentTimeMillis();
-                LOG.trace("{}, flushToDisk() mem list size: {} {}", new Object[] { name, memoryList.size(),
-                    (systemUsage != null ? systemUsage.getMemoryUsage() : "") });
+                LOG.trace("{}, flushToDisk() mem list size: {} {}", name, memoryList.size(),
+                        (systemUsage != null ? systemUsage.getMemoryUsage() : ""));
             }
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
@@ -461,7 +461,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             }
             memoryList.clear();
             setCacheEnabled(false);
-            LOG.trace("{}, flushToDisk() done - {} ms {}", new Object[]{ name, (System.currentTimeMillis() - start), (systemUsage != null ? systemUsage.getMemoryUsage() : "") });
+            LOG.trace("{}, flushToDisk() done - {} ms {}", name, (System.currentTimeMillis() - start),
+                    (systemUsage != null ? systemUsage.getMemoryUsage() : ""));
         }
     }
 

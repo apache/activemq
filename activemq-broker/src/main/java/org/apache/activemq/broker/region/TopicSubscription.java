@@ -134,12 +134,10 @@ public class TopicSubscription extends AbstractSubscription {
                             }
                             if (!warnedAboutWait) {
                                 LOG.info("{}: Pending message cursor [{}] is full, temp usag ({}%) or memory usage ({}%) limit reached, blocking message add() pending the release of resources.",
-                                        new Object[]{
-                                                toString(),
-                                                matched,
-                                                matched.getSystemUsage().getTempUsage().getPercentUsage(),
-                                                matched.getSystemUsage().getMemoryUsage().getPercentUsage()
-                                        });
+                                        toString(),
+                                        matched,
+                                        matched.getSystemUsage().getTempUsage().getPercentUsage(),
+                                        matched.getSystemUsage().getMemoryUsage().getPercentUsage());
                                 warnedAboutWait = true;
                             }
                             matchedListMutex.wait(20);
@@ -185,9 +183,8 @@ public class TopicSubscription extends AbstractSubscription {
                             // lets avoid an infinite loop if we are given a bad eviction strategy
                             // for a bad strategy lets just not evict
                             if (messagesToEvict == 0) {
-                                LOG.warn("No messages to evict returned for {} from eviction strategy: {} out of {} candidates", new Object[]{
-                                        destination, messageEvictionStrategy, list.size()
-                                });
+                                LOG.warn("No messages to evict returned for {} from eviction strategy: {} out of {} candidates",
+                                        destination, messageEvictionStrategy, list.size());
                                 break;
                             }
                         }
