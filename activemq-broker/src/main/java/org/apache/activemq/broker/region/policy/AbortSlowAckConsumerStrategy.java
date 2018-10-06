@@ -163,16 +163,19 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
             if (getMaxSlowDuration() > 0 && (entry.getValue().markCount * getCheckPeriod() >= getMaxSlowDuration()) ||
                 getMaxSlowCount() > 0 && entry.getValue().slowCount >= getMaxSlowCount()) {
 
-                LOG.trace("Transferring consumer{} to the abort list: {} slow duration = {}, slow count = {}",
-                        new Object[]{ entry.getKey().getConsumerInfo().getConsumerId(),
+                LOG.trace("Transferring consumer {} to the abort list: {} slow duration = {}, slow count = {}",
+                        entry.getKey().getConsumerInfo().getConsumerId(),
+                        toAbort,
                         entry.getValue().markCount * getCheckPeriod(),
-                        entry.getValue().getSlowCount() });
+                        entry.getValue().getSlowCount());
 
                 toAbort.put(entry.getKey(), entry.getValue());
                 slowConsumers.remove(entry.getKey());
             } else {
 
-                LOG.trace("Not yet time to abort consumer {}: slow duration = {}, slow count = {}", new Object[]{ entry.getKey().getConsumerInfo().getConsumerId(), entry.getValue().markCount * getCheckPeriod(), entry.getValue().slowCount });
+                LOG.trace("Not yet time to abort consumer {}: slow duration = {}, slow count = {}",
+                        entry.getKey().getConsumerInfo().getConsumerId(), entry.getValue().markCount * getCheckPeriod(),
+                        entry.getValue().slowCount);
 
             }
         }
