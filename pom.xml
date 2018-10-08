@@ -217,11 +217,16 @@
       <url>${staging.siteURL}/maven/${project.version}</url>
       <!--<url>${site-repo-url}</url>-->
     </site>
+    <repository>
+      <id>tomitribe.releases.https</id>
+      <name>Tomitribe Release Distribution Repository</name>
+      <url>https://repository.tomitribe.com/service/local/staging/deploy/maven2</url>
+    </repository>
+
     <snapshotRepository>
-      <id>apache.snapshots.https</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>https://repository.apache.org/content/repositories/snapshots</url>
-      <uniqueVersion>false</uniqueVersion>
+      <id>tomitribe.snapshots.https</id>
+      <name>Tomitribe Development Snapshot Repository</name>
+      <url>https://repository.tomitribe.com/content/repositories/snapshots-tomitribe</url>
     </snapshotRepository>
   </distributionManagement>
 
