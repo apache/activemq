@@ -1401,6 +1401,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 public void execute(Transaction tx) throws IOException {
                     for (Operation op : messagingTx) {
                         op.execute(tx);
+                        recordAckMessageReferenceLocation(location, op.getLocation());
                     }
                 }
             });
@@ -1408,21 +1409,26 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         } finally {
             indexLock.writeLock().unlock();
         }
-        for (Operation op: inflightTx) {
-            recordAckMessageReferenceLocation(location, op.getLocation());
-        }
     }
 
     @SuppressWarnings("rawtypes")
     protected void process(KahaPrepareCommand command, Location location) {
         TransactionId key = TransactionIdConversion.convert(command.getTransactionInfo());
+        List<Operation> tx = null;
         synchronized (inflightTransactions) {
-            List<Operation> tx = inflightTransactions.remove(key);
+            tx = inflightTransactions.remove(key);
             if (tx != null) {
                 preparedTransactions.put(key, tx);
-                for (Operation op: tx) {
+            }
+        }
+        if (tx != null && !tx.isEmpty()) {
+            indexLock.writeLock().lock();
+            try {
+                for (Operation op : tx) {
                     recordAckMessageReferenceLocation(location, op.getLocation());
                 }
+            } finally {
+                indexLock.writeLock().unlock();
             }
         }
     }
@@ -1437,9 +1443,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 updates = preparedTransactions.remove(key);
             }
         }
-        if (key.isXATransaction() && updates != null) {
-            for(Operation op : updates) {
-                recordAckMessageReferenceLocation(location, op.getLocation());
+        if (key.isXATransaction() && updates != null && !updates.isEmpty()) {
+            indexLock.writeLock().lock();
+            try {
+                for (Operation op : updates) {
+                    recordAckMessageReferenceLocation(location, op.getLocation());
+                }
+            } finally {
+                indexLock.writeLock().unlock();
             }
         }
     }
