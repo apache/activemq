@@ -1437,7 +1437,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 updates = preparedTransactions.remove(key);
             }
         }
-        if (updates != null) {
+        if (key.isXATransaction() && updates != null) {
             for(Operation op : updates) {
                 recordAckMessageReferenceLocation(location, op.getLocation());
             }
