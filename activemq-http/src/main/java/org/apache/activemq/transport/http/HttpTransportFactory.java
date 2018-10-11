@@ -45,8 +45,10 @@ public class HttpTransportFactory extends TransportFactory {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             HttpTransportServer result = new HttpTransportServer(location, this);
+            Map<String, Object> jettyOptions = IntrospectionSupport.extractProperties(options, "jetty.");
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            result.setJettyOptions(jettyOptions);
             result.setTransportOption(transportOptions);
             result.setHttpOptions(httpOptions);
             return result;
