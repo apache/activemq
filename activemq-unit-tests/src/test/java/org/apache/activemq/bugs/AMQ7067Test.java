@@ -13,9 +13,12 @@ import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.RecoveredXATransactionViewMBean;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.MessageDatabase;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -114,6 +117,82 @@ public class AMQ7067Test {
 
         ((org.apache.activemq.broker.region.Queue) broker.getRegionBroker().getDestinationMap().get(queue)).purge();
 
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 0 == getQueueSize(queue.getQueueName());
+            }
+        });
+
+        // force gc
+        broker.getPersistenceAdapter().checkpoint(true);
+
+        Xid[] xids = xaRes.recover(TMSTARTRSCAN);
+
+        //Should be 1 since we have only 1 prepared
+        assertEquals(1, xids.length);
+        connection.close();
+
+        broker.stop();
+        broker.waitUntilStopped();
+        createBroker();
+
+        setupXAConnection();
+        xids = xaRes.recover(TMSTARTRSCAN);
+
+        System.out.println("****** recovered = " + xids);
+
+        // THIS SHOULD NOT FAIL AS THERE SHOULD DBE ONLY 1 TRANSACTION!
+        assertEquals(1, xids.length);
+    }
+
+    @Test
+    public void testXAPrepareWithAckCompactionDoesNotLooseInflight() throws Exception {
+
+        // investigate liner gc issue - store usage not getting released
+        org.apache.log4j.Logger.getLogger(MessageDatabase.class).setLevel(Level.TRACE);
+
+
+        setupXAConnection();
+
+        Queue holdKahaDb = xaSession.createQueue("holdKahaDb");
+
+        MessageProducer holdKahaDbProducer = xaSession.createProducer(holdKahaDb);
+
+        XATransactionId txid = createXATransaction();
+        System.out.println("****** create new txid = " + txid);
+        xaRes.start(txid, TMNOFLAGS);
+
+        TextMessage helloMessage = xaSession.createTextMessage(StringUtils.repeat("a", 10));
+        holdKahaDbProducer.send(helloMessage);
+        xaRes.end(txid, TMSUCCESS);
+
+        Queue queue = xaSession.createQueue("test");
+
+        produce(xaRes, xaSession, queue, 100, 512 * 1024);
+
+        xaRes.prepare(txid);
+
+        produce(xaRes, xaSession, queue, 100, 512 * 1024);
+
+        ((org.apache.activemq.broker.region.Queue) broker.getRegionBroker().getDestinationMap().get(queue)).purge();
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 0 == getQueueSize(queue.getQueueName());
+            }
+        });
+
+        // force gc, two data files requires two cycles
+        int limit = ((KahaDBPersistenceAdapter)broker.getPersistenceAdapter()).getCompactAcksAfterNoGC() + 1;
+        for (int i=0; i<limit*2; i++) {
+            broker.getPersistenceAdapter().checkpoint(true);
+        }
+
+        // ack compaction task operates in the background
+        TimeUnit.SECONDS.sleep(5);
+
         Xid[] xids = xaRes.recover(TMSTARTRSCAN);
 
         //Should be 1 since we have only 1 prepared
@@ -159,6 +238,16 @@ public class AMQ7067Test {
         produce(xaRes, xaSession, queue, 100, 512 * 1024);
 
         ((org.apache.activemq.broker.region.Queue) broker.getRegionBroker().getDestinationMap().get(queue)).purge();
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 0 == getQueueSize(queue.getQueueName());
+            }
+        });
+
+        // force gc
+        broker.getPersistenceAdapter().checkpoint(true);
 
         Xid[] xids = xaRes.recover(TMSTARTRSCAN);
 
@@ -343,7 +432,6 @@ public class AMQ7067Test {
             TextMessage helloMessage = xaSession.createTextMessage(StringUtils.repeat("a", messageSize));
             producer.send(helloMessage);
             xaRes.end(txid, TMSUCCESS);
-            xaRes.prepare(txid);
             xaRes.commit(txid, true);
         }
     }

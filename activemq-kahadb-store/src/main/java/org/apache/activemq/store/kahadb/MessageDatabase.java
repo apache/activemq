@@ -65,7 +65,6 @@ import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
-import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
@@ -2037,7 +2036,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     }
 
                     // Check if we found one, or if we only found the current file being written to.
-                    if (journalToAdvance == -1 || journalToAdvance == journal.getCurrentDataFileId()) {
+                    if (journalToAdvance == -1 || blockedFromCompaction(journalToAdvance)) {
                         return;
                     }
 
@@ -2077,8 +2076,30 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+    // called with the index lock held
+    private boolean blockedFromCompaction(int journalToAdvance) {
+        // don't forward the current data file
+        if (journalToAdvance == journal.getCurrentDataFileId()) {
+            return true;
+        }
+        // don't forward any data file with inflight transaction records because it will whack the tx - data file link
+        // in the ack map when all acks are migrated (now that the ack map is not just for acks)
+        // TODO: prepare records can be dropped but completion records (maybe only commit outcomes) need to be migrated
+        // as part of the forward work.
+        Location[] inProgressTxRange = getInProgressTxLocationRange();
+        if (inProgressTxRange[0] != null) {
+            for (int pendingTx = inProgressTxRange[0].getDataFileId(); pendingTx <= inProgressTxRange[1].getDataFileId(); pendingTx++) {
+                if (journalToAdvance == pendingTx) {
+                    LOG.trace("Compaction target:{} blocked by inflight transaction records: {}", journalToAdvance, inProgressTxRange);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private void forwardAllAcks(Integer journalToRead, Set<Integer> journalLogsReferenced) throws IllegalStateException, IOException {
-        LOG.trace("Attempting to move all acks in journal:{} to the front.", journalToRead);
+        LOG.trace("Attempting to move all acks in journal:{} to the front. Referenced files:{}", journalToRead, journalLogsReferenced);
 
         DataFile forwardsFile = journal.reserveDataFile();
         forwardsFile.setTypeCode(COMPACTED_JOURNAL_FILE);
