@@ -24,6 +24,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
+
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -47,8 +51,6 @@ import org.fusesource.hawtbuf.AsciiBuffer;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.fusesource.hawtbuf.UTF8Buffer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
@@ -60,7 +62,7 @@ public class StoreExporter {
     URI config;
     File file;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final Jsonb mapper = JsonbBuilder.create(new JsonbConfig().setProperty("johnzon.cdi.activated", false));
     private final AsciiBuffer ds_kind = new AsciiBuffer("ds");
     private final AsciiBuffer ptp_kind = new AsciiBuffer("ptp");
     private final AsciiBuffer codec_id = new AsciiBuffer("openwire");
@@ -134,7 +136,7 @@ public class StoreExporter {
                 HashMap<String, Object> jsonMap = new HashMap<String, Object>();
                 jsonMap.put("@class", "queue_destination");
                 jsonMap.put("name", dest.getQueueName());
-                String json = mapper.writeValueAsString(jsonMap);
+                String json = mapper.toJson(jsonMap);
                 System.out.println(json);
                 destRecord.setBindingData(new UTF8Buffer(json));
                 manager.store_queue(destRecord);
@@ -191,7 +193,7 @@ public class StoreExporter {
                         jsonMap.put("selector", sub.getSelector());
                     }
                     jsonMap.put("noLocal", sub.isNoLocal());
-                    String json = mapper.writeValueAsString(jsonMap);
+                    String json = mapper.toJson(jsonMap);
                     System.out.println(json);
 
                     destRecord.setBindingData(new UTF8Buffer(json));

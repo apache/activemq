@@ -53,8 +53,8 @@ public class PartitionBrokerPlugin implements BrokerPlugin {
         this.config = config;
     }
 
-    public void setConfigAsJson(String config) throws IOException {
-        this.config = Partitioning.MAPPER.readValue(config, Partitioning.class);
+    public void setConfigAsJson(String config) {
+        this.config = Partitioning.MAPPER.fromJson(config, Partitioning.class);
     }
 
     public String getBrokerURL(PartitionBroker partitionBroker, String id) {

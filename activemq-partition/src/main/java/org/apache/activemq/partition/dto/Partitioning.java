@@ -16,63 +16,45 @@
  */
 package org.apache.activemq.partition.dto;
 
+import java.util.Map;
 
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.io.IOException;
-import java.util.HashMap;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
+import javax.json.bind.annotation.JsonbProperty;
 
 /**
  * The main Configuration class for the PartitionBroker plugin
  */
 public class Partitioning {
 
-    static final public ObjectMapper MAPPER = new ObjectMapper();
-    static {
-        MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    }
-
-    static final public ObjectMapper TO_STRING_MAPPER = new ObjectMapper();
-    static {
-        TO_STRING_MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        TO_STRING_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
-    }
+    static final public Jsonb MAPPER = JsonbBuilder.create();
+    static final public Jsonb TO_STRING_MAPPER = JsonbBuilder.create(new JsonbConfig()
+            .setProperty("johnzon.cdi.activated", false).withFormatting(true));
 
     /**
      * If a client connects with a clientId which is listed in the
      * map, then he will be immediately reconnected
      * to the partition target immediately.
      */
-    @JsonProperty("by_client_id")
-    @JsonDeserialize(contentAs = Target.class)
-    public HashMap<String, Target> byClientId;
+    @JsonbProperty("by_client_id")
+    public Map<String, Target> byClientId;
 
     /**
      * If a client connects with a user priciple which is listed in the
      * map, then he will be immediately reconnected
      * to the partition target immediately.
      */
-    @JsonProperty("by_user_name")
-    @JsonDeserialize(contentAs = Target.class)
-    public HashMap<String, Target> byUserName;
+    @JsonbProperty("by_user_name")
+    public Map<String, Target> byUserName;
 
     /**
      * If a client connects with source ip which is listed in the
      * map, then he will be immediately reconnected
      * to the partition target immediately.
      */
-    @JsonProperty("by_source_ip")
-    @JsonDeserialize(contentAs = Target.class)
-    public HashMap<String, Target> bySourceIp;
+    @JsonbProperty("by_source_ip")
+    public Map<String, Target> bySourceIp;
 
     /**
      * Used to map the preferred partitioning of queues across
@@ -80,9 +62,8 @@ public class Partitioning {
      * works with a set of targets configured in this map, the client
      * will be reconnected to the appropriate target.
      */
-    @JsonProperty("by_queue")
-    @JsonDeserialize(contentAs = Target.class)
-    public HashMap<String, Target> byQueue;
+    @JsonbProperty("by_queue")
+    public Map<String, Target> byQueue;
 
     /**
      * Used to map the preferred partitioning of topics across
@@ -90,72 +71,66 @@ public class Partitioning {
      * works with a set of targets configured in this map, the client
      * will be reconnected to the appropriate target.
      */
-    @JsonProperty("by_topic")
-    @JsonDeserialize(contentAs = Target.class)
-    public HashMap<String, Target> byTopic;
+    @JsonbProperty("by_topic")
+    public Map<String, Target> byTopic;
 
     /**
      * Maps broker names to broker URLs.
      */
-    @JsonProperty("brokers")
-    @JsonDeserialize(contentAs = String.class)
-    public HashMap<String, String> brokers;
+    @JsonbProperty("brokers")
+    public Map<String, String> brokers;
 
 
     @Override
     public String toString() {
-        try {
-            return TO_STRING_MAPPER.writeValueAsString(this);
-        } catch (IOException e) {
-            return super.toString();
-        }
+        return TO_STRING_MAPPER.toJson(this);
     }
 
-    public HashMap<String, String> getBrokers() {
+    public Map<String, String> getBrokers() {
         return brokers;
     }
 
-    public void setBrokers(HashMap<String, String> brokers) {
+    public void setBrokers(Map<String, String> brokers) {
         this.brokers = brokers;
     }
 
-    public HashMap<String, Target> getByClientId() {
+    public Map<String, Target> getByClientId() {
         return byClientId;
     }
 
-    public void setByClientId(HashMap<String, Target> byClientId) {
+    public void setByClientId(Map<String, Target> byClientId) {
         this.byClientId = byClientId;
     }
 
-    public HashMap<String, Target> getByQueue() {
+    public Map<String, Target> getByQueue() {
         return byQueue;
     }
 
-    public void setByQueue(HashMap<String, Target> byQueue) {
+    public void setByQueue(Map<String, Target> byQueue) {
         this.byQueue = byQueue;
     }
 
-    public HashMap<String, Target> getBySourceIp() {
+    public Map<String, Target> getBySourceIp() {
         return bySourceIp;
     }
 
-    public void setBySourceIp(HashMap<String, Target> bySourceIp) {
+    public void setBySourceIp(Map<String, Target> bySourceIp) {
         this.bySourceIp = bySourceIp;
     }
 
-    public HashMap<String, Target> getByTopic() {
+    public Map<String, Target> getByTopic() {
         return byTopic;
     }
 
-    public void setByTopic(HashMap<String, Target> byTopic) {
+    public void setByTopic(Map<String, Target> byTopic) {
         this.byTopic = byTopic;
     }
 
-    public HashMap<String, Target> getByUserName() {
+    public Map<String, Target> getByUserName() {
         return byUserName;
     }
 
-    public void setByUserName(HashMap<String, Target> byUserName) {
+    public void setByUserName(Map<String, Target> byUserName) {
         this.byUserName = byUserName;
     }
 }

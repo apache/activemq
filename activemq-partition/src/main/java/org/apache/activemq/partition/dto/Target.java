@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.partition.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
+
+import javax.json.bind.annotation.JsonbProperty;
 
 /**
  * Represents a partition target.  This identifies the brokers that
@@ -28,8 +28,8 @@ import java.util.HashSet;
  */
 public class Target {
 
-    @JsonProperty("ids")
-    public HashSet<String> ids = new HashSet<String>();
+    @JsonbProperty("ids")
+    public Set<String> ids = new HashSet<String>();
 
     public Target() {
         ids = new HashSet<String>();
@@ -41,14 +41,10 @@ public class Target {
 
     @Override
     public String toString() {
-        try {
-            return Partitioning.TO_STRING_MAPPER.writeValueAsString(this);
-        } catch (IOException e) {
-            return super.toString();
-        }
+        return Partitioning.TO_STRING_MAPPER.toJson(this);
     }
 
-    public HashSet<String> getIds() {
+    public Set<String> getIds() {
         return ids;
     }
 

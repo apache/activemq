@@ -31,7 +31,7 @@
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <!-- for reproducible builds -->	
+    <!-- for reproducible builds -->
     <project.build.outputTimestamp>2023-03-28T14:10:59Z</project.build.outputTimestamp>
 
     <siteId>activemq-${project.version}</siteId>
@@ -66,7 +66,9 @@
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
-    <jackson-version>2.14.2</jackson-version>
+    <geronimo-jsonb.version>1.1</geronimo-jsonb.version>
+    <geronimo-jsonp.version>1.1</geronimo-jsonp.version>
+    <johnzon.version>1.1.20</johnzon.version>
     <jakarta-jms-api-version>2.0.3</jakarta-jms-api-version>
     <jakarta-jms-api-v3-version>3.1.0</jakarta-jms-api-v3-version>
     <jasypt-version>1.9.3</jasypt-version>
@@ -689,19 +691,19 @@
 
       <!-- Jackson -->
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-core</artifactId>
-        <version>${jackson-version}</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jsonb_1.0_spec</artifactId>
+        <version>${geronimo-jsonb.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>${jackson-version}</version>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-json_1.1_spec</artifactId>
+        <version>${geronimo-jsonp.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${jackson-version}</version>
+        <groupId>org.apache.johnzon</groupId>
+        <artifactId>johnzon-jsonb</artifactId>
+        <version>${johnzon.version}</version>
       </dependency>
 
       <!-- Used to configure the activemq logs -->

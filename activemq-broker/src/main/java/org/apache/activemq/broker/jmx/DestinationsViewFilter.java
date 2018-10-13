@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import javax.management.ObjectName;
 
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -100,7 +102,6 @@ public class DestinationsViewFilter implements Serializable {
      *
      */
     public static DestinationsViewFilter create(String json) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
         if (json == null) {
             return new DestinationsViewFilter();
         }
@@ -108,7 +109,13 @@ public class DestinationsViewFilter implements Serializable {
         if (json.length() == 0 || json.equals("{}")) {
             return new DestinationsViewFilter();
         }
-        return mapper.readerFor(DestinationsViewFilter.class).readValue(json);
+        try (final Jsonb jsonb = JsonbBuilder.create()) {
+            return jsonb.fromJson(json, DestinationsViewFilter.class);
+        } catch (final IOException e) {
+            throw e;
+        } catch (final Exception e) {
+            throw new IOException(e);
+        }
     }
 
     /**
@@ -129,19 +136,18 @@ public class DestinationsViewFilter implements Serializable {
      * @throws IOException
      */
     String filter(int page, int pageSize) throws IOException {
-        final ObjectMapper mapper = new ObjectMapper();
-        final Predicate<DestinationView> predicate = getPredicate();
-        final Map<ObjectName, DestinationView> filteredDestinations = new HashMap<>(destinations);
-        destinations = filteredDestinations.entrySet().stream().filter(d -> predicate.test(d.getValue())).collect(
-                Collectors.toMap(d -> d.getKey(), d -> d.getValue()));
-
+        destinations = Maps.filterValues(destinations, getPredicate());
         Map<ObjectName, DestinationView> pagedDestinations = getPagedDestinations(page, pageSize);
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("data", pagedDestinations);
         result.put("count", destinations.size());
-        StringWriter writer = new StringWriter();
-        mapper.writeValue(writer, result);
-        return writer.toString();
+        try (final Jsonb jsonb = JsonbBuilder.create()) {
+            return jsonb.toJson(result);
+        } catch (final IOException e) {
+            throw e;
+        } catch (final Exception e) {
+            throw new IOException(e);
+        }
     }
 
     Map<ObjectName, DestinationView> getPagedDestinations(int page, int pageSize) {

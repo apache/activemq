@@ -150,9 +150,6 @@
         <include>org.glassfish.jaxb:jaxb-core</include>
         <include>com.sun.istack:istack-commons-runtime</include>
         <include>javax.activation:javax.activation-api</include>
-        <include>com.fasterxml.jackson.core:jackson-core</include>
-        <include>com.fasterxml.jackson.core:jackson-annotations</include>
-        <include>com.fasterxml.jackson.core:jackson-databind</include>
       </includes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
