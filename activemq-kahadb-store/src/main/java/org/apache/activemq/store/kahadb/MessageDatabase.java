@@ -2126,7 +2126,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     LOG.trace("Error loading command during ack forward: {}", nextLocation);
                 }
 
-                if (command != null && command instanceof KahaRemoveMessageCommand) {
+                if (shouldForward(command)) {
                     payload = toByteSequence(command);
                     Location location = appender.storeItem(payload, Journal.USER_RECORD_TYPE, false);
                     updatedAckLocations.put(location.getDataFileId(), journalLogsReferenced);
@@ -2160,6 +2160,21 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         indexLock.writeLock().unlock();
 
         LOG.trace("ACK File Map following updates: {}", metadata.ackMessageFileMap);
+    }
+
+    private boolean shouldForward(JournalCommand<?> command) {
+        boolean result = false;
+        if (command != null) {
+            if (command instanceof KahaRemoveMessageCommand) {
+                result = true;
+            } else if (command instanceof KahaCommitCommand) {
+                KahaCommitCommand kahaCommitCommand = (KahaCommitCommand) command;
+                if (kahaCommitCommand.hasTransactionInfo() && kahaCommitCommand.getTransactionInfo().hasXaTransactionId()) {
+                    result = true;
+                }
+            }
+        }
+        return result;
     }
 
     private Location getNextLocationForAckForward(final Location nextLocation, final Location limit) {
