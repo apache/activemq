@@ -219,10 +219,10 @@ public class PageFileTest extends TestCase {
         PageFile pf2 = new PageFile(new File("target/test-data"), getName());
         pf2.setEnableRecoveryFile(false);
         pf2.load();
-
+        pf2.unload();
+        pf2.load();
         long freePages = pf2.getFreePageCount();
         pf.unload();
-        pf2.unload();
 
         //Make sure that all 10 pages are still tracked
         assertEquals(10, freePages);

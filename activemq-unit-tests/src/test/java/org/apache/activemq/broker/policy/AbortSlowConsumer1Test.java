@@ -42,9 +42,7 @@ public class AbortSlowConsumer1Test extends AbortSlowConsumerBase {
     public static Collection<Object[]> getTestParameters() {
         return Arrays.asList(new Object[][]{
                 {Boolean.TRUE, Boolean.TRUE},
-                {Boolean.TRUE, Boolean.FALSE},
-                {Boolean.FALSE, Boolean.TRUE},
-                {Boolean.FALSE, Boolean.FALSE}});
+                {Boolean.FALSE, Boolean.TRUE}});
     }
 
     public AbortSlowConsumer1Test(Boolean abortConnection, Boolean topic) {

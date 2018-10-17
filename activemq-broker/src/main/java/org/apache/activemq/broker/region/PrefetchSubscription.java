@@ -671,7 +671,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         // decrement after dispatch has taken ownership to avoid usage jitter
                         node.decrementReferenceCount();
                     }
-                } else if (!isSlowConsumer()) {
+                } else if (!pending.isEmpty() && !isSlowConsumer()) {
                     setSlowConsumer(true);
                     slowConsumerTargets = destinations;
                 }

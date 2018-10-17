@@ -20,9 +20,12 @@
 
 <features name="activemq-core-${project.version}">
 
+    <repository>mvn:org.apache.karaf.features/spring-legacy/[4,5)/xml/features</repository>
+
     <!-- Bundles needed if only client will be deployed in the container -->
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}" resolver="(obr)" start-level="50">
         <feature version="[4,5)">spring</feature>
+        <feature version="[4,5)">shell-compat</feature>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>

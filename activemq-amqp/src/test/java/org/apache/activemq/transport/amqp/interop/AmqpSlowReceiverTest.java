@@ -32,7 +32,7 @@ import javax.management.openmbean.TabularData;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AbortSlowConsumerStrategyViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
+import org.apache.activemq.broker.region.policy.AbortSlowAckConsumerStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
@@ -45,14 +45,14 @@ import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
 /**
- * Test the handling of consumer abort when the AbortSlowConsumerStrategy is used.
+ * Test the handling of consumer abort when the AbortSlowAckConsumerStrategy is used.
  */
 public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
 
     private final long DEFAULT_CHECK_PERIOD = 1000;
     private final long DEFAULT_MAX_SLOW_DURATION = 3000;
 
-    private AbortSlowConsumerStrategy strategy;
+    private AbortSlowAckConsumerStrategy strategy;
 
     @Test(timeout = 60 * 1000)
     public void testSlowConsumerIsAborted() throws Exception {
@@ -105,7 +105,7 @@ public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
         AbortSlowConsumerStrategyViewMBean abortPolicy = (AbortSlowConsumerStrategyViewMBean)
                 brokerService.getManagementContext().newProxyInstance(slowConsumerPolicyMBeanName, AbortSlowConsumerStrategyViewMBean.class, true);
 
-        TimeUnit.SECONDS.sleep(3);
+        TimeUnit.SECONDS.sleep(6);
 
         TabularData slowOnes = abortPolicy.getSlowConsumers();
         assertEquals("one slow consumers", 1, slowOnes.size());
@@ -148,10 +148,11 @@ public class AmqpSlowReceiverTest extends AmqpClientTestSupport {
 
     @Override
     protected void performAdditionalConfiguration(BrokerService brokerService) throws Exception {
-        strategy = new AbortSlowConsumerStrategy();
+        strategy = new AbortSlowAckConsumerStrategy();
         strategy.setAbortConnection(false);
         strategy.setCheckPeriod(DEFAULT_CHECK_PERIOD);
         strategy.setMaxSlowDuration(DEFAULT_MAX_SLOW_DURATION);
+        strategy.setMaxTimeSinceLastAck(DEFAULT_MAX_SLOW_DURATION);
 
         PolicyEntry policy = new PolicyEntry();
         policy.setSlowConsumerStrategy(strategy);
