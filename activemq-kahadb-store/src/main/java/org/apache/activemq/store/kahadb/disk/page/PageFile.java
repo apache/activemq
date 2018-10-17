@@ -145,6 +145,8 @@ public class PageFile {
     private boolean useLFRUEviction = false;
     private float LFUEvictionFactor = 0.2f;
 
+    private boolean needsFreePageRecovery = false;
+
     /**
      * Use to keep track of updated pages which have not yet been committed.
      */
@@ -401,8 +403,6 @@ public class PageFile {
                 recoveryFile = new RecoverableRandomAccessFile(getRecoveryFile(), "rw");
             }
 
-            boolean needsFreePageRecovery = false;
-
             if (metaData.isCleanShutdown()) {
                 nextTxid.set(metaData.getLastTxId() + 1);
                 if (metaData.getFreePages() > 0) {
@@ -418,17 +418,6 @@ public class PageFile {
                 writeFile.setLength(PAGE_FILE_HEADER_SIZE);
             }
             nextFreePageId.set((writeFile.length() - PAGE_FILE_HEADER_SIZE) / pageSize);
-
-            if (needsFreePageRecovery) {
-                // Scan all to find the free pages after nextFreePageId is set
-                freeList = new SequenceSet();
-                for (Iterator<Page> i = tx().iterator(true); i.hasNext(); ) {
-                    Page page = i.next();
-                    if (page.getType() == Page.PAGE_FREE_TYPE) {
-                        freeList.add(page.getPageId());
-                    }
-                }
-            }
 
             metaData.setCleanShutdown(false);
             storeMetaData();
@@ -454,6 +443,22 @@ public class PageFile {
                 stopWriter();
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
+            }
+
+            if (needsFreePageRecovery) {
+                LOG.info(toString() + ". Recovering pageFile free list due to prior unclean shutdown..");
+                freeList = new SequenceSet();
+                loaded.set(true);
+                try {
+                    for (Iterator<Page> i = new Transaction(this).iterator(true); i.hasNext(); ) {
+                        Page page = i.next();
+                        if (page.getType() == Page.PAGE_FREE_TYPE) {
+                            freeList.add(page.getPageId());
+                        }
+                    }
+                } finally {
+                    loaded.set(false);
+                }
             }
 
             if (freeList.isEmpty()) {
