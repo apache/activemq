@@ -20,6 +20,7 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.policy.AbortSlowAckConsumerStrategy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,12 +109,13 @@ public class AMQ5844Test {
         broker.setBrokerName("Main");
 
         PolicyEntry policy = new PolicyEntry();
-        AbortSlowConsumerStrategy abortSlowConsumerStrategy = new AbortSlowConsumerStrategy();
+        AbortSlowAckConsumerStrategy abortSlowConsumerStrategy = new AbortSlowAckConsumerStrategy();
         abortSlowConsumerStrategy.setAbortConnection(false);
         //time in milliseconds between checks for slow subscriptions
         abortSlowConsumerStrategy.setCheckPeriod(checkPeriod);
         //time in milliseconds that a sub can remain slow before triggering an abort
         abortSlowConsumerStrategy.setMaxSlowDuration(maxSlowDuration);
+        abortSlowConsumerStrategy.setMaxTimeSinceLastAck(maxSlowDuration);
 
         policy.setSlowConsumerStrategy(abortSlowConsumerStrategy);
         policy.setQueuePrefetch(0);

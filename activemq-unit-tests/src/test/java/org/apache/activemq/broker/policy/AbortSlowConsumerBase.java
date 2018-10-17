@@ -41,7 +41,6 @@ public class AbortSlowConsumerBase extends JmsMultipleClientsTestSupport impleme
     @Before
     public void setUp() throws Exception {
         exceptions.clear();
-        topic = true;
         underTest = createSlowConsumerStrategy();
         super.setUp();
         createDestination();
