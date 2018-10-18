@@ -68,8 +68,10 @@ import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.TypeConversionSupport;
@@ -404,6 +406,12 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
         		connectionMap.put("FailoverReconnect", connectionInfo.isFailoverReconnect());
         		
     			body = new AmqpValue(connectionMap);
+            } else if (data instanceof RemoveInfo) {
+    			RemoveInfo removeInfo = (RemoveInfo)message.getDataStructure();
+        		final HashMap<String, Object> removeMap = new LinkedHashMap<String, Object>();
+        		
+            	if (removeInfo.isConnectionRemove()) {
+            		removeMap.put(ConnectionId.class.getSimpleName(), ((ConnectionId)removeInfo.getObjectId()).getValue());
             }
         } else if (messageType == CommandTypes.ACTIVEMQ_BYTES_MESSAGE) {
             Binary payload = getBinaryFromMessageBody((ActiveMQBytesMessage) message);
