@@ -70,6 +70,7 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
@@ -412,6 +413,14 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
         		
             	if (removeInfo.isConnectionRemove()) {
             		removeMap.put(ConnectionId.class.getSimpleName(), ((ConnectionId)removeInfo.getObjectId()).getValue());
+            	} else if (removeInfo.isConsumerRemove()) {
+            		removeMap.put(ConsumerId.class.getSimpleName(), ((ConsumerId)removeInfo.getObjectId()).getValue());
+            		removeMap.put("SessionId", ((ConsumerId)removeInfo.getObjectId()).getSessionId());
+            		removeMap.put("ConnectionId", ((ConsumerId)removeInfo.getObjectId()).getConnectionId());
+            		removeMap.put("ParentId", ((ConsumerId)removeInfo.getObjectId()).getParentId());
+            	}
+            	
+            	body = new AmqpValue(removeMap);
             }
         } else if (messageType == CommandTypes.ACTIVEMQ_BYTES_MESSAGE) {
             Binary payload = getBinaryFromMessageBody((ActiveMQBytesMessage) message);
