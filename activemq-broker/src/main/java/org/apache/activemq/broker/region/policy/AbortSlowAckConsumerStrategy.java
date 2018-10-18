@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.AbstractSubscription;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.slf4j.Logger;
@@ -128,6 +129,15 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
                     LOG.debug("sub: {} is now slow", subscriber.getConsumerInfo().getConsumerId());
                     SlowConsumerEntry entry = new SlowConsumerEntry(subscriber.getContext());
                     entry.mark(); // mark consumer on first run
+                    if (subscriber instanceof AbstractSubscription) {
+                        AbstractSubscription abstractSubscription = (AbstractSubscription) subscriber;
+                        if (!abstractSubscription.isSlowConsumer()) {
+                            abstractSubscription.setSlowConsumer(true);
+                            for (Destination destination: abstractSubscription.getDestinations()) {
+                               // destination.slowConsumer(broker.getAdminConnectionContext(), abstractSubscription);
+                            }
+                        }
+                    }
                     slowConsumers.put(subscriber, entry);
                 } else if (getMaxSlowCount() > 0) {
                     slowConsumers.get(subscriber).slow();

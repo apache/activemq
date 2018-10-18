@@ -363,4 +363,7 @@ public abstract class AbstractSubscription implements Subscription {
         }
     }
 
+    public CopyOnWriteArrayList<Destination> getDestinations() {
+        return destinations;
+    }
 }

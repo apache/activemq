@@ -292,7 +292,11 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             MessageConsumer consumer = session.createConsumer(new ActiveMQQueue(queueName));
             connection.start();
 
-            return consumer.receive(5000);
+            Message message = consumer.receive(4000);
+            if (message == null) {
+                message = consumer.receive(2000);
+            }
+            return message;
         } finally {
             if (connection != null) {
                 connection.close();

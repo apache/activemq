@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 @ExamReactorStrategy(PerClass.class)
 public abstract class AbstractFeatureTest {
 
-    private static final String KARAF_MAJOR_VERSION = "4.0.0";
+    private static final String KARAF_MAJOR_VERSION = "4.2.1";
     public static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
     public static final long ASSERTION_TIMEOUT = 30000L;
     public static final String RESOURCE_BASE = "src/test/resources/org/apache/activemq/karaf/itest/";
@@ -156,7 +156,7 @@ public abstract class AbstractFeatureTest {
          karafDistributionConfiguration().frameworkUrl(karafUrl).karafVersion(KARAF_MAJOR_VERSION)
              .name("Apache Karaf").unpackDirectory(new File("target/paxexam/unpack/")),
          keepRuntimeFolder(), //
-         logLevel(LogLevelOption.LogLevel.WARN), //
+         logLevel(LogLevelOption.LogLevel.INFO), //
          editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
          // debugConfiguration("5005", true),
          features(activeMQUrl, features), //

@@ -19,6 +19,7 @@ package org.apache.activemq.ra;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.URI;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.Session;
@@ -30,17 +31,21 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.JmsQueueTransactionTest;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
 
 public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
-
-    private static final String KAHADB_DIRECTORY = "target/activemq-data/";
-    private static final String DEFAULT_HOST = "vm://localhost?broker.dataDirectory=" + KAHADB_DIRECTORY;
 
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
     private XAResource xaResource;
     private static long txGenerator;
     private Xid xid;
+
+    @Override
+    protected BrokerService createBroker() throws Exception {
+        return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false&useJmx=false"));
+    }
 
     @Override
     protected void setSessionTransacted() {
@@ -51,7 +56,7 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
     @Override
     protected ConnectionFactory newConnectionFactory() throws Exception {
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
-        managedConnectionFactory.setServerUrl(DEFAULT_HOST);
+        managedConnectionFactory.setServerUrl("vm://localhost?create=false&waitForStart=5000");
         managedConnectionFactory.setUserName(org.apache.activemq.ActiveMQConnectionFactory.DEFAULT_USER);
         managedConnectionFactory.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
 

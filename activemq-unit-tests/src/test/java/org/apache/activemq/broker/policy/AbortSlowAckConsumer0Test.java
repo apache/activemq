@@ -19,6 +19,8 @@ package org.apache.activemq.broker.policy;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.ConnectionFactory;
@@ -42,8 +44,14 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
     protected long maxTimeSinceLastAck = 5 * 1000;
     protected AbortSlowAckConsumerStrategy strategy;
 
+    @Parameterized.Parameters(name = "isTopic({0})")
+    public static Collection<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{{Boolean.TRUE}, {Boolean.FALSE}});
+    }
+
     public AbortSlowAckConsumer0Test(Boolean isTopic) {
-        super(isTopic);
+        super();
+        this.topic = isTopic;
     }
 
     @Override

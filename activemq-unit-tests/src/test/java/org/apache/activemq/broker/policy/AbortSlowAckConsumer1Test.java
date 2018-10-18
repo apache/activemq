@@ -26,10 +26,22 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 @RunWith(value = Parameterized.class)
 public class AbortSlowAckConsumer1Test extends AbortSlowConsumer1Test {
 
     protected long maxTimeSinceLastAck = 5 * 1000;
+
+    @Parameterized.Parameters(name = "abortConnection({0})-isTopic({1})")
+    public static Collection<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{
+                {Boolean.TRUE, Boolean.TRUE},
+                {Boolean.FALSE, Boolean.TRUE},
+                {Boolean.TRUE, Boolean.FALSE},
+                {Boolean.FALSE, Boolean.FALSE}});
+    }
 
     public AbortSlowAckConsumer1Test(Boolean abortConnection, Boolean topic) {
         super(abortConnection, topic);
