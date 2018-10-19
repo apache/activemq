@@ -116,7 +116,7 @@ public class AMQ3120Test {
         final int messageCount = 500;
         startBroker(true);
         int fileCount = getFileCount(kahaDbDir);
-        assertEquals(4, fileCount);
+        assertEquals(5, fileCount);
 
         Connection connection = new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getConnectUri()).createConnection();

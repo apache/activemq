@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -37,6 +38,10 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -78,6 +83,7 @@ public class PageFile {
     private static final int RECOVERY_FILE_HEADER_SIZE = 1024 * 4;
     private static final int PAGE_FILE_HEADER_SIZE = 1024 * 4;
 
+
     // Recovery header is (long offset)
     private static final Logger LOG = LoggerFactory.getLogger(PageFile.class);
 
@@ -92,6 +98,10 @@ public class PageFile {
     private RecoverableRandomAccessFile writeFile;
     // File handle used for writing pages..
     private RecoverableRandomAccessFile recoveryFile;
+
+    private RecoverableRandomAccessFile freePagesFile;
+
+    private ExecutorService freePagesFlushExecutorService;
 
     // The size of pages
     private int pageSize = DEFAULT_PAGE_SIZE;
@@ -404,11 +414,18 @@ public class PageFile {
                 recoveryFile = new RecoverableRandomAccessFile(getRecoveryFile(), "rw");
             }
 
+            freePagesFile = new RecoverableRandomAccessFile(getFreeFile(), "rw");
+
+            if(freePagesFlushExecutorService == null) {
+                freePagesFlushExecutorService = Executors.newSingleThreadExecutor();
+            }
+
+            if(freePagesFile.length() > 0) {
+                loadFreeList();
+            }
+
             if (metaData.isCleanShutdown()) {
                 nextTxid.set(metaData.getLastTxId() + 1);
-                if (metaData.getFreePages() > 0) {
-                    loadFreeList();
-                }
             } else {
                 LOG.debug(toString() + ", Recovering page file...");
                 nextTxid.set(redoRecoveryUpdates());
@@ -422,9 +439,10 @@ public class PageFile {
 
             metaData.setCleanShutdown(false);
             storeMetaData();
-            getFreeFile().delete();
+
             startWriter();
-            if (needsFreePageRecovery) {
+            if (needsFreePageRecovery && freeList.getMetadata().getNextTxid() != nextTxid.get()) {
+                freeList.clear();
                 asyncFreePageRecovery();
             }
         } else {
@@ -501,6 +519,9 @@ public class PageFile {
             flush();
             try {
                 stopWriter();
+                freePagesFlushExecutorService.shutdown();
+                freePagesFlushExecutorService.awaitTermination(1, TimeUnit.SECONDS);
+                freePagesFlushExecutorService = null;
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
             }
@@ -526,6 +547,11 @@ public class PageFile {
                 readFile = null;
                 writeFile.close();
                 writeFile = null;
+
+                if (freePagesFile != null) {
+                    freePagesFile.close();
+                }
+
                 if (enableRecoveryFile) {
                     recoveryFile.close();
                     recoveryFile = null;
@@ -695,19 +721,43 @@ public class PageFile {
         writeFile.sync();
     }
 
+    private void storeFreeListAsync() throws IOException {
+        freeList.getMetadata().setNextTxid(nextTxid.get());
+        ByteArrayOutputStream bOutput = new ByteArrayOutputStream(12);
+        DataOutputStream out = new DataOutputStream(bOutput);
+        SequenceSet.Marshaller.INSTANCE.writePayload(freeList, out);
+
+        freePagesFlushExecutorService.execute(() -> {
+            try {
+                freePagesFile.seek(0);
+                freePagesFile.write(bOutput.toByteArray());
+                freePagesFile.sync();
+            } catch (IOException ex) {
+                //ignored 
+            }
+        });
+    }
+
     private void storeFreeList() throws IOException {
-        FileOutputStream os = new FileOutputStream(getFreeFile());
-        DataOutputStream dos = new DataOutputStream(os);
-        SequenceSet.Marshaller.INSTANCE.writePayload(freeList, dos);
-        dos.close();
+        freeList.getMetadata().setNextTxid(nextTxid.get());
+        freePagesFile.seek(0);
+        SequenceSet.Marshaller.INSTANCE.writePayload(freeList, freePagesFile);
+        freePagesFile.sync();
     }
 
     private void loadFreeList() throws IOException {
         freeList.clear();
-        FileInputStream is = new FileInputStream(getFreeFile());
-        DataInputStream dis = new DataInputStream(is);
-        freeList = SequenceSet.Marshaller.INSTANCE.readPayload(dis);
-        dis.close();
+        try {
+            FileInputStream is = new FileInputStream(getFreeFile());
+            DataInputStream dis = new DataInputStream(is);
+            freeList = SequenceSet.Marshaller.INSTANCE.readPayload(dis);
+            dis.close();
+        } catch (EOFException ex) {
+            //Corrupted db.free file
+            // As this file is being written on every checkpoint now, We can now have a partial write
+            // where the size of the sequenceSet (firstLong) is written but not the whole sequenceSet
+            getFreeFile().delete();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -831,6 +881,11 @@ public class PageFile {
     public long getFreePageCount() {
         assertLoaded();
         return freeList.rangeSize();
+    }
+
+    public SequenceSet getFreePageList() {
+        assertLoaded();
+        return freeList;
     }
 
     public void setRecoveryFileMinPageCount(int recoveryFileMinPageCount) {
@@ -1158,6 +1213,7 @@ public class PageFile {
                 if (enableDiskSyncs) {
                     recoveryFile.sync();
                 }
+                storeFreeListAsync();
             }
 
             for (PageWrite w : batch) {
@@ -1169,7 +1225,6 @@ public class PageFile {
             if (enableDiskSyncs) {
                 writeFile.sync();
             }
-
         } catch (IOException ioError) {
             LOG.info("Unexpected io error on pagefile write of " + batch.size() + " pages.", ioError);
             // any subsequent write needs to be prefaced with a considered call to redoRecoveryUpdates
