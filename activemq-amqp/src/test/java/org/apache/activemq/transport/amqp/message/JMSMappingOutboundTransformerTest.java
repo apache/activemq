@@ -803,7 +803,7 @@ public class JMSMappingOutboundTransformerTest {
         assertNotNull(amqp.getApplicationProperties());
         
         Map<String, Object> apMap = amqp.getApplicationProperties().getValue();
-        assertEquals(ConnectionInfo.class.getSimpleName(), apMap.get("messageType"));
+        assertEquals(ConnectionInfo.class.getSimpleName(), apMap.get("ActiveMqDataStructureType"));
         
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
@@ -840,7 +840,7 @@ public class JMSMappingOutboundTransformerTest {
         assertNotNull(amqp.getApplicationProperties());
         
         Map<String, Object> apMap = amqp.getApplicationProperties().getValue();
-        assertEquals(RemoveInfo.class.getSimpleName(), apMap.get("messageType"));
+        assertEquals(RemoveInfo.class.getSimpleName(), apMap.get("ActiveMqDataStructureType"));
         
         assertNotNull(amqp.getBody());
         assertTrue(amqp.getBody() instanceof AmqpValue);
