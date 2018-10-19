@@ -134,7 +134,7 @@ public class PageFile {
     // Keeps track of free pages.
     private final AtomicLong nextFreePageId = new AtomicLong();
     private SequenceSet freeList = new SequenceSet();
-
+    private SequenceSet recoveredFreeList = null;
     private final AtomicLong nextTxid = new AtomicLong();
 
     // Persistent settings stored in the page file.
@@ -423,9 +423,68 @@ public class PageFile {
             storeMetaData();
             getFreeFile().delete();
             startWriter();
+            if (needsFreePageRecovery) {
+                asyncFreePageRecovery();
+            }
         } else {
             throw new IllegalStateException("Cannot load the page file when it is already loaded.");
         }
+    }
+
+    private void asyncFreePageRecovery() {
+        Thread thread = new Thread("KahaDB Index Free Page Recovery") {
+            @Override
+            public void run() {
+                try {
+                    recoverFreePages();
+                } catch (Throwable e) {
+                    if (loaded.get()) {
+                        LOG.warn("Error recovering index free page list", e);
+                    }
+                }
+            }
+        };
+        thread.setPriority(Thread.NORM_PRIORITY);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void recoverFreePages() throws Exception {
+        LOG.info(toString() + ". Recovering pageFile free list due to prior unclean shutdown..");
+        SequenceSet newFreePages = new SequenceSet();
+        // need new pageFile instance to get unshared readFile
+        PageFile recoveryPageFile = new PageFile(directory, name);
+        recoveryPageFile.loadForRecovery(nextFreePageId.get());
+        try {
+            for (Iterator<Page> i = new Transaction(recoveryPageFile).iterator(true); i.hasNext(); ) {
+                Page page = i.next();
+                if (page.getType() == Page.PAGE_FREE_TYPE) {
+                    newFreePages.add(page.getPageId());
+                }
+            }
+        } finally {
+            recoveryPageFile.readFile.close();
+        }
+
+        LOG.info(toString() + ". Recovered pageFile free list of size: " + newFreePages.rangeSize());
+        if (!newFreePages.isEmpty()) {
+
+            // allow flush (with index lock held) to merge
+            recoveredFreeList = newFreePages;
+        }
+        // all set for clean shutdown
+        needsFreePageRecovery = false;
+    }
+
+    private void loadForRecovery(long nextFreePageIdSnap) throws Exception {
+        loaded.set(true);
+        enablePageCaching = false;
+        File file = getMainPageFile();
+        readFile = new RecoverableRandomAccessFile(file, "r");
+        loadMetaData();
+        pageSize = metaData.getPageSize();
+        enableRecoveryFile = false;
+        nextFreePageId.set(nextFreePageIdSnap);
     }
 
 
@@ -445,22 +504,6 @@ public class PageFile {
                 throw new InterruptedIOException();
             }
 
-            if (needsFreePageRecovery) {
-                LOG.info(toString() + ". Recovering pageFile free list due to prior unclean shutdown..");
-                freeList = new SequenceSet();
-                loaded.set(true);
-                try {
-                    for (Iterator<Page> i = new Transaction(this).iterator(true); i.hasNext(); ) {
-                        Page page = i.next();
-                        if (page.getType() == Page.PAGE_FREE_TYPE) {
-                            freeList.add(page.getPageId());
-                        }
-                    }
-                } finally {
-                    loaded.set(false);
-                }
-            }
-
             if (freeList.isEmpty()) {
                 metaData.setFreePages(0);
             } else {
@@ -469,7 +512,12 @@ public class PageFile {
             }
 
             metaData.setLastTxId(nextTxid.get() - 1);
-            metaData.setCleanShutdown(true);
+            if (needsFreePageRecovery) {
+                // async recovery incomplete, will have to try again
+                metaData.setCleanShutdown(false);
+            } else {
+                metaData.setCleanShutdown(true);
+            }
             storeMetaData();
 
             if (readFile != null) {
@@ -511,6 +559,16 @@ public class PageFile {
 
         if (enabledWriteThread && stopWriter.get()) {
             throw new IOException("Page file already stopped: checkpointing is not allowed");
+        }
+
+        SequenceSet toMerge = recoveredFreeList;
+        if (toMerge != null) {
+            recoveredFreeList = null;
+            Sequence seq = toMerge.getHead();
+            while (seq != null) {
+                freeList.add(seq);
+                seq = seq.getNext();
+            }
         }
 
         // Setup a latch that gets notified when all buffered writes hits the disk.
