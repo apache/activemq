@@ -27,9 +27,14 @@ import java.util.HashSet;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 
 import junit.framework.TestCase;
+import org.apache.activemq.util.Wait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("rawtypes")
 public class PageFileTest extends TestCase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PageFileTest.class);
 
     public void testCRUD() throws IOException {
 
@@ -216,15 +221,23 @@ public class PageFileTest extends TestCase {
 
         //Load a second instance on the same directory fo the page file which
         //simulates an unclean shutdown from the previous run
-        PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
         pf2.setEnableRecoveryFile(false);
         pf2.load();
-        pf2.unload();
-        pf2.load();
-        long freePages = pf2.getFreePageCount();
-        pf.unload();
+        try {
+            assertTrue("We have 10 free pages", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
 
-        //Make sure that all 10 pages are still tracked
-        assertEquals(10, freePages);
+                    pf2.flush();
+                    long freePages = pf2.getFreePageCount();
+                    LOG.info("free page count: " + freePages);
+                    return  freePages == 10l;
+                }
+            }, 12000000));
+        } finally {
+            pf.unload();
+            pf2.unload();
+        }
     }
 }

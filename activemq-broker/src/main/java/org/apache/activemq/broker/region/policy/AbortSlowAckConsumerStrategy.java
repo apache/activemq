@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -74,12 +71,22 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
             return;
         }
 
-        if (getMaxSlowDuration() > 0) {
-            // For subscriptions that are already slow we mark them again and check below if
-            // they've exceeded their configured lifetime.
-            for (SlowConsumerEntry entry : slowConsumers.values()) {
-                entry.mark();
+
+        List<Subscription> subscribersDestroyed  = new LinkedList<Subscription>();
+        // check for removed consumers also
+        for (Map.Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
+            if (getMaxSlowDuration() > 0) {
+                // For subscriptions that are already slow we mark them again and check below if
+                // they've exceeded their configured lifetime.
+                entry.getValue().mark();
             }
+            if (!entry.getKey().isSlowConsumer()) {
+                subscribersDestroyed.add(entry.getKey());
+            }
+        }
+
+        for (Subscription subscription: subscribersDestroyed) {
+            slowConsumers.remove(subscription);
         }
 
         List<Destination> disposed = new ArrayList<Destination>();
@@ -134,7 +141,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
                         if (!abstractSubscription.isSlowConsumer()) {
                             abstractSubscription.setSlowConsumer(true);
                             for (Destination destination: abstractSubscription.getDestinations()) {
-                               // destination.slowConsumer(broker.getAdminConnectionContext(), abstractSubscription);
+                               destination.slowConsumer(broker.getAdminConnectionContext(), abstractSubscription);
                             }
                         }
                     }
