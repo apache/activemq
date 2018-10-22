@@ -39,6 +39,7 @@ import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
@@ -134,7 +135,7 @@ public class PageFile {
     // Keeps track of free pages.
     private final AtomicLong nextFreePageId = new AtomicLong();
     private SequenceSet freeList = new SequenceSet();
-    private SequenceSet recoveredFreeList = null;
+    private AtomicReference<SequenceSet> recoveredFreeList = new AtomicReference<SequenceSet>();
     private final AtomicLong nextTxid = new AtomicLong();
 
     // Persistent settings stored in the page file.
@@ -469,8 +470,8 @@ public class PageFile {
         LOG.info(toString() + ". Recovered pageFile free list of size: " + newFreePages.rangeSize());
         if (!newFreePages.isEmpty()) {
 
-            // allow flush (with index lock held) to merge
-            recoveredFreeList = newFreePages;
+            // allow flush (with index lock held) to merge eventually
+            recoveredFreeList.lazySet(newFreePages);
         }
         // all set for clean shutdown
         needsFreePageRecovery = false;
@@ -561,9 +562,9 @@ public class PageFile {
             throw new IOException("Page file already stopped: checkpointing is not allowed");
         }
 
-        SequenceSet toMerge = recoveredFreeList;
+        SequenceSet toMerge = recoveredFreeList.get();
         if (toMerge != null) {
-            recoveredFreeList = null;
+            recoveredFreeList.lazySet(null);
             Sequence seq = toMerge.getHead();
             while (seq != null) {
                 freeList.add(seq);
