@@ -32,6 +32,7 @@ import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.util.RedeliveryPlugin;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,6 +161,14 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         assertNotNull("got message", message);
         message.acknowledge();
 
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                // wait for ack to be processes
+                LOG.info("Total message count: " + broker.getAdminView().getTotalMessageCount());
+                return broker.getAdminView().getTotalMessageCount() == 0;
+            }
+        });
         // send it again
         // should go to dlq as a duplicate from the store
         producerConnection.getTransport().request(message);
