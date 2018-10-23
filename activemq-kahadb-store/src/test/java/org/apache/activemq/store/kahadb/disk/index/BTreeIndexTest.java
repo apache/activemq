@@ -57,11 +57,12 @@ public class BTreeIndexTest extends IndexTestSupport {
     protected Index<String, Long> createIndex() throws Exception {
 
         long id = tx.allocate().getPageId();
-        tx.commit();
 
         BTreeIndex<String, Long> index = new BTreeIndex<String,Long>(pf, id);
         index.setKeyMarshaller(StringMarshaller.INSTANCE);
         index.setValueMarshaller(LongMarshaller.INSTANCE);
+        index.load(tx);
+        tx.commit();
 
         return index;
     }
@@ -231,8 +232,6 @@ public class BTreeIndexTest extends IndexTestSupport {
         this.index.load(tx);
 
         long id = tx.allocate().getPageId();
-        tx.commit();
-
         BTreeIndex<String, String> sindex = new BTreeIndex<String,String>(pf, id);
         sindex.setKeyMarshaller(StringMarshaller.INSTANCE);
         sindex.setValueMarshaller(StringMarshaller.INSTANCE);
@@ -273,7 +272,6 @@ public class BTreeIndexTest extends IndexTestSupport {
         this.index.load(tx);
 
         long id = tx.allocate().getPageId();
-        tx.commit();
 
         BTreeIndex<String, String> sindex = new BTreeIndex<String,String>(pf, id);
         sindex.setKeyMarshaller(StringMarshaller.INSTANCE);
@@ -364,7 +362,6 @@ public class BTreeIndexTest extends IndexTestSupport {
         pf.load();
         tx = pf.tx();
         long id = tx.allocate().getPageId();
-        tx.commit();
 
         BTreeIndex<Long, HashSet<String>> test = new BTreeIndex<Long, HashSet<String>>(pf, id);
         test.setKeyMarshaller(LongMarshaller.INSTANCE);

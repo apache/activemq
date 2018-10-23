@@ -25,13 +25,12 @@ public class HashIndexTest extends IndexTestSupport {
     protected Index<String, Long> createIndex() throws Exception {
         
         long id = tx.allocate().getPageId();
-        tx.commit();
-
         HashIndex<String, Long> index = new HashIndex<String,Long>(pf, id);
         index.setBinCapacity(12);
         index.setKeyMarshaller(StringMarshaller.INSTANCE);
         index.setValueMarshaller(LongMarshaller.INSTANCE);
-        
+        index.load(tx);
+        tx.commit();
         return index;
     }
 
