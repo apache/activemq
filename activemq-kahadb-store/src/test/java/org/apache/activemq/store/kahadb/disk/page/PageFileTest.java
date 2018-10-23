@@ -142,7 +142,6 @@ public class PageFileTest extends TestCase {
 
         Transaction tx = pf.tx();
         Page page = tx.allocate();
-        tx.commit();
 
         OutputStream pos = tx.openOutputStream(page, true);
         DataOutputStream os = new DataOutputStream(pos);
@@ -227,7 +226,7 @@ public class PageFileTest extends TestCase {
 
         //Load a second instance on the same directory fo the page file which
         //simulates an unclean shutdown from the previous run
-        PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
         pf2.setEnableRecoveryFile(false);
         pf2.load();
         try {
@@ -245,6 +244,28 @@ public class PageFileTest extends TestCase {
             pf.unload();
             pf2.unload();
         }
+    }
+
+    public void testAllocatedAndUnusedAreFree() throws Exception {
+
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.load();
+
+        Transaction tx = pf.tx();
+        tx.allocate(10);
+        tx.commit();
+
+        assertEquals(10, pf.getPageCount());
+        assertEquals(pf.getFreePageCount(), 10);
+
+        // free pages should get reused
+
+        tx.allocate(10);
+        tx.rollback();
+        assertEquals(10, pf.getPageCount());
+        assertEquals(pf.getFreePageCount(), 10);
+
     }
 
     public void testBackgroundRecoveryIsThreadSafe() throws Exception {

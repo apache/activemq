@@ -27,12 +27,13 @@ public class HashIndexBenchMark extends IndexBenchmark {
 
         Transaction tx = pf.tx();
         long id = tx.allocate().getPageId();
-        tx.commit();
 
         HashIndex<String, Long> index = new HashIndex<String, Long>(pf, id);
         index.setKeyMarshaller(StringMarshaller.INSTANCE);
         index.setValueMarshaller(LongMarshaller.INSTANCE);
-        
+        index.load(tx);
+        tx.commit();
+
         return index;
     }
 
