@@ -33,6 +33,31 @@ import java.util.NoSuchElementException;
  */
 public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Long> {
 
+    private final MetaData metadata;
+
+    public static class MetaData {
+        long nextTxid = -1;
+        long freePageHashCheckpoint = -1;
+
+        public long getFreePageHashCheckpoint() {
+            return freePageHashCheckpoint;
+        }
+
+        public long getNextTxid() {
+            return nextTxid;
+        }
+
+        public void setNextTxid(long value) {
+            nextTxid = value;
+        }
+    }
+    public SequenceSet() {
+        this.metadata = new MetaData();
+    }
+    public MetaData getMetadata() {
+        return metadata;
+    }
+
     public static class Marshaller implements org.apache.activemq.store.kahadb.disk.util.Marshaller<SequenceSet> {
 
         public static final Marshaller INSTANCE = new Marshaller();
@@ -40,14 +65,33 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
         public SequenceSet readPayload(DataInput in) throws IOException {
             SequenceSet value = new SequenceSet();
             int count = in.readInt();
+            long readCheckpointHash = 0;
+
             for (int i = 0; i < count; i++) {
                 if( in.readBoolean() ) {
                     Sequence sequence = new Sequence(in.readLong(), in.readLong());
                     value.addLast(sequence);
+                    readCheckpointHash = readCheckpointHash ^ sequence.first;
+                    readCheckpointHash = readCheckpointHash ^ sequence.last;
                 } else {
                     Sequence sequence = new Sequence(in.readLong());
                     value.addLast(sequence);
+                    readCheckpointHash = readCheckpointHash ^ sequence.first;
                 }
+            }
+
+            try {
+                long savedCheckpointHash = in.readLong();
+                //Check if i can was not a partial write - Check Hash
+                if (savedCheckpointHash == readCheckpointHash) {
+                    value.metadata.freePageHashCheckpoint = savedCheckpointHash;
+                    value.metadata.nextTxid = in.readLong();
+                } else {
+                    value.clear();
+                    value = new SequenceSet();
+                }
+            } catch (Exception ex) {
+                /* This is a new Matadata that was not present in previous versions */
             }
             return value;
         }
@@ -55,17 +99,24 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
         public void writePayload(SequenceSet value, DataOutput out) throws IOException {
             out.writeInt(value.size());
             Sequence sequence = value.getHead();
+            value.metadata.freePageHashCheckpoint = 0;
+
             while (sequence != null ) {
                 if( sequence.range() > 1 ) {
                     out.writeBoolean(true);
                     out.writeLong(sequence.first);
                     out.writeLong(sequence.last);
+                    value.metadata.freePageHashCheckpoint = value.metadata.freePageHashCheckpoint ^ sequence.first;
+                    value.metadata.freePageHashCheckpoint = value.metadata.freePageHashCheckpoint ^ sequence.last;
                 } else {
                     out.writeBoolean(false);
                     out.writeLong(sequence.first);
+                    value.metadata.freePageHashCheckpoint = value.metadata.freePageHashCheckpoint ^ sequence.first;
                 }
                 sequence = sequence.getNext();
             }
+            out.writeLong(value.metadata.freePageHashCheckpoint);
+            out.writeLong(value.metadata.nextTxid);
         }
 
         public int getFixedSize() {

@@ -16,20 +16,28 @@
  */
 package org.apache.activemq.store.kahadb.disk.page;
 
+import junit.framework.TestCase;
+import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
+import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.apache.activemq.util.Wait;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashSet;
-
-import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
-
-import junit.framework.TestCase;
-import org.apache.activemq.util.Wait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("rawtypes")
 public class PageFileTest extends TestCase {
@@ -227,13 +235,12 @@ public class PageFileTest extends TestCase {
             assertTrue("We have 10 free pages", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
-
                     pf2.flush();
                     long freePages = pf2.getFreePageCount();
                     LOG.info("free page count: " + freePages);
                     return  freePages == 10l;
                 }
-            }, 12000000));
+            }, 100000));
         } finally {
             pf.unload();
             pf2.unload();
@@ -259,6 +266,240 @@ public class PageFileTest extends TestCase {
         tx.rollback();
         assertEquals(10, pf.getPageCount());
         assertEquals(pf.getFreePageCount(), 10);
+    }
 
+    //Test for AMQ-7080
+    public void testFreePageRecoveryCleanShutdownAndRecoverFromDbFreeFile() throws Exception {
+
+        int numberOfFreePages = 100;
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(true);
+        pf.load();
+
+        //Allocate free pages
+        Page firstPage = pf.allocate(numberOfFreePages * 2);
+        for (int i = 0; i < numberOfFreePages; i++) {
+            pf.freePage(firstPage.pageId + i);
+        }
+        pf.flush();
+
+        assertEquals(pf.getFreePageCount(), numberOfFreePages);
+
+        // Reload it... clean shutdown
+        pf.unload();
+        pf.load();
+
+        assertEquals(pf.getFreePageCount(), numberOfFreePages);
+        pf.unload();
+    }
+
+    //Test for AMQ-7080
+    public void testFreePageRecoveryUncleanShutdownAndRecoverFromDbFreeFile() throws Exception {
+        AtomicBoolean asyncRecovery = verifyAsyncRecovery();
+        int numberOfFreePages = 100;
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(true);
+        pf.load();
+
+        //Allocate free pages
+        Transaction tx = pf.tx();
+        tx.allocate(numberOfFreePages);
+        tx.commit();
+
+        pf.flush();
+
+        assertEquals(pf.getFreePageCount(), numberOfFreePages);
+
+        waitFreePageFileFlush(pf);
+
+        //Load a second instance on the same directory fo the page file which
+        //simulates an unclean shutdown from the previous run
+        final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.load();
+
+        assertEquals(pf.getFreePageCount(), pf2.getFreePageCount());
+
+        pf2.unload();
+        pf.unload();
+        assertFalse(asyncRecovery.get());
+    }
+
+    //Test for AMQ-7080
+    public void testFreePageRecoveryUncleanShutdownAndDirtyDbFree() throws Exception {
+        AtomicBoolean asyncRecovery = verifyAsyncRecovery();
+        int numberOfFreePages = 100;
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(true);
+        pf.load();
+
+        //Allocate free pages
+        Transaction tx = pf.tx();
+        tx.allocate(numberOfFreePages);
+        tx.commit();
+        pf.flush();
+
+        FileInputStream is = new FileInputStream(pf.getFreeFile());
+        DataInputStream dis = new DataInputStream(is);
+
+        SequenceSet freeList = SequenceSet.Marshaller.INSTANCE.readPayload(dis);
+
+        // Simulate outdated db.free
+        freeList.getMetadata().setNextTxid(freeList.getMetadata().getNextTxid() - 1);
+        freeList.remove(100);
+        FileOutputStream os = new FileOutputStream(pf.getFreeFile());
+        DataOutputStream dos = new DataOutputStream(os);
+        SequenceSet.Marshaller.INSTANCE.writePayload(freeList, dos);
+
+        //Load a second instance on the same directory fo the page file which
+        //simulates an unclean shutdown from the previous run
+        final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.load();
+
+        try {
+            assertTrue("We have 100 free pages", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+
+                    pf2.flush();
+                    long freePages = pf2.getFreePageCount();
+                    LOG.info("free page count: " + freePages);
+                    return  freePages == numberOfFreePages;
+                }
+            }, 100000));
+        } finally {
+            pf.unload();
+            pf2.unload();
+        }
+
+        assertTrue(asyncRecovery.get());
+    }
+
+    //Test for AMQ-7080
+    public void testFreePageRecoveryUncleanShutdownAndPartialWriteDbFree() throws Exception {
+        AtomicBoolean asyncRecovery = verifyAsyncRecovery();
+        int numberOfFreePages = 100;
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(true);
+        pf.load();
+
+        //Allocate free pages
+        Transaction tx = pf.tx();
+        tx.allocate(numberOfFreePages);
+        tx.commit();
+        pf.flush();
+
+        waitFreePageFileFlush(pf);
+        // Simulate a partial write
+        RecoverableRandomAccessFile freeFile = new RecoverableRandomAccessFile(pf.getFreeFile(), "rw");
+        freeFile.seek(10);
+        freeFile.writeLong(170);
+        freeFile.sync();
+
+        //Load a second instance on the same directory fo the page file which
+        //simulates an unclean shutdown from the previous run
+        final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.load();
+
+        try {
+            assertTrue("We have 200 free pages", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+
+                    pf2.flush();
+                    long freePages = pf2.getFreePageCount();
+                    LOG.info("free page count: " + freePages);
+                    return  freePages == numberOfFreePages;
+                }
+            }, 100000));
+        } finally {
+            pf.unload();
+            pf2.unload();
+        }
+        assertTrue(asyncRecovery.get());
+    }
+
+    //Test for AMQ-7080
+    public void testFreePageRecoveryUncleanShutdownAndWrongFreePageSize() throws Exception {
+        AtomicBoolean asyncRecovery = verifyAsyncRecovery();
+        int numberOfFreePages = 100;
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(true);
+        pf.load();
+
+        //Allocate free pages
+        Transaction tx = pf.tx();
+        tx.allocate(numberOfFreePages);
+        tx.commit();
+        pf.flush();
+
+        waitFreePageFileFlush(pf);
+        // Simulate a partial write with free count bigger than what is written
+        RecoverableRandomAccessFile freeFile = new RecoverableRandomAccessFile(pf.getFreeFile(), "rw");
+        freeFile.seek(0);
+        freeFile.writeInt(1000000);
+        freeFile.sync();
+
+        //Load a second instance on the same directory fo the page file which
+        //simulates an unclean shutdown from the previous run
+        final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.load();
+
+        try {
+            assertTrue("We have 200 free pages", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+
+                    pf2.flush();
+                    long freePages = pf2.getFreePageCount();
+                    LOG.info("free page count: " + freePages);
+                    return  freePages == numberOfFreePages;
+                }
+            }, 100000));
+        } finally {
+            pf.unload();
+            pf2.unload();
+        }
+        assertTrue(asyncRecovery.get());
+    }
+
+    private void waitFreePageFileFlush(final PageFile pf) throws Exception {
+        assertTrue("Free Page file saved", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                try {
+                    FileInputStream is = new FileInputStream(pf.getFreeFile());
+                    DataInputStream dis = new DataInputStream(is);
+                    SequenceSet freeList = SequenceSet.Marshaller.INSTANCE.readPayload(dis);
+                    return freeList.getMetadata().getNextTxid() == pf.getFreePageList().getMetadata().getNextTxid();
+                } catch (Exception ex) {
+                    // This file is written async
+                    return false;
+                }
+            }
+        }, 10000));
+    }
+
+    private AtomicBoolean verifyAsyncRecovery() {
+        AtomicBoolean asyncRecovery = new AtomicBoolean(false);
+
+        Appender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Recovering pageFile free list")) {
+                    asyncRecovery.set(true);
+                }
+            }
+        };
+
+        org.apache.log4j.Logger log4jLogger =
+                org.apache.log4j.Logger.getLogger(PageFile.class);
+        log4jLogger.addAppender(appender);
+        log4jLogger.setLevel(Level.DEBUG);
+        return asyncRecovery;
     }
 }
