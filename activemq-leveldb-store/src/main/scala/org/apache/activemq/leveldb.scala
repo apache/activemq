@@ -91,7 +91,7 @@ package object leveldb  {
 
     def uncompress(compressed: ByteBuffer, uncompressed: ByteBuffer): Int = {
       val input = if (compressed.hasArray) {
-        new Buffer(compressed.array, compressed.arrayOffset + compressed.position, compressed.remaining)
+        new Buffer(compressed.array, compressed.arrayOffset + compressed.position(), compressed.remaining)
       } else {
         val t = new Buffer(compressed.remaining)
         compressed.mark
@@ -101,7 +101,7 @@ package object leveldb  {
       }
 
       val output = if (uncompressed.hasArray) {
-        new Buffer(uncompressed.array, uncompressed.arrayOffset + uncompressed.position, uncompressed.capacity()-uncompressed.position)
+        new Buffer(uncompressed.array, uncompressed.arrayOffset + uncompressed.position(), uncompressed.capacity()-uncompressed.position())
       } else {
         new Buffer(uncompressed_length(input))
       }
@@ -109,9 +109,9 @@ package object leveldb  {
       output.length = uncompress(input, output)
 
       if (uncompressed.hasArray) {
-        uncompressed.limit(uncompressed.position + output.length)
+        uncompressed.limit(uncompressed.position() + output.length)
       } else {
-        val p = uncompressed.position
+        val p = uncompressed.position()
         uncompressed.limit(uncompressed.capacity)
         uncompressed.put(output.data, output.offset, output.length)
         uncompressed.flip.position(p)

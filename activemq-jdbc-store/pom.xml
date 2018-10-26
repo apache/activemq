@@ -49,6 +49,11 @@
       <artifactId>activeio-core</artifactId>
       <optional>true</optional>
     </dependency>
+      
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+    </dependency>
 
     <!-- =============================== -->
     <!-- Testing Dependencies -->

@@ -114,8 +114,8 @@
     <rome-version>1.12.2</rome-version>
     <saxon-version>9.5.1-5</saxon-version>
     <saxon-bundle-version>9.5.1-5_1</saxon-bundle-version>
-    <scala-plugin-version>3.1.0</scala-plugin-version>
-    <scala-version>2.11.11</scala-version>
+    <scala-plugin-version>3.4.2</scala-plugin-version>
+    <scala-version>2.11.12</scala-version>
     <shiro-version>1.5.1</shiro-version>
     <scalatest-version>3.0.8</scalatest-version>
     <slf4j-version>1.7.25</slf4j-version>
@@ -147,15 +147,15 @@
     <!-- Maven Plugin Version for this Project -->
     <maven-bundle-plugin-version>2.3.7</maven-bundle-plugin-version>
     <maven-surefire-plugin-version>2.22.1</maven-surefire-plugin-version>
-    <maven-antrun-plugin-version>1.3</maven-antrun-plugin-version>
-    <maven-assembly-plugin-version>2.4</maven-assembly-plugin-version>
+    <maven-antrun-plugin-version>1.8</maven-antrun-plugin-version>
+    <maven-assembly-plugin-version>2.6</maven-assembly-plugin-version>
     <maven-release-plugin-version>2.4.1</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
-    <maven-war-plugin-version>2.4</maven-war-plugin-version>
+    <maven-war-plugin-version>3.2.2</maven-war-plugin-version>
     <maven-compiler-plugin-version>3.8.1</maven-compiler-plugin-version>
-    <maven-jar-plugin-version>2.4</maven-jar-plugin-version>
+    <maven-jar-plugin-version>3.1.0</maven-jar-plugin-version>
     <maven-archiver-version>2.5</maven-archiver-version>
-    <maven-source-plugin-version>2.2.1</maven-source-plugin-version>
+    <maven-source-plugin-version>2.4</maven-source-plugin-version>
     <maven-javadoc-plugin-version>2.9.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.4</maven-install-plugin-version>
     <maven-shade-plugin-version>2.1</maven-shade-plugin-version>
@@ -171,6 +171,7 @@
     <maven-project-info-reports-plugin-version>2.7</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.30</maven-graph-plugin-version>
     <maven-plugin-plugin-version>3.6.0</maven-plugin-plugin-version>
+    <maven-plugin-api-version>3.6.0</maven-plugin-api-version>
     <maven-core-version>3.6.1</maven-core-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
@@ -1149,6 +1150,26 @@
         <groupId>org.apache.servicemix.bundles</groupId>
         <artifactId>org.apache.servicemix.bundles.josql</artifactId>
         <version>${josql-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.xml.bind</groupId>
+        <artifactId>jaxb-api</artifactId>
+        <version>2.2.12</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-impl</artifactId>
+        <version>2.2.11</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.annotation</groupId>
+        <artifactId>javax.annotation-api</artifactId>
+        <version>1.3.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-plugin-api</artifactId>
+        <version>${maven-plugin-api-version}</version>
       </dependency>
 
     </dependencies>

@@ -16,19 +16,24 @@
  */
 package org.apache.activemq.filter;
 
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTempQueue;
+import org.apache.activemq.command.ActiveMQTempTopic;
+import org.apache.activemq.command.ActiveMQTopic;
 
 /**
  * A base class for entry objects used to construct a destination based policy
  * map.
- * 
- * 
+ *
+ *
  * @org.apache.xbean.XBean
  */
 public abstract class DestinationMapEntry<T> implements Comparable<T> {
 
     protected ActiveMQDestination destination;
 
+    @Override
     public int compareTo(Object that) {
         if (that instanceof DestinationMapEntry) {
             DestinationMapEntry<?> thatEntry = (DestinationMapEntry<?>)that;
@@ -57,7 +62,7 @@ public abstract class DestinationMapEntry<T> implements Comparable<T> {
     public void setTempTopic(boolean flag){
         setDestination(new ActiveMQTempTopic(">"));
     }
-    
+
     public void setTempQueue(boolean flag){
         setDestination(new ActiveMQTempQueue(">"));
     }

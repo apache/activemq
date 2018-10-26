@@ -68,6 +68,10 @@
       <artifactId>spring-context</artifactId>
     </dependency>
     <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.jvnet.jaxb2_commons</groupId>
       <artifactId>jaxb2-basics-runtime</artifactId>
       <version>${jaxb-basics-version}</version>
@@ -102,7 +106,7 @@
       <plugin>
         <groupId>org.apache.cxf</groupId>
         <artifactId>cxf-xjc-plugin</artifactId>
-        <version>3.0.1</version>
+        <version>3.2.3</version>
         <executions>
           <execution>
             <id>compile-xsd</id>

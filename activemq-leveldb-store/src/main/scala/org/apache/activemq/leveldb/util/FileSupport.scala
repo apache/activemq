@@ -23,6 +23,7 @@ import org.apache.activemq.leveldb.LevelDBClient
 import org.fusesource.leveldbjni.internal.Util
 import org.apache.activemq.leveldb.util.ProcessSupport._
 import java.util.zip.CRC32
+import java.util.function.Consumer
 
 object FileSupport {
 
@@ -306,8 +307,10 @@ object ProcessSupport {
   def launch(p:ProcessBuilder, in:InputStream=null)(func: (Int, Array[Byte], Array[Byte]) => Unit):Unit = {
     val out = new ByteArrayOutputStream
     val err = new ByteArrayOutputStream
-    p.start(out, err, in).onExit { code=>
-      func(code, out.toByteArray, err.toByteArray)
+    val process = p.start(out, err, in)
+    LevelDBClient.THREAD_POOL {
+       process.waitFor
+   	   (process.exitValue, out.toByteArray, err.toByteArray)
     }
   }
 
@@ -319,5 +322,4 @@ object ProcessSupport {
     process.waitFor
     (process.exitValue, out.toByteArray, err.toByteArray)
   }
-
 }
