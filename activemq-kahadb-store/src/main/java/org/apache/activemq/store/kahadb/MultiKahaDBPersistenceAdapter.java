@@ -173,9 +173,9 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     @Override
-    public void checkpoint(final boolean sync) throws IOException {
+    public void checkpoint(final boolean cleanup) throws IOException {
         for (PersistenceAdapter persistenceAdapter : adapters) {
-            persistenceAdapter.checkpoint(sync);
+            persistenceAdapter.checkpoint(cleanup);
         }
     }
 

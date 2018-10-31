@@ -55,6 +55,7 @@ public abstract class AbstractKahaDBStore extends LockableServiceSupport {
     protected boolean failIfDatabaseIsLocked;
     protected long checkpointInterval = 5*1000;
     protected long cleanupInterval = 30*1000;
+    private boolean cleanupOnStop = true;
     protected boolean checkForCorruptJournalFiles = false;
     protected boolean checksumJournalFiles = true;
     protected boolean forceRecoverIndex = false;
@@ -200,6 +201,14 @@ public abstract class AbstractKahaDBStore extends LockableServiceSupport {
 
     public void setCleanupInterval(long cleanupInterval) {
         this.cleanupInterval = cleanupInterval;
+    }
+
+    public void setCleanupOnStop(boolean cleanupOnStop) {
+        this.cleanupOnStop = cleanupOnStop;
+    }
+
+    public boolean getCleanupOnStop() {
+        return this.cleanupOnStop;
     }
 
     public boolean isChecksumJournalFiles() {
@@ -666,7 +675,7 @@ public abstract class AbstractKahaDBStore extends LockableServiceSupport {
      */
     protected void startCheckpoint() {
         if (checkpointInterval == 0 && cleanupInterval == 0) {
-            LOG.info("periodic checkpoint/cleanup disabled, will ocurr on clean shutdown/restart");
+            LOG.info("periodic checkpoint/cleanup disabled, will occur on clean " + (getCleanupOnStop() ? "shutdown/" : "") + "restart");
             return;
         }
         synchronized (checkpointThreadLock) {
