@@ -18,6 +18,7 @@ package org.apache.activemq.ra;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.jms.JMSException;
@@ -288,7 +289,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                             try {
                                 setConnection(newConnection());
                                 super.commit(xid, onePhase);
-                                LOG.trace("{}.commit({},{})", getConnection(), xid);
+                                LOG.trace("{}.commit({},{})", getConnection(), xid, onePhase);
 
                             } catch (JMSException e) {
                                 LOG.trace("{}.commit({},{}) failed", getConnection(), xid, onePhase, e);
@@ -321,7 +322,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                             try {
                                 original = setConnection(newConnection());
                                 result = super.recover(flags);
-                                LOG.trace("{}.recover({})={}", getConnection(), flags, result);
+                                LOG.trace("{}.recover({})={}", getConnection(), flags, Arrays.asList(result));
 
                             } catch (JMSException e) {
                                 LOG.trace("{}.recover({}) failed", getConnection(), flags, e);
