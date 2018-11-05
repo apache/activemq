@@ -28,6 +28,7 @@ import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePoli
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
@@ -64,7 +65,6 @@ public class AMQ6463Test extends JmsTestSupport {
         TextMessage message = session.createTextMessage("test msg");
         final int numMessages = 20;
 
-        message.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, "* * * * *");
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, 0);
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 0);
         message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, numMessages - 1);
@@ -99,6 +99,8 @@ public class AMQ6463Test extends JmsTestSupport {
         service.setSchedulerSupport(true);
         service.setDeleteAllMessagesOnStartup(true);
 
+        IOHelper.deleteChildren(service.getSchedulerDirectoryFile());
+
         service.getSystemUsage().getMemoryUsage().setLimit(512);
 
         // Setup a destination policy where it takes only 1 message at a time.
@@ -118,7 +120,7 @@ public class AMQ6463Test extends JmsTestSupport {
 
     public void setUp() throws Exception {
         setAutoFail(true);
-        DefaultTestAppender appender = new DefaultTestAppender() {
+        appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
                 if (event.getLevel().equals(Level.ERROR)) {
