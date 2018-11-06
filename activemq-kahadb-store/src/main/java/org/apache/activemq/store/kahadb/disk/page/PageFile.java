@@ -135,7 +135,10 @@ public class PageFile {
     // Keeps track of free pages.
     private final AtomicLong nextFreePageId = new AtomicLong();
     private SequenceSet freeList = new SequenceSet();
+
     private AtomicReference<SequenceSet> recoveredFreeList = new AtomicReference<SequenceSet>();
+    private SequenceSet runtimeRecoveredFreeList = new SequenceSet();
+
     private final AtomicLong nextTxid = new AtomicLong();
 
     // Persistent settings stored in the page file.
@@ -147,6 +150,7 @@ public class PageFile {
     private float LFUEvictionFactor = 0.2f;
 
     private boolean needsFreePageRecovery = false;
+    private long lastPageToRecoverFreePage;
 
     /**
      * Use to keep track of updated pages which have not yet been committed.
@@ -433,6 +437,7 @@ public class PageFile {
     }
 
     private void asyncFreePageRecovery(final long lastRecoveryPage) {
+        lastPageToRecoverFreePage = lastRecoveryPage;
         Thread thread = new Thread("KahaDB Index Free Page Recovery") {
             @Override
             public void run() {
@@ -570,11 +575,10 @@ public class PageFile {
         SequenceSet toMerge = recoveredFreeList.get();
         if (toMerge != null) {
             recoveredFreeList.lazySet(null);
-            Sequence seq = toMerge.getHead();
-            while (seq != null) {
-                freeList.add(seq);
-                seq = seq.getNext();
-            }
+            freeList.merge(toMerge);
+            freeList.merge(runtimeRecoveredFreeList);
+            lastPageToRecoverFreePage = 0;
+            runtimeRecoveredFreeList.clear();
         }
 
         // Setup a latch that gets notified when all buffered writes hits the disk.
@@ -959,7 +963,11 @@ public class PageFile {
     }
 
     public void freePage(long pageId) {
-        freeList.add(pageId);
+        if (pageId >= lastPageToRecoverFreePage) {
+            freeList.add(pageId);
+        } else {
+            runtimeRecoveredFreeList.add(pageId);
+        }
         removeFromCache(pageId);
     }
 

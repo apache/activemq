@@ -94,6 +94,15 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
         }
     }
 
+    public void merge(SequenceSet sequenceSet) {
+        Sequence node = sequenceSet.getHead();
+
+        while (node != null) {
+            add(node);
+            node = node.getNext();
+        }
+    }
+
     /**
      *
      * @param value
