@@ -425,19 +425,19 @@ public class PageFile {
             getFreeFile().delete();
             startWriter();
             if (needsFreePageRecovery) {
-                asyncFreePageRecovery();
+                asyncFreePageRecovery(nextFreePageId.get());
             }
         } else {
             throw new IllegalStateException("Cannot load the page file when it is already loaded.");
         }
     }
 
-    private void asyncFreePageRecovery() {
+    private void asyncFreePageRecovery(final long lastRecoveryPage) {
         Thread thread = new Thread("KahaDB Index Free Page Recovery") {
             @Override
             public void run() {
                 try {
-                    recoverFreePages();
+                    recoverFreePages(lastRecoveryPage);
                 } catch (Throwable e) {
                     if (loaded.get()) {
                         LOG.warn("Error recovering index free page list", e);
@@ -450,7 +450,7 @@ public class PageFile {
         thread.start();
     }
 
-    private void recoverFreePages() throws Exception {
+    private void recoverFreePages(final long lastRecoveryPage) throws Exception {
         LOG.info(toString() + ". Recovering pageFile free list due to prior unclean shutdown..");
         SequenceSet newFreePages = new SequenceSet();
         // need new pageFile instance to get unshared readFile
@@ -459,6 +459,11 @@ public class PageFile {
         try {
             for (Iterator<Page> i = new Transaction(recoveryPageFile).iterator(true); i.hasNext(); ) {
                 Page page = i.next();
+
+                if (page.getPageId() >= lastRecoveryPage) {
+                    break;
+                }
+
                 if (page.getType() == Page.PAGE_FREE_TYPE) {
                     newFreePages.add(page.getPageId());
                 }
@@ -817,6 +822,9 @@ public class PageFile {
         return toOffset(nextFreePageId.get());
     }
 
+    public boolean isFreePage(long pageId) {
+        return freeList.contains(pageId);
+    }
     /**
      * @return the number of pages allocated in the PageFile
      */
