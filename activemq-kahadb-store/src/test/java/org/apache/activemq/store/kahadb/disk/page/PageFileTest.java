@@ -241,7 +241,6 @@ public class PageFileTest extends TestCase {
             pf2.unload();
         }
     }
-    }
 
     public void testBackgroundRecoveryIsThreadSafe() throws Exception {
 
@@ -334,4 +333,5 @@ public class PageFileTest extends TestCase {
                 return  freePages == 100100;
             }
         }, 12000000));
+    }
 }
