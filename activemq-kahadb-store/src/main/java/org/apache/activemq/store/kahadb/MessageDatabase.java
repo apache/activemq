@@ -2365,7 +2365,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         ListIndex<String, Location> subLocations;
 
         // Transient data used to track which Messages are no longer needed.
-        final TreeMap<Long, Long> messageReferences = new TreeMap<>();
         final HashSet<String> subscriptionCache = new LinkedHashSet<>();
 
         public void trackPendingAdd(Long seq) {
@@ -2635,30 +2634,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             // Configure the message references index
-            Iterator<Entry<String, SequenceSet>> subscriptions = rc.ackPositions.iterator(tx);
-            while (subscriptions.hasNext()) {
-                Entry<String, SequenceSet> subscription = subscriptions.next();
-                SequenceSet pendingAcks = subscription.getValue();
-                if (pendingAcks != null && !pendingAcks.isEmpty()) {
-                    Long lastPendingAck = pendingAcks.getTail().getLast();
-                    for (Long sequenceId : pendingAcks) {
-                        Long current = rc.messageReferences.get(sequenceId);
-                        if (current == null) {
-                            current = new Long(0);
-                        }
 
-                        // We always add a trailing empty entry for the next position to start from
-                        // so we need to ensure we don't count that as a message reference on reload.
-                        if (!sequenceId.equals(lastPendingAck)) {
-                            current = current.longValue() + 1;
-                        } else {
-                            current = Long.valueOf(0L);
-                        }
-
-                        rc.messageReferences.put(sequenceId, current);
-                    }
-                }
-            }
 
             // Configure the subscription cache
             for (Iterator<Entry<String, LastAck>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext(); ) {
@@ -2677,10 +2653,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             } else {
                 // update based on ackPositions for unmatched, last entry is always the next
-                if (!rc.messageReferences.isEmpty()) {
-                    Long nextMessageId = (Long) rc.messageReferences.keySet().toArray()[rc.messageReferences.size() - 1];
-                    rc.orderIndex.nextMessageId =
-                            Math.max(rc.orderIndex.nextMessageId, nextMessageId);
+                Iterator<Entry<String, SequenceSet>> subscriptions = rc.ackPositions.iterator(tx);
+                while (subscriptions.hasNext()) {
+                    Entry<String, SequenceSet> subscription = subscriptions.next();
+                    SequenceSet pendingAcks = subscription.getValue();
+                    if (pendingAcks != null && !pendingAcks.isEmpty()) {
+                        for (Long sequenceId : pendingAcks) {
+                            rc.orderIndex.nextMessageId = Math.max(rc.orderIndex.nextMessageId, sequenceId);
+                        }
+                    }
                 }
             }
         }
@@ -2884,13 +2865,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             sequences.add(messageSequence);
             sd.ackPositions.put(tx, subscriptionKey, sequences);
         }
-
-        Long count = sd.messageReferences.get(messageSequence);
-        if (count == null) {
-            count = Long.valueOf(0L);
-        }
-        count = count.longValue() + 1;
-        sd.messageReferences.put(messageSequence, count);
     }
 
     // new sub is interested in potentially all existing messages
@@ -2904,18 +2878,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
         }
         sd.ackPositions.put(tx, subscriptionKey, allOutstanding);
-
-        for (Long ackPosition : allOutstanding) {
-            Long count = sd.messageReferences.get(ackPosition);
-
-            // There might not be a reference if the ackLocation was the last
-            // one which is a placeholder for the next incoming message and
-            // no value was added to the message references table.
-            if (count != null) {
-                count = count.longValue() + 1;
-                sd.messageReferences.put(ackPosition, count);
-            }
-        }
     }
 
     // on a new message add, all existing subs are interested in this message
@@ -2933,16 +2895,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             MessageKeys key = sd.orderIndex.get(tx, messageSequence);
-            incrementAndAddSizeToStoreStat(kahaDest, subscriptionKey,
-                    key.location.getSize());
-
-            Long count = sd.messageReferences.get(messageSequence);
-            if (count == null) {
-                count = Long.valueOf(0L);
-            }
-            count = count.longValue() + 1;
-            sd.messageReferences.put(messageSequence, count);
-            sd.messageReferences.put(messageSequence + 1, Long.valueOf(0L));
+            incrementAndAddSizeToStoreStat(kahaDest, subscriptionKey, key.location.getSize());
         }
     }
 
@@ -2957,16 +2910,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             ArrayList<Long> unreferenced = new ArrayList<>();
 
             for(Long sequenceId : sequences) {
-                Long references = sd.messageReferences.get(sequenceId);
-                if (references != null) {
-                    references = references.longValue() - 1;
-
-                    if (references.longValue() > 0) {
-                        sd.messageReferences.put(sequenceId, references);
-                    } else {
-                        sd.messageReferences.remove(sequenceId);
-                        unreferenced.add(sequenceId);
-                    }
+                if(!isSequenceReferenced(tx, sd, sequenceId)) {
+                    unreferenced.add(sequenceId);
                 }
             }
 
@@ -2984,6 +2929,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             }
         }
+    }
+
+    private boolean isSequenceReferenced(final Transaction tx, final StoredDestination sd, final Long sequenceId) throws IOException {
+        for(String subscriptionKey : sd.subscriptionCache) {
+            SequenceSet sequence = sd.ackPositions.get(tx, subscriptionKey);
+            if (sequence != null && sequence.contains(sequenceId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -3012,17 +2967,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         key.location.getSize());
 
                 // Check if the message is reference by any other subscription.
-                Long count = sd.messageReferences.get(messageSequence);
-                if (count != null) {
-                    long references = count.longValue() - 1;
-                    if (references > 0) {
-                        sd.messageReferences.put(messageSequence, Long.valueOf(references));
-                        return;
-                    } else {
-                        sd.messageReferences.remove(messageSequence);
-                    }
+                if (isSequenceReferenced(tx, sd, messageSequence)) {
+                    return;
                 }
-
                 // Find all the entries that need to get deleted.
                 ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<>();
                 sd.orderIndex.getDeleteList(tx, deletes, messageSequence);

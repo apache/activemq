@@ -175,7 +175,6 @@ public class KahaDBStoreOpenWireVersionTest {
                         entry.getValue().orderIndex.defaultPriorityIndex.clear(tx);
                         entry.getValue().orderIndex.lowPriorityIndex.clear(tx);
                         entry.getValue().orderIndex.highPriorityIndex.clear(tx);
-                        entry.getValue().messageReferences.clear();
                     }
                 }
             });
