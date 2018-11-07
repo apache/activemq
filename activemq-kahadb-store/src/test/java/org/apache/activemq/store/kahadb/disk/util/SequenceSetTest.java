@@ -139,6 +139,28 @@ public class SequenceSetTest {
         set.remove(10);
         assertEquals(3, set.size());
         assertEquals(97, set.rangeSize());
+
+        SequenceSet toRemove = new SequenceSet();
+        toRemove.add(new Sequence(0, 100));
+
+        set.remove(toRemove);
+        assertEquals(0, set.size());
+        assertEquals(0, set.rangeSize());
+
+    }
+
+    @Test
+    public void testMerge() {
+        SequenceSet set = new SequenceSet();
+        set.add(new Sequence(0, 100));
+
+        SequenceSet set2 = new SequenceSet();
+        set.add(new Sequence(50, 150));
+
+        set.merge(set2);
+        assertEquals(151, set.rangeSize());
+        assertEquals(1, set.size());
+
     }
 
     @Test
