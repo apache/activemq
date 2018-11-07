@@ -16,23 +16,19 @@
  */
 package org.apache.activemq.usecases;
 
-import javax.management.openmbean.TabularData;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.page.PageFile;
-import org.apache.activemq.transport.vm.VMTransport;
-import org.apache.activemq.transport.vm.VMTransportFactory;
-import org.apache.activemq.transport.vm.VMTransportServer;
-import org.junit.Ignore;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -40,12 +36,16 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTestBase {
 
@@ -763,6 +763,54 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
 
         session.close();
         con.close();
+    }
+
+    @org.junit.Test(timeout = 640000)
+    public void testInactiveSubscribeAfterBrokerRestart() throws Exception {
+        final int messageCount = 20;
+        Connection alwaysOnCon = createConnection("subs1");
+        Connection tearDownFacCon = createConnection("subs2");
+        Session awaysOnCon = alwaysOnCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session tearDownCon = tearDownFacCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQTopic topic = new ActiveMQTopic("TEST.FOO");
+        String consumerName = "consumerName";
+        String tearDownconsumerName = "tearDownconsumerName";
+        // Setup consumers
+        MessageConsumer remoteConsumer = awaysOnCon.createDurableSubscriber(topic, consumerName);
+        MessageConsumer remoteConsumer2 = tearDownCon.createDurableSubscriber(topic, tearDownconsumerName);
+        DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener("listener");
+        remoteConsumer.setMessageListener(listener);
+        remoteConsumer2.setMessageListener(listener);
+        // Setup producer
+        MessageProducer localProducer = awaysOnCon.createProducer(topic);
+        localProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        // Send messages
+        for (int i = 0; i < messageCount; i++) {
+            if (i == 10) {
+                remoteConsumer2.close();
+                tearDownFacCon.close();
+            }
+            Message test = awaysOnCon.createTextMessage("test-" + i);
+            localProducer.send(test);
+        }
+        destroyBroker();
+        createBroker(false);
+        Connection reconnectCon = createConnection("subs2");
+        Session reconnectSession = reconnectCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        remoteConsumer2 = reconnectSession.createDurableSubscriber(topic, tearDownconsumerName);
+        remoteConsumer2.setMessageListener(listener);
+        LOG.info("waiting for messages to flow");
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.count >= messageCount * 2;
+            }
+        });
+        assertTrue("At least message " + messageCount * 2 +
+                        " must be received, count=" + listener.count,
+                messageCount * 2 <= listener.count);
+        awaysOnCon.close();
+        reconnectCon.close();
     }
 
 
