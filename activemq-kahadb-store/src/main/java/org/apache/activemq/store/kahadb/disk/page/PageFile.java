@@ -135,7 +135,10 @@ public class PageFile {
     // Keeps track of free pages.
     private final AtomicLong nextFreePageId = new AtomicLong();
     private SequenceSet freeList = new SequenceSet();
+
     private AtomicReference<SequenceSet> recoveredFreeList = new AtomicReference<SequenceSet>();
+    private AtomicReference<SequenceSet> trackingFreeDuringRecovery = new AtomicReference<SequenceSet>();
+
     private final AtomicLong nextTxid = new AtomicLong();
 
     // Persistent settings stored in the page file.
@@ -145,8 +148,6 @@ public class PageFile {
 
     private boolean useLFRUEviction = false;
     private float LFUEvictionFactor = 0.2f;
-
-    private boolean needsFreePageRecovery = false;
 
     /**
      * Use to keep track of updated pages which have not yet been committed.
@@ -412,7 +413,7 @@ public class PageFile {
             } else {
                 LOG.debug(toString() + ", Recovering page file...");
                 nextTxid.set(redoRecoveryUpdates());
-                needsFreePageRecovery = true;
+                trackingFreeDuringRecovery.set(new SequenceSet());
             }
 
             if (writeFile.length() < PAGE_FILE_HEADER_SIZE) {
@@ -424,7 +425,7 @@ public class PageFile {
             storeMetaData();
             getFreeFile().delete();
             startWriter();
-            if (needsFreePageRecovery) {
+            if (trackingFreeDuringRecovery.get() != null) {
                 asyncFreePageRecovery(nextFreePageId.get());
             }
         } else {
@@ -478,8 +479,6 @@ public class PageFile {
             // allow flush (with index lock held) to merge eventually
             recoveredFreeList.lazySet(newFreePages);
         }
-        // all set for clean shutdown
-        needsFreePageRecovery = false;
     }
 
     private void loadForRecovery(long nextFreePageIdSnap) throws Exception {
@@ -518,7 +517,7 @@ public class PageFile {
             }
 
             metaData.setLastTxId(nextTxid.get() - 1);
-            if (needsFreePageRecovery) {
+            if (trackingFreeDuringRecovery.get() != null) {
                 // async recovery incomplete, will have to try again
                 metaData.setCleanShutdown(false);
             } else {
@@ -567,14 +566,16 @@ public class PageFile {
             throw new IOException("Page file already stopped: checkpointing is not allowed");
         }
 
-        SequenceSet toMerge = recoveredFreeList.get();
-        if (toMerge != null) {
+        SequenceSet recovered = recoveredFreeList.get();
+        if (recovered != null) {
             recoveredFreeList.lazySet(null);
-            Sequence seq = toMerge.getHead();
-            while (seq != null) {
-                freeList.add(seq);
-                seq = seq.getNext();
-            }
+            SequenceSet inUse = trackingFreeDuringRecovery.get();
+            recovered.remove(inUse);
+            freeList.merge(recovered);
+
+            // all set for clean shutdown
+            trackingFreeDuringRecovery.set(null);
+            inUse.clear();
         }
 
         // Setup a latch that gets notified when all buffered writes hits the disk.
@@ -961,6 +962,11 @@ public class PageFile {
     public void freePage(long pageId) {
         freeList.add(pageId);
         removeFromCache(pageId);
+
+        SequenceSet trackFreeDuringRecovery = trackingFreeDuringRecovery.get();
+        if (trackFreeDuringRecovery != null) {
+            trackFreeDuringRecovery.add(pageId);
+        }
     }
 
     @SuppressWarnings("unchecked")

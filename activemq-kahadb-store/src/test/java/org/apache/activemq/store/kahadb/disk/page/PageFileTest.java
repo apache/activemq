@@ -18,7 +18,11 @@ package org.apache.activemq.store.kahadb.disk.page;
 
 import junit.framework.TestCase;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
+import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +35,7 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("rawtypes")
 public class PageFileTest extends TestCase {
@@ -333,5 +338,112 @@ public class PageFileTest extends TestCase {
                 return  freePages == 100100;
             }
         }, 12000000));
+    }
+
+    public void testBackgroundWillMarkUsedPagesAsFreeInTheBeginning() throws Exception {
+        final int numberOfPages = 100000;
+        final AtomicBoolean recoveryEnd = new AtomicBoolean();
+
+        Appender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Recovered pageFile free list")) {
+                    recoveryEnd.set(true);
+                }
+            }
+        };
+
+        org.apache.log4j.Logger log4jLogger =
+                org.apache.log4j.Logger.getLogger(PageFile.class);
+        log4jLogger.addAppender(appender);
+        log4jLogger.setLevel(Level.DEBUG);
+
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(false);
+        pf.load();
+
+        List<Long> pagesToFree = new LinkedList<>();
+
+        LOG.info("Creating Transactions");
+        for (int i = 0; i < numberOfPages; i++) {
+            Transaction tx = pf.tx();
+            Page page = tx.allocate();
+            String t = "page:" + i;
+            page.set(t);
+            tx.store(page, StringMarshaller.INSTANCE, false);
+            tx.commit();
+
+            if (i >= numberOfPages / 2) {
+                pagesToFree.add(page.getPageId());
+            }
+        }
+
+        pf.flush();
+
+        LOG.info("Number of free pages:" + pf.getFreePageCount());
+
+        //Simulate an unclean shutdown
+        final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.setEnableRecoveryFile(false);
+        pf2.load();
+
+        LOG.info("RecoveredPageFile: Number of free pages:" + pf2.getFreePageCount());
+
+        Transaction tx = pf2.tx();
+
+        for (Long pageId : pagesToFree) {
+            tx.free(tx.load(pageId,  StringMarshaller.INSTANCE));
+            tx.commit();
+        }
+
+        LOG.info("RecoveredPageFile: Number of free pages Before Reusing:" + pf2.getFreePageCount());
+        List<Transaction> transactions = new LinkedList<>();
+
+        int totalFreePages = numberOfPages / 2;
+        int totalPages = numberOfPages;
+
+        for (int i = 0; i < 20; i++) {
+            tx = pf2.tx();
+            Page page = tx.allocate();
+            String t = "page:" + i;
+            page.set(t);
+            tx.store(page, StringMarshaller.INSTANCE, false);
+            tx.commit();
+            transactions.add(tx);
+
+            // Free pages was already recovered
+            if (page.getPageId() < numberOfPages) {
+                totalFreePages--;
+            } else {
+                totalPages++;
+            }
+        }
+
+        LOG.info("RecoveredPageFile: Number of free pages After Reusing:" + pf2.getFreePageCount());
+
+        assertTrue("Recovery Finished", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                pf2.flush();
+                long freePages = pf2.getFreePageCount();
+                LOG.info("free page count: " + freePages);
+                return  recoveryEnd.get();
+            }
+        }, 100000));
+
+        LOG.info("RecoveredPageFile: Number of free pages:" + pf2.getFreePageCount());
+
+        for (Transaction txConcurrent: transactions) {
+            for (Page page : txConcurrent) {
+                assertFalse(pf2.isFreePage(page.pageId));
+            }
+        }
+
+        // Make sure we dont have leaking pages.
+        assertEquals(pf2.getFreePageCount(), totalFreePages);
+        assertEquals(pf2.getPageCount(), totalPages);
+
+        assertEquals("pages freed during recovery should be reused", numberOfPages, totalPages);
     }
 }
