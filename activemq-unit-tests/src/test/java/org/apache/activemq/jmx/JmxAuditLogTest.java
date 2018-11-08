@@ -30,6 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -62,10 +64,13 @@ public class JmxAuditLogTest extends TestSupport
 
       broker = new BrokerService();
       broker.setUseJmx(true);
+      broker.setDeleteAllMessagesOnStartup(true);
       portToUse = findOpenPort();
       broker.setManagementContext(createManagementContext("broker", portToUse));
       broker.setPopulateUserNameInMBeans(true);
       broker.setDestinations(createDestinations());
+      TransportConnector transportConnector = broker.addConnector("tcp://0.0.0.0:0");
+      transportConnector.setName("TCP");
       broker.start();
    }
 
@@ -152,6 +157,76 @@ public class JmxAuditLogTest extends TestSupport
 
       assertTrue("got ended statement", gotEnded.get());
       assertEquals("got two messages", 2, logCount.get());
+
+   }
+
+   @Test
+   public void testNameTargetVisible() throws Exception
+   {
+      Logger log4jLogger = Logger.getLogger("org.apache.activemq.audit");
+      log4jLogger.setLevel(Level.INFO);
+      final AtomicInteger logCount = new AtomicInteger(0);
+      final AtomicBoolean gotEnded = new AtomicBoolean(false);
+      final AtomicBoolean gotQueueName = new AtomicBoolean(false);
+      final AtomicBoolean gotBrokerName = new AtomicBoolean(false);
+      final AtomicBoolean gotConnectorName = new AtomicBoolean(false);
+
+      final String queueName = queue.getQueueName();
+      Appender appender = new DefaultTestAppender()
+      {
+         @Override
+         public void doAppend(LoggingEvent event)
+         {
+            if (event.getMessage() instanceof String)
+            {
+               String message = (String) event.getMessage();
+               System.out.println(message);
+               if (message.contains(VERBS[0])) {
+                  if (message.contains(queueName)) {
+                     gotQueueName.set(true);
+                  }
+                  if (message.contains(broker.getBrokerName())) {
+                     gotBrokerName.set(true);
+                  }
+
+                  if (message.contains("TCP")) {
+                     gotConnectorName.set(true);
+                  }
+               }
+
+               if (message.contains(VERBS[1])) {
+                  gotEnded.set(true);
+               }
+            }
+            logCount.incrementAndGet();
+         }
+      };
+      log4jLogger.addAppender(appender);
+
+      MBeanServerConnection conn = createJMXConnector(portToUse);
+      ObjectName queueObjName = new ObjectName(broker.getBrokerObjectName() + ",destinationType=Queue,destinationName=" + queueName);
+
+      Object[] params = {};
+      String[] signature = {};
+
+      conn.invoke(queueObjName, "purge", params, signature);
+
+      assertTrue("got ended statement", gotEnded.get());
+      assertEquals("got two messages", 2, logCount.get());
+      assertTrue("got queueName in called statement", gotQueueName.get());
+
+      // call broker to verify brokerName
+      conn.invoke(broker.getBrokerObjectName(), "resetStatistics", params, signature);
+      assertEquals("got 4 messages", 4, logCount.get());
+      assertTrue("got brokerName in called statement", gotBrokerName.get());
+
+
+      ObjectName transportConnectorON = BrokerMBeanSupport.createConnectorName(broker.getBrokerObjectName(), "clientConnectors", "TCP");
+      conn.invoke(transportConnectorON, "stop", params, signature);
+      assertEquals("got messages", 6, logCount.get());
+      assertTrue("got connectorName in called statement", gotConnectorName.get());
+
+      log4jLogger.removeAppender(appender);
 
    }
 }

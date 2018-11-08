@@ -36,15 +36,15 @@ public class AsyncAnnotatedMBean extends AnnotatedMBean {
     private ExecutorService executor;
     private long timeout = 0;
 
-    public <T> AsyncAnnotatedMBean(ExecutorService executor, long timeout, T impl, Class<T> mbeanInterface) throws NotCompliantMBeanException {
-        super(impl, mbeanInterface);
+    public <T> AsyncAnnotatedMBean(ExecutorService executor, long timeout, T impl, Class<T> mbeanInterface, ObjectName objectName) throws NotCompliantMBeanException {
+        super(impl, mbeanInterface, objectName);
 
         this.executor = executor;
         this.timeout = timeout;
     }
 
-    protected AsyncAnnotatedMBean(Class<?> mbeanInterface) throws NotCompliantMBeanException {
-        super(mbeanInterface);
+    protected AsyncAnnotatedMBean(Class<?> mbeanInterface, ObjectName objectName) throws NotCompliantMBeanException {
+        super(mbeanInterface, objectName);
     }
 
     protected Object asyncInvole(String s, Object[] objects, String[] strings) throws MBeanException, ReflectionException {
@@ -67,9 +67,9 @@ public class AsyncAnnotatedMBean extends AnnotatedMBean {
         for (Class c : object.getClass().getInterfaces()) {
             if (mbeanName.equals(c.getName())) {
                 if (timeout == 0) {
-                    context.registerMBean(new AnnotatedMBean(object, c), objectName);
+                    context.registerMBean(new AnnotatedMBean(object, c, objectName), objectName);
                 } else {
-                    context.registerMBean(new AsyncAnnotatedMBean(executor, timeout, object, c), objectName);
+                    context.registerMBean(new AsyncAnnotatedMBean(executor, timeout, object, c, objectName), objectName);
                 }
                 return;
             }

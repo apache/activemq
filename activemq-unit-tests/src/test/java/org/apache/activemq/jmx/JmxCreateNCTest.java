@@ -38,6 +38,9 @@ public class JmxCreateNCTest {
 
     @Test
     public void testBridgeRegistration() throws Exception {
+
+        System.setProperty("org.apache.activemq.audit", "all");
+
         BrokerService broker = new BrokerService();
         broker.setBrokerName(BROKER_NAME);
         broker.setUseJmx(true); // explicitly set this so no funny issues

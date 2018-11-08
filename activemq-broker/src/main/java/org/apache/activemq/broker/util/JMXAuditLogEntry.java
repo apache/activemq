@@ -21,14 +21,25 @@ import java.util.Arrays;
 public class JMXAuditLogEntry extends AuditLogEntry {
     public static final String[] VERBS = new String[] {" called ", " ended "};
     private int state = 0;
+    protected String target;
 
     public void complete() {
         setTimestamp(System.currentTimeMillis());
         state = 1;
     }
 
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
     @Override
     public String toString() {
-        return user.trim() + VERBS[state] + operation + Arrays.toString((Object[])parameters.get("arguments")) + " at " + getFormattedTime();
+        return user.trim() + VERBS[state] + operation + Arrays.toString((Object[])parameters.get("arguments"))
+                + (target != null ? " on " + target : "")
+                + " at " + getFormattedTime();
     }
 }
