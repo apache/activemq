@@ -151,6 +151,7 @@ public class DLQRetryTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
+        System.setProperty("org.apache.activemq.audit", "all");
         bindAddress = "tcp://localhost:0";
         useTopic = false;
         super.setUp();
