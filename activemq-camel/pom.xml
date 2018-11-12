@@ -49,7 +49,7 @@
   <dependencies>
 
     <!-- =============================== -->
-    <!-- Required Dependencies -->
+    <!-- Required Dependencies           -->
     <!-- =============================== -->
     <dependency>
       <groupId>org.slf4j</groupId>
