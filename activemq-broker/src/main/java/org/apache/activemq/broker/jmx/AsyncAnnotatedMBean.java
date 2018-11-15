@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanException;
 import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
@@ -52,7 +53,7 @@ public class AsyncAnnotatedMBean extends AnnotatedMBean {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static void registerMBean(ExecutorService executor, long timeout, ManagementContext context, Object object, ObjectName objectName) throws Exception {
+    public static ObjectInstance registerMBean(ExecutorService executor, long timeout, ManagementContext context, Object object, ObjectName objectName) throws Exception {
 
         if (timeout < 0 && executor != null) {
             throw new IllegalArgumentException("async timeout cannot be negative.");
@@ -67,15 +68,14 @@ public class AsyncAnnotatedMBean extends AnnotatedMBean {
         for (Class c : object.getClass().getInterfaces()) {
             if (mbeanName.equals(c.getName())) {
                 if (timeout == 0) {
-                    context.registerMBean(new AnnotatedMBean(object, c, objectName), objectName);
+                    return context.registerMBean(new AnnotatedMBean(object, c, objectName), objectName);
                 } else {
-                    context.registerMBean(new AsyncAnnotatedMBean(executor, timeout, object, c, objectName), objectName);
+                    return context.registerMBean(new AsyncAnnotatedMBean(executor, timeout, object, c, objectName), objectName);
                 }
-                return;
             }
         }
 
-        context.registerMBean(object, objectName);
+        return context.registerMBean(object, objectName);
     }
 
     @Override
