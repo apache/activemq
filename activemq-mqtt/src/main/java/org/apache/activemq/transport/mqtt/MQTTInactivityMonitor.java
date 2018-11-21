@@ -78,7 +78,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
                     ASYNC_TASKS.execute(new Runnable() {
                         @Override
                         public void run() {
-                            onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime + readGraceTime) + ") long: "
+                            onException(new InactivityIOException("CONNECT frame not received with in connectionTimeout (>" + connectionTimeout + "): "
                                 + next.getRemoteAddress()));
                         }
                     });
