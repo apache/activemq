@@ -20,12 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.maven;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -146,6 +141,7 @@ public abstract class AbstractFeatureTest {
     }
 
     public static Option configure(String... features) {
+        String karafVersion = MavenUtils.getArtifactVersion("org.apache.karaf", "apache-karaf");
         MavenUrlReference karafUrl = maven().groupId("org.apache.karaf").artifactId("apache-karaf")
             .type("tar.gz").versionAsInProject();
         UrlReference camelUrl = maven().groupId("org.apache.camel.karaf")
@@ -158,6 +154,8 @@ public abstract class AbstractFeatureTest {
          keepRuntimeFolder(), //
          logLevel(LogLevelOption.LogLevel.INFO), //
          editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
+         editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories",
+                 "mvn:org.apache.karaf.features/spring-legacy/" + karafVersion + "/xml/features"),
          // debugConfiguration("5005", true),
          features(activeMQUrl, features), //
          features(camelUrl)
