@@ -180,6 +180,9 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
                 // skip beans and pull out the broker node to validate
                 DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
                 dbf.setNamespaceAware(true);
+                dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
+                dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 Document doc = db.parse(configToMonitor.getInputStream());
                 Node brokerRootNode = doc.getElementsByTagNameNS("*","broker").item(0);
