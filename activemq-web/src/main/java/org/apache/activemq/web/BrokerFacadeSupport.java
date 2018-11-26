@@ -229,7 +229,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @Override
     public Collection<NetworkBridgeViewMBean> getNetworkBridges() throws Exception {
         String brokerName = getBrokerName();
-        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=networkConnectors,networkConnectorName=*,networkBridge=*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=*,networkConnectorName=*,networkBridge=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
                 NetworkBridgeViewMBean.class);
