@@ -654,30 +654,31 @@ public class MQTTProtocolConverter {
         return mqttTransport;
     }
 
-    boolean willSent = false;
+    AtomicBoolean transportErrorHandled = new AtomicBoolean(false);
     public void onTransportError() {
-        if (connect != null) {
-            if (connected.get()) {
-                if (connect.willTopic() != null && connect.willMessage() != null && !willSent) {
-                    willSent = true;
-                    try {
-                        PUBLISH publish = new PUBLISH();
-                        publish.topicName(connect.willTopic());
-                        publish.qos(connect.willQos());
-                        publish.messageId(packetIdGenerator.getNextSequenceId(getClientId()));
-                        publish.payload(connect.willMessage());
-                        publish.retain(connect.willRetain());
-                        ActiveMQMessage message = convertMessage(publish);
-                        message.setProducerId(producerId);
-                        message.onSend();
+        if (transportErrorHandled.compareAndSet(false, true)) {
+            if (connect != null) {
+                if (connected.get()) {
+                    if (connect.willTopic() != null && connect.willMessage() != null) {
+                        try {
+                            PUBLISH publish = new PUBLISH();
+                            publish.topicName(connect.willTopic());
+                            publish.qos(connect.willQos());
+                            publish.messageId(packetIdGenerator.getNextSequenceId(getClientId()));
+                            publish.payload(connect.willMessage());
+                            publish.retain(connect.willRetain());
+                            ActiveMQMessage message = convertMessage(publish);
+                            message.setProducerId(producerId);
+                            message.onSend();
 
-                        sendToActiveMQ(message, null);
-                    } catch (Exception e) {
-                        LOG.warn("Failed to publish Will Message " + connect.willMessage());
+                            sendToActiveMQ(message, null);
+                        } catch (Exception e) {
+                            LOG.warn("Failed to publish Will Message " + connect.willMessage());
+                        }
                     }
+                    // remove connection info
+                    sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
                 }
-                // remove connection info
-                sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
             }
         }
     }
@@ -886,5 +887,10 @@ public class MQTTProtocolConverter {
             }
         }
         return subsciptionStrategy;
+    }
+
+    // for testing
+    public void setSubsciptionStrategy(MQTTSubscriptionStrategy subsciptionStrategy) {
+        this.subsciptionStrategy = subsciptionStrategy;
     }
 }
