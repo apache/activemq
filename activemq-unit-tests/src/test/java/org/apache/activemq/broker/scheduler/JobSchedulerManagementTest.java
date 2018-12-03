@@ -34,6 +34,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ScheduledMessage;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.util.IdGenerator;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -395,6 +396,9 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         Message message = browser.receive(5000);
         assertNotNull(message);
         assertEquals(45000, message.getLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY));
+
+        // Verify that original destination was preserved
+        assertEquals(destination, ((ActiveMQMessage) message).getOriginalDestination());
 
         // Now check if there are anymore, there shouldn't be
         message = browser.receive(5000);

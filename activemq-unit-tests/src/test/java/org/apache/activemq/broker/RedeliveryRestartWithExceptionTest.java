@@ -416,7 +416,12 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
         public long getLastProducerSequenceId(ProducerId id) throws IOException {
             return kahaDB.getLastProducerSequenceId(id);
         }
-        
+
+        @Override
+        public void allowIOResumption() {
+            kahaDB.allowIOResumption();
+        }
+
     }
     
     private class ProxyMessageStoreWithUpdateException extends ProxyMessageStore {

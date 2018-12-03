@@ -34,8 +34,9 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class QueueSubscriptionInflightMessageSizeTest extends AbstractInflightMessageSizeTest {
 
-    public QueueSubscriptionInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge) {
-        super(ackType, optimizeAcknowledge);
+    public QueueSubscriptionInflightMessageSizeTest(int ackType, boolean optimizeAcknowledge,
+            boolean useTopicSubscriptionInflightStats) {
+        super(ackType, optimizeAcknowledge, useTopicSubscriptionInflightStats);
     }
 
     @Override

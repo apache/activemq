@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import javax.jms.JMSException;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -59,6 +60,7 @@ public final class XPathExpression implements BooleanExpression {
                 builderFactory.setIgnoringComments(true);
                 try {
                     // set some reasonable defaults
+                    builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
                     builderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
                     builderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
                     builderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);

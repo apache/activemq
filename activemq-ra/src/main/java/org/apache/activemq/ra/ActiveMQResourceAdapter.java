@@ -355,8 +355,18 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                         }
 
                         private ActiveMQConnection newConnection() throws JMSException {
-                            ActiveMQConnection connection = makeConnection();
-                            connection.start();
+                            ActiveMQConnection connection = null;
+                            try {
+                                connection = makeConnection();
+                                connection.start();
+                            } catch (JMSException ex) {
+                                if (connection != null) {
+                                    try {
+                                        connection.close();
+                                    } catch (JMSException ignore) { }
+                                }
+                                throw ex;
+                            }
                             return connection;
                         }
 

@@ -154,6 +154,11 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     }
 
     @Override
+    public boolean isContentMarshalled() {
+        return content != null || dataOut == null;
+    }
+
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
@@ -743,7 +748,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 // big buffer
                 int rc = this.dataIn.read(value, 0, remainingBytes);
                 remainingBytes = 0;
-                return rc;
+                return rc != -1 ? rc : 0;
             }
 
         } catch (EOFException e) {

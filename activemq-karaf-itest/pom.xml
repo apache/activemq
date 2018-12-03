@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.15.0-SNAPSHOT</version>
+    <version>5.16.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-karaf-itest</artifactId>
@@ -259,6 +259,7 @@
             <configuration>
               <includes>
                 <include>**/ActiveMQBrokerNdCamelFeatureTest.*</include>
+                <include>**/ActiveMQAMQPBrokerFeatureTest.*</include>
               </includes>
             </configuration>
           </plugin>

@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -75,6 +76,7 @@ public class Topic extends BaseDestination implements Task {
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
     private final TaskRunner taskRunner;
+    private final TaskRunnerFactory taskRunnerFactor;
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         @Override
@@ -92,6 +94,7 @@ public class Topic extends BaseDestination implements Task {
         this.topicStore = store;
         subscriptionRecoveryPolicy = new RetainedMessageSubscriptionRecoveryPolicy(null);
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
+        this.taskRunnerFactor = taskFactory;
     }
 
     @Override
@@ -383,7 +386,10 @@ public class Topic extends BaseDestination implements Task {
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
 
                 if (isFlowControlLogRequired()) {
-                    LOG.info("{}, Usage Manager memory limit reached {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                    LOG.warn("{}, Usage Manager memory limit reached {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                            getActiveMQDestination().getQualifiedName(), memoryUsage.getLimit());
+                } else {
+                    LOG.debug("{}, Usage Manager memory limit reached {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
                             getActiveMQDestination().getQualifiedName(), memoryUsage.getLimit());
                 }
 
@@ -784,11 +790,21 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
-    private final Runnable expireMessagesTask = new Runnable() {
+    private final AtomicBoolean expiryTaskInProgress = new AtomicBoolean(false);
+    private final Runnable expireMessagesWork = new Runnable() {
         @Override
         public void run() {
             List<Message> browsedMessages = new InsertionCountList<Message>();
             doBrowse(browsedMessages, getMaxExpirePageSize());
+            expiryTaskInProgress.set(false);
+        }
+    };
+    private final Runnable expireMessagesTask = new Runnable() {
+        @Override
+        public void run() {
+            if (expiryTaskInProgress.compareAndSet(false, true)) {
+                taskRunnerFactor.execute(expireMessagesWork);
+            }
         }
     };
 
@@ -847,9 +863,10 @@ public class Topic extends BaseDestination implements Task {
 
     /**
      * force a reread of the store - after transaction recovery completion
+     * @param pendingAdditionsCount
      */
     @Override
-    public void clearPendingMessages() {
+    public void clearPendingMessages(int pendingAdditionsCount) {
         dispatchLock.readLock().lock();
         try {
             for (DurableTopicSubscription durableTopicSubscription : durableSubscribers.values()) {

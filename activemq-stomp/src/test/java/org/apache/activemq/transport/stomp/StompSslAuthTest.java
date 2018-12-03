@@ -54,13 +54,13 @@ public class StompSslAuthTest extends StompTest {
 
     @Override
     public void addOpenWireConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("ssl://0.0.0.0:0?needClientAuth=true");
-        cf = new ActiveMQConnectionFactory(connector.getPublishableConnectString());
+        TransportConnector connector = brokerService.addConnector("ssl://0.0.0.0:0?transport.needClientAuth=true");
+        cf = new ActiveMQConnectionFactory(connector.getPublishableConnectString() + "?socket.verifyHostName=false");
     }
 
     @Override
     protected String getAdditionalConfig() {
-        return "?needClientAuth=true";
+        return "?needClientAuth=true&transport.verifyHostName=false";
     }
 
     // NOOP - These operations handled by jaas cert login module

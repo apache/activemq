@@ -138,7 +138,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         Appender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
-                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Usage Manager memory limit reached")) {
+                if (event.getLevel().equals(Level.WARN) && event.getMessage().toString().contains("Usage Manager memory limit reached")) {
                     LOG.info("received  log message: " + event.getMessage());
                     warnings.incrementAndGet();
                 }

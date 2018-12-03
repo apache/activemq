@@ -25,7 +25,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -33,7 +32,8 @@ import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.transport.DefaultTransportListener;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,36 +42,60 @@ public class WireFormatInfoPropertiesTest {
 
     static final Logger LOG = LoggerFactory.getLogger(WireFormatInfoPropertiesTest.class);
 
-    protected BrokerService master;
-    protected String brokerUri;
+    private BrokerService service;
+    private String brokerUri;
+    private TransportConnector connector;
+
+    @Before
+    public void before() throws Exception {
+        service = new BrokerService();
+        connector = service.addConnector("tcp://localhost:0");
+        brokerUri = connector.getPublishableConnectString();
+        service.setPersistent(false);
+        service.setUseJmx(false);
+        service.setBrokerName("Master");
+        service.start();
+        service.waitUntilStarted();
+    }
+
+    @After
+    public void after() throws Exception {
+        if (service != null) {
+            service.stop();
+            service.waitUntilStopped();
+        }
+    }
 
     @Test
-    public void testClientProperties() throws Exception{
-        BrokerService service = createBrokerService();
-        try {
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(new URI(brokerUri));
-            ActiveMQConnection conn = (ActiveMQConnection)factory.createConnection();
-            final AtomicReference<WireFormatInfo> clientWf = new AtomicReference<WireFormatInfo>();
-            conn.addTransportListener(new DefaultTransportListener() {
-                @Override
-                public void onCommand(Object command) {
-                    if (command instanceof WireFormatInfo) {
-                        clientWf.set((WireFormatInfo)command);
-                    }
-                }
-            });
-            conn.start();
-            if (clientWf.get() == null) {
-                fail("Wire format info is null");
-            }
-            assertTrue(clientWf.get().getProperties().containsKey("ProviderName"));
-            assertTrue(clientWf.get().getProperties().containsKey("ProviderVersion"));
-            assertTrue(clientWf.get().getProperties().containsKey("PlatformDetails"));
-            assertTrue(clientWf.get().getProviderName().equals(ActiveMQConnectionMetaData.PROVIDER_NAME));
-            assertTrue(clientWf.get().getPlatformDetails().equals(ActiveMQConnectionMetaData.PLATFORM_DETAILS));
-        } finally {
-            stopBroker(service);
+    public void testClientPropertiesWithDefaultPlatformDetails() throws Exception{
+        WireFormatInfo clientWf = testClientProperties(brokerUri);
+        assertTrue(clientWf.getPlatformDetails().equals(ActiveMQConnectionMetaData.DEFAULT_PLATFORM_DETAILS));
+    }
+
+    @Test
+    public void testClientPropertiesWithPlatformDetails() throws Exception{
+        WireFormatInfo clientWf = testClientProperties(brokerUri + "?wireFormat.includePlatformDetails=true");
+        assertTrue(clientWf.getPlatformDetails().equals(ActiveMQConnectionMetaData.PLATFORM_DETAILS));
+    }
+
+    private WireFormatInfo testClientProperties(String brokerUri) throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(new URI(brokerUri));
+        ActiveMQConnection conn = (ActiveMQConnection)factory.createConnection();
+        conn.start();
+
+        assertTrue(connector.getConnections().size() == 1);
+        final WireFormatInfo clientWf = connector.getConnections().get(0).getRemoteWireFormatInfo();
+        if (clientWf == null) {
+            fail("Wire format info is null");
         }
+
+        //verify properties that the client sends to the broker
+        assertTrue(clientWf.getProperties().containsKey("ProviderName"));
+        assertTrue(clientWf.getProperties().containsKey("ProviderVersion"));
+        assertTrue(clientWf.getProperties().containsKey("PlatformDetails"));
+        assertTrue(clientWf.getProviderName().equals(ActiveMQConnectionMetaData.PROVIDER_NAME));
+
+        return clientWf;
     }
 
     @Test
@@ -98,25 +122,6 @@ public class WireFormatInfoPropertiesTest {
         // the version won't be valid until runtime
         assertTrue(result.getProviderVersion() == null || result.getProviderVersion().equals(orig.getProviderVersion()));
         assertTrue(result.getPlatformDetails().equals(orig.getPlatformDetails()));
-    }
-
-    private BrokerService createBrokerService() throws Exception {
-        BrokerService service = new BrokerService();
-        TransportConnector connector = service.addConnector("tcp://localhost:0");
-        brokerUri = connector.getPublishableConnectString();
-        service.setPersistent(false);
-        service.setUseJmx(false);
-        service.setBrokerName("Master");
-        service.start();
-        service.waitUntilStarted();
-        return service;
-    }
-
-    private void stopBroker(BrokerService service) throws Exception {
-        if (service != null) {
-            service.stop();
-            service.waitUntilStopped();
-        }
     }
 
 }

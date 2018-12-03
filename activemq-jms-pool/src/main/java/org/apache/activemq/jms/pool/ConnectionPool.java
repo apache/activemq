@@ -233,7 +233,7 @@ public class ConnectionPool implements ExceptionListener {
             }
         }
 
-        if (expiryTimeout > 0 && System.currentTimeMillis() > firstUsed + expiryTimeout) {
+        if (expiryTimeout > 0 && (firstUsed + expiryTimeout) - System.currentTimeMillis() < 0) {
             hasExpired = true;
             if (referenceCount == 0) {
                 close();
@@ -243,7 +243,7 @@ public class ConnectionPool implements ExceptionListener {
 
         // Only set hasExpired here is no references, as a Connection with references is by
         // definition not idle at this time.
-        if (referenceCount == 0 && idleTimeout > 0 && System.currentTimeMillis() > lastUsed + idleTimeout) {
+        if (referenceCount == 0 && idleTimeout > 0 && (lastUsed + idleTimeout) - System.currentTimeMillis() < 0) {
             hasExpired = true;
             close();
             expired = true;

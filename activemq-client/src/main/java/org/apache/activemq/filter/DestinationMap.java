@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.activemq.command.ActiveMQDestination;
 
@@ -46,6 +47,7 @@ public class DestinationMap {
     private DestinationMapNode topicRootNode = new DestinationMapNode(null);
     private DestinationMapNode tempTopicRootNode = new DestinationMapNode(null);
 
+
     /**
      * Looks up the value(s) matching the given Destination key. For simple
      * destinations this is typically a List of one single value, for wildcards
@@ -57,13 +59,20 @@ public class DestinationMap {
      *         matching values.
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public synchronized Set get(ActiveMQDestination key) {
+    public Set get(ActiveMQDestination key) {
+        synchronized (this) {
+            return unsynchronizedGet(key);
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public Set unsynchronizedGet(ActiveMQDestination key) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             Set answer = new HashSet(destinations.length);
             for (int i = 0; i < destinations.length; i++) {
                 ActiveMQDestination childDestination = destinations[i];
-                Object value = get(childDestination);
+                Object value = unsynchronizedGet(childDestination);
                 if (value instanceof Set) {
                     answer.addAll((Set) value);
                 } else if (value != null) {
@@ -75,7 +84,13 @@ public class DestinationMap {
         return findWildcardMatches(key);
     }
 
-    public synchronized void put(ActiveMQDestination key, Object value) {
+    public void put(ActiveMQDestination key, Object value) {
+        synchronized (this) {
+            unsynchronizedPut(key, value);
+        }
+    }
+
+    public void unsynchronizedPut(ActiveMQDestination key, Object value) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             for (int i = 0; i < destinations.length; i++) {
@@ -92,7 +107,13 @@ public class DestinationMap {
     /**
      * Removes the value from the associated destination
      */
-    public synchronized void remove(ActiveMQDestination key, Object value) {
+    public void remove(ActiveMQDestination key, Object value) {
+        synchronized (this) {
+            unsynchronizedRemove(key, value);
+        }
+    }
+
+    public void unsynchronizedRemove(ActiveMQDestination key, Object value) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             for (int i = 0; i < destinations.length; i++) {
@@ -202,19 +223,38 @@ public class DestinationMap {
      * @return the largest matching value or null if no value matches
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object chooseValue(final ActiveMQDestination destination) {
-        Set set = get(destination);
+    public DestinationMapEntry chooseValue(final ActiveMQDestination destination) {
+        Set<DestinationMapEntry> set = get(destination);
         if (set == null || set.isEmpty()) {
             return null;
         }
-        SortedSet sortedSet = new TreeSet(new Comparator<DestinationMapEntry>() {
+
+        //Comparator to sort in order - we want to pick the exact match by destination or the
+        //closest parent that applies
+        final Comparator<DestinationMapEntry> comparator = new Comparator<DestinationMapEntry>() {
             @Override
             public int compare(DestinationMapEntry entry1, DestinationMapEntry entry2) {
                 return destination.equals(entry1.destination) ? -1 : (destination.equals(entry2.destination) ? 1 : entry1.compareTo(entry2));
             }
-        });
-        sortedSet.addAll(set);
-        return sortedSet.first();
+        };
+
+        //Sort and filter out any children and non matching entries
+        final SortedSet<DestinationMapEntry> sortedSet = set.stream()
+            .filter(entry -> isMatchOrParent(destination, (DestinationMapEntry)entry))
+            .collect(Collectors.toCollection(() -> new TreeSet<DestinationMapEntry>(comparator)));
+
+        return sortedSet.size() > 0 ? sortedSet.first() : null;
+    }
+
+    @SuppressWarnings("rawtypes")
+    //Used to filter out any child/unmatching entries
+    private boolean isMatchOrParent(final ActiveMQDestination destination, final DestinationMapEntry entry) {
+        //If destination not set then do not filter out
+        if (entry.getDestination() == null) {
+            return true;
+        }
+        final DestinationFilter filter = DestinationFilter.parseFilter(entry.getDestination());
+        return destination.equals(entry.getDestination()) || filter.matches(destination);
     }
 
     /**

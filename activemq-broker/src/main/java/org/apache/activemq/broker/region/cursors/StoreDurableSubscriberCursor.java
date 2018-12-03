@@ -188,7 +188,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             Message msg = node.getMessage();
             if (isStarted()) {
                 if (!msg.isPersistent()) {
-                    nonPersistent.addMessageLast(node);
+                    nonPersistent.tryAddMessageLast(node, wait);
                 }
             }
             if (msg.isPersistent()) {

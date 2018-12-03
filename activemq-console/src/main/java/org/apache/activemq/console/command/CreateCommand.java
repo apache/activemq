@@ -20,6 +20,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -158,7 +159,10 @@ public class CreateCommand extends AbstractCommand {
         File dest = new File(targetBase, DEFAULT_TARGET_ACTIVEMQ_CONF);
         context.print("Copying from: " + src.getCanonicalPath() + "\n          to: " + dest.getCanonicalPath());
 
-        DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
+        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        DocumentBuilder builder = dbf.newDocumentBuilder();
         Element docElem = builder.parse(src).getDocumentElement();
 
         XPath xpath = XPathFactory.newInstance().newXPath();

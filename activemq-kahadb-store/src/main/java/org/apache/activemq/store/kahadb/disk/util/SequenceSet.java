@@ -94,6 +94,30 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
         }
     }
 
+    public void merge(SequenceSet sequenceSet) {
+        Sequence node = sequenceSet.getHead();
+
+        while (node != null) {
+            add(node);
+            node = node.getNext();
+        }
+    }
+
+    public void remove(SequenceSet sequenceSet) {
+        Sequence node = sequenceSet.getHead();
+
+        while (node != null) {
+            remove(node);
+            node = node.getNext();
+        }
+    }
+
+    public void remove(Sequence value) {
+        for(long i=value.first; i<value.last+1; i++) {
+            remove(i);
+        }
+    }
+
     /**
      *
      * @param value
@@ -111,6 +135,13 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
         Sequence sequence = getTail();
         if (sequence.isAdjacentToLast(value)) {
             sequence.last = value;
+            return true;
+        }
+
+        // check if the value is greater than the bigger sequence value and if it's not adjacent to it
+        // in this case, we are sure that the value should be add to the tail of the sequence.
+        if (sequence.isBiggerButNotAdjacentToLast(value)) {
+            addLast(new Sequence(value));
             return true;
         }
 

@@ -183,11 +183,11 @@ public interface PersistenceAdapter extends Service {
     /**
      * checkpoint any
      *
-     * @param sync
+     * @param cleanup
      * @throws IOException
      *
      */
-    void checkpoint(boolean sync) throws IOException;
+    void checkpoint(boolean cleanup) throws IOException;
 
     /**
      * A hint to return the size of the store on disk
@@ -206,4 +206,6 @@ public interface PersistenceAdapter extends Service {
      * @return the last stored sequence id or -1 if no suppression needed
      */
     long getLastProducerSequenceId(ProducerId id) throws IOException;
+
+    void allowIOResumption();
 }

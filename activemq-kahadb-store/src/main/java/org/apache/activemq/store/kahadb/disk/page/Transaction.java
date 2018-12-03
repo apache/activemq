@@ -670,6 +670,8 @@ public class Transaction implements Iterable<Page> {
             allocateList.clear();
             writes.clear();
             writeTransactionId = -1;
+        } else {
+            freePages(allocateList);
         }
         size = 0;
     }
@@ -692,6 +694,8 @@ public class Transaction implements Iterable<Page> {
             allocateList.clear();
             writes.clear();
             writeTransactionId = -1;
+        } else {
+            freePages(allocateList);
         }
         size = 0;
     }

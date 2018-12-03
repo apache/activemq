@@ -105,6 +105,9 @@ public class AutoTransportConnectionsTest {
     public void configureConnectorAndStart(String bindAddress) throws Exception {
         connector = service.addConnector(bindAddress);
         connectionUri = connector.getPublishableConnectString();
+        if (connectionUri.contains("ssl")) {
+            connectionUri += connectionUri.contains("?") ? "&socket.verifyHostName=false" : "?socket.verifyHostName=false";
+        }
         service.start();
         service.waitUntilStarted();
     }

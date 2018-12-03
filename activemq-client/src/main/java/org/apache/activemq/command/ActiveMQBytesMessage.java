@@ -152,6 +152,11 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     }
 
     @Override
+    public boolean isContentMarshalled() {
+        return content != null || dataOut == null;
+    }
+
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }

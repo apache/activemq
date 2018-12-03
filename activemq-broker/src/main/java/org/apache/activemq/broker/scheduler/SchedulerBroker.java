@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 public class SchedulerBroker extends BrokerFilter implements JobListener {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
+    private static final LongSequenceGenerator longGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final AtomicBoolean started = new AtomicBoolean();
     private final WireFormat wireFormat = new OpenWireFormat();
@@ -337,8 +338,11 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
         }
 
-        getInternalScheduler().schedule(msg.getMessageId().toString(),
-            new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
+        //job id should be unique for every job (Same format as MessageId)
+        MessageId jobId = new MessageId(messageSend.getMessageId().getProducerId(), longGenerator.getNextSequenceId());
+
+        getInternalScheduler().schedule(jobId.toString(),
+                new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
     }
 
     @Override
@@ -426,6 +430,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             msg.setPersistent(false);
             msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
             msg.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+
+            // Preserve original destination
+            msg.setOriginalDestination(msg.getDestination());
+
             msg.setDestination(replyTo);
             msg.setResponseRequired(false);
             msg.setProducerId(this.producerId);

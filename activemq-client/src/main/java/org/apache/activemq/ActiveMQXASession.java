@@ -68,11 +68,6 @@ public class ActiveMQXASession extends ActiveMQSession implements QueueSession, 
         super(connection, sessionId, theAcknowlegeMode, dispatchAsync);
     }
 
-    public boolean getTransacted() throws JMSException {
-        checkClosed();
-        return getTransactionContext().isInXATransaction();
-    }
-
     public void rollback() throws JMSException {
         checkClosed();
         throw new TransactionInProgressException("Cannot rollback() inside an XASession");
@@ -99,16 +94,12 @@ public class ActiveMQXASession extends ActiveMQSession implements QueueSession, 
         return new ActiveMQTopicSession(this);
     }
 
-    /*
-     * when there is no XA transaction it is auto ack
-     */
-    public boolean isAutoAcknowledge() {
-      return true;
-    }
-    
     protected void doStartTransaction() throws JMSException {
-        // allow non transactional auto ack work on an XASession
-        // Seems ok by the spec that an XAConnection can be used without an XA tx
+        if (acknowledgementMode != SESSION_TRANSACTED) {
+            // ok once the factory XaAckMode has been explicitly set to allow use outside an XA tx
+        } else if (!getTransactionContext().isInXATransaction()) {
+            throw new JMSException("Session's XAResource has not been enlisted in a distributed transaction.");
+        }
     }
 
 }

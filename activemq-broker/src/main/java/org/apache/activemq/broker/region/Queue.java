@@ -39,6 +39,7 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -68,6 +69,7 @@ import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.broker.util.InsertionCountList;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
@@ -143,10 +145,21 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             asyncWakeup();
         }
     };
-    private final Runnable expireMessagesTask = new Runnable() {
+    private final AtomicBoolean expiryTaskInProgress = new AtomicBoolean(false);
+    private final Runnable expireMessagesWork = new Runnable() {
         @Override
         public void run() {
             expireMessages();
+            expiryTaskInProgress.set(false);
+        }
+    };
+
+    private final Runnable expireMessagesTask = new Runnable() {
+        @Override
+        public void run() {
+            if (expiryTaskInProgress.compareAndSet(false, true)) {
+                taskFactory.execute(expireMessagesWork);
+            }
         }
     };
 
@@ -206,7 +219,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             if (messagesWaitingForSpace.remove(timeout.message.getMessageId()) != null) {
                                 ExceptionResponse response = new ExceptionResponse(
                                         new ResourceAllocationException(
-                                                "Usage Manager Memory Limit reached. Stopping producer ("
+                                                "Usage Manager Memory Limit Wait Timeout. Stopping producer ("
                                                         + timeout.message.getProducerId()
                                                         + ") to prevent flooding "
                                                         + getActiveMQDestination().getQualifiedName()
@@ -608,6 +621,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+    private volatile ResourceAllocationException sendMemAllocationException = null;
     @Override
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
@@ -636,15 +650,25 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             fastProducer(context, producerInfo);
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
                 if (isFlowControlLogRequired()) {
-                    LOG.info("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                    LOG.warn("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
                                 memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
-
+                } else {
+                    LOG.debug("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                            memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
                 }
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
-                    throw new ResourceAllocationException("Usage Manager Memory Limit reached. Stopping producer ("
-                            + message.getProducerId() + ") to prevent flooding "
-                            + getActiveMQDestination().getQualifiedName() + "."
-                            + " See http://activemq.apache.org/producer-flow-control.html for more info");
+                    ResourceAllocationException resourceAllocationException = sendMemAllocationException;
+                    if (resourceAllocationException == null) {
+                        synchronized (this) {
+                            resourceAllocationException = sendMemAllocationException;
+                            if (resourceAllocationException == null) {
+                                sendMemAllocationException = resourceAllocationException = new ResourceAllocationException("Usage Manager Memory Limit reached on "
+                                        + getActiveMQDestination().getQualifiedName() + "."
+                                        + " See http://activemq.apache.org/producer-flow-control.html for more info");
+                            }
+                        }
+                    }
+                    throw resourceAllocationException;
                 }
 
                 // We can avoid blocking due to low usage if the producer is
@@ -765,6 +789,21 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+    public void rollbackPendingCursorAdditions(MessageId messageId) {
+        synchronized (indexOrderedCursorUpdates) {
+            for (int i = indexOrderedCursorUpdates.size() - 1; i >= 0; i--) {
+                MessageContext mc = indexOrderedCursorUpdates.get(i);
+                if (mc.message.getMessageId().equals(messageId)) {
+                    indexOrderedCursorUpdates.remove(mc);
+                    if (mc.onCompletion != null) {
+                        mc.onCompletion.run();
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     private void doPendingCursorAdditions() throws Exception {
         LinkedList<MessageContext> orderedUpdates = new LinkedList<>();
         sendLock.lockInterruptibly();
@@ -829,6 +868,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         @Override
         public void afterRollback() throws Exception {
+            if (store != null && messageContext.message.isPersistent()) {
+                rollbackPendingCursorAdditions(messageContext.message.getMessageId());
+            }
             messageContext.message.decrementReferenceCount();
         }
     }
@@ -861,6 +903,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     // before restarting normal broker operations
                     resetNeeded = true;
                     pendingSends.decrementAndGet();
+                    rollbackPendingCursorAdditions(message.getMessageId());
                     throw e;
                 }
             }
@@ -1025,6 +1068,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             systemUsage.getMemoryUsage().removeUsageListener(this);
             if (memoryUsage != null) {
                 memoryUsage.stop();
+            }
+            if (systemUsage.getStoreUsage() != null) {
+                systemUsage.getStoreUsage().stop();
             }
             if (store != null) {
                 store.stop();
@@ -1204,9 +1250,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
 
         LOG.trace("max {}, alreadyPagedIn {}, messagesCount {}, memoryUsage {}%", new Object[]{max, alreadyPagedIn, messagesInQueue, memoryUsage.getPercentUsage()});
-        return (alreadyPagedIn < max)
+        return (alreadyPagedIn == 0 || (alreadyPagedIn < max)
                 && (alreadyPagedIn < messagesInQueue)
-                && messages.hasSpace();
+                && messages.hasSpace());
     }
 
     private void addAll(Collection<? extends MessageReference> refs, List<Message> l, int max,
@@ -1215,7 +1261,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             QueueMessageReference ref = (QueueMessageReference) i.next();
             if (ref.isExpired() && (ref.getLockOwner() == null)) {
                 toExpire.add(ref);
-            } else if (l.contains(ref.getMessage()) == false) {
+            } else if (!ref.isAcked() && l.contains(ref.getMessage()) == false) {
                 l.add(ref.getMessage());
             }
         }
@@ -1273,6 +1319,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     try {
                         QueueMessageReference r = (QueueMessageReference) ref;
                         removeMessage(c, r);
+                        messages.rollback(r.getMessageId());
                     } catch (IOException e) {
                     }
                 }
@@ -1289,9 +1336,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     @Override
-    public void clearPendingMessages() {
+    public void clearPendingMessages(int pendingAdditionsCount) {
         messagesLock.writeLock().lock();
         try {
+            final ActiveMQMessage dummyPersistent = new ActiveMQMessage();
+            dummyPersistent.setPersistent(true);
+            for (int i=0; i<pendingAdditionsCount; i++) {
+                try {
+                    // track the increase in the cursor size w/o reverting to the store
+                    messages.addMessageFirst(dummyPersistent);
+                } catch (Exception ignored) {
+                    LOG.debug("Unexpected exception on tracking pending message additions", ignored);
+                }
+            }
             if (resetNeeded) {
                 messages.gc();
                 messages.reset();
@@ -1402,6 +1459,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      */
     public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest,
             int maximumMessages) throws Exception {
+
+        if (destination.equals(dest)) {
+            return 0;
+        }
+
         int movedCounter = 0;
         int count = 0;
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
@@ -1450,18 +1512,38 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      * @throws Exception
      */
     public boolean moveMessageTo(ConnectionContext context, QueueMessageReference m, ActiveMQDestination dest) throws Exception {
-        BrokerSupport.resend(context, m.getMessage(), dest);
-        removeMessage(context, m);
-        messagesLock.writeLock().lock();
+        Set<Destination> destsToPause = regionBroker.getDestinations(dest);
         try {
-            messages.rollback(m.getMessageId());
-            if (isDLQ()) {
-                DeadLetterStrategy stratagy = getDeadLetterStrategy();
-                stratagy.rollback(m.getMessage());
+            for (Destination d: destsToPause) {
+                if (d instanceof Queue) {
+                    ((Queue)d).pauseDispatch();
+                }
+            }
+            BrokerSupport.resend(context, m.getMessage(), dest);
+            removeMessage(context, m);
+            messagesLock.writeLock().lock();
+            try {
+                messages.rollback(m.getMessageId());
+                if (isDLQ()) {
+                    ActiveMQDestination originalDestination = m.getMessage().getOriginalDestination();
+                    if (originalDestination != null) {
+                        for (Destination destination : regionBroker.getDestinations(originalDestination)) {
+                            DeadLetterStrategy strategy = destination.getDeadLetterStrategy();
+                            strategy.rollback(m.getMessage());
+                        }
+                    }
+                }
+            } finally {
+                messagesLock.writeLock().unlock();
             }
         } finally {
-            messagesLock.writeLock().unlock();
+            for (Destination d: destsToPause) {
+                if (d instanceof Queue) {
+                    ((Queue)d).resumeDispatch();
+                }
+            }
         }
+
         return true;
     }
 
@@ -1498,6 +1580,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      */
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter,
             ActiveMQDestination dest, int maximumMessages) throws Exception {
+
+        if (destination.equals(dest)) {
+            return 0;
+        }
+
         int movedCounter = 0;
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         do {
@@ -1528,6 +1615,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             throw new Exception("Retry of message is only possible on Dead Letter Queues!");
         }
         int restoredCounter = 0;
+        // ensure we deal with a snapshot to avoid potential duplicates in the event of messages
+        // getting immediate dlq'ed
+        long numberOfRetryAttemptsToCheckAllMessagesOnce = this.destinationStatistics.getMessages().getCount();
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         do {
             doPageIn(true);
@@ -1539,6 +1629,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
             List<MessageReference> list = new ArrayList<MessageReference>(set);
             for (MessageReference ref : list) {
+                numberOfRetryAttemptsToCheckAllMessagesOnce--;
                 if (ref.getMessage().getOriginalDestination() != null) {
 
                     moveMessageTo(context, (QueueMessageReference)ref, ref.getMessage().getOriginalDestination());
@@ -1548,7 +1639,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     }
                 }
             }
-        } while (set.size() < this.destinationStatistics.getMessages().getCount() && set.size() < maximumMessages);
+        } while (numberOfRetryAttemptsToCheckAllMessagesOnce > 0 && set.size() < this.destinationStatistics.getMessages().getCount());
         return restoredCounter;
     }
 
@@ -1664,6 +1755,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         if (!added || browser.atMax()) {
                             browser.decrementQueueRef();
                             browserDispatches.remove(browserDispatch);
+                        } else {
+                            wakeup();
                         }
                     } catch (Exception e) {
                         LOG.warn("exception on dispatch to browser: {}", browserDispatch.getBrowser(), e);
@@ -1982,45 +2075,52 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             } finally {
                 messagesLock.writeLock().unlock();
             }
-            // Only add new messages, not already pagedIn to avoid multiple
-            // dispatch attempts
-            pagedInMessagesLock.writeLock().lock();
-            try {
-                if(isPrioritizedMessages()) {
-                    resultList = new PrioritizedPendingList();
-                } else {
-                    resultList = new OrderedPendingList();
-                }
-                for (QueueMessageReference ref : result) {
-                    if (!pagedInMessages.contains(ref)) {
-                        pagedInMessages.addMessageLast(ref);
-                        resultList.addMessageLast(ref);
+
+            if (count > 0) {
+                // Only add new messages, not already pagedIn to avoid multiple
+                // dispatch attempts
+                pagedInMessagesLock.writeLock().lock();
+                try {
+                    if (isPrioritizedMessages()) {
+                        resultList = new PrioritizedPendingList();
                     } else {
-                        ref.decrementReferenceCount();
-                        // store should have trapped duplicate in it's index, or cursor audit trapped insert
-                        // or producerBrokerExchange suppressed send.
-                        // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
-                        LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
-                        if (store != null) {
-                            ConnectionContext connectionContext = createConnectionContext();
-                            dropMessage(ref);
-                            if (gotToTheStore(ref.getMessage())) {
-                                LOG.debug("Duplicate message {} from cursor, removing from store", this, ref.getMessage());
-                                store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
+                        resultList = new OrderedPendingList();
+                    }
+                    for (QueueMessageReference ref : result) {
+                        if (!pagedInMessages.contains(ref)) {
+                            pagedInMessages.addMessageLast(ref);
+                            resultList.addMessageLast(ref);
+                        } else {
+                            ref.decrementReferenceCount();
+                            // store should have trapped duplicate in it's index, or cursor audit trapped insert
+                            // or producerBrokerExchange suppressed send.
+                            // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
+                            LOG.warn("{}, duplicate message {} - {} from cursor, is cursor audit disabled or too constrained? Redirecting to dlq", this, ref.getMessageId(), ref.getMessage().getMessageId().getFutureOrSequenceLong());
+                            if (store != null) {
+                                ConnectionContext connectionContext = createConnectionContext();
+                                dropMessage(ref);
+                                if (gotToTheStore(ref.getMessage())) {
+                                    LOG.debug("Duplicate message {} from cursor, removing from store", this, ref.getMessage());
+                                    store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
+                                }
+                                broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from cursor for " + destination));
                             }
-                            broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from cursor for " + destination));
                         }
                     }
+                } finally {
+                    pagedInMessagesLock.writeLock().unlock();
                 }
-            } finally {
-                pagedInMessagesLock.writeLock().unlock();
+            } else if (!messages.hasSpace()) {
+                if (isFlowControlLogRequired()) {
+                    LOG.warn("{} cursor blocked, no space available to page in messages; usage: {}", this, this.systemUsage.getMemoryUsage());
+                } else {
+                    LOG.debug("{} cursor blocked, no space available to page in messages; usage: {}", this, this.systemUsage.getMemoryUsage());
+                }
             }
-        } else {
-            // Avoid return null list, if condition is not validated
-            resultList = new OrderedPendingList();
         }
 
-        return resultList;
+        // Avoid return null list, if condition is not validated
+        return resultList != null ? resultList : new OrderedPendingList();
     }
 
     private final boolean haveRealConsumer() {

@@ -301,4 +301,36 @@ public class StompWSTransportTest extends WSTransportTestSupport {
             LOG.info("Caught exception on write of disconnect", ex);
         }
     }
+
+    @Test(timeout = 60000)
+    public void testEscapedHeaders() throws Exception {
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.1\n" +
+                              "heart-beat:0,0\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+
+        wsStompConnection.sendRawFrame(connectFrame);
+        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        assertTrue(incoming.startsWith("CONNECTED"));
+
+        String message = "SEND\n" + "destination:/queue/" + getTestName() + "\nescaped-header:one\\ntwo\\cthree\n\n" + "Hello World" + Stomp.NULL;
+        wsStompConnection.sendRawFrame(message);
+
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getTestName() + "\n" +
+                       "id:12345\n" + "ack:auto\n\n" + Stomp.NULL;
+        wsStompConnection.sendRawFrame(frame);
+
+        incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        assertTrue(incoming.startsWith("MESSAGE"));
+        assertTrue(incoming.indexOf("escaped-header:one\\ntwo\\cthree") >= 0);
+
+        try {
+            wsStompConnection.sendFrame(new StompFrame(Stomp.Commands.DISCONNECT));
+        } catch (Exception ex) {
+            LOG.info("Caught exception on write of disconnect", ex);
+        }
+    }
 }

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.policy;
 
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.Queue;
@@ -34,6 +35,8 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class DeadLetterExpiryTest extends DeadLetterTest {
     private static final Logger LOG = LoggerFactory.getLogger(DeadLetterExpiryTest.class);
@@ -62,6 +65,23 @@ public class DeadLetterExpiryTest extends DeadLetterTest {
 
         pMap.put(new ActiveMQQueue("loop"), buggyLoopingDLQPolicy);
         pMap.put(new ActiveMQQueue("DLQ.loop"), buggyLoopingDLQPolicy);
+
+        SharedDeadLetterStrategy auditConfigured = new SharedDeadLetterStrategy();
+        auditConfigured.setDeadLetterQueue(new ActiveMQQueue("DLQ.auditConfigured"));
+        auditConfigured.setProcessNonPersistent(true);
+        auditConfigured.setProcessExpired(true);
+        auditConfigured.setMaxProducersToAudit(1);
+        auditConfigured.setMaxAuditDepth(10);
+        PolicyEntry auditConfiguredDlqPolicy = new PolicyEntry();
+        auditConfiguredDlqPolicy.setDeadLetterStrategy(auditConfigured);
+        auditConfiguredDlqPolicy.setExpireMessagesPeriod(1000);
+
+        pMap.put(new ActiveMQQueue("Comp.One"), auditConfiguredDlqPolicy);
+        pMap.put(new ActiveMQQueue("Comp.Two"), auditConfiguredDlqPolicy);
+
+        PolicyEntry auditConfiguredPolicy = new PolicyEntry();
+        auditConfiguredPolicy.setEnableAudit(false); // allow duplicates through the cursor
+        pMap.put(new ActiveMQQueue("DLQ.auditConfigured"), auditConfiguredPolicy);
 
         PolicyEntry policyWithExpiryProcessing = pMap.getDefaultEntry();
         policyWithExpiryProcessing.setExpireMessagesPeriod(1000);
@@ -122,6 +142,30 @@ public class DeadLetterExpiryTest extends DeadLetterTest {
 
     }
 
+    public void testAuditConfigured() throws Exception {
+        destination = new ActiveMQQueue("Comp.One,Comp.Two");
+        connection.start();
+
+        messageCount = 1;
+        timeToLive = 2000;
+        deliveryMode = DeliveryMode.NON_PERSISTENT;
+        sendMessages();
+        sendMessages();
+
+        assertTrue("all messages expired even duplicates!", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                try {
+                    QueueViewMBean queueViewMBean = getProxyToQueue("DLQ.auditConfigured");
+                    LOG.info("Queue " + queueViewMBean.getName() + ", size:" + queueViewMBean.getQueueSize());
+                    // expiry across queues is no longer seralised on a single timertask thread AMQ-6979
+                    return queueViewMBean.getQueueSize() >= 2;
+                } catch (Exception expectedTillExpiry) {}
+                return false;
+            }
+        }));
+    }
+
     public void testNoDLQLoop() throws Exception {
         destination = new ActiveMQQueue("loop");
         messageCount = 2;
@@ -170,6 +214,8 @@ public class DeadLetterExpiryTest extends DeadLetterTest {
 
     protected void setUp() throws Exception {
         transactedMode = true;
+        deliveryMode = DeliveryMode.PERSISTENT;
+        timeToLive = 0;
         super.setUp();
     }
 

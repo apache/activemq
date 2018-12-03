@@ -17,6 +17,7 @@
 package org.apache.activemq.security;
 
 import java.net.URI;
+import java.util.Arrays;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -126,6 +127,7 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         conn.start();
 
+        LOG.info("dest list at start:" + Arrays.asList(broker.getRegionBroker().getDestinations()));
         final int numDests = broker.getRegionBroker().getDestinations().length;
         for (int i=0; i<10; i++) {
             MessageProducer p = sess.createProducer(new ActiveMQQueue("USERS.PURGE." + i));
@@ -135,8 +137,9 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
         assertTrue("dests are purged", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+                LOG.info("dest list:" + Arrays.asList(broker.getRegionBroker().getDestinations()));
                 LOG.info("dests, orig: " + numDests + ", now: "+ broker.getRegionBroker().getDestinations().length);
-                return (numDests + 1) == broker.getRegionBroker().getDestinations().length;
+                return numDests == broker.getRegionBroker().getDestinations().length;
             }
         }));
 

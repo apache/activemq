@@ -17,14 +17,14 @@
 package org.apache.activemq.transport.nio;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-
-import junit.framework.TestCase;
+import javax.net.ssl.SSLHandshakeException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -32,6 +32,8 @@ import org.apache.activemq.broker.TransportConnector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class NIOSSLBasicTest {
 
@@ -79,22 +81,36 @@ public class NIOSSLBasicTest {
     @Test
     public void basicConnector() throws Exception {
         BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true");
-        basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
+        basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
     }
 
     @Test
     public void enabledCipherSuites() throws Exception {
-        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=SSL_RSA_WITH_RC4_128_SHA,SSL_DH_anon_WITH_3DES_EDE_CBC_SHA");
-        basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
+        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false&transport.enabledCipherSuites=TLS_RSA_WITH_AES_256_CBC_SHA256");
+        basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
     }
 
     @Test
     public void enabledProtocols() throws Exception {
         BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true&transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2");
-        basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
+        basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
+    }
+
+    //Client is missing verifyHostName=false so it should fail as cert doesn't have right host name
+    @Test(expected = Exception.class)
+    public void verifyHostNameErrorClient() throws Exception {
+        BrokerService broker = null;
+        try {
+            broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true");
+            basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
+        } finally {
+            if (broker != null) {
+                stopBroker(broker);
+            }
+        }
     }
 
     public void basicSendReceive(String uri) throws Exception {

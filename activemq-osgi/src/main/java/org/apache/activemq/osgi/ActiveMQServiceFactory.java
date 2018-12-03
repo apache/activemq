@@ -26,7 +26,7 @@ import java.util.Properties;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
-import org.apache.camel.osgi.CamelContextFactoryBean;
+import org.apache.camel.blueprint.CamelContextFactoryBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
@@ -137,8 +137,11 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             brokerContext.setApplicationContext(ctx);
             broker.setBrokerContext(brokerContext);
 
+            broker.setStartAsync(true);
             broker.start();
-            broker.waitUntilStarted();
+
+            if (!broker.isSlave())
+                broker.waitUntilStarted();
             brokers.put(pid, broker);
         } catch (Exception e) {
             throw new ConfigurationException(null, "Cannot start the broker", e);

@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -79,7 +80,15 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public void rebase() {
-        resetSize();
+        MessageId lastAdded = lastCachedIds[SYNC_ADD];
+        if (lastAdded != null) {
+            try {
+                setBatch(lastAdded);
+            } catch (Exception e) {
+                LOG.error("{} - Failed to set batch on rebase", this, e);
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -139,7 +148,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             // if the index suppressed it (original still present), or whether it was stored and needs to be removed
             Object possibleFuture = message.getMessageId().getFutureOrSequenceLong();
             if (possibleFuture instanceof Future) {
-                ((Future) possibleFuture).get();
+                try {
+                    ((Future) possibleFuture).get();
+                } catch (Exception okToErrorOrCancelStoreOp) {}
             }
             // need to access again after wait on future
             Object sequence = message.getMessageId().getFutureOrSequenceLong();
@@ -342,8 +353,20 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             final Object futureOrLong = candidate.getFutureOrSequenceLong();
             if (futureOrLong instanceof Future) {
                 Future future = (Future) futureOrLong;
-                if (future.isCancelled()) {
-                    it.remove();
+                if (future.isDone()) {
+                    if (future.isCancelled()) {
+                        it.remove();
+                    } else {
+                        // check for exception, we may be seeing old state
+                        try {
+                            future.get(0, TimeUnit.SECONDS);
+                            // stale; if we get a result next prune will see Long
+                        } catch (ExecutionException expected) {
+                            it.remove();
+                        } catch (Exception unexpected) {
+                            LOG.debug("{} unexpected exception verifying exception state of future", this, unexpected);
+                        }
+                    }
                 } else {
                     // we don't want to wait for work to complete
                     break;
@@ -376,7 +399,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             } else if (candidateOrSequenceLong != null &&
                     Long.compare(((Long) candidateOrSequenceLong), ((Long) lastCacheFutureOrSequenceLong)) > 0) {
                 lastCachedIds[index] = candidate;
-            } if (LOG.isTraceEnabled()) {
+            } else if (LOG.isTraceEnabled()) {
                 LOG.trace("no set last cached[" + index + "] current:" + lastCacheFutureOrSequenceLong + " <= than candidate: " + candidateOrSequenceLong+ ", " + this);
             }
         }
@@ -388,7 +411,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     @Override
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
-        setCacheEnabled(false);
         size++;
     }
 
@@ -483,7 +505,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     @Override
     public String toString() {
         return super.toString() + ":" + regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
-                    + ",size=" + this.size + ",cacheEnabled=" + isCacheEnabled()
+                    + ",size=" + this.size + ",cacheEnabled=" + cacheEnabled
                     + ",maxBatchSize:" + maxBatchSize + ",hasSpace:" + hasSpace() + ",pendingCachedIds.size:" + pendingCachedIds.size()
                     + ",lastSyncCachedId:" + lastCachedIds[SYNC_ADD] + ",lastSyncCachedId-seq:" + (lastCachedIds[SYNC_ADD] != null ? lastCachedIds[SYNC_ADD].getFutureOrSequenceLong() : "null")
                     + ",lastAsyncCachedId:" + lastCachedIds[ASYNC_ADD] + ",lastAsyncCachedId-seq:" + (lastCachedIds[ASYNC_ADD] != null ? lastCachedIds[ASYNC_ADD].getFutureOrSequenceLong() : "null");

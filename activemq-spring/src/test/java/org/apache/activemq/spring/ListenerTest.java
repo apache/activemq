@@ -63,7 +63,7 @@ public class ListenerTest {
 
         Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                return (6 * msgNum) <= listener.messages.size();
+                return (6 * msgNum) == listener.messages.size();
             }
         });
 

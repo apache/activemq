@@ -59,6 +59,7 @@ public abstract class BaseDestination implements Destination {
     public static final long DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC = 60 * 1000;
     public static final int MAX_PRODUCERS_TO_AUDIT = 64;
     public static final int MAX_AUDIT_DEPTH = 10000;
+    public static final String DUPLICATE_FROM_STORE_MSG_PREFIX = "duplicate from store for ";
 
     protected final AtomicBoolean started = new AtomicBoolean();
     protected final ActiveMQDestination destination;
@@ -673,12 +674,20 @@ public abstract class BaseDestination implements Destination {
 
     protected final void waitForSpace(ConnectionContext context, ProducerBrokerExchange producerBrokerExchange, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
         if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
-            getLog().debug("sendFailIfNoSpace, forcing exception on send, usage: {}: {}", usage, warning);
+            if (isFlowControlLogRequired()) {
+                getLog().info("sendFailIfNoSpace, forcing exception on send, usage: {}: {}", usage, warning);
+            } else {
+                getLog().debug("sendFailIfNoSpace, forcing exception on send, usage: {}: {}", usage, warning);
+            }
             throw new ResourceAllocationException(warning);
         }
         if (!context.isNetworkConnection() && systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
             if (!usage.waitForSpace(systemUsage.getSendFailIfNoSpaceAfterTimeout(), highWaterMark)) {
-                getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send, usage: {}: {}", usage, warning);
+                if (isFlowControlLogRequired()) {
+                    getLog().info("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send, usage: {}: {}", usage, warning);
+                } else {
+                    getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send, usage: {}: {}", usage, warning);
+                }
                 throw new ResourceAllocationException(warning);
             }
         } else {
@@ -691,7 +700,9 @@ public abstract class BaseDestination implements Destination {
                 }
 
                 if (isFlowControlLogRequired()) {
-                    getLog().info("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
+                    getLog().warn("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
+                } else {
+                    getLog().debug("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((System.currentTimeMillis() - start) / 1000))});
                 }
             }
             long finish = System.currentTimeMillis();
@@ -841,7 +852,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public ConnectionContext createConnectionContext() {
-        ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
+        ConnectionContext answer = new ConnectionContext();
         answer.setBroker(this.broker);
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
         answer.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
@@ -871,16 +882,16 @@ public abstract class BaseDestination implements Destination {
     }
 
     @Override
-    public void duplicateFromStore(Message message, Subscription durableSub) {
+    public void duplicateFromStore(Message message, Subscription subscription) {
         ConnectionContext connectionContext = createConnectionContext();
-        getLog().warn("duplicate message from store {}, redirecting for dlq processing", message.getMessageId());
-        Throwable cause = new Throwable("duplicate from store for " + destination);
+        getLog().warn("{}{}, redirecting {} for dlq processing", DUPLICATE_FROM_STORE_MSG_PREFIX, destination, message.getMessageId());
+        Throwable cause = new Throwable(DUPLICATE_FROM_STORE_MSG_PREFIX + destination);
         message.setRegionDestination(this);
         broker.getRoot().sendToDeadLetterQueue(connectionContext, message, null, cause);
         MessageAck messageAck = new MessageAck(message, MessageAck.POSION_ACK_TYPE, 1);
         messageAck.setPoisonCause(cause);
         try {
-            acknowledge(connectionContext, durableSub, messageAck, message);
+            acknowledge(connectionContext, subscription, messageAck, message);
         } catch (IOException e) {
             getLog().error("Failed to acknowledge duplicate message {} from {} with {}", message.getMessageId(), destination, messageAck);
         }

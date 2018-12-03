@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -46,8 +47,11 @@ import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,10 +68,12 @@ public class JournalCorruptionEofIndexRecoveryTest {
     private String connectionUri;
     private KahaDBPersistenceAdapter adapter;
     private boolean ignoreMissingJournalFiles = false;
+    private int journalMaxBatchSize;
 
     private final Destination destination = new ActiveMQQueue("Test");
     private final String KAHADB_DIRECTORY = "target/activemq-data/";
     private final String payload = new String(new byte[1024]);
+    File brokerDataDir = null;
 
     protected void startBroker() throws Exception {
         doStartBroker(true, false);
@@ -78,14 +84,13 @@ public class JournalCorruptionEofIndexRecoveryTest {
     }
 
     protected void restartBroker(boolean whackIndex, boolean forceRecoverIndex) throws Exception {
-        File dataDir = broker.getPersistenceAdapter().getDirectory();
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
         }
 
         if (whackIndex) {
-            File indexToDelete = new File(dataDir, "db.data");
+            File indexToDelete = new File(brokerDataDir, "db.data");
             LOG.info("Whacking index: " + indexToDelete);
             indexToDelete.delete();
         }
@@ -113,6 +118,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         cf = new ActiveMQConnectionFactory(connectionUri);
 
         broker.start();
+        brokerDataDir = broker.getPersistenceAdapter().getDirectory();
         LOG.info("Starting broker..");
     }
 
@@ -123,6 +129,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
         // ensure there are a bunch of data files but multiple entries in each
         adapter.setJournalMaxFileLength(1024 * 20);
+
+        adapter.setJournalMaxWriteBatchSize(journalMaxBatchSize);
 
         // speed up the test case, checkpoint an cleanup early and often
         adapter.setCheckpointInterval(5000);
@@ -146,6 +154,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
     @Before
     public void reset() throws Exception {
         ignoreMissingJournalFiles = true;
+        journalMaxBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     }
 
     @Test
@@ -188,6 +197,58 @@ public class JournalCorruptionEofIndexRecoveryTest {
     }
 
     @Test
+    public void testRecoveryAfterCorruptionMetadataLocation() throws Exception {
+        startBroker();
+
+        produceMessagesToConsumeMultipleDataFiles(50);
+
+        int numFiles = getNumberOfJournalFiles();
+
+        assertTrue("more than x files: " + numFiles, numFiles > 2);
+
+        broker.getPersistenceAdapter().checkpoint(true);
+        Location location = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getMetadata().producerSequenceIdTrackerLocation;
+
+        DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(Integer.valueOf(location.getDataFileId()));
+        RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
+        randomAccessFile.seek(location.getOffset());
+        randomAccessFile.writeInt(Integer.MAX_VALUE);
+        randomAccessFile.getChannel().force(true);
+
+        ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().close();
+        try {
+            broker.stop();
+            broker.waitUntilStopped();
+        } catch (Exception expected) {
+        } finally {
+            broker = null;
+        }
+
+        AtomicBoolean trappedExpectedLogMessage = new AtomicBoolean(false);
+        DefaultTestAppender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel() == Level.WARN
+                        && event.getRenderedMessage().contains("Cannot recover message audit")
+                        && event.getThrowableInformation().getThrowable().getLocalizedMessage().contains("Invalid location size")) {
+                    trappedExpectedLogMessage.set(true);
+                }
+            }
+        };
+        org.apache.log4j.Logger.getRootLogger().addAppender(appender);
+
+
+        try {
+            restartBroker(false);
+        } finally {
+            org.apache.log4j.Logger.getRootLogger().removeAppender(appender);
+        }
+
+        assertEquals("no missing message", 50, broker.getAdminView().getTotalMessageCount());
+        assertTrue("Did replay records on invalid location size", trappedExpectedLogMessage.get());
+    }
+
+    @Test
     public void testRecoveryAfterCorruptionCheckSum() throws Exception {
         startBroker();
 
@@ -223,6 +284,20 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     @Test
     public void testRecoverIndex() throws Exception {
+        startBroker();
+
+        final int numToSend = 4;
+        produceMessagesToConsumeMultipleDataFiles(numToSend);
+
+        // force journal replay by whacking the index
+        restartBroker(false, true);
+
+        assertEquals("Drain", numToSend, drainQueue(numToSend));
+    }
+
+    @Test
+    public void testRecoverIndexWithSmallBatch() throws Exception {
+        journalMaxBatchSize = 2 * 1024;
         startBroker();
 
         final int numToSend = 4;

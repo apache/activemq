@@ -181,6 +181,12 @@ public class DataFileAppenderNoSpaceNoBatchTest {
             assertTrue("write complete", latch.await(5, TimeUnit.SECONDS));
         }
 
+        boolean someExceptions = false;
+        for (Location location: locations) {
+            someExceptions |= (location.getException().get() != null);
+        }
+        assertTrue(someExceptions);
+
         LOG.info("Latches count: " + latches.size());
         LOG.info("Seeks: " + seekPositions);
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -74,16 +74,7 @@ public class StompWireFormat implements WireFormat {
         return unmarshal(dis);
     }
 
-    @Override
-    public void marshal(Object command, DataOutput os) throws IOException {
-        StompFrame stomp = (org.apache.activemq.transport.stomp.StompFrame)command;
-
-        if (stomp.getAction().equals(Stomp.Commands.KEEPALIVE)) {
-            os.write(Stomp.BREAK);
-            return;
-        }
-
-        StringBuilder buffer = new StringBuilder();
+    private StringBuilder marshalHeaders(StompFrame stomp, StringBuilder buffer) throws IOException {
         buffer.append(stomp.getAction());
         buffer.append(Stomp.NEWLINE);
 
@@ -95,19 +86,48 @@ public class StompWireFormat implements WireFormat {
             buffer.append(Stomp.NEWLINE);
         }
 
-        // Add a newline to seperate the headers from the content.
+        // Add a newline to separate the headers from the content.
         buffer.append(Stomp.NEWLINE);
 
-        os.write(buffer.toString().getBytes("UTF-8"));
+        return buffer;
+    }
+
+    @Override
+    public void marshal(Object command, DataOutput os) throws IOException {
+        StompFrame stomp = (org.apache.activemq.transport.stomp.StompFrame)command;
+
+        if (stomp.getAction().equals(Stomp.Commands.KEEPALIVE)) {
+            os.write(Stomp.BREAK);
+            return;
+        }
+
+        StringBuilder builder = new StringBuilder();
+
+        os.write(marshalHeaders(stomp, builder).toString().getBytes("UTF-8"));
         os.write(stomp.getContent());
         os.write(END_OF_FRAME);
     }
 
+    public String marshalToString(StompFrame stomp) throws IOException {
+        if (stomp.getAction().equals(Stomp.Commands.KEEPALIVE)) {
+            return String.valueOf((char)Stomp.BREAK);
+        }
+
+        StringBuilder buffer = new StringBuilder();
+        marshalHeaders(stomp, buffer);
+
+        if (stomp.getContent() != null) {
+            String contentString = new String(stomp.getContent(), "UTF-8");
+            buffer.append(contentString);
+        }
+
+        buffer.append('\u0000');
+        return buffer.toString();
+    }
+
     @Override
     public Object unmarshal(DataInput in) throws IOException {
-
         try {
-
             // parse action
             String action = parseAction(in, frameSize);
 
@@ -212,7 +232,7 @@ public class StompWireFormat implements WireFormat {
     }
 
     protected HashMap<String, String> parseHeaders(DataInput in, AtomicLong frameSize) throws IOException {
-        HashMap<String, String> headers = new HashMap<String, String>(25);
+        HashMap<String, String> headers = new HashMap<>(25);
         while (true) {
             ByteSequence line = readHeaderLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
             if (line != null && line.length > 1) {

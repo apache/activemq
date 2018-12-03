@@ -54,7 +54,7 @@ public class NetworkReconnectSslNioTest {
         local.setSslContext(sslContext);
         local.setUseJmx(false);
         local.setPersistent(false);
-        final NetworkConnector networkConnector = local.addNetworkConnector("static:(" + remote.getTransportConnectorByScheme("nio+ssl").getPublishableConnectString().replace("nio+ssl", "ssl") + ")?useExponentialBackOff=false&initialReconnectDelay=10");
+        final NetworkConnector networkConnector = local.addNetworkConnector("static:(" + remote.getTransportConnectorByScheme("nio+ssl").getPublishableConnectString().replace("nio+ssl", "ssl") + "?socket.verifyHostName=false" + ")?useExponentialBackOff=false&initialReconnectDelay=10");
         local.start();
 
         assertTrue("Bridge created", Wait.waitFor(new Wait.Condition() {

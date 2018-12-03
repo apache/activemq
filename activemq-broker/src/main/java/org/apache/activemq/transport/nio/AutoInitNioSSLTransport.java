@@ -30,6 +30,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLParameters;
 
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -87,6 +88,12 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
                 sslEngine = sslContext.createSSLEngine(remoteHost, remotePort);
             } else {
                 sslEngine = sslContext.createSSLEngine();
+            }
+
+            if (verifyHostName) {
+                SSLParameters sslParams = new SSLParameters();
+                sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+                sslEngine.setSSLParameters(sslParams);
             }
 
             sslEngine.setUseClientMode(false);

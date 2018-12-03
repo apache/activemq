@@ -1096,9 +1096,9 @@ public class FailoverTransport implements CompositeTransport {
             }
 
             int warnInterval = getWarnAfterReconnectAttempts();
-            if (warnInterval > 0 && (connectFailures % warnInterval) == 0) {
-                LOG.warn("Failed to connect to {} after: {} attempt(s) continuing to retry.",
-                         uris, connectFailures);
+            if (warnInterval > 0 && (connectFailures == 1 || (connectFailures % warnInterval) == 0)) {
+                LOG.warn("Failed to connect to {} after: {} attempt(s) with {}, continuing to retry.",
+                         uris, connectFailures, (failure == null ? "?" : failure.getLocalizedMessage()));
             }
         }
 

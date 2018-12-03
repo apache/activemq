@@ -102,7 +102,7 @@ public class StompAutoSslAuthTest extends StompTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
-        return "?transport.needClientAuth=true";
+        return "?transport.needClientAuth=true&transport.verifyHostName=false";
     }
 
     @Override

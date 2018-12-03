@@ -216,7 +216,9 @@ class DurableSubscriptionOfflineTestListener implements MessageListener {
     }
     @Override
     public void onMessage(javax.jms.Message message) {
-        count++;
+        synchronized (this) {
+            count++;
+        }
         if (id != null) {
             try {
                 LOG.info(id + ", " + message.getJMSMessageID());

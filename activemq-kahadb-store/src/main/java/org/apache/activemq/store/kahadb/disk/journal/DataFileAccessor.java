@@ -17,6 +17,7 @@
 package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Map;
 
 import org.apache.activemq.util.ByteSequence;
@@ -83,7 +84,9 @@ final class DataFileAccessor {
             } else {
                 file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
             }
-
+            if ((long)location.getOffset() + location.getSize() > dataFile.length) {
+                throw new IOException("Invalid location size: " + location + ", size: " + location.getSize());
+            }
             byte[] data = new byte[location.getSize() - Journal.RECORD_HEAD_SPACE];
             file.readFully(data);
             return new ByteSequence(data, 0, data.length);
@@ -115,38 +118,6 @@ final class DataFileAccessor {
         }
     }
 
-//    public boolean readLocationDetailsAndValidate(Location location) {
-//        try {
-//            WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
-//            if (asyncWrite != null) {
-//                location.setSize(asyncWrite.location.getSize());
-//                location.setType(asyncWrite.location.getType());
-//            } else {
-//                file.seek(location.getOffset());
-//                location.setSize(file.readInt());
-//                location.setType(file.readByte());
-//
-//                byte data[] = new byte[3];
-//                file.seek(location.getOffset() + Journal.ITEM_HEAD_OFFSET_TO_SOR);
-//                file.readFully(data);
-//                if (data[0] != Journal.ITEM_HEAD_SOR[0]
-//                    || data[1] != Journal.ITEM_HEAD_SOR[1]
-//                    || data[2] != Journal.ITEM_HEAD_SOR[2]) {
-//                    return false;
-//                }
-//                file.seek(location.getOffset() + location.getSize() - Journal.ITEM_FOOT_SPACE);
-//                file.readFully(data);
-//                if (data[0] != Journal.ITEM_HEAD_EOR[0]
-//                    || data[1] != Journal.ITEM_HEAD_EOR[1]
-//                    || data[2] != Journal.ITEM_HEAD_EOR[2]) {
-//                    return false;
-//                }
-//            }
-//        } catch (IOException e) {
-//            return false;
-//        }
-//        return true;
-//    }
 
     public void updateRecord(Location location, ByteSequence data, boolean sync) throws IOException {
 
@@ -156,5 +127,9 @@ final class DataFileAccessor {
         if (sync) {
             file.sync();
         }
+    }
+
+    public RecoverableRandomAccessFile getRaf() {
+        return file;
     }
 }

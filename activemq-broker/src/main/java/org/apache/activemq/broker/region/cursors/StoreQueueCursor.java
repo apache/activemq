@@ -20,6 +20,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,6 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     private final Queue queue;
     private PendingMessageCursor nonPersistent;
     private final QueueStorePrefetch persistent;
-    private boolean started;
     private PendingMessageCursor currentCursor;
 
     /**
@@ -78,9 +78,6 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     public synchronized void stop() throws Exception {
         started = false;
         if (nonPersistent != null) {
-//            nonPersistent.clear();
-//            nonPersistent.stop();
-//            nonPersistent.gc();
           nonPersistent.destroy();
         }
         persistent.stop();
@@ -222,6 +219,11 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         this.nonPersistent = nonPersistent;
     }
 
+    /**
+     * @return the persistent Cursor
+     */
+    public PendingMessageCursor getPersistent() { return  this.persistent; }
+
     @Override
     public void setMaxBatchSize(int maxBatchSize) {
         persistent.setMaxBatchSize(maxBatchSize);
@@ -263,6 +265,12 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         if (nonPersistent != null) {
             nonPersistent.setEnableAudit(enableAudit);
         }
+    }
+
+    @Override
+    public void rollback(MessageId id) {
+        nonPersistent.rollback(id);
+        persistent.rollback(id);
     }
 
     @Override

@@ -49,24 +49,19 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.SocketProxy;
 import org.apache.activemq.util.Wait;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(value = Parameterized.class)
 public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumer0Test.class);
 
-    @Parameterized.Parameters(name = "isTopic({0})")
-    public static Collection<Object[]> getTestParameters() {
-        return Arrays.asList(new Object[][]{{Boolean.TRUE}, {Boolean.FALSE}});
-    }
-
-    public AbortSlowConsumer0Test(Boolean isTopic) {
-        this.topic = isTopic;
+    public AbortSlowConsumer0Test() {
+        this.topic = true;
     }
 
     @Test
@@ -125,8 +120,11 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
         assertEquals("no slow consumers left", 0, slowOnes.size());
 
         // verify mbean gone with destination
-        broker.getAdminView().removeTopic(amqDest.getPhysicalName());
-
+        if (topic) {
+            broker.getAdminView().removeTopic(amqDest.getPhysicalName());
+        } else {
+            broker.getAdminView().removeQueue(amqDest.getPhysicalName());
+        }
         try {
             abortPolicy.getSlowConsumers();
             fail("expect not found post destination removal");

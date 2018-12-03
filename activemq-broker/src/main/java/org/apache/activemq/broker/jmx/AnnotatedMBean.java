@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.management.MBeanAttributeInfo;
@@ -48,7 +49,12 @@ public class AnnotatedMBean extends StandardMBean {
 
     private static final Logger LOG = LoggerFactory.getLogger("org.apache.activemq.audit");
 
-    private static boolean audit;
+    private static final byte OFF = 0b00;
+    private static final byte ENTRY = 0b01;
+    private static final byte EXIT = 0b10;
+    private static final byte ALL = 0b11;
+
+    private static byte audit = OFF;
     private static AuditLogService auditLog;
 
     static {
@@ -56,10 +62,25 @@ public class AnnotatedMBean extends StandardMBean {
         for (Class<?> c : p) {
             primitives.put(c.getName(), c);
         }
-        audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
-        if (audit) {
+        audit = byteFromProperty("org.apache.activemq.audit");
+        if (audit != OFF) {
             auditLog = AuditLogService.getAuditLog();
         }
+    }
+
+    private final ObjectName objectName;
+
+    private static byte byteFromProperty(String s) {
+        byte val = OFF;
+        String config = System.getProperty(s, "").toLowerCase(Locale.ENGLISH);
+        if ("true".equals(config) || "entry".equals(config)) {
+            val = ENTRY;
+        } else if ("exit".equals(config)) {
+            val = EXIT;
+        } else if ("all".equals(config)) {
+            val = ALL;
+        }
+        return val;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -69,7 +90,7 @@ public class AnnotatedMBean extends StandardMBean {
 
         for (Class c : object.getClass().getInterfaces()) {
             if (mbeanName.equals(c.getName())) {
-                context.registerMBean(new AnnotatedMBean(object, c), objectName);
+                context.registerMBean(new AnnotatedMBean(object, c, objectName), objectName);
                 return;
             }
         }
@@ -78,13 +99,15 @@ public class AnnotatedMBean extends StandardMBean {
     }
 
     /** Instance where the MBean interface is implemented by another object. */
-    public <T> AnnotatedMBean(T impl, Class<T> mbeanInterface) throws NotCompliantMBeanException {
+    public <T> AnnotatedMBean(T impl, Class<T> mbeanInterface, ObjectName objectName) throws NotCompliantMBeanException {
         super(impl, mbeanInterface);
+        this.objectName = objectName;
     }
 
     /** Instance where the MBean interface is implemented by this object. */
-    protected AnnotatedMBean(Class<?> mbeanInterface) throws NotCompliantMBeanException {
+    protected AnnotatedMBean(Class<?> mbeanInterface, ObjectName objectName) throws NotCompliantMBeanException {
         super(mbeanInterface);
+        this.objectName = objectName;
     }
 
     /** {@inheritDoc} */
@@ -179,7 +202,8 @@ public class AnnotatedMBean extends StandardMBean {
 
     @Override
     public Object invoke(String s, Object[] objects, String[] strings) throws MBeanException, ReflectionException {
-        if (audit) {
+        JMXAuditLogEntry entry = null;
+        if (audit != OFF) {
             Subject subject = Subject.getSubject(AccessController.getContext());
             String caller = "anonymous";
             if (subject != null) {
@@ -189,9 +213,10 @@ public class AnnotatedMBean extends StandardMBean {
                 }
             }
 
-            AuditLogEntry entry = new JMXAuditLogEntry();
+            entry = new JMXAuditLogEntry();
             entry.setUser(caller);
             entry.setTimestamp(System.currentTimeMillis());
+            entry.setTarget(extractTargetTypeProperty(objectName));
             entry.setOperation(this.getMBeanInfo().getClassName() + "." + s);
 
             try
@@ -213,9 +238,31 @@ public class AnnotatedMBean extends StandardMBean {
                entry.getParameters().put("arguments", objects);
             }
 
+            if ((audit&ENTRY) == ENTRY) {
+                auditLog.log(entry);
+            }
+        }
+        Object result = super.invoke(s, objects, strings);
+        if ((audit&EXIT) == EXIT) {
+            entry.complete();
             auditLog.log(entry);
         }
-        return super.invoke(s, objects, strings);
+        return result;
+    }
+
+    // keep brokerName last b/c objectNames include the brokerName
+    final static String[] targetPropertiesCandidates = new String[] {"destinationName", "networkConnectorName", "connectorName", "connectionName", "brokerName"};
+    private String extractTargetTypeProperty(ObjectName objectName) {
+        String result = null;
+        for (String attr: targetPropertiesCandidates) {
+            try {
+                result = objectName.getKeyProperty(attr);
+                if (result != null) {
+                    break;
+                }
+            } catch (NullPointerException ok) {}
+        }
+        return result;
     }
 
     private Method getMBeanMethod(Class clazz, String methodName, String[] signature) throws ReflectiveOperationException {

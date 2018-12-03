@@ -330,4 +330,40 @@ public abstract class AbstractSubscription implements Subscription {
     public AtomicInteger getPrefetchExtension() {
         return this.prefetchExtension;
     }
+
+    protected void contractPrefetchExtension(int amount) {
+        if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
+            decrementPrefetchExtension(amount);
+        }
+    }
+
+    protected void expandPrefetchExtension(int amount) {
+        if (isUsePrefetchExtension() && getPrefetchSize() != 0) {
+            incrementPrefetchExtension(amount);
+        }
+    }
+
+    protected void decrementPrefetchExtension(int amount) {
+        while (true) {
+            int currentExtension = prefetchExtension.get();
+            int newExtension = Math.max(0, currentExtension - amount);
+            if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                break;
+            }
+        }
+    }
+
+    private void incrementPrefetchExtension(int amount) {
+        while (true) {
+            int currentExtension = prefetchExtension.get();
+            int newExtension = Math.max(currentExtension, currentExtension + amount);
+            if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                break;
+            }
+        }
+    }
+
+    public CopyOnWriteArrayList<Destination> getDestinations() {
+        return destinations;
+    }
 }

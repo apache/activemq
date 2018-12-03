@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
     @Override
     public void handle(IOException exception) {
-        if (ignoreAllErrors) {
+        if (!broker.isStarted() || ignoreAllErrors) {
             allowIOResumption();
             LOG.info("Ignoring IO exception, " + exception, exception);
             return;
@@ -120,7 +120,7 @@ import org.slf4j.LoggerFactory;
                                                 if (destination instanceof Queue) {
                                                     Queue queue = (Queue)destination;
                                                     if (queue.isResetNeeded()) {
-                                                        queue.clearPendingMessages();
+                                                        queue.clearPendingMessages(0);
                                                     }
                                                 }
                                             }
@@ -166,6 +166,13 @@ import org.slf4j.LoggerFactory;
     }
 
     protected void allowIOResumption() {
+        try {
+            if (broker.getPersistenceAdapter() != null) {
+                broker.getPersistenceAdapter().allowIOResumption();
+            }
+        } catch (IOException e) {
+            LOG.warn("Failed to allow IO resumption", e);
+        }
     }
 
     private void stopBroker(Exception exception) {

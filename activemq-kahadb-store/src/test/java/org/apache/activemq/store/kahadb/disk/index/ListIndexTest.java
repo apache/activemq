@@ -57,12 +57,11 @@ public class ListIndexTest extends IndexTestSupport {
     protected Index<String, Long> createIndex() throws Exception {
 
         long id = tx.allocate().getPageId();
-        tx.commit();
-
         ListIndex<String, Long> index = new ListIndex<String, Long>(pf, id);
         index.setKeyMarshaller(StringMarshaller.INSTANCE);
         index.setValueMarshaller(LongMarshaller.INSTANCE);
-
+        index.load(tx);
+        tx.commit();
         return index;
     }
 

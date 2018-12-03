@@ -70,7 +70,7 @@
     </broker>
 
     <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory">
-        <property name="brokerURL" value="tcp://localhost:61616?jms.dispatchAsync=false"/>
+        <property name="brokerURL" value="tcp://localhost:61616?jms.dispatchAsync=false&amp;jms.xaAckMode=1"/>
         <property name="userName" value="karaf" />
         <property name="password" value="karaf" />
 

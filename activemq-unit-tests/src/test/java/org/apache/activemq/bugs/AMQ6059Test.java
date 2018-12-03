@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -105,6 +106,17 @@ public class AMQ6059Test {
         restartBroker();
         verifyIsDlq(dlqQueue);
         verifyMessageIsRecovered(dlqQueue);
+    }
+
+    @Test
+    public void testSetDlqFlag() throws Exception {
+        final ActiveMQQueue toFlp = new ActiveMQQueue("QNameToFlip");
+        sendMessage(toFlp);
+
+        final QueueViewMBean queueViewMBean = getProxyToQueue(toFlp.getQueueName());
+        assertFalse(queueViewMBean.isDLQ());
+        queueViewMBean.setDLQ(true);
+        assertTrue(queueViewMBean.isDLQ());
     }
 
     protected BrokerService createBroker() throws Exception {

@@ -20,12 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.maven;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -62,7 +57,7 @@ import org.slf4j.LoggerFactory;
 @ExamReactorStrategy(PerClass.class)
 public abstract class AbstractFeatureTest {
 
-    private static final String KARAF_MAJOR_VERSION = "4.0.0";
+    private static final String KARAF_MAJOR_VERSION = "4.2.1";
     public static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
     public static final long ASSERTION_TIMEOUT = 30000L;
     public static final String RESOURCE_BASE = "src/test/resources/org/apache/activemq/karaf/itest/";
@@ -146,6 +141,7 @@ public abstract class AbstractFeatureTest {
     }
 
     public static Option configure(String... features) {
+        String karafVersion = MavenUtils.getArtifactVersion("org.apache.karaf", "apache-karaf");
         MavenUrlReference karafUrl = maven().groupId("org.apache.karaf").artifactId("apache-karaf")
             .type("tar.gz").versionAsInProject();
         UrlReference camelUrl = maven().groupId("org.apache.camel.karaf")
@@ -156,8 +152,10 @@ public abstract class AbstractFeatureTest {
          karafDistributionConfiguration().frameworkUrl(karafUrl).karafVersion(KARAF_MAJOR_VERSION)
              .name("Apache Karaf").unpackDirectory(new File("target/paxexam/unpack/")),
          keepRuntimeFolder(), //
-         logLevel(LogLevelOption.LogLevel.WARN), //
+         logLevel(LogLevelOption.LogLevel.INFO), //
          editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
+         editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories",
+                 "mvn:org.apache.karaf.features/spring-legacy/" + karafVersion + "/xml/features"),
          // debugConfiguration("5005", true),
          features(activeMQUrl, features), //
          features(camelUrl)

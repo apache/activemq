@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.jms.InvalidClientIDException;
@@ -112,10 +113,26 @@ public class RegionBroker extends EmptyBroker {
     private boolean allowTempAutoCreationOnSend;
 
     private final ReentrantReadWriteLock inactiveDestinationsPurgeLock = new ReentrantReadWriteLock();
+    private final TaskRunnerFactory taskRunnerFactory;
+    private final AtomicBoolean purgeInactiveDestinationsTaskInProgress = new AtomicBoolean(false);
     private final Runnable purgeInactiveDestinationsTask = new Runnable() {
         @Override
         public void run() {
-            purgeInactiveDestinations();
+            if (purgeInactiveDestinationsTaskInProgress.compareAndSet(false, true)) {
+                taskRunnerFactory.execute(purgeInactiveDestinationsWork);
+            }
+        }
+    };
+    private final Runnable purgeInactiveDestinationsWork = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                purgeInactiveDestinations();
+            } catch (Throwable ignored) {
+                LOG.error("Unexpected exception on purgeInactiveDestinations {}", this, ignored);
+            } finally {
+                purgeInactiveDestinationsTaskInProgress.set(false);
+            }
         }
     };
 
@@ -134,6 +151,7 @@ public class RegionBroker extends EmptyBroker {
         this.destinationInterceptor = destinationInterceptor;
         tempQueueRegion = createTempQueueRegion(memoryManager, taskRunnerFactory, destinationFactory);
         tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);
+        this.taskRunnerFactory = taskRunnerFactory;
     }
 
     @Override
@@ -786,7 +804,7 @@ public class RegionBroker extends EmptyBroker {
                             if (context.getSecurityContext() == null || !context.getSecurityContext().isBrokerContext()) {
                                 adminContext = BrokerSupport.getConnectionContext(this);
                             }
-                            addDestination(adminContext, deadLetterDestination, false).getActiveMQDestination().setDLQ();
+                            addDestination(adminContext, deadLetterDestination, false).getActiveMQDestination().setDLQ(true);
                             BrokerSupport.resendNoCopy(adminContext, message, deadLetterDestination);
                             return true;
                         }
@@ -895,7 +913,7 @@ public class RegionBroker extends EmptyBroker {
                     log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimeoutBeforeGC());
                     try {
                         getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         LOG.error("Failed to remove inactive destination {}", dest, e);
                     }
                 }

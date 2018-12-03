@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -107,15 +108,15 @@ public class ProtocolConverter {
     private final LongSequenceGenerator transactionIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator tempDestinationGenerator = new LongSequenceGenerator();
 
-    private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
-    private final ConcurrentMap<ConsumerId, StompSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, StompSubscription>();
-    private final ConcurrentMap<String, StompSubscription> subscriptions = new ConcurrentHashMap<String, StompSubscription>();
-    private final ConcurrentMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<String, ActiveMQDestination>();
-    private final ConcurrentMap<String, String> tempDestinationAmqToStompMap = new ConcurrentHashMap<String, String>();
-    private final Map<String, LocalTransactionId> transactions = new ConcurrentHashMap<String, LocalTransactionId>();
+    private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ConsumerId, StompSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, StompSubscription> subscriptions = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, String> tempDestinationAmqToStompMap = new ConcurrentHashMap<>();
+    private final Map<String, LocalTransactionId> transactions = new ConcurrentHashMap<>();
     private final StompTransport stompTransport;
 
-    private final ConcurrentMap<String, AckEntry> pedingAcks = new ConcurrentHashMap<String, AckEntry>();
+    private final ConcurrentMap<String, AckEntry> pedingAcks = new ConcurrentHashMap<>();
     private final IdGenerator ACK_ID_GENERATOR = new IdGenerator();
 
     private final Object commnadIdMutex = new Object();
@@ -256,9 +257,9 @@ public class ProtocolConverter {
                 onStompCommit(command);
             } else if (action.startsWith(Stomp.Commands.ABORT)) {
                 onStompAbort(command);
-            } else if (action.startsWith(Stomp.Commands.SUBSCRIBE)) {
+            } else if (action.startsWith(Stomp.Commands.SUBSCRIBE_PREFIX)) {
                 onStompSubscribe(command);
-            } else if (action.startsWith(Stomp.Commands.UNSUBSCRIBE)) {
+            } else if (action.startsWith(Stomp.Commands.UNSUBSCRIBE_PREFIX)) {
                 onStompUnsubscribe(command);
             } else if (action.startsWith(Stomp.Commands.CONNECT) ||
                        action.startsWith(Stomp.Commands.STOMP)) {
@@ -299,7 +300,7 @@ public class ProtocolConverter {
         exception.printStackTrace(stream);
         stream.close();
 
-        HashMap<String, String> headers = new HashMap<String, String>();
+        HashMap<String, String> headers = new HashMap<>();
         headers.put(Stomp.Headers.Error.MESSAGE, exception.getMessage());
         headers.put(Stomp.Headers.CONTENT_TYPE, "text/plain");
 
@@ -611,6 +612,7 @@ public class ProtocolConverter {
         }
 
         consumerInfo.setDestination(actualDest);
+        consumerInfo.setDispatchAsync(true);
 
         StompSubscription stompSubscription;
         if (!consumerInfo.isBrowser()) {
@@ -799,7 +801,7 @@ public class ProtocolConverter {
                         }
 
                         connected.set(true);
-                        HashMap<String, String> responseHeaders = new HashMap<String, String>();
+                        HashMap<String, String> responseHeaders = new HashMap<>();
 
                         responseHeaders.put(Stomp.Headers.Connected.SESSION, connectionInfo.getClientId());
                         String requestId = headers.get(Stomp.Headers.Connect.REQUEST_ID);
@@ -1029,6 +1031,10 @@ public class ProtocolConverter {
                     case Stomp.Commands.DISCONNECT:
                         result = action;
                         break;
+                    case Stomp.Commands.SUBSCRIBE_PREFIX:
+                        result = Stomp.Commands.SUBSCRIBE;
+                    case Stomp.Commands.UNSUBSCRIBE_PREFIX:
+                        result = Stomp.Commands.UNSUBSCRIBE;
                     default:
                         break;
                 }
@@ -1036,5 +1042,28 @@ public class ProtocolConverter {
         }
 
         return result;
+    }
+
+    /**
+     * Remove all pending acknowledgement markers that are batched into the single
+     * client acknowledge operation.
+     *
+     * @param subscription
+     *      The STOMP Subscription that has performed a client acknowledge.
+     * @param msgIdsToRemove
+     *      List of message IDs that are bound to the subscription that has ack'd
+     */
+    protected void afterClientAck(StompSubscription subscription, ArrayList<String> msgIdsToRemove) {
+        int count = 0;
+
+        for (Map.Entry<String,AckEntry> entry : this.pedingAcks.entrySet()){
+            AckEntry actEntry = entry.getValue();
+            if (msgIdsToRemove.contains(actEntry.messageId)) {
+                this.pedingAcks.remove(entry.getKey());
+                count++;
+            }
+        }
+
+        LOG.trace("Subscription:[{}] client acknowledged {} messages", subscription.getSubscriptionId(), count);
     }
 }

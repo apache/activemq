@@ -162,6 +162,11 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         }
     }
 
+    @Override
+    public boolean isContentMarshalled() {
+        return content != null || map == null || map.isEmpty();
+    }
+
     /**
      * Builds the message body from data
      *

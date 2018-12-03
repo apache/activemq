@@ -75,12 +75,15 @@ public class DurableConduitBridge extends ConduitBridge {
                             String candidateSubName = getSubscriberName(dest);
                             for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
                                 String subName = subscription.getConsumerInfo().getSubscriptionName();
-                                if (subName != null && subName.equals(candidateSubName)) {
+                                String clientId = subscription.getContext().getClientId();
+                                if (subName != null && subName.equals(candidateSubName) && clientId.startsWith(configuration.getName())) {
                                     DemandSubscription sub = createDemandSubscription(dest, subName);
-                                    sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
-                                    sub.setStaticallyIncluded(true);
-                                    addSubscription(sub);
-                                    break;
+                                    if (sub != null) {
+                                        sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
+                                        sub.setStaticallyIncluded(true);
+                                        addSubscription(sub);
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -139,7 +142,7 @@ public class DurableConduitBridge extends ConduitBridge {
             info.setSubscriptionName(getSubscriberName(info.getDestination()));
             // and override the consumerId with something unique so that it won't
             // be removed if the durable subscriber (at the other end) goes away
-            info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),
+           info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),
                                consumerIdGenerator.getNextSequenceId()));
         }
         info.setSelector(null);

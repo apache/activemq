@@ -950,7 +950,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
                             @Override
                             public void afterRollback() throws Exception {
-                                LOG.trace("rollback {}", ack, new Throwable("here"));
+                                if (LOG.isTraceEnabled()) {
+                                    LOG.trace("rollback {}", ack, new Throwable("here"));
+                                }
                                 // ensure we don't filter this as a duplicate
                                 connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
 
@@ -1041,9 +1043,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     messageListener.onMessage(message);
 
                 } catch (Throwable e) {
-                    LOG.error("error dispatching message: ", e);
+                    if (!isClosed()) {
+                        LOG.error("{} error dispatching message: {} ", this, message.getMessageId(), e);
+                    }
 
-                    if (getTransactionContext().isInXATransaction()) {
+                    if (getTransactionContext() != null && getTransactionContext().isInXATransaction()) {
                         LOG.debug("Marking transaction: {} rollbackOnly", getTransactionContext());
                         getTransactionContext().setRollbackOnly(true);
                     }
@@ -2166,7 +2170,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     @Override
     public String toString() {
-        return "ActiveMQSession {id=" + info.getSessionId() + ",started=" + started.get() + "} " + sendMutex;
+        return "ActiveMQSession {id=" + info.getSessionId() + ",started=" + started.get() + ",closed=" + closed + "} " + sendMutex;
     }
 
     public void checkMessageListener() throws JMSException {

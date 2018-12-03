@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLServerSocket;
 
 import org.apache.activemq.Service;
@@ -79,6 +80,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected int minmumWireFormatVersion;
     protected boolean useQueueForAccept = true;
     protected boolean allowLinkStealing;
+    protected boolean verifyHostName = false;
 
     /**
      * trace=true -> the Transport stack where this TcpTransport object will be, will have a TransportLogger layer
@@ -172,6 +174,18 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             //  see: https://issues.apache.org/jira/browse/AMQ-4582
             //
             if (socket instanceof SSLServerSocket) {
+                if (transportOptions.containsKey("verifyHostName")) {
+                    verifyHostName = Boolean.parseBoolean(transportOptions.get("verifyHostName").toString());
+                } else {
+                    transportOptions.put("verifyHostName", verifyHostName);
+                }
+
+                if (verifyHostName) {
+                    SSLParameters sslParams = new SSLParameters();
+                    sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+                    ((SSLServerSocket)this.serverSocket).setSSLParameters(sslParams);
+                }
+
                 if (transportOptions.containsKey("enabledCipherSuites")) {
                     Object cipherSuites = transportOptions.remove("enabledCipherSuites");
 
@@ -180,6 +194,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                             "Invalid transport options {enabledCipherSuites=%s}", cipherSuites));
                     }
                 }
+
             }
 
             //AMQ-6599 - don't strip out set properties on the socket as we need to set them

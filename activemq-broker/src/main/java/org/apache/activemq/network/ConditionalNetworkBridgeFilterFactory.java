@@ -43,6 +43,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
     int replayDelay = 0;
     int rateLimit = 0;
     int rateDuration = 1000;
+    private boolean selectorAware = false;
 
     @Override
     public NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int messageTTL, int consumerTTL) {
@@ -54,6 +55,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
         filter.setRateLimit(getRateLimit());
         filter.setRateDuration(getRateDuration());
         filter.setReplayDelay(getReplayDelay());
+        filter.setSelectorAware(isSelectorAware());
         return filter;
     }
 
@@ -89,6 +91,14 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
         this.replayDelay = replayDelay;
     }
 
+    public void setSelectorAware(boolean selectorAware) {
+        this.selectorAware = selectorAware;
+    }
+
+    public boolean isSelectorAware() {
+        return selectorAware;
+    }
+
     private static class ConditionalNetworkBridgeFilter extends NetworkBridgeFilter {
         final static Logger LOG = LoggerFactory.getLogger(ConditionalNetworkBridgeFilter.class);
         private int rateLimit;
@@ -98,6 +108,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
 
         private int matchCount;
         private long rateDurationEnd;
+        private boolean selectorAware = false;
 
         @Override
         protected boolean matchesForwardingFilter(Message message, final MessageEvaluationContext mec) {
@@ -136,10 +147,23 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
             List<Subscription> consumers = regionDestination.getConsumers();
             for (Subscription sub : consumers) {
                 if (!sub.getConsumerInfo().isNetworkSubscription() && !sub.getConsumerInfo().isBrowser()) {
-                    LOG.trace("Not replaying [{}] for [{}] to origin due to existing local consumer: {}", new Object[]{
-                            message.getMessageId(), message.getDestination(), sub.getConsumerInfo()
-                    });
-                    return false;
+
+                    if (!isSelectorAware()) {
+                        LOG.trace("Not replaying [{}] for [{}] to origin due to existing local consumer: {}", new Object[]{
+                                message.getMessageId(), message.getDestination(), sub.getConsumerInfo()
+                        });
+                        return false;
+
+                    } else {
+                        try {
+                            if (sub.matches(message, mec)) {
+                                LOG.trace("Not replaying [{}] for [{}] to origin due to existing selector matching local consumer: {}", new Object[]{
+                                        message.getMessageId(), message.getDestination(), sub.getConsumerInfo()
+                                });
+                                return false;
+                            }
+                        } catch (Exception ignored) {}
+                    }
                 }
             }
             return true;
@@ -171,6 +195,14 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
 
         public void setAllowReplayWhenNoConsumers(boolean allowReplayWhenNoConsumers) {
             this.allowReplayWhenNoConsumers = allowReplayWhenNoConsumers;
+        }
+
+        public void setSelectorAware(boolean selectorAware) {
+            this.selectorAware = selectorAware;
+        }
+
+        public boolean isSelectorAware() {
+            return selectorAware;
         }
     }
 }

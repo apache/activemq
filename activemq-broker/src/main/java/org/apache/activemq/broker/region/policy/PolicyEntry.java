@@ -103,12 +103,15 @@ public class PolicyEntry extends DestinationMapEntry {
     private NetworkBridgeFilterFactory networkBridgeFilterFactory;
     private boolean doOptimzeMessageStorage = true;
     private int maxDestinations = -1;
+    private boolean useTopicSubscriptionInflightStats = true;
 
     /*
      * percentage of in-flight messages above which optimize message store is disabled
      */
     private int optimizeMessageStoreInFlightLimit = 10;
     private boolean persistJMSRedelivered = false;
+    private int sendFailIfNoSpace = -1;
+    private long sendFailIfNoSpaceAfterTimeout = -1;
 
 
     public void configure(Broker broker,Queue queue) {
@@ -147,7 +150,7 @@ public class PolicyEntry extends DestinationMapEntry {
      *
      * If includedProperties is null then all of the properties will be set as
      * isUpdate will return true
-     * @param baseDestination
+     * @param queue
      * @param includedProperties
      */
     public void update(Queue queue, Set<String> includedProperties) {
@@ -309,12 +312,19 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         destination.setSlowConsumerStrategy(scs);
         destination.setPrioritizedMessages(isPrioritizedMessages());
+        if (sendFailIfNoSpace != -1) {
+            destination.getSystemUsage().setSendFailIfNoSpace(isSendFailIfNoSpace());
+        }
+        if (sendFailIfNoSpaceAfterTimeout != -1) {
+            destination.getSystemUsage().setSendFailIfNoSpaceAfterTimeout(getSendFailIfNoSpaceAfterTimeout());
+        }
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
         configurePrefetch(subscription);
         subscription.setUsePrefetchExtension(isUsePrefetchExtension());
         subscription.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+        subscription.setUseTopicSubscriptionInflightStats(isUseTopicSubscriptionInflightStats());
         if (pendingMessageLimitStrategy != null) {
             int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);
             int consumerLimit = subscription.getInfo().getMaximumPendingMessageLimit();
@@ -1099,5 +1109,33 @@ public class PolicyEntry extends DestinationMapEntry {
     @Override
     public String toString() {
         return "PolicyEntry [" + destination + "]";
+    }
+
+    public void setSendFailIfNoSpace(boolean val) {
+        if (val) {
+            this.sendFailIfNoSpace = 1;
+        } else {
+            this.sendFailIfNoSpace = 0;
+        }
+    }
+
+    public boolean isSendFailIfNoSpace() {
+        return sendFailIfNoSpace == 1;
+    }
+
+    public void setSendFailIfNoSpaceAfterTimeout(long sendFailIfNoSpaceAfterTimeout) {
+        this.sendFailIfNoSpaceAfterTimeout = sendFailIfNoSpaceAfterTimeout;
+    }
+
+    public long getSendFailIfNoSpaceAfterTimeout() {
+        return this.sendFailIfNoSpaceAfterTimeout;
+    }
+
+    public boolean isUseTopicSubscriptionInflightStats() {
+        return useTopicSubscriptionInflightStats;
+    }
+
+    public void setUseTopicSubscriptionInflightStats(boolean useTopicSubscriptionInflightStats) {
+        this.useTopicSubscriptionInflightStats = useTopicSubscriptionInflightStats;
     }
 }

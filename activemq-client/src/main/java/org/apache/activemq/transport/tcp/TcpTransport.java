@@ -133,7 +133,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<CountDownLatch>();
     protected volatile int receiveCounter;
 
-    private Map<String, Object> socketOptions;
+    protected Map<String, Object> socketOptions;
     private int soLinger = Integer.MIN_VALUE;
     private Boolean keepAlive;
     private Boolean tcpNoDelay;
@@ -751,6 +751,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         return true;
     }
 
+    @Override
     public WireFormat getWireFormat() {
         return wireFormat;
     }

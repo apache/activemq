@@ -31,20 +31,24 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
     RandomAccessFile raf;
     File file;
     String mode;
+    final boolean isSkipMetadataUpdate;
 
-    public RecoverableRandomAccessFile(File file, String mode) throws FileNotFoundException {
+    public RecoverableRandomAccessFile(File file, String mode, boolean skipMetadataUpdate) throws FileNotFoundException {
         this.file = file;
         this.mode = mode;
         raf = new RandomAccessFile(file, mode);
+        isSkipMetadataUpdate = skipMetadataUpdate;
+    }
+
+    public RecoverableRandomAccessFile(File file, String mode) throws FileNotFoundException {
+        this(file, mode, SKIP_METADATA_UPDATE);
     }
 
     public RecoverableRandomAccessFile(String name, String mode) throws FileNotFoundException {
-        this.file = new File(name);
-        this.mode = mode;
-        raf = new RandomAccessFile(file, mode);
+        this(new File(name), mode);
     }
 
-    protected RandomAccessFile getRaf() throws IOException {
+    public RandomAccessFile getRaf() throws IOException {
         if (raf == null) {
             raf = new RandomAccessFile(file, mode);
         }
@@ -394,7 +398,7 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
 
     public void sync() throws IOException {
         try {
-            getRaf().getChannel().force(!SKIP_METADATA_UPDATE);;
+            getRaf().getChannel().force(!isSkipMetadataUpdate);;
         } catch (IOException ioe) {
             handleException();
             throw ioe;

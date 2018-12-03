@@ -132,4 +132,6 @@ abstract class ProxyLevelDBStore extends LockableServiceSupport with BrokerServi
   def removePList(name: String): Boolean = {
     return proxy_target.removePList(name)
   }
+
+  def allowIOResumption() = {}
 }

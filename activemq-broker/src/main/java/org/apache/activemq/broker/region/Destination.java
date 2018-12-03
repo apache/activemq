@@ -239,7 +239,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     boolean isDoOptimzeMessageStorage();
     void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage);
 
-    public void clearPendingMessages();
+    public void clearPendingMessages(int pendingAdditionsCount);
 
     void duplicateFromStore(Message message, Subscription subscription);
 }

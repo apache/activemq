@@ -137,7 +137,13 @@ public class MemoryMessageStore extends AbstractMessageStore {
 
     @Override
     public void setBatch(MessageId messageId) {
-        lastBatchId = messageId;
+        synchronized (messageTable) {
+            if (messageTable.containsKey(messageId)) {
+                lastBatchId = messageId;
+            } else {
+                resetBatching();
+            }
+        }
     }
 
     @Override

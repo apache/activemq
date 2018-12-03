@@ -79,13 +79,13 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     /**
-     * @param sync
+     * @param cleanup
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#checkpoint(boolean)
      */
     @Override
-    public void checkpoint(boolean sync) throws IOException {
-        this.letter.checkpoint(sync);
+    public void checkpoint(boolean cleanup) throws IOException {
+        this.letter.checkpoint(cleanup);
     }
 
     /**
@@ -161,6 +161,11 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public long getLastProducerSequenceId(ProducerId id) throws IOException {
         return this.letter.getLastProducerSequenceId(id);
+    }
+
+    @Override
+    public void allowIOResumption() {
+        this.letter.allowIOResumption();
     }
 
     /**
@@ -542,6 +547,14 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         letter.setCheckForCorruptJournalFiles(checkForCorruptJournalFiles);
     }
 
+    public String getPurgeRecoveredXATransactionStrategy() {
+        return letter.getPurgeRecoveredXATransactionStrategy();
+    }
+
+    public void setPurgeRecoveredXATransactionStrategy(String purgeRecoveredXATransactionStrategy) {
+        letter.setPurgeRecoveredXATransactionStrategy(purgeRecoveredXATransactionStrategy);
+    }
+
     @Override
     public void setBrokerService(BrokerService brokerService) {
         super.setBrokerService(brokerService);
@@ -803,5 +816,16 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public boolean isPersistNoLocal() {
         return this.letter.isPersistNoLocal();
+    }
+
+    /*
+     * When set, ensure that the cleanup/gc operation is executed during the stop procedure
+     */
+    public void setCleanupOnStop(boolean cleanupOnStop) {
+        this.letter.setCleanupOnStop(cleanupOnStop);
+    }
+
+    public boolean getCleanupOnStop() {
+        return this.letter.getCleanupOnStop();
     }
 }

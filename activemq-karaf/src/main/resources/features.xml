@@ -42,6 +42,8 @@
         <bundle>mvn:org.apache.activemq/activemq-camel/${project.version}</bundle>
         <feature version="${camel-version-range}">camel-jms</feature>
         <feature version="${camel-version-range}">camel</feature>
+        <feature version="${camel-version-range}">camel-spring</feature>
+        <feature version="${camel-version-range}">camel-blueprint</feature>
     </feature>
 
     <feature name="activemq-web-console" version="${project.version}" resolver="(obr)" start-level="50">
@@ -63,6 +65,8 @@
       <bundle>mvn:io.netty/netty-common/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport-native-epoll/${qpid-jms-netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-transport-native-kqueue/${qpid-jms-netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-transport-native-unix-common/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-buffer/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-codec/${qpid-jms-netty-version}</bundle>
       <bundle>mvn:io.netty/netty-codec-http/${qpid-jms-netty-version}</bundle>

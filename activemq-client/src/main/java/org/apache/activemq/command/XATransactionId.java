@@ -22,6 +22,7 @@ import java.util.Arrays;
 import javax.transaction.xa.Xid;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.JenkinsHash;
 
 /**
  * @openwire:marshaller code="112"
@@ -199,19 +200,12 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
     public int hashCode() {
         if (hash == 0) {
             hash = formatId;
-            hash = hash(globalTransactionId, hash);
-            hash = hash(branchQualifier, hash);
+            JenkinsHash jh = JenkinsHash.getInstance();
+            hash = jh.hash(globalTransactionId, hash);
+            hash = jh.hash(branchQualifier, hash);
             if (hash == 0) {
                 hash = 0xaceace;
             }
-        }
-        return hash;
-    }
-
-    private static int hash(byte[] bytes, int hash) {
-        int size = bytes.length;
-        for (int i = 0; i < size; i++) {
-            hash ^= bytes[i] << ((i % 4) * 8);
         }
         return hash;
     }

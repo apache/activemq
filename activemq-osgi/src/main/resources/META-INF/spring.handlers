@@ -20,4 +20,3 @@
 http\://activemq.apache.org/schema/core=org.apache.xbean.spring.context.v2.XBeanNamespaceHandler
 http\://camel.apache.org/schema/spring=org.apache.camel.spring.handler.CamelNamespaceHandler
 http\://camel.apache.org/schema/spring/v2.10=org.apache.camel.spring.handler.CamelNamespaceHandler
-http\://camel.apache.org/schema/osgi=org.apache.camel.osgi.CamelNamespaceHandler

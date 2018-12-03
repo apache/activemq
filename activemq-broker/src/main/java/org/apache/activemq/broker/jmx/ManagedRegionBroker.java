@@ -324,8 +324,9 @@ public class ManagedRegionBroker extends RegionBroker {
             }
         }
         try {
-            AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
-            registeredMBeans.add(key);
+            if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key) != null) {
+                registeredMBeans.add(key);
+            }
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean {}", key);
             LOG.debug("Failure reason: ", e);
@@ -380,8 +381,9 @@ public class ManagedRegionBroker extends RegionBroker {
         }
 
         try {
-            AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
-            registeredMBeans.add(key);
+            if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key) != null) {
+                registeredMBeans.add(key);
+            }
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean {}", key);
             LOG.debug("Failure reason: ", e);
@@ -444,8 +446,9 @@ public class ManagedRegionBroker extends RegionBroker {
         }
 
         try {
-            AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
-            registeredMBeans.add(key);
+            if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key) != null) {
+                registeredMBeans.add(key);
+            }
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean {}", key);
             LOG.debug("Failure reason: ", e);
@@ -520,8 +523,9 @@ public class ManagedRegionBroker extends RegionBroker {
             SubscriptionView view = new InactiveDurableSubscriptionView(this, brokerService, key.getClientId(), info, subscription);
 
             try {
-                AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
-                registeredMBeans.add(objectName);
+                if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName) != null) {
+                    registeredMBeans.add(objectName);
+                }
             } catch (Throwable e) {
                 LOG.warn("Failed to register MBean {}", key);
                 LOG.debug("Failure reason: ", e);
@@ -770,8 +774,9 @@ public class ManagedRegionBroker extends RegionBroker {
                     view = new AbortSlowConsumerStrategyView(this, strategy);
                 }
 
-                AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
-                registeredMBeans.add(objectName);
+                if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName) != null) {
+                    registeredMBeans.add(objectName);
+                }
             }
         } catch (Exception e) {
             LOG.warn("Failed to register MBean {}", strategy);
@@ -785,8 +790,9 @@ public class ManagedRegionBroker extends RegionBroker {
             ObjectName objectName = BrokerMBeanSupport.createXATransactionName(brokerObjectName, transaction);
             if (!registeredMBeans.contains(objectName))  {
                 RecoveredXATransactionView view = new RecoveredXATransactionView(this, transaction);
-                AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
-                registeredMBeans.add(objectName);
+                if (AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName) != null) {
+                    registeredMBeans.add(objectName);
+                }
             }
         } catch (Exception e) {
             LOG.warn("Failed to register prepared transaction MBean {}", transaction);
@@ -836,5 +842,9 @@ public class ManagedRegionBroker extends RegionBroker {
     public DestinationView getQueueView(String queueName) throws MalformedObjectNameException {
         ObjectName objName = BrokerMBeanSupport.createDestinationName(brokerObjectName.toString(), "Queue", queueName);
         return queues.get(objName);
+    }
+
+    public Set<ObjectName> getRegisteredMbeans() {
+        return registeredMBeans;
     }
 }

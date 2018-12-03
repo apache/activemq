@@ -149,9 +149,9 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
 
     @Override
     protected void doStart() throws Exception {
+        transport.setTransportListener(getTransportListener());
         socketTransportStarted.countDown();
 
-        transport.setTransportListener(getTransportListener());
         transport.start();
     }
 

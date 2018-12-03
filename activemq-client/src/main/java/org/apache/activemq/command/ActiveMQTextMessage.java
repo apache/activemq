@@ -158,6 +158,11 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         this.text = null;
     }
 
+    @Override
+    public boolean isContentMarshalled() {
+        return content != null || text == null;
+    }
+
     /**
      * Clears out the message body. Clearing a message's body does not clear its
      * header values or property entries. <p/>

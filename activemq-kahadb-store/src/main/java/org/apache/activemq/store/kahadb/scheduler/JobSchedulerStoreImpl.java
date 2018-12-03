@@ -59,6 +59,10 @@ import org.apache.activemq.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/*
+ * @org.apache.xbean.XBean element="kahaDBJobScheduler"
+ */
+
 public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSchedulerStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(JobSchedulerStoreImpl.class);
@@ -230,7 +234,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             checkpointLock.writeLock().lock();
             try {
                 if (metaData.getPage() != null) {
-                    checkpointUpdate(true);
+                    checkpointUpdate(getCleanupOnStop());
                 }
             } finally {
                 checkpointLock.writeLock().unlock();

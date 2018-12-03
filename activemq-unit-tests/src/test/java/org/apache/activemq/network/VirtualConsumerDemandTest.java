@@ -118,31 +118,49 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
      * @throws Exception
      */
     @Test(timeout = 60 * 1000)
-    public void testVirtualTopic() throws Exception {
+    public void testVirtualTopics() throws Exception {
         Assume.assumeTrue(isUseVirtualDestSubsOnCreation);
         doSetUp(true, null);
 
         MessageConsumer advisoryConsumer = getVirtualDestinationAdvisoryConsumer("VirtualTopic.>");
 
         MessageProducer includedProducer = localSession.createProducer(new ActiveMQTopic("VirtualTopic.include.test.bar"));
+        MessageProducer includedProducer2 = localSession.createProducer(new ActiveMQTopic("VirtualTopic.include.test.bar2"));
+        MessageProducer includedProducer3 = localSession.createProducer(new ActiveMQTopic("VirtualTopic.include.test.bar3"));
         Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
 
         final DestinationStatistics destinationStatistics = localBroker.getDestination(new ActiveMQTopic("VirtualTopic.include.test.bar")).getDestinationStatistics();
+        final DestinationStatistics destinationStatistics2 = localBroker.getDestination(new ActiveMQTopic("VirtualTopic.include.test.bar2")).getDestinationStatistics();
+
+        //No queue destination on the remote side so should not forward
+        final DestinationStatistics destinationStatistics3 = localBroker.getDestination(new ActiveMQTopic("VirtualTopic.include.test.bar3")).getDestinationStatistics();
 
         //this will create the destination so messages accumulate
         final DestinationStatistics remoteStats = remoteBroker.getDestination(new ActiveMQQueue("Consumer.cons1.VirtualTopic.include.test.bar")).getDestinationStatistics();
+        final DestinationStatistics remoteStats2 = remoteBroker.getDestination(new ActiveMQQueue("Consumer.cons1.VirtualTopic.include.test.bar2")).getDestinationStatistics();
+
         waitForConsumerCount(destinationStatistics, 1);
+        waitForConsumerCount(destinationStatistics2, 1);
 
         includedProducer.send(test);
+        includedProducer2.send(localSession.createTextMessage("test2"));
+        includedProducer3.send(localSession.createTextMessage("test3"));
 
         //assert statistics
         waitForDispatchFromLocalBroker(destinationStatistics, 1);
+        waitForDispatchFromLocalBroker(destinationStatistics2, 1);
         assertLocalBrokerStatistics(destinationStatistics, 1);
+        assertLocalBrokerStatistics(destinationStatistics2, 1);
         assertEquals("remote dest messages", 1, remoteStats.getMessages().getCount());
+        assertEquals("remote dest messages", 1, remoteStats2.getMessages().getCount());
 
-        assertRemoteAdvisoryCount(advisoryConsumer, 1);
-        assertAdvisoryBrokerCounts(1,1,1);
+        assertRemoteAdvisoryCount(advisoryConsumer, 2);
+        assertAdvisoryBrokerCounts(1,2,2);
+
+        //should not have forwarded for 3rd topic
+        Thread.sleep(1000);
+        assertEquals("local broker dest stat dispatched", 0, destinationStatistics3.getDispatched().getCount());
     }
 
 

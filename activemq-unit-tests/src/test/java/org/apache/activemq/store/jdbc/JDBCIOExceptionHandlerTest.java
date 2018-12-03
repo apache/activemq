@@ -17,21 +17,41 @@
 package org.apache.activemq.store.jdbc;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
+import java.net.Socket;
+import java.rmi.registry.Registry;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
+import javax.management.*;
+import javax.management.loading.ClassLoaderRepository;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
 
+import com.sun.jndi.rmi.registry.RegistryContext;
+import com.sun.jndi.rmi.registry.RegistryContextFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ft.SyncCreateDataSource;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.bugs.embedded.ThreadExplorer;
+import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,6 +119,79 @@ public class JDBCIOExceptionHandlerTest {
         factory = new ActiveMQConnectionFactory(connectionUri);
 
         return broker;
+    }
+
+    @Test
+    public void testStartWithDatabaseDown() throws Exception {
+        final AtomicBoolean connectorStarted = new AtomicBoolean(false);
+        final AtomicBoolean connectorStopped = new AtomicBoolean(false);
+
+        DefaultTestAppender appender = new DefaultTestAppender() {
+
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getMessage().toString().startsWith("JMX consoles can connect to")) {
+                    connectorStarted.set(true);
+                }
+
+                if (event.getMessage().toString().equals("Stopping jmx connector")) {
+                    connectorStopped.set(true);
+                }
+            }
+        };
+
+        org.apache.log4j.Logger rootLogger = org.apache.log4j.Logger.getRootLogger();
+        Level previousLevel = rootLogger.getLevel();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+
+
+        BrokerService broker = new BrokerService();
+        broker.getManagementContext().setCreateConnector(true);
+        broker.getManagementContext().setCreateMBeanServer(true);
+
+        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        EmbeddedDataSource embeddedDataSource = (EmbeddedDataSource) jdbc.getDataSource();
+        // create a wrapper to EmbeddedDataSource to allow the connection be
+        // reestablished to derby db
+        dataSource = new ReconnectingEmbeddedDataSource(new SyncCreateDataSource(embeddedDataSource));
+        dataSource.stopDB();
+        jdbc.setDataSource(dataSource);
+
+        jdbc.setLockKeepAlivePeriod(1000l);
+        LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
+        leaseDatabaseLocker.setHandleStartException(true);
+        leaseDatabaseLocker.setLockAcquireSleepInterval(2000l);
+        jdbc.setLocker(leaseDatabaseLocker);
+
+        broker.setPersistenceAdapter(jdbc);
+        LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+        ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+        ioExceptionHandler.setStopStartConnectors(true);
+        broker.setIoExceptionHandler(ioExceptionHandler);
+        try {
+            broker.start();
+            fail("Broker should have been stopped!");
+        } catch (Exception e) {
+            Thread.sleep(5000);
+            assertTrue("Broker should have been stopped!", broker.isStopped());
+            Thread[] threads = ThreadExplorer.listThreads();
+            for (int i = 0; i < threads.length; i++) {
+                if (threads[i].getName().startsWith("IOExceptionHandler")) {
+                    fail("IOExceptionHanlder still active");
+                }
+            }
+
+            if (connectorStarted.get() && !connectorStopped.get()) {
+                fail("JMX Server Connector should have been stopped!");
+            }
+
+        } finally {
+            dataSource = null;
+            broker = null;
+            rootLogger.removeAppender(appender);
+            rootLogger.setLevel(previousLevel);
+        }
     }
 
     /*
@@ -223,6 +316,7 @@ public class JDBCIOExceptionHandlerTest {
         } finally {
             LOG.debug("*** broker is stopping...");
             broker.stop();
+            broker.waitUntilStopped();
         }
     }
 

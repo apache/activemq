@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -49,8 +50,8 @@ public class StompSubscription {
     protected final String subscriptionId;
     protected final ConsumerInfo consumerInfo;
 
-    protected final LinkedHashMap<MessageId, MessageDispatch> dispatchedMessage = new LinkedHashMap<MessageId, MessageDispatch>();
-    protected final LinkedList<MessageDispatch> unconsumedMessage = new LinkedList<MessageDispatch>();
+    protected final LinkedHashMap<MessageId, MessageDispatch> dispatchedMessage = new LinkedHashMap<>();
+    protected final LinkedList<MessageDispatch> unconsumedMessage = new LinkedList<>();
 
     protected String ackMode = AUTO_ACK;
     protected ActiveMQDestination destination;
@@ -65,15 +66,11 @@ public class StompSubscription {
 
     void onMessageDispatch(MessageDispatch md, String ackId) throws IOException, JMSException {
         ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
-        if (ackMode == CLIENT_ACK) {
+        if (ackMode.equals(CLIENT_ACK) || ackMode.equals(INDIVIDUAL_ACK)) {
             synchronized (this) {
                 dispatchedMessage.put(message.getMessageId(), md);
             }
-        } else if (ackMode == INDIVIDUAL_ACK) {
-            synchronized (this) {
-                dispatchedMessage.put(message.getMessageId(), md);
-            }
-        } else if (ackMode == AUTO_ACK) {
+        } else if (ackMode.equals(AUTO_ACK)) {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             protocolConverter.getStompTransport().sendToActiveMQ(ack);
         }
@@ -119,8 +116,11 @@ public class StompSubscription {
                 }
             }
 
-            if (!unconsumedMessage.isEmpty()) {
+            // For individual Ack we already sent an Ack that will be applied on commit
+            // we don't send a second standard Ack as that would produce an error.
+            if (!unconsumedMessage.isEmpty() && ackMode == CLIENT_ACK) {
                 ack = new MessageAck(unconsumedMessage.getLast(), MessageAck.STANDARD_ACK_TYPE, unconsumedMessage.size());
+                ack.setTransactionId(transactionId);
                 unconsumedMessage.clear();
             }
         }
@@ -142,6 +142,8 @@ public class StompSubscription {
         ack.setDestination(consumerInfo.getDestination());
         ack.setConsumerId(consumerInfo.getConsumerId());
 
+        final ArrayList<String> acknowledgedMessages = new ArrayList<>();
+
         if (ackMode == CLIENT_ACK) {
             if (transactionId == null) {
                 ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
@@ -162,6 +164,7 @@ public class StompSubscription {
                         count++;
                     }
                 } else {
+                    acknowledgedMessages.add(id.toString());
                     iter.remove();
                     count++;
                 }
@@ -176,15 +179,19 @@ public class StompSubscription {
                 ack.setTransactionId(transactionId);
             }
 
+            this.protocolConverter.afterClientAck(this, acknowledgedMessages);
         } else if (ackMode == INDIVIDUAL_ACK) {
             ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
             ack.setMessageID(msgId);
+            ack.setMessageCount(1);
             if (transactionId != null) {
                 unconsumedMessage.add(dispatchedMessage.get(msgId));
                 ack.setTransactionId(transactionId);
+            } else {
+                dispatchedMessage.remove(msgId);
             }
-            dispatchedMessage.remove(msgId);
         }
+
         return ack;
     }
 

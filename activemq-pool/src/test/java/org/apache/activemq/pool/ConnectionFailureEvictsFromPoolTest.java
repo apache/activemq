@@ -68,7 +68,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
 
     public void testEvictionXA() throws Exception {
         XaPooledConnectionFactory pooledFactory =
-                new XaPooledConnectionFactory(new ActiveMQXAConnectionFactory("mock:" + connector.getConnectUri() + "?closeAsync=false"));
+                new XaPooledConnectionFactory(new ActiveMQXAConnectionFactory("mock:(" + connector.getConnectUri() + "?closeAsync=false)?jms.xaAckMode=1"));
 
         doTestEviction(pooledFactory);
     }

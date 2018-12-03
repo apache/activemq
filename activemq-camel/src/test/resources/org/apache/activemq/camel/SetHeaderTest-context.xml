@@ -45,5 +45,9 @@
     <property name="brokerURL" value="vm://localhost?broker.persistent=false"/>
   </bean>
 
+  <bean id="activemq" 
+      class="org.apache.activemq.camel.component.ActiveMQComponent">
+      <property name="brokerURL" value="vm://localhost"/>
+   </bean>
 </beans>
         <!-- END SNIPPET: example -->

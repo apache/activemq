@@ -38,6 +38,10 @@ public class Sequence extends LinkedNode<Sequence> {
         return last + 1 == value;
     }
 
+    public boolean isBiggerButNotAdjacentToLast(long value) {
+        return last + 1 < value;
+    }
+
     public boolean isAdjacentToFirst(long value) {
         return first - 1 == value;
     }

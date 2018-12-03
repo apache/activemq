@@ -38,6 +38,7 @@ public class SslContext {
     protected List<KeyManager> keyManagers = new ArrayList<KeyManager>();
     protected List<TrustManager> trustManagers = new ArrayList<TrustManager>();
     protected SecureRandom secureRandom;
+    private volatile boolean initialized;
     private SSLContext sslContext;
     
     private static final ThreadLocal<SslContext> current = new ThreadLocal<SslContext>();
@@ -117,18 +118,24 @@ public class SslContext {
     }
 
     public SSLContext getSSLContext() throws NoSuchProviderException, NoSuchAlgorithmException, KeyManagementException {
-        if( sslContext == null ) {
-            if( provider == null ) {
-                sslContext = SSLContext.getInstance(protocol);
-            } else {
-                sslContext = SSLContext.getInstance(protocol, provider);
+        if (!initialized) {
+            synchronized (this) {
+                if (!initialized) {
+                    if (provider == null) {
+                        sslContext = SSLContext.getInstance(protocol);
+                    } else {
+                        sslContext = SSLContext.getInstance(protocol, provider);
+                    }
+                    sslContext.init(getKeyManagersAsArray(), getTrustManagersAsArray(), getSecureRandom());
+                    initialized = true;
+                }
             }
-            sslContext.init(getKeyManagersAsArray(), getTrustManagersAsArray(), getSecureRandom());
         }
         return sslContext;
     }
-    public void setSSLContext(SSLContext sslContext) {
+    public synchronized void setSSLContext(SSLContext sslContext) {
         this.sslContext = sslContext;
+        initialized = true;
     }
     
     

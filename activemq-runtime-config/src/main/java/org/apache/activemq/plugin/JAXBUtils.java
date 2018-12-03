@@ -16,22 +16,24 @@
  */
 package org.apache.activemq.plugin;
 
-import javax.xml.bind.JAXBElement;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.activemq.broker.region.virtual.FilteredDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.schema.core.DtoFilteredDestination;
-import org.apache.activemq.schema.core.DtoTopic;
-import org.apache.activemq.schema.core.DtoQueue;
 import org.apache.activemq.schema.core.DtoAuthenticationUser;
+import org.apache.activemq.schema.core.DtoFilteredDestination;
+import org.apache.activemq.schema.core.DtoQueue;
+import org.apache.activemq.schema.core.DtoSslContext;
+import org.apache.activemq.schema.core.DtoTopic;
 import org.apache.activemq.security.AuthenticationUser;
+import org.apache.activemq.spring.SpringSslContext;
 
 public class JAXBUtils {
 
@@ -45,6 +47,12 @@ public class JAXBUtils {
         return null;
     }
 
+    public static void ensureAccessible(Method m) {
+        if ((!Modifier.isPublic(m.getModifiers()) || !Modifier.isPublic(m.getDeclaringClass().getModifiers())) && !m.isAccessible()) {
+            m.setAccessible(true);
+        }
+    }
+
     public static Object inferTargetObject(Object elementContent) {
         if (DtoTopic.class.isAssignableFrom(elementContent.getClass())) {
             return new ActiveMQTopic();
@@ -53,7 +61,9 @@ public class JAXBUtils {
         } else if (DtoAuthenticationUser.class.isAssignableFrom(elementContent.getClass())) {
             return new AuthenticationUser();
         } else if (DtoFilteredDestination.class.isAssignableFrom(elementContent.getClass())) {
-            return new FilteredDestination();            
+            return new FilteredDestination();
+        } else if (DtoSslContext.class.isAssignableFrom(elementContent.getClass())) {
+            return new SpringSslContext();
         } else {
             return new Object();
         }
@@ -63,6 +73,8 @@ public class JAXBUtils {
         Object result = parameterValues;
         if (Set.class.isAssignableFrom(aClass)) {
             result = new HashSet(parameterValues);
+        } else if (!Collection.class.isAssignableFrom(aClass)) {
+            result = parameterValues.get(0);
         }
         return result;
     }

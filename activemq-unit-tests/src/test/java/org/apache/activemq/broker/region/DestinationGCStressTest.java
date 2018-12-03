@@ -22,6 +22,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.util.Wait;
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
@@ -169,7 +170,7 @@ public class DestinationGCStressTest {
         log4jLogger.addAppender(appender);
         try {
 
-            final AtomicInteger max = new AtomicInteger(20000);
+            final AtomicInteger max = new AtomicInteger(10000);
 
             final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
             factory.setWatchTopicAdvisories(false);
@@ -217,6 +218,16 @@ public class DestinationGCStressTest {
             executorService.awaitTermination(60, TimeUnit.SECONDS);
 
             logger.info("Done");
+
+
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    int len = ((RegionBroker)brokerService.getRegionBroker()).getTopicRegion().getDestinationMap().size();
+                    logger.info("Num topics: " + len);
+                    return len == 0;
+                }
+            });
 
             connection.close();
 

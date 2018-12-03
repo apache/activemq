@@ -19,6 +19,7 @@ package org.apache.activemq;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -42,10 +43,16 @@ import javax.management.ObjectName;
 import junit.framework.Test;
 
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.region.QueueSubscription;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.activemq.TestSupport.getDestinationConsumers;
 
 /**
  * Test cases used to test the JMS message consumer.
@@ -221,6 +228,96 @@ public class JMSConsumerTest extends JmsTestSupport {
         }
         assertNull(consumer.receiveNoWait());
         message.acknowledge();
+    }
+
+    public void testReceiveTopicWithPrefetch1() throws Exception {
+
+        // Set prefetch to 1
+        connection.getPrefetchPolicy().setAll(1);
+        connection.start();
+
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        destination = createDestination(session, Byte.valueOf(ActiveMQDestination.TOPIC_TYPE));
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        // Send the messages
+        sendMessages(session, destination, 4);
+
+        // Make sure 4 messages were delivered.
+        Message message = null;
+        for (int i = 0; i < 4; i++) {
+            message = consumer.receive(1000);
+            assertNotNull(message);
+        }
+
+        final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
+
+        assertTrue("prefetch extension..",
+                subscriptions.stream().
+                        filter(s -> s instanceof TopicSubscription).
+                        mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
+                        allMatch(e -> e == 4));
+
+        assertNull(consumer.receiveNoWait());
+        message.acknowledge();
+
+        assertTrue("prefetch extension back to 0", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return subscriptions.stream().
+                        filter(s -> s instanceof TopicSubscription).
+                        mapToInt(s -> ((TopicSubscription)s).getPrefetchExtension().get()).
+                        allMatch(e -> e == 0);
+            }
+        }));
+
+    }
+
+    public void testReceiveQueueWithPrefetch1() throws Exception {
+
+        // Set prefetch to 1
+        connection.getPrefetchPolicy().setAll(1);
+        connection.start();
+
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        destination = createDestination(session, Byte.valueOf(ActiveMQDestination.QUEUE_TYPE));
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        // Send the messages
+        sendMessages(session, destination, 4);
+
+        // Make sure 4 messages were delivered.
+        Message message = null;
+        for (int i = 0; i < 4; i++) {
+            message = consumer.receive(1000);
+            assertNotNull(message);
+        }
+
+        final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
+
+        assertTrue("prefetch extension..", Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return subscriptions.stream().
+                                filter(s -> s instanceof QueueSubscription).
+                                mapToInt(s -> ((QueueSubscription)s).getPrefetchExtension().get()).
+                                allMatch(e -> e == 4);
+                    }
+                }));
+
+
+        assertNull(consumer.receiveNoWait());
+        message.acknowledge();
+
+        assertTrue("prefetch extension back to 0", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return subscriptions.stream().
+                        filter(s -> s instanceof QueueSubscription).
+                        mapToInt(s -> ((QueueSubscription)s).getPrefetchExtension().get()).
+                        allMatch(e -> e == 0);
+            }
+        }));
     }
 
     public void initCombosForTestDurableConsumerSelectorChange() {

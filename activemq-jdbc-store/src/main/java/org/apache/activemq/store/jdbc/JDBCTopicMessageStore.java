@@ -152,7 +152,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
 
         public LastRecoveredEntry defaultPriority() {
-            return perPriority[javax.jms.Message.DEFAULT_PRIORITY];
+            return perPriority[0];
         }
 
         @Override
@@ -321,7 +321,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     public void pendingCompletion(String clientId, String subscriptionName, long sequenceId, byte priority) {
         final String key = getSubscriptionKey(clientId, subscriptionName);
         LastRecovered recovered = new LastRecovered();
-        recovered.perPriority[isPrioritizedMessages() ? priority : javax.jms.Message.DEFAULT_PRIORITY].recovered = sequenceId;
+        recovered.perPriority[priority].recovered = sequenceId;
         subscriberLastRecoveredMap.put(key, recovered);
         pendingCompletion.add(key);
         LOG.trace(this + ", pending completion: " + key + ", last: " + recovered);

@@ -283,7 +283,11 @@ public class ActiveMQEndpointWorker {
             LOG.info("Stopping");
             // wake up pausing reconnect attempt
             shutdownMutex.notifyAll();
-            serverSessionPool.close();
+            try {
+                serverSessionPool.close();
+            } catch (Throwable ignored) {
+                LOG.debug("Unexpected error on server session pool close", ignored);
+            }
         }
         disconnect();
     }

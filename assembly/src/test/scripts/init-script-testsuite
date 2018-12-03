@@ -19,7 +19,7 @@
 # This script tests the activemq init script
 #
 # Authors:
-# Marc Schoechlin <ms@256bit.org>  
+# Marc Schoechlin <ms@256bit.org>
 
 STATUS_OVERVIEW=""
 OVERALL_STATUS="0"
@@ -97,7 +97,7 @@ echo "Setting HOME to $TESTDIR"
 export HOME="$TESTDIR"
 
 case "`uname`" in
-  CYGWIN*) 
+  CYGWIN*)
     echo "Set init script"
     SCRIPT="$PWD/activemq"
     CONFIG="$HOME/.activemqrc"
@@ -124,17 +124,17 @@ sleep 2
 assert ${STRATEGY} successful "${SCRIPT} stop"
 assert ${STRATEGY}     failed "${SCRIPT}"
 assert ${STRATEGY}     failed "${SCRIPT} status"
-assert ${STRATEGY} successful "${SCRIPT} browse|grep -q 'Activemq is not running.'"
-assert ${STRATEGY} successful "${SCRIPT} browse FOOBAR111111111 2>&1|grep -q 'Activemq is not running.'"
-assert ${STRATEGY} successful "${SCRIPT} browse --amqurl tcp://localhost:11111 FOOOOO 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} browse|grep -q 'No JMS destination specified.'"
+assert ${STRATEGY} successful "${SCRIPT} browse FOOBAR111111111 2>&1|grep -q 'Broker not available at:'"
+assert ${STRATEGY} successful "${SCRIPT} browse --amqurl tcp://localhost:11111 FOOOOO 2>&1|grep -q 'Broker not available at:'"
 assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep -q 'Encrypted text: '"
 assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -q 'Decrypted text:'"
-assert ${STRATEGY} successful "${SCRIPT} bstat 2>&1|grep -q 'Activemq is not running.'"
-assert ${STRATEGY} successful "${SCRIPT} bstat --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
-assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1|grep -q 'Activemq is not running.'"
-assert ${STRATEGY} successful "${SCRIPT} dstat --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
-assert ${STRATEGY} successful "${SCRIPT} query 2>&1|grep -q 'Activemq is not running.'"
-assert ${STRATEGY} successful "${SCRIPT} query --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} bstat 2>&1|grep -q 'Broker not available at:'"
+assert ${STRATEGY} successful "${SCRIPT} bstat --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'Broker not available at:'"
+assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1|grep -q 'Broker not available at:'"
+assert ${STRATEGY} successful "${SCRIPT} dstat --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'Broker not available at:'"
+assert ${STRATEGY} successful "${SCRIPT} query 2>&1|grep -q 'Broker not available at:'"
+assert ${STRATEGY} successful "${SCRIPT} query --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'Broker not available at:'"
 assert ${STRATEGY} successful "${SCRIPT} restart"
 assert ${STRATEGY} successful "${SCRIPT} stop"
 
@@ -170,8 +170,18 @@ assert ${STRATEGY} successful "${SCRIPT} query|grep brokerName"
 # assert ${STRATEGY} successful "${SCRIPT} create"
 # assert ${STRATEGY} successful "${SCRIPT} export"
 
-echo 
-echo 
+#ActiveMQ start with custom ACTIVEMQ_OUT
+TEST_ACTIVEMQ_OUT=$TESTDIR/activemq.out
+export ACTIVEMQ_OUT=$TEST_ACTIVEMQ_OUT
+assert ${STRATEGY} successful "${SCRIPT} restart && test -f $TEST_ACTIVEMQ_OUT"
+assert ${STRATEGY} successful "${SCRIPT} stop"
+rm $TEST_ACTIVEMQ_OUT
+unset ACTIVEMQ_OUT
+assert ${STRATEGY} successful "${SCRIPT} restart && test ! -f $TEST_ACTIVEMQ_OUT"
+assert ${STRATEGY} successful "${SCRIPT} stop"
+
+echo
+echo
 
 trap "" INT TERM
 finalize

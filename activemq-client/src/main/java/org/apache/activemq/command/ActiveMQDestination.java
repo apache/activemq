@@ -425,11 +425,11 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         return options != null && options.containsKey(IS_DLQ);
     }
 
-    public void setDLQ() {
+    public void setDLQ(boolean val) {
         if (options == null) {
             options = new HashMap<String, String>();
         }
-        options.put(IS_DLQ, String.valueOf(true));
+        options.put(IS_DLQ, String.valueOf(val));
     }
 
     public static UnresolvedDestinationTransformer getUnresolvableDestinationTransformer() {

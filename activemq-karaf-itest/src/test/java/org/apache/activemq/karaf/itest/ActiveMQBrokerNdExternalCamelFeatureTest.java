@@ -26,11 +26,12 @@ import java.util.concurrent.Callable;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.PaxExam;
 
-//@RunWith(PaxExam.class)
-@Ignore
+@RunWith(PaxExam.class)
 public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTest {
 
     @Configuration
@@ -53,6 +54,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractFeatureTes
 
         assertBrokerStarted();
         withinReason(new Runnable() {
+            @Override
             public void run() {
                 getBundle("org.apache.activemq.activemq-camel");
             }

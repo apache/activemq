@@ -86,6 +86,37 @@ public class SequenceSetTest {
     }
 
     @Test
+    public void testAddValuesToTail() {
+        SequenceSet set = new SequenceSet();
+        set.add(new Sequence(0, 10));
+        set.add(new Sequence(21, 42));
+        set.add(new Sequence(142, 512));
+
+        set.add(513);
+
+        for (int i = 600; i < 650; i++) {
+            set.add(i);
+        }
+
+        for (int i = 0; i < 10; i++) {
+            set.add(i * 100);
+        }
+
+        assertTrue(set.contains(0));
+        assertTrue(set.contains(25));
+
+        assertTrue(set.contains(513));
+        assertTrue(!set.contains(514));
+        assertFalse(set.contains(599));
+        assertTrue(set.contains(625));
+        assertFalse(set.contains(651));
+
+        for (int i = 0; i < 10; i++) {
+            assertTrue(set.contains(i * 100));
+        }
+    }
+
+    @Test
     public void testRemove() {
         SequenceSet set = new SequenceSet();
         set.add(new Sequence(0, 100));
@@ -108,6 +139,28 @@ public class SequenceSetTest {
         set.remove(10);
         assertEquals(3, set.size());
         assertEquals(97, set.rangeSize());
+
+        SequenceSet toRemove = new SequenceSet();
+        toRemove.add(new Sequence(0, 100));
+
+        set.remove(toRemove);
+        assertEquals(0, set.size());
+        assertEquals(0, set.rangeSize());
+
+    }
+
+    @Test
+    public void testMerge() {
+        SequenceSet set = new SequenceSet();
+        set.add(new Sequence(0, 100));
+
+        SequenceSet set2 = new SequenceSet();
+        set.add(new Sequence(50, 150));
+
+        set.merge(set2);
+        assertEquals(151, set.rangeSize());
+        assertEquals(1, set.size());
+
     }
 
     @Test

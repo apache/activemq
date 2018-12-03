@@ -143,7 +143,10 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
 
 
     protected void assertMessagesArrived(ConsumerBean messageList, int expected, long timeout) {
-        messageList.assertMessagesArrived(expected,timeout);
+        messageList.waitForMessagesToArrive(expected,timeout);
+        assertTrue("got at least expected num messages, " +
+                        "may be the odd duplicate on clientAck and disconnect outside a tx on separate thread",
+                messageList.getMessages().size() >= expected);
 
         messageList.flushMessages();
 

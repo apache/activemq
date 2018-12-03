@@ -107,4 +107,21 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     public void setExpiration(long expiration) {
         this.expiration = expiration;
     }
+
+    public int getMaxProducersToAudit() {
+        return messageAudit.getMaximumNumberOfProducersToTrack();
+    }
+
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        messageAudit.setMaximumNumberOfProducersToTrack(maxProducersToAudit);
+    }
+
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        messageAudit.setAuditDepth(maxAuditDepth);
+    }
+
+    public int getMaxAuditDepth() {
+        return messageAudit.getAuditDepth();
+    }
+
 }

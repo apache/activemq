@@ -58,7 +58,7 @@ public class DuplicateFromStoreTest {
     protected final static int NUM_PRODUCERS = 100;
     protected final static int NUM_CONSUMERS = 20;
 
-    protected final static int NUM_MSGS = 40000;
+    protected final static int NUM_MSGS = 20000;
     protected final static int CONSUMER_SLEEP = 0;
     protected final static int PRODUCER_SLEEP = 10;
 
@@ -66,6 +66,8 @@ public class DuplicateFromStoreTest {
     public static CountDownLatch consumersFinished = new CountDownLatch(NUM_CONSUMERS );
 
     public AtomicInteger totalMessagesToSend = new AtomicInteger(NUM_MSGS);
+    public AtomicInteger totalMessagesSent = new AtomicInteger(NUM_MSGS);
+
     public AtomicInteger totalReceived = new AtomicInteger(0);
 
     public int messageSize = 16*1000;
@@ -85,13 +87,14 @@ public class DuplicateFromStoreTest {
         policy.setMemoryLimit(10 * 1024 * 1024); // 10 MB
         policy.setExpireMessagesPeriod(0);
         policy.setEnableAudit(false); // allow any duplicates from the store to bubble up to the q impl
+        policy.setQueuePrefetch(100);
         PolicyMap policies = new PolicyMap();
         policies.put(dest, policy);
         broker.setDestinationPolicy(policies);
 
         // configure <systemUsage>
         MemoryUsage memoryUsage = new MemoryUsage();
-        memoryUsage.setPercentOfJvmHeap(70);
+        memoryUsage.setPercentOfJvmHeap(50);
 
         StoreUsage storeUsage = new StoreUsage();
         storeUsage.setLimit(8 * 1024 * 1024 * 1024); // 8 gb
@@ -132,7 +135,7 @@ public class DuplicateFromStoreTest {
 
         LOG.info("All producers and consumers got started. Awaiting their termination");
         producersFinished.await(100, TimeUnit.MINUTES);
-        LOG.info("All producers have terminated.");
+        LOG.info("All producers have terminated. remaining to send: " + totalMessagesToSend.get() + ", sent:" + totalMessagesSent.get());
 
         consumersFinished.await(100, TimeUnit.MINUTES);
         LOG.info("All consumers have terminated.");
@@ -231,6 +234,7 @@ public class DuplicateFromStoreTest {
                 // send message
                 while (totalMessagesToSend.decrementAndGet() >= 0) {
                     producer.send(message);
+                    totalMessagesSent.incrementAndGet();
                     log.debug("Sent message: " + counter);
                     counter++;
 
@@ -240,7 +244,7 @@ public class DuplicateFromStoreTest {
                     Thread.sleep(PRODUCER_SLEEP);
                 }
             } catch (Exception ex) {
-                log.error(ex.getMessage());
+                log.error(ex.toString());
                 return;
             } finally {
                 try {
@@ -312,10 +316,10 @@ public class DuplicateFromStoreTest {
                         TextMessage textMessage = (TextMessage) message2;
                         String text = textMessage.getText();
                         log.debug("Received: " + text.substring(0, 50));
+                    } else if (totalReceived.get() < NUM_MSGS) {
+                        log.error("Received message of unsupported type. Expecting TextMessage. count: " + totalReceived.get());
                     } else {
-                        if (totalReceived.get() < NUM_MSGS) {
-                            log.error("Received message of unsupported type. Expecting TextMessage. " + message2);
-                        }
+                        // all done
                         break;
                     }
                     if (message2 != null) {

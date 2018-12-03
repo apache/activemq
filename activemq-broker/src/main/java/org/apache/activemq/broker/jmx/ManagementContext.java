@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.management.Attribute;
@@ -62,9 +64,9 @@ public class ManagementContext implements Service {
     public static final String DEFAULT_DOMAIN = "org.apache.activemq";
 
     static {
-        String option = Boolean.TRUE.toString();
+        String option = Boolean.FALSE.toString();
         try {
-            option = System.getProperty("org.apache.activemq.broker.jmx.createConnector", "true");
+            option = System.getProperty("org.apache.activemq.broker.jmx.createConnector", "false");
         } catch (Exception ex) {
         }
 
@@ -87,7 +89,7 @@ public class ManagementContext implements Service {
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
     private final AtomicBoolean started = new AtomicBoolean(false);
-    private final AtomicBoolean connectorStarting = new AtomicBoolean(false);
+    private final CountDownLatch connectorStarted = new CountDownLatch(1);
     private JMXConnectorServer connectorServer;
     private ObjectName namingServiceObjectName;
     private Registry registry;
@@ -141,7 +143,6 @@ public class ManagementContext implements Service {
                             JMXConnectorServer server = connectorServer;
                             if (started.get() && server != null) {
                                 LOG.debug("Starting JMXConnectorServer...");
-                                connectorStarting.set(true);
                                 try {
                                     // need to remove MDC as we must not inherit MDC in child threads causing leaks
                                     MDC.remove("activemq.broker");
@@ -150,7 +151,7 @@ public class ManagementContext implements Service {
                                     if (brokerName != null) {
                                         MDC.put("activemq.broker", brokerName);
                                     }
-                                    connectorStarting.set(false);
+                                    connectorStarted.countDown();
                                 }
                                 LOG.info("JMX consoles can connect to {}", server.getAddress());
                             }
@@ -198,7 +199,7 @@ public class ManagementContext implements Service {
             connectorServer = null;
             if (server != null) {
                 try {
-                    if (!connectorStarting.get()) {
+                    if (connectorStarted.await(10, TimeUnit.SECONDS)) {
                         LOG.debug("Stopping jmx connector");
                         server.stop();
                     }
@@ -326,7 +327,7 @@ public class ManagementContext implements Service {
     }
 
     public boolean isConnectorStarted() {
-        return connectorStarting.get() || (connectorServer != null && connectorServer.isActive());
+        return connectorStarted.getCount() == 0 || (connectorServer != null && connectorServer.isActive());
     }
 
     /**

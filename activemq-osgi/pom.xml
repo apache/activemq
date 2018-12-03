@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.15.0-SNAPSHOT</version>
+    <version>5.16.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-osgi</artifactId>
@@ -57,9 +57,9 @@
       org.apache.zookeeper*;resolution:=optional,
       org.fusesource.leveldbjni*;resolution:=optional,
       org.fusesource.hawtjni*;resolution:=optional,
-      org.springframework.jms*;version="[3,5)";resolution:=optional,
-      org.springframework.transaction*;version="[3,5)";resolution:=optional,
-      org.springframework*;version="[3,5)";resolution:=optional,
+      org.springframework.jms*;version="[4,5)";resolution:=optional,
+      org.springframework.transaction*;version="[4,5)";resolution:=optional,
+      org.springframework*;version="[4,5)";resolution:=optional,
       org.xmlpull*;resolution:=optional,
       scala*;resolution:=optional,
       javax.annotation*,
@@ -87,7 +87,6 @@
     </activemq.osgi.export>
     <activemq.osgi.private.pkg>
          org.apache.xbean*,
-         org.springframework.osgi*,
          org.fusesource.hawtdispatch*,
          org.fusesource.mqtt*,
          org.fusesource.hawtbuf*,
@@ -174,28 +173,10 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
     </dependency>
-
+    
     <dependency>
-      <groupId>org.springframework.osgi</groupId>
-      <artifactId>spring-osgi-core</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.aop</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.beans</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.context</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>org.springframework.core</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-blueprint</artifactId>
     </dependency>
 
     <dependency>
@@ -247,7 +228,16 @@
                   <type>jar</type>
                   <overWrite>false</overWrite>
                   <outputDirectory>${basedir}/target/extra-resources/</outputDirectory>
-                  <includes>camel-osgi.xsd,camel-spring.xsd</includes>
+                  <includes>camel-spring.xsd</includes>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.apache.camel</groupId>
+                  <artifactId>camel-blueprint</artifactId>
+                  <version>${camel-version}</version>
+                  <type>jar</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${basedir}/target/extra-resources/</outputDirectory>
+                  <includes>camel-blueprint.xsd</includes>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -289,7 +279,6 @@
             <Embed-Dependency>
               *;groupId=org.apache.activemq;inline=META-INF/services/*,
               *;groupId=org.apache.qpid;inline=META-INF/services/*,
-              *;groupId=org.springframework.osgi;inline=true
               *;groupId=org.apache.xbean;inline=true
               <!--
               groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,

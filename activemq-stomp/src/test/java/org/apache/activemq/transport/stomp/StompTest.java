@@ -28,6 +28,7 @@ import java.io.StringReader;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -46,10 +47,15 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.ObjectName;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.region.AbstractSubscription;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.util.Wait;
@@ -2262,6 +2268,91 @@ public class StompTest extends StompTestSupport {
         assertEquals("MESSAGE", sframe.getAction());
         assertEquals(bigBody, sframe.getBody());
     }
+
+    @Test(timeout = 60000)
+    public void testAckInTransactionTopic() throws Exception {
+        doTestAckInTransaction(true);
+    }
+
+    @Test(timeout = 60000)
+    public void testAckInTransactionQueue() throws Exception {
+        doTestAckInTransaction(false);
+    }
+
+    public void doTestAckInTransaction(boolean topic) throws Exception {
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+        stompConnection.receive();
+        String destination = (topic ? "/topic" : "/queue") + "/test";
+        stompConnection.subscribe(destination, Stomp.Headers.Subscribe.AckModeValues.CLIENT);
+
+        for (int j = 0; j < 5; j++) {
+
+            for (int i = 0; i < 10; i++) {
+                stompConnection.send(destination , "message" + i);
+            }
+
+            stompConnection.begin("tx"+j);
+
+            for (int i = 0; i < 10; i++) {
+                StompFrame message = stompConnection.receive();
+                stompConnection.ack(message, "tx"+j);
+
+            }
+            stompConnection.commit("tx"+j);
+        }
+
+        List<Subscription> subs = getDestinationConsumers(brokerService,
+                ActiveMQDestination.createDestination("test", topic ? ActiveMQDestination.TOPIC_TYPE : ActiveMQDestination.QUEUE_TYPE));
+
+
+        for (Subscription subscription : subs) {
+            final AbstractSubscription abstractSubscription = (AbstractSubscription) subscription;
+
+            assertTrue("prefetchExtension should be back to Zero after commit", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    LOG.info("ext: " + abstractSubscription.getPrefetchExtension().get());
+                    return abstractSubscription.getPrefetchExtension().get() == 0;
+                }
+            }));
+        }
+    }
+
+    public static List<Subscription> getDestinationConsumers(BrokerService broker, ActiveMQDestination destination) {
+        List<Subscription> result = null;
+        org.apache.activemq.broker.region.Destination dest = getDestination(broker, destination);
+        if (dest != null) {
+            result = dest.getConsumers();
+        }
+        return result;
+    }
+
+    public static org.apache.activemq.broker.region.Destination getDestination(BrokerService target, ActiveMQDestination destination) {
+        org.apache.activemq.broker.region.Destination result = null;
+        for (org.apache.activemq.broker.region.Destination dest : getDestinationMap(target, destination).values()) {
+            if (dest.getName().equals(destination.getPhysicalName())) {
+                result = dest;
+                break;
+            }
+        }
+        return result;
+    }
+
+    private static Map<ActiveMQDestination, org.apache.activemq.broker.region.Destination> getDestinationMap(BrokerService target,
+                                                                                                             ActiveMQDestination destination) {
+        RegionBroker regionBroker = (RegionBroker) target.getRegionBroker();
+        if (destination.isTemporary()) {
+            return destination.isQueue() ? regionBroker.getTempQueueRegion().getDestinationMap() :
+                    regionBroker.getTempTopicRegion().getDestinationMap();
+        }
+        return destination.isQueue() ?
+                regionBroker.getQueueRegion().getDestinationMap() :
+                regionBroker.getTopicRegion().getDestinationMap();
+    }
+
 
     protected SamplePojo createObjectFromJson(String data) throws Exception {
         HierarchicalStreamReader in = new JettisonMappedXmlDriver().createReader(new StringReader(data));

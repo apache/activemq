@@ -173,9 +173,9 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     @Override
-    public void checkpoint(final boolean sync) throws IOException {
+    public void checkpoint(final boolean cleanup) throws IOException {
         for (PersistenceAdapter persistenceAdapter : adapters) {
-            persistenceAdapter.checkpoint(sync);
+            persistenceAdapter.checkpoint(cleanup);
         }
     }
 
@@ -289,6 +289,13 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     @Override
+    public void allowIOResumption() {
+        for (PersistenceAdapter persistenceAdapter : adapters) {
+            persistenceAdapter.allowIOResumption();
+        }
+    }
+
+    @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         PersistenceAdapter adapter = null;
         try {
@@ -299,7 +306,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
             adapter.removeQueueMessageStore(destination);
             removeMessageStore(adapter, destination);
-            destinationMap.removeAll(destination);
+            destinationMap.remove(destination, adapter);
         }
     }
 
@@ -314,7 +321,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
             adapter.removeTopicMessageStore(destination);
             removeMessageStore(adapter, destination);
-            destinationMap.removeAll(destination);
+            destinationMap.remove(destination, adapter);
         }
     }
 

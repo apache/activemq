@@ -193,11 +193,19 @@ public class ActiveMQConnectionSupport {
         info.setServerUrl(url);
     }
 
+    public String getTrustStore() {
+        return info.getTrustStore();
+    }
+
     public void setTrustStore(String trustStore) {
         if (log.isDebugEnabled()) {
             log.debug(this + ", setting [trustStore] to: " + trustStore);
         }
         info.setTrustStore(trustStore);
+    }
+
+    public String getTrustStorePassword() {
+        return info.getTrustStorePassword();
     }
 
     public void setTrustStorePassword(String trustStorePassword) {
@@ -207,6 +215,10 @@ public class ActiveMQConnectionSupport {
         info.setTrustStorePassword(trustStorePassword);
     }
 
+    public String getKeyStore() {
+        return info.getKeyStore();
+    }
+
     public void setKeyStore(String keyStore) {
         if (log.isDebugEnabled()) {
             log.debug(this + ", setting [keyStore] to: " + keyStore);
@@ -214,11 +226,19 @@ public class ActiveMQConnectionSupport {
         info.setKeyStore(keyStore);
     }
 
+    public String getKeyStorePassword() {
+        return info.getKeyStorePassword();
+    }
+
     public void setKeyStorePassword(String keyStorePassword) {
         if (log.isDebugEnabled()) {
             log.debug(this + ", setting [keyStorePassword] to: " + keyStorePassword);
         }
         info.setKeyStorePassword(keyStorePassword);
+    }
+
+    public String getKeyStoreKeyPassword() {
+        return info.getKeyStoreKeyPassword();
     }
 
     public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {

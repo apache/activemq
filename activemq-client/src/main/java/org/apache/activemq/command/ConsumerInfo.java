@@ -17,6 +17,7 @@
 package org.apache.activemq.command;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -530,6 +531,13 @@ public class ConsumerInfo extends BaseCommand implements TransientInitializer {
     public void initTransients() {
         assignedGroupCount = new ConcurrentHashMap<>();
         lastDeliveredSequenceId = RemoveInfo.LAST_DELIVERED_UNSET;
+    }
+
+    @Override
+    public String toString() {
+        HashMap<String, Object> overrideFields = new HashMap<String, Object>();
+        overrideFields.put("networkConsumerIds", networkConsumerIds);
+        return super.toString(overrideFields);
     }
 
 }

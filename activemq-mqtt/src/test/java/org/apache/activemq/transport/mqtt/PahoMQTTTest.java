@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.StandardCharsets;
+import java.util.AbstractMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -160,7 +161,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         client.publish(ACCOUNT_PREFIX + "1/2/3/4", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
 
         // One delivery for topic  ACCOUNT_PREFIX + "#"
-        String result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        String result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertTrue(client.getPendingDeliveryTokens().length == 0);
         assertEquals(expectedResult, result);
 
@@ -168,10 +169,10 @@ public class PahoMQTTTest extends MQTTTestSupport {
         client.publish(ACCOUNT_PREFIX + "a/1/2", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
 
         // One delivery for topic  ACCOUNT_PREFIX + "a/1/2"
-        result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         // One delivery for topic  ACCOUNT_PREFIX + "#"
-        result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
@@ -183,7 +184,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         client.publish(ACCOUNT_PREFIX + "1/2/3", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
 
         // One delivery for topic  ACCOUNT_PREFIX + "1/2/3"
-        result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
@@ -208,13 +209,13 @@ public class PahoMQTTTest extends MQTTTestSupport {
         String expectedResult = "hello mqtt broker on hash";
         client.publish(ACCOUNT_PREFIX + "a/b/c", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
 
-        String result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        String result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
         expectedResult = "hello mqtt broker on a different topic";
         client.publish(ACCOUNT_PREFIX + "1/2/3/4/5/6", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
-        result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
@@ -229,18 +230,18 @@ public class PahoMQTTTest extends MQTTTestSupport {
         client.publish(ACCOUNT_PREFIX + "1/2/3", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
 
         // One message from topic subscription on ACCOUNT_PREFIX + "#"
-        result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
 
         // One message from topic subscription on ACCOUNT_PREFIX + "1/2/3"
-        result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
 
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
         expectedResult = "hello mqtt broker on some other topic";
         client.publish(ACCOUNT_PREFIX + "a/b/c/d/e", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
-        result = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        result = listener.messageQ.poll(20, TimeUnit.SECONDS).getValue();
         assertEquals(expectedResult, result);
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
@@ -252,14 +253,12 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
         expectedResult = "this should not come back...";
         client.publish(ACCOUNT_PREFIX + "1/2/3/4", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
-        result = listener.messageQ.poll(3, TimeUnit.SECONDS);
-        assertNull(result);
+        assertNull(listener.messageQ.poll(3, TimeUnit.SECONDS));
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
         expectedResult = "this should not come back either...";
         client.publish(ACCOUNT_PREFIX + "a/b/c", expectedResult.getBytes(StandardCharsets.UTF_8), 0, false);
-        result = listener.messageQ.poll(3, TimeUnit.SECONDS);
-        assertNull(result);
+        assertNull(listener.messageQ.poll(3, TimeUnit.SECONDS));
         assertTrue(client.getPendingDeliveryTokens().length == 0);
 
         client.disconnect();
@@ -351,11 +350,11 @@ public class PahoMQTTTest extends MQTTTestSupport {
         String message = "Message from client: " + clientId;
         client1.publish(topic, message.getBytes(StandardCharsets.UTF_8), 1, false);
 
-        String result = client1MqttCallback.messageQ.poll(10, TimeUnit.SECONDS);
+        String result = client1MqttCallback.messageQ.poll(10, TimeUnit.SECONDS).getValue();
         assertEquals(message, result);
         assertEquals(1, client1MqttCallback.received.get());
 
-        result = clientAdminMqttCallback.messageQ.poll(10, TimeUnit.SECONDS);
+        result = clientAdminMqttCallback.messageQ.poll(10, TimeUnit.SECONDS).getValue();
         assertEquals(message, result);
 
         assertTrue(client1.isConnected());
@@ -382,6 +381,22 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
         clientAdmin.disconnect();
         clientAdmin.close();
+    }
+
+    @Test(timeout = 300000)
+    public void testActiveMQWildCards1() throws Exception {
+        final DefaultListener listener = new DefaultListener();
+        MqttClient client = createClient(false, "receive", listener);
+        final String ACCOUNT_PREFIX = "test/";
+        client.subscribe(ACCOUNT_PREFIX+"a/#");
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+        String expectedResult = "should get this 1";
+        String topic = ACCOUNT_PREFIX+"a/b/1.2.3*4>";
+        client.publish(topic, expectedResult.getBytes(), 0, false);
+        AbstractMap.SimpleEntry<String,String> entry = listener.messageQ.poll(20, TimeUnit.SECONDS);
+        assertEquals(topic, entry.getKey());
+        assertEquals(expectedResult, entry.getValue());
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
     }
 
     protected MqttClient createClient(boolean cleanSession, String clientId, MqttCallback listener) throws Exception {
@@ -427,7 +442,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
     static class DefaultListener implements MqttCallback {
 
         final AtomicInteger received = new AtomicInteger();
-        final BlockingQueue<String> messageQ = new ArrayBlockingQueue<String>(10);
+        final BlockingQueue<AbstractMap.SimpleEntry<String, String>> messageQ = new ArrayBlockingQueue<AbstractMap.SimpleEntry<String, String>>(10);
 
         @Override
         public void connectionLost(Throwable cause) {
@@ -437,7 +452,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         public void messageArrived(String topic, MqttMessage message) throws Exception {
             LOG.info("Received: {}", message);
             received.incrementAndGet();
-            messageQ.put(new String(message.getPayload(), StandardCharsets.UTF_8));
+            messageQ.put(new AbstractMap.SimpleEntry(topic, new String(message.getPayload(), StandardCharsets.UTF_8)));
         }
 
         @Override

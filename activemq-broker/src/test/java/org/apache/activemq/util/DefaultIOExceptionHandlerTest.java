@@ -49,6 +49,11 @@ public class DefaultIOExceptionHandlerTest {
         underTest.setSystemExitOnShutdown(exitPlease);
         underTest.setBrokerService(new BrokerService() {
             @Override
+            public boolean isStarted() {
+                return true;
+            }
+
+            @Override
             public void stop() throws Exception {
                 shutdownOnExitSet.set(isSystemExitOnShutdown());
                 stopCalled.countDown();

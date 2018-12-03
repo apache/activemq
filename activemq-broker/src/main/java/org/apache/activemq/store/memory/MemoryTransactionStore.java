@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -55,9 +56,9 @@ public class MemoryTransactionStore implements TransactionStore {
 
     public class Tx {
 
-        public ArrayList<AddMessageCommand> messages = new ArrayList<AddMessageCommand>();
+        public List<AddMessageCommand> messages = Collections.synchronizedList(new ArrayList<AddMessageCommand>());
 
-        public final ArrayList<RemoveMessageCommand> acks = new ArrayList<RemoveMessageCommand>();
+        public final List<RemoveMessageCommand> acks = Collections.synchronizedList(new ArrayList<RemoveMessageCommand>());
 
         public void add(AddMessageCommand msg) {
             messages.add(msg);
@@ -106,11 +107,12 @@ public class MemoryTransactionStore implements TransactionStore {
                     cmd.run(ctx);
                 }
 
+                persistenceAdapter.commitTransaction(ctx);
+
             } catch (IOException e) {
                 persistenceAdapter.rollbackTransaction(ctx);
                 throw e;
             }
-            persistenceAdapter.commitTransaction(ctx);
         }
     }
 
@@ -239,8 +241,13 @@ public class MemoryTransactionStore implements TransactionStore {
     public Tx getTx(Object txid) {
         Tx tx = inflightTransactions.get(txid);
         if (tx == null) {
-            tx = new Tx();
-            inflightTransactions.put(txid, tx);
+            synchronized (inflightTransactions) {
+                tx = inflightTransactions.get(txid);
+                if ( tx == null) {
+                    tx = new Tx();
+                    inflightTransactions.put(txid, tx);
+                }
+            }
         }
         return tx;
     }
@@ -261,13 +268,16 @@ public class MemoryTransactionStore implements TransactionStore {
         }
         Tx tx;
         if (wasPrepared) {
-            tx = preparedTransactions.remove(txid);
+            tx = preparedTransactions.get(txid);
         } else {
             tx = inflightTransactions.remove(txid);
         }
 
         if (tx != null) {
             tx.commit();
+        }
+        if (wasPrepared) {
+            preparedTransactions.remove(txid);
         }
         if (postCommit != null) {
             postCommit.run();

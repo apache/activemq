@@ -17,6 +17,7 @@
 
 package org.apache.activemq.broker;
 
+import javax.jms.InvalidClientIDException;
 import java.util.LinkedList;
 import org.apache.activemq.command.ConnectionInfo;
 
@@ -47,6 +48,11 @@ public class StubBroker extends EmptyBroker {
     }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+        for (AddConnectionData data : addConnectionData) {
+            if (data.connectionInfo.getClientId() != null && data.connectionInfo.getClientId().equals(info.getClientId())) {
+                throw new InvalidClientIDException("ClientID already exists");
+            }
+        }
         addConnectionData.add(new AddConnectionData(context, info));
     }
 

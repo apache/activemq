@@ -123,7 +123,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             Transport localTransport;
             try {
                 // Allows the transport to access the broker's ssl configuration.
-                SslContext.setCurrentSslContext(getBrokerService().getSslContext());
+                if (getSslContext() != null) {
+                    SslContext.setCurrentSslContext(getSslContext());
+                } else {
+                    SslContext.setCurrentSslContext(getBrokerService().getSslContext());
+                }
                 try {
                     remoteTransport = TransportFactory.connect(connectUri);
                 } catch (Exception e) {
@@ -256,7 +260,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         }
         NetworkBridgeListener listener = new DiscoverNetworkBridgeListener(getBrokerService(), getObjectName());
 
-        DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this, localTransport, remoteTransport, listener);
+        DemandForwardingBridge result = getBridgeFactory().createNetworkBridge(this, localTransport, remoteTransport, listener);
         result.setBrokerService(getBrokerService());
         return configureBridge(result);
     }

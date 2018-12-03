@@ -36,6 +36,7 @@ import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -96,6 +97,33 @@ public class JMSClientTest extends JMSClientTestSupport {
             Message msg = consumer.receive(TestConfig.TIMEOUT);
             assertNotNull(msg);
             assertTrue(msg instanceof TextMessage);
+        }
+    }
+
+    @Test(timeout = 60000)
+    public void testSendJMSMapMessage() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            assertNotNull(session);
+            Queue queue = session.createQueue(name.getMethodName());
+            MessageProducer producer = session.createProducer(queue);
+            MapMessage message = session.createMapMessage();
+            message.setBoolean("Boolean", false);
+            message.setString("STRING", "TEST");
+            producer.send(message);
+            QueueViewMBean proxy = getProxyToQueue(name.getMethodName());
+            assertEquals(1, proxy.getQueueSize());
+
+            MessageConsumer consumer = session.createConsumer(queue);
+            Message received = consumer.receive(5000);
+            assertNotNull(received);
+            assertTrue(received instanceof MapMessage);
+            MapMessage map = (MapMessage) received;
+            assertEquals("TEST", map.getString("STRING"));
+            assertEquals(false, map.getBooleanProperty("Boolean"));
         }
     }
 

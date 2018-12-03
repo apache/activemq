@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
@@ -84,7 +85,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     private WireFormat wireFormat = new OpenWireFormat();
     private Statements statements;
     private JDBCAdapter adapter;
-    private MemoryTransactionStore transactionStore;
+    private final JdbcMemoryTransactionStore transactionStore = new JdbcMemoryTransactionStore(this);
     private ScheduledFuture<?> cleanupTicket;
     private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
@@ -102,6 +103,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     protected LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
     protected int maxRows = DefaultJDBCAdapter.MAX_ROWS;
+    protected final HashMap<ActiveMQDestination, MessageStore> storeCache = new HashMap<>();
 
     {
         setLockKeepAlivePeriod(DEFAULT_LOCK_KEEP_ALIVE_PERIOD);
@@ -191,18 +193,26 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        MessageStore rc = new JDBCMessageStore(this, getAdapter(), wireFormat, destination, audit);
-        if (transactionStore != null) {
-            rc = transactionStore.proxy(rc);
+        MessageStore rc = storeCache.get(destination);
+        if (rc == null) {
+            MessageStore store = transactionStore.proxy(new JDBCMessageStore(this, getAdapter(), wireFormat, destination, audit));
+            rc = storeCache.putIfAbsent(destination, store);
+            if (rc == null) {
+                rc = store;
+            }
         }
         return rc;
     }
 
     @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
-        TopicMessageStore rc = new JDBCTopicMessageStore(this, getAdapter(), wireFormat, destination, audit);
-        if (transactionStore != null) {
-            rc = transactionStore.proxy(rc);
+        TopicMessageStore rc = (TopicMessageStore) storeCache.get(destination);
+        if (rc == null) {
+            TopicMessageStore store = transactionStore.proxy(new JDBCTopicMessageStore(this, getAdapter(), wireFormat, destination, audit));
+            rc = (TopicMessageStore) storeCache.putIfAbsent(destination, store);
+            if (rc == null) {
+                rc = store;
+            }
         }
         return rc;
     }
@@ -220,6 +230,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 LOG.error("Failed to remove consumer destination: " + destination, ioe);
             }
         }
+        storeCache.remove(destination);
     }
 
     private void removeConsumerDestination(ActiveMQQueue destination) throws IOException {
@@ -243,13 +254,11 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      */
     @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
+        storeCache.remove(destination);
     }
 
     @Override
     public TransactionStore createTransactionStore() throws IOException {
-        if (transactionStore == null) {
-            transactionStore = new JdbcMemoryTransactionStore(this);
-        }
         return this.transactionStore;
     }
 
@@ -290,6 +299,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             c.close();
         }
     }
+
+    @Override
+    public void allowIOResumption() {}
 
     @Override
     public void init() throws Exception {
@@ -484,7 +496,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public TransactionContext getTransactionContext(ConnectionContext context) throws IOException {
-        if (context == null) {
+        if (context == null || isBrokerContext(context)) {
             return getTransactionContext();
         } else {
             TransactionContext answer = (TransactionContext)context.getLongTermStoreContext();
@@ -494,6 +506,10 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             }
             return answer;
         }
+    }
+
+    private boolean isBrokerContext(ConnectionContext context) {
+        return context.getSecurityContext() != null && context.getSecurityContext().isBrokerContext();
     }
 
     public TransactionContext getTransactionContext() throws IOException {
@@ -769,11 +785,10 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         }
     }
 
-    public void commitAdd(ConnectionContext context, MessageId messageId, long preparedSequenceId) throws IOException {
+    public void commitAdd(ConnectionContext context, final MessageId messageId, final long preparedSequenceId, final long newSequence) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
-            long sequence = (Long)messageId.getEntryLocator();
-            getAdapter().doCommitAddOp(c, preparedSequenceId, sequence);
+            getAdapter().doCommitAddOp(c, preparedSequenceId, newSequence);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit add: " + messageId + ". Reason: " + e, e);
@@ -785,7 +800,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public void commitRemove(ConnectionContext context, MessageAck ack) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
-            getAdapter().doRemoveMessage(c, (Long)ack.getLastMessageId().getFutureOrSequenceLong(), null);
+            getAdapter().doRemoveMessage(c, (Long)ack.getLastMessageId().getEntryLocator(), null);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit last ack: " + ack + ". Reason: " + e,e);

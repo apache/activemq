@@ -74,7 +74,7 @@ public class NIOSSLLoadTest {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
-        connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=SSL_RSA_WITH_RC4_128_SHA,SSL_DH_anon_WITH_3DES_EDE_CBC_SHA");
+        connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=TLS_RSA_WITH_AES_256_CBC_SHA256");
         broker.start();
         broker.waitUntilStarted();
 
@@ -113,6 +113,7 @@ public class NIOSSLLoadTest {
         }
 
         Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 return getReceived() == PRODUCER_COUNT * MESSAGE_COUNT;
             }

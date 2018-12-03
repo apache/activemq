@@ -33,6 +33,7 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
     public static final int PROVIDER_MAJOR_VERSION;
     public static final int PROVIDER_MINOR_VERSION;
     public static final String PROVIDER_NAME = "ActiveMQ";
+    public static final String DEFAULT_PLATFORM_DETAILS = "Java";
     public static final String PLATFORM_DETAILS;
 
     public static final ActiveMQConnectionMetaData INSTANCE = new ActiveMQConnectionMetaData();

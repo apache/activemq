@@ -46,7 +46,7 @@
 <div>
 <form action="queues.jsp" method="get">
     <label name="destination">Queue Name Filter</label>
-    <input type="text" name="QueueFilter" value="${param.QueueFilter}"/>
+    <input type="text" name="QueueFilter" value="<c:out value='${param.QueueFilter}'/>"/>
 
     <input type="submit" value="Filter"/>
 </form>
@@ -54,7 +54,7 @@
 </tr>
 </table>
 
-<h2>Queues:<c:if test="${null != param.QueueFilter && param.QueueFilter != ''}"> (filter='${param.QueueFilter}')</c:if></h2>
+<h2>Queues:<c:if test="${null != param.QueueFilter && param.QueueFilter != ''}"> (filter="<c:out value='${param.QueueFilter}'/>")</c:if></h2>
 
 <table id="queues" class="sortable autostripe">
 <thead>

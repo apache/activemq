@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.15.0-SNAPSHOT</version>
+    <version>5.16.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-unit-tests</artifactId>
@@ -770,6 +770,7 @@
                 <exclude>org/apache/activemq/broker/jmx/MBeanTest.*</exclude>
                 <exclude>org/apache/activemq/broker/jmx/PurgeTest.*</exclude>
                 <exclude>org/apache/activemq/broker/mKahaDBXARecoveryBrokerTest.*</exclude>
+                <exclude>org/apache/activemq/broker/KahaDBXARecoveryBrokerTest.*</exclude>
                 <exclude>org/apache/activemq/broker/policy/AbortSlowConsumerTest.*</exclude>
                 <exclude>org/apache/activemq/broker/region/DestinationGCTest.*</exclude>
                 <exclude>org/apache/activemq/broker/region/DestinationRemoveRestartTest.*</exclude>

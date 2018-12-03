@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.pool;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -39,7 +42,9 @@ import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 
 import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -55,6 +60,7 @@ public class XAConnectionPoolTest extends TestSupport {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
 
+        final Xid xid = createXid();
         // simple TM that is in a tx and will track syncs
         pcf.setTransactionManager(new TransactionManager() {
             @Override
@@ -85,7 +91,12 @@ public class XAConnectionPoolTest extends TestSupport {
 
                     @Override
                     public boolean enlistResource(XAResource xaRes) throws IllegalStateException, RollbackException, SystemException {
-                        return false;
+                        try {
+                            xaRes.start(xid, 0);
+                        } catch (XAException e) {
+                            throw new SystemException(e.getMessage());
+                        }
+                        return true;
                     }
 
                     @Override
@@ -146,6 +157,31 @@ public class XAConnectionPoolTest extends TestSupport {
             sync.afterCompletion(1);
         }
         connection.close();
+    }
+
+    static long txGenerator = 22;
+    public Xid createXid() throws IOException {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(baos);
+        os.writeLong(++txGenerator);
+        os.close();
+        final byte[] bs = baos.toByteArray();
+
+        return new Xid() {
+
+            public int getFormatId() {
+                return 86;
+            }
+
+            public byte[] getGlobalTransactionId() {
+                return bs;
+            }
+
+            public byte[] getBranchQualifier() {
+                return bs;
+            }
+        };
     }
 
     public void testAckModeOfPoolNonXAWithTM() throws Exception {
