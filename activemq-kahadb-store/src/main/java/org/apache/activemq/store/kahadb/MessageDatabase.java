@@ -149,6 +149,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         protected Location ackMessageFileMapLocation = null;
         protected transient ActiveMQMessageAuditNoSync producerSequenceIdTracker = new ActiveMQMessageAuditNoSync();
         protected transient Map<Integer, Set<Integer>> ackMessageFileMap = new HashMap<>();
+        protected transient AtomicBoolean ackMessageFileMapDirtyFlag = new AtomicBoolean(false);
         protected int version = VERSION;
         protected int openwireVersion = OpenWireFormat.DEFAULT_STORE_VERSION;
 
@@ -825,6 +826,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 KahaAckMessageFileMapCommand audit = (KahaAckMessageFileMapCommand) load(metadata.ackMessageFileMapLocation);
                 ObjectInputStream objectIn = new ObjectInputStream(audit.getAckMessageFileMap().newInput());
                 metadata.ackMessageFileMap = (Map<Integer, Set<Integer>>) objectIn.readObject();
+                metadata.ackMessageFileMapDirtyFlag.lazySet(true);
                 requiresReplay = false;
             } catch (Exception e) {
                 LOG.warn("Cannot recover ackMessageFileMap", e);
@@ -1634,6 +1636,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             referenceFileIds = new HashSet<>();
             referenceFileIds.add(messageLocation.getDataFileId());
             metadata.ackMessageFileMap.put(ackLocation.getDataFileId(), referenceFileIds);
+            metadata.ackMessageFileMapDirtyFlag.lazySet(true);
+
         } else {
             Integer id = Integer.valueOf(messageLocation.getDataFileId());
             if (!referenceFileIds.contains(id)) {
@@ -1760,7 +1764,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         metadata.state = OPEN_STATE;
         metadata.producerSequenceIdTrackerLocation = checkpointProducerAudit();
-        metadata.ackMessageFileMapLocation = checkpointAckMessageFileMap();
+        if (metadata.ackMessageFileMapDirtyFlag.get() || (metadata.ackMessageFileMapLocation == null)) {
+            metadata.ackMessageFileMapLocation = checkpointAckMessageFileMap();
+        }
+        metadata.ackMessageFileMapDirtyFlag.lazySet(false);
         Location[] inProgressTxRange = getInProgressTxLocationRange();
         metadata.firstInProgressTransactionLocation = inProgressTxRange[0];
         tx.store(metadata.page, metadataMarshaller, true);
@@ -1931,6 +1938,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     }
                     if (gcCandidateSet.contains(candidate)) {
                         ackMessageFileMapMod |= (metadata.ackMessageFileMap.remove(candidate) != null);
+                        metadata.ackMessageFileMapDirtyFlag.lazySet(true);
                     } else {
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("not removing data file: " + candidate
@@ -1945,6 +1953,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 for (Integer candidate : gcCandidateSet) {
                     for (Set<Integer> ackFiles : metadata.ackMessageFileMap.values()) {
                         ackMessageFileMapMod |= ackFiles.remove(candidate);
+                        metadata.ackMessageFileMapDirtyFlag.lazySet(true);
                     }
                 }
                 if (ackMessageFileMapMod) {
@@ -2127,6 +2136,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 referenceFileIds = new HashSet<>();
                 referenceFileIds.addAll(entry.getValue());
                 metadata.ackMessageFileMap.put(entry.getKey(), referenceFileIds);
+                metadata.ackMessageFileMapDirtyFlag.lazySet(true);
             } else {
                 referenceFileIds.addAll(entry.getValue());
             }
@@ -2135,6 +2145,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         // remove the old location data from the ack map so that the old journal log file can
         // be removed on next GC.
         metadata.ackMessageFileMap.remove(journalToRead);
+        metadata.ackMessageFileMapDirtyFlag.lazySet(true);
 
         indexLock.writeLock().unlock();
 
