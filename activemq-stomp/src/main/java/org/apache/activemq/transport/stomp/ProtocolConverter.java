@@ -571,6 +571,24 @@ public class ProtocolConverter {
         String subscriptionId = headers.get(Stomp.Headers.Subscribe.ID);
         String destination = headers.get(Stomp.Headers.Subscribe.DESTINATION);
 
+        /* To make sure the subscribed destination is not empty*/
+        if(destination==null || "".equals(destination)){
+            String errorString = "An empty or null Destination was specified";
+            HashMap<String, String> errorHeaders = new HashMap<>();
+            errorHeaders.put(Stomp.Headers.Error.MESSAGE,errorString );
+            errorHeaders.put(Stomp.Headers.CONTENT_TYPE, "text/plain");
+            final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
+            if (receiptId != null) {
+                errorHeaders.put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
+            }
+            StompFrame errorMessage = new StompFrame(Stomp.Responses.ERROR, errorHeaders, errorString.getBytes());
+            try {
+                stompTransport.sendToStomp(errorMessage);
+            }catch(IOException e){
+                LOG.error("Exception occurred while sending the empty destination error frame",e);
+            }
+        }
+
         if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("SUBSCRIBE received without a subscription id!");
         }
