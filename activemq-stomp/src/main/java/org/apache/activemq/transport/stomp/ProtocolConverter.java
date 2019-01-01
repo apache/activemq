@@ -575,6 +575,10 @@ public class ProtocolConverter {
             throw new ProtocolException("SUBSCRIBE received without a subscription id!");
         }
 
+        if (destination == null || "".equals(destination)) {
+            throw new ProtocolException("Invalid empty or 'null' Destination header");
+        }
+
         final ActiveMQDestination actualDest = translator.convertDestination(this, destination, true);
 
         if (actualDest == null) {
