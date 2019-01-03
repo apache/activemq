@@ -133,18 +133,10 @@ public class MemoryLimitTest extends TestSupport {
         Message msg = consumer.receive(5000);
         msg.acknowledge();
 
-        // this should free some space and allow us to get new batch of messages in the memory
-        // exceeding the limit
-        assertTrue("Limit is exceeded", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                LOG.info("Destination usage: " + dest.getMemoryUsage());
-                return dest.getMemoryUsage().getPercentUsage() >= 200;
-            }
-        }));
+        assertTrue("Should be less than 70% of limit but was: " + percentUsage, percentUsage <= 71);
 
         LOG.info("Broker usage: " + broker.getSystemUsage().getMemoryUsage());
-        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() >= 200);
+        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() <= 71);
 
         // let's make sure we can consume all messages
         for (int i = 1; i < 2000; i++) {
