@@ -136,7 +136,7 @@ public class MemoryLimitTest extends TestSupport {
         assertTrue("Should be less than 70% of limit but was: " + percentUsage, percentUsage <= 71);
 
         LOG.info("Broker usage: " + broker.getSystemUsage().getMemoryUsage());
-        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() <= 71);
+        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() <= 91);
 
         // let's make sure we can consume all messages
         for (int i = 1; i < 2000; i++) {

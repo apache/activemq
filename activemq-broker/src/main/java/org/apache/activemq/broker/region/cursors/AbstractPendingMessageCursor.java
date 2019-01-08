@@ -177,6 +177,16 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
         return systemUsage != null ? (!isParentFull() && systemUsage.getMemoryUsage().getPercentUsage() < memoryUsageHighWaterMark) : true;
     }
 
+    boolean parentHasSpace(int waterMark) {
+        boolean result = true;
+        if (systemUsage != null) {
+            if (systemUsage.getMemoryUsage().getParent() != null) {
+                return systemUsage.getMemoryUsage().getParent().getPercentUsage() <= waterMark;
+            }
+        }
+        return result;
+    }
+
     private boolean isParentFull() {
         boolean result = false;
         if (systemUsage != null) {
