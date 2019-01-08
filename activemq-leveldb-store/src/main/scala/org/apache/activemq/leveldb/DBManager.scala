@@ -737,7 +737,7 @@ class DBManager(val parent:LevelDBStore) {
         lastmsgid = msg.getMessageId
         count += 1
       }
-      count < max && listener.hasSpace
+      count < max && listener.canRecoveryNextMessage
     }
     if( lastmsgid==null ) {
       startPos

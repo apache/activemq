@@ -595,7 +595,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                             msg.getMessageId().setFutureOrSequenceLong(entry.getKey());
                             listener.recoverMessage(msg);
                             counter++;
-                            if (counter >= maxReturned || !listener.hasSpace()) {
+                            if (counter >= maxReturned || !listener.canRecoveryNextMessage()) {
                                 break;
                             }
                         }

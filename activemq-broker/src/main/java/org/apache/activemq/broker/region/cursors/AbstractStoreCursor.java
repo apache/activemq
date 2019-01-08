@@ -276,6 +276,12 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return useCache && size==0 && hasSpace() && isStarted();
     }
 
+    @Override
+    public boolean canRecoveryNextMessage() {
+        // Should be safe to recovery messages if the overall memory usage if < 90%
+        return parentHasSpace(90);
+    }
+
     private void syncWithStore(Message currentAdd) throws Exception {
         pruneLastCached();
         for (ListIterator<MessageId> it = pendingCachedIds.listIterator(pendingCachedIds.size()); it.hasPrevious(); ) {

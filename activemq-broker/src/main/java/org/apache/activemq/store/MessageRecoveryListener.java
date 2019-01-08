@@ -26,6 +26,9 @@ public interface MessageRecoveryListener {
     boolean recoverMessage(Message message) throws Exception;
     boolean recoverMessageReference(MessageId ref) throws Exception;
     boolean hasSpace();
+    default boolean canRecoveryNextMessage() {
+        return true;
+    }
     /**
      * check if ref is a duplicate but do not record the reference
      * @param ref
