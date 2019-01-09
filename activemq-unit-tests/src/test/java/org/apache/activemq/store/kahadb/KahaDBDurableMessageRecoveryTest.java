@@ -55,7 +55,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class KahaDBDurableMessageRecoveryTest {
 
-    @Parameters(name = "recoverIndex")
+    @Parameters(name = "{0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] { { false }, { true } });
     }
