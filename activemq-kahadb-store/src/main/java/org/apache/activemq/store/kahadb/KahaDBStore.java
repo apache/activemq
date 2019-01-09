@@ -80,6 +80,7 @@ import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
@@ -1086,12 +1087,27 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
-                        sd.orderIndex.setBatch(tx, cursorPos);
+                        SequenceSet subAckPositions = getSequenceSet(tx, sd, subscriptionKey);
+                        //If we have ackPositions tracked then compare the first one as individual acknowledge mode
+                        //may have bumped lastAck even though there are earlier messages to still consume
+                        if (subAckPositions != null && !subAckPositions.isEmpty()
+                                && subAckPositions.getHead().getFirst() < cursorPos.lastAckedSequence) {
+                            //we have messages to ack before lastAckedSequence
+                            sd.orderIndex.setBatch(tx, subAckPositions.getHead().getFirst() - 1);
+                        } else {
+                            subAckPositions = null;
+                            sd.orderIndex.setBatch(tx, cursorPos);
+                        }
                         recoverRolledBackAcks(sd, tx, Integer.MAX_VALUE, listener);
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
                             if (ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
+                            //If subAckPositions is set then verify the sequence set contains the message still
+                            //and if it doesn't skip it
+                            if (subAckPositions != null && !subAckPositions.contains(entry.getKey())) {
                                 continue;
                             }
                             listener.recoverMessage(loadMessage(entry.getValue().location));
@@ -1118,13 +1134,24 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         StoredDestination sd = getStoredDestination(dest, tx);
                         sd.orderIndex.resetCursorPosition();
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
+                        SequenceSet subAckPositions = null;
                         if (moc == null) {
                             LastAck pos = getLastAck(tx, sd, subscriptionKey);
                             if (pos == null) {
                                 // sub deleted
                                 return;
                             }
-                            sd.orderIndex.setBatch(tx, pos);
+                            subAckPositions = getSequenceSet(tx, sd, subscriptionKey);
+                            //If we have ackPositions tracked then compare the first one as individual acknowledge mode
+                            //may have bumped lastAck even though there are earlier messages to still consume
+                            if (subAckPositions != null && !subAckPositions.isEmpty()
+                                    && subAckPositions.getHead().getFirst() < pos.lastAckedSequence) {
+                                //we have messages to ack before lastAckedSequence
+                                sd.orderIndex.setBatch(tx, subAckPositions.getHead().getFirst() - 1);
+                            } else {
+                                subAckPositions = null;
+                                sd.orderIndex.setBatch(tx, pos);
+                            }
                             moc = sd.orderIndex.cursor;
                         } else {
                             sd.orderIndex.cursor.sync(moc);
@@ -1136,6 +1163,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                                 .hasNext();) {
                             entry = iterator.next();
                             if (ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
+                            //If subAckPositions is set then verify the sequence set contains the message still
+                            //and if it doesn't skip it
+                            if (subAckPositions != null && !subAckPositions.contains(entry.getKey())) {
                                 continue;
                             }
                             if (listener.recoverMessage(loadMessage(entry.getValue().location))) {
@@ -1536,6 +1568,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 super(runnable, null);
             }
 
+            @Override
             public void setException(final Throwable e) {
                 super.setException(e);
             }
