@@ -2981,6 +2981,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return sd.subscriptionAcks.get(tx, subscriptionKey);
     }
 
+    protected SequenceSet getSequenceSet(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
+        if (sd.ackPositions != null) {
+            final SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
+            return messageSequences;
+        }
+
+        return null;
+    }
+
     protected long getStoredMessageCount(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
         if (sd.ackPositions != null) {
             SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
