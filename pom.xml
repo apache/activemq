@@ -266,9 +266,9 @@
   </modules>
 
   <scm>
-    <connection>scm:git:http://git-wip-us.apache.org/repos/asf/activemq.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/activemq.git</developerConnection>
-    <url>https://fisheye6.atlassian.com/browse/~br=master/activemq-git</url>
+    <connection>scm:git:http://gitbox.apache.org/repos/asf/activemq.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/activemq.git</developerConnection>
+    <url>https://github.com/apache/activemq</url>
     <tag>HEAD</tag>
   </scm>
 
