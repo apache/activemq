@@ -37,7 +37,7 @@ public class StoreUsageTest extends EmbeddedBrokerTestSupport {
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
-        broker.getSystemUsage().getStoreUsage().setLimit(34 * 1024);
+        broker.getSystemUsage().getStoreUsage().setLimit(38 * 1024);
         broker.deleteAllMessages();
         return broker;
     }

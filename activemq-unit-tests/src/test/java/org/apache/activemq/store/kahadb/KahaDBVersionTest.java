@@ -57,6 +57,7 @@ public class KahaDBVersionTest extends TestCase {
     final static File VERSION_3_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion3");
     final static File VERSION_4_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion4");
     final static File VERSION_5_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion5");
+    final static File VERSION_6_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion6");
 
 
     BrokerService broker = null;
@@ -131,6 +132,10 @@ public class KahaDBVersionTest extends TestCase {
 
     public void testVersion5Conversion() throws Exception {
         doConvertRestartCycle(VERSION_5_DB);
+    }
+
+    public void testVersion6Conversion() throws Exception {
+        doConvertRestartCycle(VERSION_6_DB);
     }
 
     public void doConvertRestartCycle(File existingStore) throws Exception {
