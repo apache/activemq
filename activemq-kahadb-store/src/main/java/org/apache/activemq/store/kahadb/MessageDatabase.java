@@ -3030,16 +3030,23 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
 
             if (messageSequences != null) {
-                Sequence head = messageSequences.getHead();
-                if (head != null) {
+                if (!messageSequences.isEmpty()) {
+                    final Sequence head = messageSequences.getHead();
+
                     //get an iterator over the order index starting at the first unacked message
                     //and go over each message to add up the size
                     Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx,
                             new MessageOrderCursor(head.getFirst()));
 
+                    final boolean contiguousRange = messageSequences.size() == 1;
                     while (iterator.hasNext()) {
                         Entry<Long, MessageKeys> entry = iterator.next();
-                        locationSize += entry.getValue().location.getSize();
+                        //Verify sequence contains the key
+                        //if contiguous we just add all starting with the first but if not
+                        //we need to check if the id is part of the range - could happen if individual ack mode was used
+                        if (contiguousRange || messageSequences.contains(entry.getKey())) {
+                            locationSize += entry.getValue().location.getSize();
+                        }
                     }
                 }
             }

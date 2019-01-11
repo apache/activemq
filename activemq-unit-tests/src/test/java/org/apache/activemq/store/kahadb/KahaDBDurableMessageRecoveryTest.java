@@ -209,6 +209,12 @@ public class KahaDBDurableMessageRecoveryTest {
         // Verify there are 8 messages left still and restart broker
         assertTrue(Wait.waitFor(() -> 8 == getPendingMessageCount(topic, "clientId1", "sub1"), 3000, 500));
         assertTrue(Wait.waitFor(() -> 10 == getPendingMessageCount(topic, "clientId1", "sub2"), 3000, 500));
+
+        //Verify the pending size is less for sub1
+        assertTrue(getPendingMessageSize(topic, "clientId1", "sub1") > 0);
+        assertTrue(getPendingMessageSize(topic, "clientId1", "sub2") > 0);
+        assertTrue(getPendingMessageSize(topic, "clientId1", "sub1") < getPendingMessageSize(topic, "clientId1", "sub2"));
+
         subscriber1.close();
         subscriber2.close();
         restartBroker(recoverIndex);
@@ -216,6 +222,11 @@ public class KahaDBDurableMessageRecoveryTest {
         // Verify 8 messages exist in store on startup on sub 1 and 10 on sub 2
         assertTrue(Wait.waitFor(() -> 8 == getPendingMessageCount(topic, "clientId1", "sub1"), 3000, 500));
         assertTrue(Wait.waitFor(() -> 10 == getPendingMessageCount(topic, "clientId1", "sub2"), 3000, 500));
+
+        //Verify the pending size is less for sub1
+        assertTrue(getPendingMessageSize(topic, "clientId1", "sub1") > 0);
+        assertTrue(getPendingMessageSize(topic, "clientId1", "sub2") > 0);
+        assertTrue(getPendingMessageSize(topic, "clientId1", "sub1") < getPendingMessageSize(topic, "clientId1", "sub2"));
 
         // Recreate subscriber and try and receive the other 8 messages
         session = getSession(ActiveMQSession.AUTO_ACKNOWLEDGE);
@@ -346,5 +357,11 @@ public class KahaDBDurableMessageRecoveryTest {
         final Topic brokerTopic = (Topic) broker.getDestination(topic);
         final TopicMessageStore store = (TopicMessageStore) brokerTopic.getMessageStore();
         return store.getMessageCount(clientId, subId);
+    }
+
+    protected long getPendingMessageSize(ActiveMQTopic topic, String clientId, String subId) throws Exception {
+        final Topic brokerTopic = (Topic) broker.getDestination(topic);
+        final TopicMessageStore store = (TopicMessageStore) brokerTopic.getMessageStore();
+        return store.getMessageSize(clientId, subId);
     }
 }
