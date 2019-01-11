@@ -134,7 +134,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     static final int OPEN_STATE = 2;
     static final long NOT_ACKED = -1;
 
-    static final int VERSION = 6;
+    static final int VERSION = 7;
 
     static final byte COMPACTED_JOURNAL_FILE = DataFile.STANDARD_LOG_FILE + 1;
 
@@ -188,6 +188,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             } catch (EOFException expectedOnUpgrade) {
                 openwireVersion = OpenWireFormat.DEFAULT_LEGACY_VERSION;
             }
+
             LOG.info("KahaDB is version " + version);
         }
 
@@ -863,7 +864,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     sd.messageIdIndex.remove(tx, keys.messageId);
                     metadata.producerSequenceIdTracker.rollback(keys.messageId);
                     undoCounter++;
-                    decrementAndSubSizeToStoreStat(key, keys.location.getSize());
+                    decrementAndSubSizeToStoreStat(tx, key, sd, keys.location.getSize());
                     // TODO: do we need to modify the ack positions for the pub sub case?
                 }
             }
@@ -979,7 +980,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             sd.messageIdIndex.remove(tx, keys.messageId);
                             LOG.info("[" + sdEntry.getKey() + "] dropped: " + keys.messageId + " at corrupt location: " + keys.location);
                             undoCounter++;
-                            decrementAndSubSizeToStoreStat(sdEntry.getKey(), keys.location.getSize());
+                            decrementAndSubSizeToStoreStat(tx, sdEntry.getKey(), sdEntry.getValue(), keys.location.getSize());
                             // TODO: do we need to modify the ack positions for the pub sub case?
                         }
                     } else {
@@ -1491,7 +1492,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (previous == null) {
             previous = sd.messageIdIndex.put(tx, command.getMessageId(), id);
             if (previous == null) {
-                incrementAndAddSizeToStoreStat(command.getDestination(), location.getSize());
+                incrementAndAddSizeToStoreStat(tx, command.getDestination(), location.getSize());
                 sd.orderIndex.put(tx, priority, id, new MessageKeys(command.getMessageId(), location));
                 if (sd.subscriptions != null && !sd.subscriptions.isEmpty(tx)) {
                     addAckLocationForNewMessage(tx, command.getDestination(), sd, id);
@@ -1550,11 +1551,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     new MessageKeys(command.getMessageId(), location)
             );
             sd.locationIndex.put(tx, location, id);
-            incrementAndAddSizeToStoreStat(command.getDestination(), location.getSize());
+            incrementAndAddSizeToStoreStat(tx, command.getDestination(), location.getSize());
 
             if (previousKeys != null) {
                 //Remove the existing from the size
-                decrementAndSubSizeToStoreStat(command.getDestination(), previousKeys.location.getSize());
+                decrementAndSubSizeToStoreStat(tx, command.getDestination(), previousKeys.location.getSize());
 
                 //update all the subscription metrics
                 if (enableSubscriptionStatistics && sd.ackPositions != null && location.getSize() != previousKeys.location.getSize()) {
@@ -1590,7 +1591,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
                 if (keys != null) {
                     sd.locationIndex.remove(tx, keys.location);
-                    decrementAndSubSizeToStoreStat(command.getDestination(), keys.location.getSize());
+                    decrementAndSubSizeToStoreStat(tx, command.getDestination(), keys.location.getSize());
                     recordAckMessageReferenceLocation(ackLocation, keys.location);
                     metadata.lastUpdate = ackLocation;
                 }  else if (LOG.isDebugEnabled()) {
@@ -1654,6 +1655,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         sd.messageIdIndex.clear(tx);
         sd.messageIdIndex.unload(tx);
         tx.free(sd.messageIdIndex.getPageId());
+
+        tx.free(sd.messageStoreStatistics.getPageId());
+        sd.messageStoreStatistics = null;
 
         if (sd.subscriptions != null) {
             sd.subscriptions.clear(tx);
@@ -2362,6 +2366,53 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
+    class StoredMessageStoreStatistics {
+        private PageFile pageFile;
+        private Page<MessageStoreStatistics> page;
+        private long pageId;
+        private AtomicBoolean loaded = new AtomicBoolean();
+        private MessageStoreStatisticsMarshaller messageStoreStatisticsMarshaller = new MessageStoreStatisticsMarshaller();
+
+        StoredMessageStoreStatistics(PageFile pageFile, long pageId) {
+            this.pageId = pageId;
+            this.pageFile = pageFile;
+        }
+
+        StoredMessageStoreStatistics(PageFile pageFile, Page page) {
+            this(pageFile, page.getPageId());
+        }
+
+        public long getPageId() {
+            return pageId;
+        }
+
+        synchronized void load(Transaction tx) throws IOException {
+            if (loaded.compareAndSet(false, true)) {
+                page = tx.load(pageId, null);
+
+                if (page.getType() == Page.PAGE_FREE_TYPE) {
+                    page.set(null);
+                    tx.store(page, messageStoreStatisticsMarshaller, true);
+                }
+            }
+            page = tx.load(pageId, messageStoreStatisticsMarshaller);
+        }
+
+        synchronized MessageStoreStatistics get(Transaction tx) throws IOException {
+            load(tx);
+            return page.get();
+        }
+
+        synchronized void put(Transaction tx, MessageStoreStatistics storeStatistics) throws IOException {
+            if (page == null) {
+                page = tx.load(pageId, messageStoreStatisticsMarshaller);
+            }
+
+            page.set(storeStatistics);
+
+            tx.store(page, messageStoreStatisticsMarshaller, true);
+        }
+    }
     class StoredDestination {
 
         MessageOrderIndex orderIndex = new MessageOrderIndex();
@@ -2378,6 +2429,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         // Transient data used to track which Messages are no longer needed.
         final HashSet<String> subscriptionCache = new LinkedHashSet<>();
 
+        StoredMessageStoreStatistics messageStoreStatistics;
+
         public void trackPendingAdd(Long seq) {
             orderIndex.trackPendingAdd(seq);
         }
@@ -2389,6 +2442,38 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         @Override
         public String toString() {
             return "nextSeq:" + orderIndex.nextMessageId + ",lastRet:" + orderIndex.cursor + ",pending:" + orderIndex.pendingAdditions.size();
+        }
+    }
+
+    protected  class MessageStoreStatisticsMarshaller extends VariableMarshaller<MessageStoreStatistics> {
+
+        @Override
+        public void writePayload(final MessageStoreStatistics object, final DataOutput dataOut) throws IOException {
+            dataOut.writeBoolean(null != object);
+            if (object != null) {
+                dataOut.writeLong(object.getMessageCount().getCount());
+                dataOut.writeLong(object.getMessageSize().getTotalSize());
+                dataOut.writeLong(object.getMessageSize().getMaxSize());
+                dataOut.writeLong(object.getMessageSize().getMinSize());
+                dataOut.writeLong(object.getMessageSize().getCount());
+            }
+        }
+
+        @Override
+        public MessageStoreStatistics readPayload(final DataInput dataIn) throws IOException {
+
+            if (!dataIn.readBoolean()) {
+                return null;
+            }
+
+            MessageStoreStatistics messageStoreStatistics = new MessageStoreStatistics();
+            messageStoreStatistics.getMessageCount().setCount(dataIn.readLong());
+            messageStoreStatistics.getMessageSize().setTotalSize(dataIn.readLong());
+            messageStoreStatistics.getMessageSize().setMaxSize(dataIn.readLong());
+            messageStoreStatistics.getMessageSize().setMinSize(dataIn.readLong());
+            messageStoreStatistics.getMessageSize().setCount(dataIn.readLong());
+
+            return messageStoreStatistics;
         }
     }
 
@@ -2470,6 +2555,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     });
                 }
             }
+
             if (metadata.version >= 2) {
                 value.orderIndex.lowPriorityIndex = new BTreeIndex<>(pageFile, dataIn.readLong());
                 value.orderIndex.highPriorityIndex = new BTreeIndex<>(pageFile, dataIn.readLong());
@@ -2488,6 +2574,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         value.orderIndex.highPriorityIndex.setValueMarshaller(messageKeysMarshaller);
                         value.orderIndex.highPriorityIndex.load(tx);
                     }
+                });
+            }
+
+            if (metadata.version >= 7) {
+                value.messageStoreStatistics = new StoredMessageStoreStatistics(pageFile, dataIn.readLong());
+            } else {
+                pageFile.tx().execute(tx -> {
+                    value.messageStoreStatistics = new StoredMessageStoreStatistics(pageFile, tx.allocate());
+                    value.messageStoreStatistics.load(tx);
                 });
             }
 
@@ -2510,6 +2605,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
             dataOut.writeLong(value.orderIndex.lowPriorityIndex.getPageId());
             dataOut.writeLong(value.orderIndex.highPriorityIndex.getPageId());
+            dataOut.writeLong(value.messageStoreStatistics.getPageId());
         }
     }
 
@@ -2541,6 +2637,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             storedDestinations.put(key, rc);
         }
         return rc;
+    }
+
+    protected MessageStoreStatistics getStoredMessageStoreStatistics(KahaDestination destination, Transaction tx) throws IOException {
+        StoredDestination sd = getStoredDestination(destination, tx);
+        return  sd != null && sd.messageStoreStatistics != null ? sd.messageStoreStatistics.get(tx) : null;
     }
 
     protected StoredDestination getExistingStoredDestination(KahaDestination destination, Transaction tx) throws IOException {
@@ -2575,8 +2676,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 rc.ackPositions = new ListIndex<>(pageFile, tx.allocate());
                 rc.subLocations = new ListIndex<>(pageFile, tx.allocate());
             }
+
+            rc.messageStoreStatistics = new StoredMessageStoreStatistics(pageFile, tx.allocate());
+
             metadata.destinations.put(tx, key, rc);
         }
+
+        rc.messageStoreStatistics.load(tx);
 
         // Configure the marshalers and load.
         rc.orderIndex.load(tx);
@@ -2644,9 +2750,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             }
 
-            // Configure the message references index
-
-
             // Configure the subscription cache
             for (Iterator<Entry<String, LastAck>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext(); ) {
                 Entry<String, LastAck> entry = iterator.next();
@@ -2707,31 +2810,60 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @param kahaDestination
      * @param size
      */
-    protected void incrementAndAddSizeToStoreStat(KahaDestination kahaDestination, long size) {
-        incrementAndAddSizeToStoreStat(key(kahaDestination), size);
+    protected void incrementAndAddSizeToStoreStat(Transaction tx, KahaDestination kahaDestination, long size) throws IOException {
+        StoredDestination sd = getStoredDestination(kahaDestination, tx);
+        incrementAndAddSizeToStoreStat(tx, key(kahaDestination), sd, size);
     }
 
-    protected void incrementAndAddSizeToStoreStat(String kahaDestKey, long size) {
+    protected void incrementAndAddSizeToStoreStat(Transaction tx, String kahaDestKey, StoredDestination sd, long size) throws IOException {
         MessageStoreStatistics storeStats = getStoreStats(kahaDestKey);
         if (storeStats != null) {
-            storeStats.getMessageCount().increment();
-            if (size > 0) {
-                storeStats.getMessageSize().addSize(size);
+            incrementAndAddSizeToStoreStat(size, storeStats);
+            sd.messageStoreStatistics.put(tx, storeStats);
+        } else if (sd != null){
+            // During the recovery the storeStats is null
+            MessageStoreStatistics storedStoreStats = sd.messageStoreStatistics.get(tx);
+            if (storedStoreStats == null) {
+                storedStoreStats = new MessageStoreStatistics();
             }
+            incrementAndAddSizeToStoreStat(size, storedStoreStats);
+            sd.messageStoreStatistics.put(tx, storedStoreStats);
         }
     }
 
-    protected void decrementAndSubSizeToStoreStat(KahaDestination kahaDestination, long size) {
-        decrementAndSubSizeToStoreStat(key(kahaDestination), size);
+    private void incrementAndAddSizeToStoreStat(final long size, final MessageStoreStatistics storedStoreStats) {
+        storedStoreStats.getMessageCount().increment();
+        if (size > 0) {
+            storedStoreStats.getMessageSize().addSize(size);
+        }
     }
 
-    protected void decrementAndSubSizeToStoreStat(String kahaDestKey, long size) {
+    protected void decrementAndSubSizeToStoreStat(Transaction tx, KahaDestination kahaDestination, long size) throws IOException {
+        StoredDestination sd = getStoredDestination(kahaDestination, tx);
+        decrementAndSubSizeToStoreStat(tx, key(kahaDestination), sd,size);
+    }
+
+    protected void decrementAndSubSizeToStoreStat(Transaction tx, String kahaDestKey, StoredDestination sd, long size) throws IOException {
         MessageStoreStatistics storeStats = getStoreStats(kahaDestKey);
         if (storeStats != null) {
-            storeStats.getMessageCount().decrement();
-            if (size > 0) {
-                storeStats.getMessageSize().addSize(-size);
+            decrementAndSubSizeToStoreStat(size, storeStats);
+            sd.messageStoreStatistics.put(tx, storeStats);
+        } else if (sd != null){
+            // During the recovery the storeStats is null
+            MessageStoreStatistics storedStoreStats = sd.messageStoreStatistics.get(tx);
+            if (storedStoreStats == null) {
+                storedStoreStats = new MessageStoreStatistics();
             }
+            decrementAndSubSizeToStoreStat(size, storedStoreStats);
+            sd.messageStoreStatistics.put(tx, storedStoreStats);
+        }
+    }
+
+    private void decrementAndSubSizeToStoreStat(final long size, final MessageStoreStatistics storedStoreStats) {
+        storedStoreStats.getMessageCount().decrement();
+
+        if (size > 0) {
+            storedStoreStats.getMessageSize().addSize(-size);
         }
     }
 
@@ -2936,7 +3068,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     sd.locationIndex.remove(tx, entry.getValue().location);
                     sd.messageIdIndex.remove(tx, entry.getValue().messageId);
                     sd.orderIndex.remove(tx, entry.getKey());
-                    decrementAndSubSizeToStoreStat(command.getDestination(), entry.getValue().location.getSize());
+                    decrementAndSubSizeToStoreStat(tx, command.getDestination(), entry.getValue().location.getSize());
                 }
             }
         }
@@ -2990,7 +3122,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     sd.locationIndex.remove(tx, entry.getValue().location);
                     sd.messageIdIndex.remove(tx, entry.getValue().messageId);
                     sd.orderIndex.remove(tx, entry.getKey());
-                    decrementAndSubSizeToStoreStat(command.getDestination(), entry.getValue().location.getSize());
+                    decrementAndSubSizeToStoreStat(tx, command.getDestination(), entry.getValue().location.getSize());
                 }
             }
         }

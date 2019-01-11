@@ -177,7 +177,7 @@ public class MKahaDBStoreLimitTest {
 
         FilteredKahaDBPersistenceAdapter filtered = new FilteredKahaDBPersistenceAdapter();
         StoreUsage storeUsage = new StoreUsage();
-        storeUsage.setLimit(40*1024);
+        storeUsage.setLimit(44*1024);
 
         filtered.setUsage(storeUsage);
         filtered.setDestination(queueA);
