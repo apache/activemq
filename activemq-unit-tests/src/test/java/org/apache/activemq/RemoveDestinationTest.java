@@ -26,6 +26,7 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
@@ -35,6 +36,7 @@ import org.apache.activemq.advisory.DestinationSource;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
@@ -72,6 +74,45 @@ public class RemoveDestinationTest {
             conn.start();
         }
         return conn;
+    }
+
+    @Test(timeout = 60000)
+    public void testRemoveQueue() throws Exception {
+
+        ActiveMQConnection amqConnection = (ActiveMQConnection) createConnection(true);
+
+        final DestinationSource destinationSource = amqConnection.getDestinationSource();
+        Session session = amqConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue("TEST.FOO");
+        MessageProducer producer = session.createProducer(queue);
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        TextMessage msg = session.createTextMessage("Hellow World");
+        producer.send(msg);
+        assertNotNull(consumer.receive(5000));
+        final ActiveMQQueue amqQueue = (ActiveMQQueue) queue;
+
+        consumer.close();
+        producer.close();
+        session.close();
+
+        assertTrue("Destination discovered", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return destinationSource.getQueues().contains(amqQueue);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+
+        amqConnection.destroyDestination((ActiveMQDestination) queue);
+
+        assertTrue("Destination is removed", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !destinationSource.getQueues().contains(amqQueue);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
     }
 
     @Test(timeout = 60000)

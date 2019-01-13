@@ -297,6 +297,9 @@ public abstract class AbstractRegion implements Region {
                     }
                 }
                 destinationMap.unsynchronizedRemove(destination, dest);
+                if (dest instanceof Queue){
+                    ((Queue) dest).purge();
+                }
                 dispose(context, dest);
                 DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
                 if (destinationInterceptor != null) {
