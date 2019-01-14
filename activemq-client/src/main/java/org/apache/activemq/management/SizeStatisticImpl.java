@@ -92,6 +92,13 @@ public class SizeStatisticImpl extends StatisticImpl {
     }
 
     /**
+     * @return the maximum size of any step
+     */
+    public synchronized void setMaxSize(long size) {
+        maxSize = size;
+    }
+
+    /**
      * @return the minimum size of any step
      */
     public synchronized long getMinSize() {
@@ -99,10 +106,21 @@ public class SizeStatisticImpl extends StatisticImpl {
     }
 
     /**
+     * @return the maximum size of any step
+     */
+    public synchronized void setMinSize(long size) {
+        minSize = size;
+    }
+
+    /**
      * @return the total size of all the steps added together
      */
     public synchronized long getTotalSize() {
         return totalSize;
+    }
+
+    public synchronized void setCount(long count) {
+        this.count = count;
     }
 
     /**

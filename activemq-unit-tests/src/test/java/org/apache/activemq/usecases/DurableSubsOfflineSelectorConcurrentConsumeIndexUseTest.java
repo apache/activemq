@@ -218,7 +218,7 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
             assertTrue("no leak of pages, always use just 11", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
-                    return 11 == store.getPageFile().getPageCount() -
+                    return 12 == store.getPageFile().getPageCount() -
                             store.getPageFile().getFreePageCount();
                 }
             }, TimeUnit.SECONDS.toMillis(10)));
