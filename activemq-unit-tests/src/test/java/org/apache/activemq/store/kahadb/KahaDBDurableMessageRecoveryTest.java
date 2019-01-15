@@ -55,9 +55,9 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class KahaDBDurableMessageRecoveryTest {
 
-    @Parameters(name = "{0}")
+    @Parameters(name = "recoverIndex={0},enableSubscriptionStats={1}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] { { false }, { true } });
+        return Arrays.asList(new Object[][] { { false, false }, { false, true }, { true, false }, { true, true } });
     }
 
     @Rule
@@ -66,6 +66,7 @@ public class KahaDBDurableMessageRecoveryTest {
     private URI brokerConnectURI;
 
     private boolean recoverIndex;
+    private boolean enableSubscriptionStats;
 
     @Before
     public void setUpBroker() throws Exception {
@@ -81,9 +82,10 @@ public class KahaDBDurableMessageRecoveryTest {
     /**
      * @param deleteIndex
      */
-    public KahaDBDurableMessageRecoveryTest(boolean recoverIndex) {
+    public KahaDBDurableMessageRecoveryTest(boolean recoverIndex, boolean enableSubscriptionStats) {
         super();
         this.recoverIndex = recoverIndex;
+        this.enableSubscriptionStats = enableSubscriptionStats;
     }
 
     protected void startBroker(boolean recoverIndex) throws Exception {
@@ -105,6 +107,7 @@ public class KahaDBDurableMessageRecoveryTest {
         KahaDBPersistenceAdapter adapter = (KahaDBPersistenceAdapter) brokerService.getPersistenceAdapter();
 
         adapter.setForceRecoverIndex(forceRecoverIndex);
+        adapter.setEnableSubscriptionStatistics(enableSubscriptionStats);
 
         // set smaller size for test
         adapter.setJournalMaxFileLength(1024 * 20);
@@ -210,10 +213,12 @@ public class KahaDBDurableMessageRecoveryTest {
         assertTrue(Wait.waitFor(() -> 8 == getPendingMessageCount(topic, "clientId1", "sub1"), 3000, 500));
         assertTrue(Wait.waitFor(() -> 10 == getPendingMessageCount(topic, "clientId1", "sub2"), 3000, 500));
 
-        //Verify the pending size is less for sub1
-        assertTrue(getPendingMessageSize(topic, "clientId1", "sub1") > 0);
-        assertTrue(getPendingMessageSize(topic, "clientId1", "sub2") > 0);
-        assertTrue(getPendingMessageSize(topic, "clientId1", "sub1") < getPendingMessageSize(topic, "clientId1", "sub2"));
+        // Verify the pending size is less for sub1
+        final long sub1PendingSizeBeforeRestart = getPendingMessageSize(topic, "clientId1", "sub1");
+        final long sub2PendingSizeBeforeRestart = getPendingMessageSize(topic, "clientId1", "sub2");
+        assertTrue(sub1PendingSizeBeforeRestart > 0);
+        assertTrue(sub2PendingSizeBeforeRestart > 0);
+        assertTrue(sub1PendingSizeBeforeRestart < sub2PendingSizeBeforeRestart);
 
         subscriber1.close();
         subscriber2.close();
@@ -223,10 +228,9 @@ public class KahaDBDurableMessageRecoveryTest {
         assertTrue(Wait.waitFor(() -> 8 == getPendingMessageCount(topic, "clientId1", "sub1"), 3000, 500));
         assertTrue(Wait.waitFor(() -> 10 == getPendingMessageCount(topic, "clientId1", "sub2"), 3000, 500));
 
-        //Verify the pending size is less for sub1
-        assertTrue(getPendingMessageSize(topic, "clientId1", "sub1") > 0);
-        assertTrue(getPendingMessageSize(topic, "clientId1", "sub2") > 0);
-        assertTrue(getPendingMessageSize(topic, "clientId1", "sub1") < getPendingMessageSize(topic, "clientId1", "sub2"));
+        // Verify the pending size is less for sub1
+        assertEquals(sub1PendingSizeBeforeRestart, getPendingMessageSize(topic, "clientId1", "sub1"));
+        assertEquals(sub2PendingSizeBeforeRestart, getPendingMessageSize(topic, "clientId1", "sub2"));
 
         // Recreate subscriber and try and receive the other 8 messages
         session = getSession(ActiveMQSession.AUTO_ACKNOWLEDGE);
@@ -293,7 +297,7 @@ public class KahaDBDurableMessageRecoveryTest {
         subscriber2.close();
         restartBroker(recoverIndex);
 
-        //Manually recover subscription and verify proper messages are loaded
+        // Manually recover subscription and verify proper messages are loaded
         final Topic brokerTopic = (Topic) broker.getDestination(topic);
         final TopicMessageStore store = (TopicMessageStore) brokerTopic.getMessageStore();
         final AtomicInteger sub1Recovered = new AtomicInteger();
@@ -348,7 +352,7 @@ public class KahaDBDurableMessageRecoveryTest {
             }
         });
 
-        //Verify proper number of messages are recovered
+        // Verify proper number of messages are recovered
         assertEquals(8, sub1Recovered.get());
         assertEquals(10, sub2Recovered.get());
     }

@@ -46,7 +46,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -3001,6 +3000,61 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         return 0;
+    }
+
+    /**
+     * Recovers durable subscription pending message size with only 1 pass over the order index on recovery
+     * instead of iterating over the index once per subscription
+     *
+     * @param tx
+     * @param sd
+     * @param subscriptionKeys
+     * @return
+     * @throws IOException
+     */
+    protected Map<String, AtomicLong> getStoredMessageSize(Transaction tx, StoredDestination sd, List<String> subscriptionKeys) throws IOException {
+
+        final Map<String, AtomicLong> subPendingMessageSizes = new HashMap<>();
+        final Map<String, SequenceSet> messageSequencesMap = new HashMap<>();
+
+        if (sd.ackPositions != null) {
+            Long recoveryPosition = null;
+            //Go through each subscription and find matching ackPositions and their first
+            //position to find the initial recovery position which is the first message across all subs
+            //that needs to still be acked
+            for (String subscriptionKey : subscriptionKeys) {
+                subPendingMessageSizes.put(subscriptionKey, new AtomicLong());
+                final SequenceSet messageSequences = sd.ackPositions.get(tx, subscriptionKey);
+                if (messageSequences != null && !messageSequences.isEmpty()) {
+                    final long head = messageSequences.getHead().getFirst();
+                    recoveryPosition = recoveryPosition != null ? Math.min(recoveryPosition, head) : head;
+                    //cache the SequenceSet to speed up recovery of metrics below and avoid a second index hit
+                    messageSequencesMap.put(subscriptionKey, messageSequences);
+                }
+            }
+            recoveryPosition = recoveryPosition != null ? recoveryPosition : 0;
+
+            final Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx,
+                    new MessageOrderCursor(recoveryPosition));
+
+            //iterate through all messages starting at the recovery position to recover metrics
+            while (iterator.hasNext()) {
+                final Entry<Long, MessageKeys> messageEntry = iterator.next();
+
+                //For each message in the index check if each subscription needs to ack the message still
+                //if the ackPositions SequenceSet contains the message then it has not been acked and should be
+                //added to the pending metrics for that subscription
+                for (Entry<String, SequenceSet> seqEntry : messageSequencesMap.entrySet()) {
+                    final String subscriptionKey = seqEntry.getKey();
+                    final SequenceSet messageSequences = messageSequencesMap.get(subscriptionKey);
+                    if (messageSequences.contains(messageEntry.getKey())) {
+                        subPendingMessageSizes.get(subscriptionKey).addAndGet(messageEntry.getValue().location.getSize());
+                    }
+                }
+            }
+        }
+
+        return subPendingMessageSizes;
     }
 
     protected long getStoredMessageSize(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
