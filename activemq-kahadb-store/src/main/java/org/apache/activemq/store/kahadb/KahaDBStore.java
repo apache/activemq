@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.broker.ConnectionContext;
@@ -1050,7 +1051,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         protected void recoverMessageStoreSubMetrics() throws IOException {
             if (isEnableSubscriptionStatistics()) {
-
                 final MessageStoreSubscriptionStatistics statistics = getMessageStoreSubStatistics();
                 indexLock.writeLock().lock();
                 try {
@@ -1058,19 +1058,29 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         @Override
                         public void execute(Transaction tx) throws IOException {
                             StoredDestination sd = getStoredDestination(dest, tx);
+
+                            List<String> subscriptionKeys = new ArrayList<>();
                             for (Iterator<Entry<String, KahaSubscriptionCommand>> iterator = sd.subscriptions
                                     .iterator(tx); iterator.hasNext();) {
                                 Entry<String, KahaSubscriptionCommand> entry = iterator.next();
 
-                                String subscriptionKey = entry.getKey();
-                                LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
+                                final String subscriptionKey = entry.getKey();
+                                final LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
                                 if (cursorPos != null) {
-                                    long size = getStoredMessageSize(tx, sd, subscriptionKey);
+                                    //add the subscriptions to a list for recovering pending sizes below
+                                    subscriptionKeys.add(subscriptionKey);
+                                    //recover just the count here as that is fast
                                     statistics.getMessageCount(subscriptionKey)
                                             .setCount(getStoredMessageCount(tx, sd, subscriptionKey));
-                                    statistics.getMessageSize(subscriptionKey).addSize(size > 0 ? size : 0);
                                 }
                             }
+
+                            //Recover the message sizes for each subscription by iterating only 1 time over the order index
+                            //to speed up recovery
+                            final Map<String, AtomicLong> subPendingMessageSizes = getStoredMessageSize(tx, sd, subscriptionKeys);
+                            subPendingMessageSizes.forEach((k,v) -> {
+                                statistics.getMessageSize(k).addSize(v.get() > 0 ? v.get() : 0);
+                            });
                         }
                     });
                 } finally {
