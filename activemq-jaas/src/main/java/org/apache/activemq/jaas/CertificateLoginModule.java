@@ -49,9 +49,12 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
     private CallbackHandler callbackHandler;
     private Subject subject;
 
-    private X509Certificate certificates[];
     private String username;
     private Set<Principal> principals = new HashSet<Principal>();
+
+    /** the authentication status*/
+    private boolean succeeded = false;
+    private boolean commitSucceeded = false;
 
     /**
      * Overriding to allow for proper initialization. Standard JAAS.
@@ -78,7 +81,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
         } catch (UnsupportedCallbackException uce) {
             throw new LoginException(uce.getMessage() + " Unable to obtain client certificates.");
         }
-        certificates = ((CertificateCallback)callbacks[0]).getCertificates();
+        X509Certificate[] certificates = ((CertificateCallback)callbacks[0]).getCertificates();
 
         username = getUserNameForCertificates(certificates);
         if (username == null) {
@@ -88,6 +91,7 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
         if (debug) {
             LOG.debug("Certificate for user: " + username);
         }
+        succeeded = true;
         return true;
     }
 
@@ -96,6 +100,15 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
      */
     @Override
     public boolean commit() throws LoginException {
+        if (debug) {
+            LOG.debug("commit");
+        }
+
+        if (!succeeded) {
+            clear();
+            return false;
+        }
+
         principals.add(new UserPrincipal(username));
 
         for (String group : getUserGroups(username)) {
@@ -104,11 +117,8 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
 
         subject.getPrincipals().addAll(principals);
 
-        clear();
-
-        if (debug) {
-            LOG.debug("commit");
-        }
+        username = null;
+        commitSucceeded = true;
         return true;
     }
 
@@ -117,10 +127,18 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
      */
     @Override
     public boolean abort() throws LoginException {
-        clear();
-
         if (debug) {
             LOG.debug("abort");
+        }
+        if (!succeeded) {
+            return false;
+        } else if (succeeded && commitSucceeded) {
+            // we succeeded, but another required module failed
+            logout();
+        } else {
+            // our commit failed
+            clear();
+            succeeded = false;
         }
         return true;
     }
@@ -131,11 +149,14 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
     @Override
     public boolean logout() {
         subject.getPrincipals().removeAll(principals);
-        principals.clear();
+        clear();
 
         if (debug) {
             LOG.debug("logout");
         }
+
+        succeeded = false;
+        commitSucceeded = false;
         return true;
     }
 
@@ -143,8 +164,8 @@ public abstract class CertificateLoginModule extends PropertiesLoader implements
      * Helper method.
      */
     private void clear() {
-        certificates = null;
         username = null;
+        principals.clear();
     }
 
     /**
