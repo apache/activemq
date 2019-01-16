@@ -61,8 +61,7 @@ public class RecoveryStatsBrokerTest extends BrokerRestartTestSupport {
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
-        persistenceAdapter.setJournalMaxFileLength(1024*1024);
-        persistenceAdapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.PERIODIC.name());
+        persistenceAdapter.setJournalMaxFileLength(1024*20);
         //persistenceAdapter.setConcurrentStoreAndDispatchQueues(false);
         persistenceAdapter.setDirectory(broker.getBrokerDataDirectory());
         broker.setPersistenceAdapter(persistenceAdapter);
@@ -138,7 +137,7 @@ public class RecoveryStatsBrokerTest extends BrokerRestartTestSupport {
 
         destinations.forEach(destination -> consumedMessages.put(destination, 0));
 
-        int numberOfMessages = 10000;
+        int numberOfMessages = 400;
 
         StubConnection connection = createConnection();
         ConnectionInfo connectionInfo = createConnectionInfo();
