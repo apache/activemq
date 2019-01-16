@@ -72,8 +72,12 @@ public class LDAPLoginModule implements LoginModule {
     private Subject subject;
     private CallbackHandler handler;  
     private LDAPLoginProperty [] config;
-    private String username;
+    private Principal user;
     private Set<GroupPrincipal> groups = new HashSet<GroupPrincipal>();
+
+    /** the authentication status*/
+    private boolean succeeded = false;
+    private boolean commitSucceeded = false;
 
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
@@ -118,7 +122,7 @@ public class LDAPLoginModule implements LoginModule {
         
         String password;
         
-        username = ((NameCallback)callbacks[0]).getName();
+        String username = ((NameCallback)callbacks[0]).getName();
         if (username == null)
         	return false;
         	
@@ -130,28 +134,56 @@ public class LDAPLoginModule implements LoginModule {
         // authenticate will throw LoginException
         // in case of failed authentication
         authenticate(username, password);
+
+        user = new UserPrincipal(username);
+        succeeded = true;
         return true;
     }
 
     @Override
     public boolean logout() throws LoginException {
-        username = null;
+        subject.getPrincipals().remove(user);
+        subject.getPrincipals().removeAll(groups);
+
+        user = null;
+        groups.clear();
+
+        succeeded = false;
+        commitSucceeded = false;
         return true;
     }
 
     @Override
     public boolean commit() throws LoginException {
+        if (!succeeded) {
+            user = null;
+            groups.clear();
+            return false;
+        }
+
         Set<Principal> principals = subject.getPrincipals();
-        principals.add(new UserPrincipal(username));
+        principals.add(user);
         for (GroupPrincipal gp : groups) {
             principals.add(gp);
         }
+
+        commitSucceeded = true;
         return true;
     }
 
     @Override
     public boolean abort() throws LoginException {
-        username = null;
+        if (!succeeded) {
+            return false;
+        } else if (succeeded && commitSucceeded) {
+            // we succeeded, but another required module failed
+            logout();
+        } else {
+            // our commit failed
+            user = null;
+            groups.clear();
+            succeeded = false;
+        }
         return true;
     }
 
