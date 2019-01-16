@@ -30,6 +30,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.store.MessageStoreStatistics;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
@@ -61,6 +62,7 @@ public class RecoveryStatsBrokerTest extends BrokerRestartTestSupport {
     protected void configureBroker(BrokerService broker) throws Exception {
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
         persistenceAdapter.setJournalMaxFileLength(1024*1024);
+        persistenceAdapter.setJournalDiskSyncStrategy(JournalDiskSyncStrategy.PERIODIC.name());
         //persistenceAdapter.setConcurrentStoreAndDispatchQueues(false);
         persistenceAdapter.setDirectory(broker.getBrokerDataDirectory());
         broker.setPersistenceAdapter(persistenceAdapter);
@@ -116,11 +118,13 @@ public class RecoveryStatsBrokerTest extends BrokerRestartTestSupport {
         this.restartType = restartType;
     }
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();
