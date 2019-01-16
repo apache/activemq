@@ -54,7 +54,10 @@ public class GuestLoginModule implements LoginModule {
     private boolean credentialsInvalidate;
     private Set<Principal> principals = new HashSet<Principal>();
     private CallbackHandler callbackHandler;
-    private boolean loginSucceeded;
+
+    /** the authentication status*/
+    private boolean succeeded = false;
+    private boolean commitSucceeded = false;
 
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
@@ -79,7 +82,7 @@ public class GuestLoginModule implements LoginModule {
 
     @Override
     public boolean login() throws LoginException {
-        loginSucceeded = true;
+        succeeded = true;
         if (credentialsInvalidate) {
             PasswordCallback passwordCallback = new PasswordCallback("Password: ", false);
             try {
@@ -88,7 +91,7 @@ public class GuestLoginModule implements LoginModule {
                      if (debug) {
                         LOG.debug("Guest login failing (credentialsInvalidate=true) on presence of a password");
                      }
-                     loginSucceeded = false;
+                     succeeded = false;
                      passwordCallback.clearPassword();
                  };
              } catch (IOException ioe) {
@@ -96,21 +99,24 @@ public class GuestLoginModule implements LoginModule {
              }
         }
         if (debug) {
-            LOG.debug("Guest login " + loginSucceeded);
+            LOG.debug("Guest login " + succeeded);
         }
-        return loginSucceeded;
+        return succeeded;
     }
 
     @Override
     public boolean commit() throws LoginException {
-        if (loginSucceeded) {
-            subject.getPrincipals().addAll(principals);
-        }
-
         if (debug) {
             LOG.debug("commit");
         }
-        return loginSucceeded;
+
+        if (!succeeded) {
+            return false;
+        }
+
+        subject.getPrincipals().addAll(principals);
+        commitSucceeded = true;
+        return true;
     }
 
     @Override
@@ -118,6 +124,15 @@ public class GuestLoginModule implements LoginModule {
 
         if (debug) {
             LOG.debug("abort");
+        }
+        if (!succeeded) {
+            return false;
+        } else if (succeeded && commitSucceeded) {
+            // we succeeded, but another required module failed
+            logout();
+        } else {
+            // our commit failed
+            succeeded = false;
         }
         return true;
     }
@@ -129,6 +144,9 @@ public class GuestLoginModule implements LoginModule {
         if (debug) {
             LOG.debug("logout");
         }
+
+        succeeded = false;
+        commitSucceeded = false;
         return true;
     }
 }

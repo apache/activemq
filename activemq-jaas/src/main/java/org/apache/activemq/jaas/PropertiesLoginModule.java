@@ -50,13 +50,16 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
     private Map<String,Set<String>> groups;
     private String user;
     private final Set<Principal> principals = new HashSet<Principal>();
-    private boolean loginSucceeded;
+
+    /** the authentication status*/
+    private boolean succeeded = false;
+    private boolean commitSucceeded = false;
 
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-        loginSucceeded = false;
+        succeeded = false;
         init(options);
         users = load(USER_FILE_PROP_NAME, "user", options).getProps();
         groups = load(GROUP_FILE_PROP_NAME, "group", options).invertedPropertiesValuesMap();
@@ -91,45 +94,57 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         if (!password.equals(new String(tmpPassword))) {
             throw new FailedLoginException("Password does not match");
         }
-        loginSucceeded = true;
+        succeeded = true;
 
         if (debug) {
             LOG.debug("login " + user);
         }
-        return loginSucceeded;
+        return succeeded;
     }
 
     @Override
     public boolean commit() throws LoginException {
-        boolean result = loginSucceeded;
-        if (result) {
-            principals.add(new UserPrincipal(user));
-
-            Set<String> matchedGroups = groups.get(user);
-            if (matchedGroups != null) {
-                for (String entry : matchedGroups) {
-                    principals.add(new GroupPrincipal(entry));
-                }
+        if (!succeeded) {
+            clear();
+            if (debug) {
+                LOG.debug("commit, result: false");
             }
-
-            subject.getPrincipals().addAll(principals);
+            return false;
         }
 
-        // will whack loginSucceeded
-        clear();
+        principals.add(new UserPrincipal(user));
+
+        Set<String> matchedGroups = groups.get(user);
+        if (matchedGroups != null) {
+            for (String entry : matchedGroups) {
+                principals.add(new GroupPrincipal(entry));
+            }
+        }
+
+        subject.getPrincipals().addAll(principals);
 
         if (debug) {
-            LOG.debug("commit, result: " + result);
+            LOG.debug("commit, result: true");
         }
-        return result;
+
+        commitSucceeded = true;
+        return true;
     }
 
     @Override
     public boolean abort() throws LoginException {
-        clear();
-
         if (debug) {
             LOG.debug("abort");
+        }
+        if (!succeeded) {
+            return false;
+        } else if (succeeded && commitSucceeded) {
+            // we succeeded, but another required module failed
+            logout();
+        } else {
+            // our commit failed
+            clear();
+            succeeded = false;
         }
         return true;
     }
@@ -137,17 +152,19 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
     @Override
     public boolean logout() throws LoginException {
         subject.getPrincipals().removeAll(principals);
-        principals.clear();
         clear();
         if (debug) {
             LOG.debug("logout");
         }
+
+        succeeded = false;
+        commitSucceeded = false;
         return true;
     }
 
     private void clear() {
         user = null;
-        loginSucceeded = false;
+        principals.clear();
     }
 
 }
