@@ -158,6 +158,21 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     @Override
+    public int getTempUsagePercentUsage() {
+        return destination.getTempUsage().getPercentUsage();
+    }
+
+    @Override
+    public long getTempUsageLimit() {
+        return destination.getTempUsage().getLimit();
+    }
+
+    @Override
+    public void setTempUsageLimit(long limit) {
+        destination.getTempUsage().setLimit(limit);
+    }
+
+    @Override
     public long getMaxEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMaxTime();
     }

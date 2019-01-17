@@ -42,6 +42,7 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.usage.TempUsage;
 import org.apache.activemq.usage.Usage;
 import org.slf4j.Logger;
 
@@ -276,6 +277,11 @@ public abstract class BaseDestination implements Destination {
     @Override
     public void setMemoryUsage(MemoryUsage memoryUsage) {
         this.memoryUsage = memoryUsage;
+    }
+
+    @Override
+    public TempUsage getTempUsage() {
+        return systemUsage.getTempUsage();
     }
 
     @Override

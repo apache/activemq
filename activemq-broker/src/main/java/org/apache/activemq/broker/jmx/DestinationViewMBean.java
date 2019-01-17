@@ -239,6 +239,24 @@ public interface DestinationViewMBean {
     void setMemoryLimit(long limit);
 
     /**
+     * @return the percentage of amount of temp usage used
+     */
+    @MBeanInfo("The percentage of the temp usage limit used")
+    int getTempUsagePercentUsage();
+
+    /**
+     * @return the amount of temp usage allocated to this destination
+     */
+    @MBeanInfo("Temp usage limit, in bytes, assigned to this destination.")
+    long getTempUsageLimit();
+
+    /**
+     * set the amount of temp usage allocated to this destination
+     * @param limit the amount of temp usage allocated to this destination
+     */
+    void setTempUsageLimit(long limit);
+
+    /**
      * @return the portion of memory from the broker memory limit for this destination
      */
     @MBeanInfo("Portion of memory from the broker memory limit for this destination")

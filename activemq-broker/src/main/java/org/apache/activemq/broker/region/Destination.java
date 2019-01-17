@@ -33,6 +33,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.TempUsage;
 import org.apache.activemq.usage.Usage;
 
 /**
@@ -69,6 +70,8 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     MemoryUsage getMemoryUsage();
 
     void setMemoryUsage(MemoryUsage memoryUsage);
+
+    TempUsage getTempUsage();
 
     void dispose(ConnectionContext context) throws IOException;
 
