@@ -25,15 +25,15 @@
     <!-- Starts the broker with default configuration -->
     <feature name="activemq-broker-noweb" description="Full ActiveMQ broker with default configuration" version="${project.version}" resolver="(obr)" start-level="50">
         <feature version="${project.version}">activemq</feature>
-        <configfile finalname="/etc/activemq.xml">mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/activemq</configfile>
-        <configfile finalname="/etc/org.apache.activemq.server-default.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq</configfile>
+        <configfile finalname="${karaf.etc}/activemq.xml">mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/activemq</configfile>
+        <configfile finalname="${karaf.etc}/org.apache.activemq.server-default.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq</configfile>
     </feature>
 
     <!-- Starts the broker with default configuration and web console -->
     <feature name="activemq-broker" description="Full ActiveMQ broker with default configuration and web console" version="${project.version}" resolver="(obr)" start-level="50">
         <feature version="${project.version}">activemq</feature>
-        <configfile finalname="/etc/activemq.xml">mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/activemq</configfile>
-        <configfile finalname="/etc/org.apache.activemq.server-default.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq</configfile>
+        <configfile finalname="${karaf.etc}/activemq.xml">mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/activemq</configfile>
+        <configfile finalname="${karaf.etc}/org.apache.activemq.server-default.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq</configfile>
         <feature version="${project.version}">activemq-web-console</feature>
     </feature>
 
@@ -49,7 +49,7 @@
     <feature name="activemq-web-console" version="${project.version}" resolver="(obr)" start-level="50">
       <feature start-level="10">war</feature>
       <feature start-level="10">eventadmin</feature>
-      <configfile finalname="/etc/org.apache.activemq.webconsole.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq-webconsole</configfile>
+      <configfile finalname="${karaf.etc}/org.apache.activemq.webconsole.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq-webconsole</configfile>
       <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
     </feature>
 
