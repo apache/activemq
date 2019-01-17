@@ -32,6 +32,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.TempUsage;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.SubscriptionKey;
 
@@ -120,6 +121,11 @@ public class DestinationFilter implements Destination {
     @Override
     public void setMemoryUsage(MemoryUsage memoryUsage) {
         next.setMemoryUsage(memoryUsage);
+    }
+
+    @Override
+    public TempUsage getTempUsage() {
+        return next.getTempUsage();
     }
 
     @Override

@@ -120,6 +120,23 @@ public class BrokerDestinationView {
         return destination.getMemoryUsage().getLimit();
     }
 
+    /**
+     * Gets the temp usage as a percentage for this Destination.
+     *
+     * @return Gets the temp usage as a percentage for this Destination.
+     */
+    public int getTempPercentUsage() {
+        return destination.getTempUsage().getPercentUsage();
+    }
+
+    /**
+     * Gets the temp usage limit in bytes.
+     *
+     * @return the temp usage limit in bytes.
+     */
+    public long getTempUsageLimit() {
+        return destination.getTempUsage().getLimit();
+    }
 
     /**
      * @return the average time it takes to store a message on this destination (ms)
