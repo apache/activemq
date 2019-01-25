@@ -69,6 +69,7 @@ public class PageFile {
     private static final String PAGEFILE_SUFFIX = ".data";
     private static final String RECOVERY_FILE_SUFFIX = ".redo";
     private static final String FREE_FILE_SUFFIX = ".free";
+    private static final String FREE_FILE_MAP_SUFFIX = ".map";
 
     // 4k Default page size.
     public static final int DEFAULT_PAGE_SIZE = Integer.getInteger("defaultPageSize", 1024*4);
@@ -76,6 +77,7 @@ public class PageFile {
     public static final int DEFAULT_PAGE_CACHE_SIZE = Integer.getInteger("defaultPageCacheSize", 100);;
 
     private static final int RECOVERY_FILE_HEADER_SIZE = 1024 * 4;
+    private static final int PAGE_FILE_MAP_HEADER_SIZE = 1024 * 4;
     private static final int PAGE_FILE_HEADER_SIZE = 1024 * 4;
 
     // Recovery header is (long offset)
@@ -92,6 +94,8 @@ public class PageFile {
     private RecoverableRandomAccessFile writeFile;
     // File handle used for writing pages..
     private RecoverableRandomAccessFile recoveryFile;
+
+    private RecoverableRandomAccessFile freePageMap;
 
     // The size of pages
     private int pageSize = DEFAULT_PAGE_SIZE;
@@ -330,6 +334,7 @@ public class PageFile {
         delete(getMainPageFile());
         delete(getFreeFile());
         delete(getRecoveryFile());
+        delete(getFreeFileMap());
     }
 
     public void archive() throws IOException {
@@ -405,15 +410,25 @@ public class PageFile {
                 recoveryFile = new RecoverableRandomAccessFile(getRecoveryFile(), "rw");
             }
 
+            freePageMap = new RecoverableRandomAccessFile(getFreeFileMap(), "rw");
+
             if (metaData.isCleanShutdown()) {
                 nextTxid.set(metaData.getLastTxId() + 1);
                 if (metaData.getFreePages() > 0) {
-                    loadFreeList();
+                    // Migrate from db.free to db.data
+                    if(getFreeFile().exists()) {
+                        loadFreeList();
+                        syncFreeListMap(nextTxid.get());
+                    }
+
+                    recoverFreePageFromMap(nextTxid.get());
                 }
             } else {
                 LOG.debug(toString() + ", Recovering page file...");
                 nextTxid.set(redoRecoveryUpdates());
-                trackingFreeDuringRecovery.set(new SequenceSet());
+                if (!recoverFreePageFromMap(nextTxid.get())) {
+                    trackingFreeDuringRecovery.set(new SequenceSet());
+                }
             }
 
             if (writeFile.length() < PAGE_FILE_HEADER_SIZE) {
@@ -432,6 +447,7 @@ public class PageFile {
             throw new IllegalStateException("Cannot load the page file when it is already loaded.");
         }
     }
+
 
     private void asyncFreePageRecovery(final long lastRecoveryPage) {
         Thread thread = new Thread("KahaDB Index Free Page Recovery") {
@@ -474,11 +490,7 @@ public class PageFile {
         }
 
         LOG.info(toString() + ". Recovered pageFile free list of size: " + newFreePages.rangeSize());
-        if (!newFreePages.isEmpty()) {
-
-            // allow flush (with index lock held) to merge eventually
-            recoveredFreeList.lazySet(newFreePages);
-        }
+        recoveredFreeList.lazySet(newFreePages);
     }
 
     private void loadForRecovery(long nextFreePageIdSnap) throws Exception {
@@ -512,7 +524,7 @@ public class PageFile {
             if (freeList.isEmpty()) {
                 metaData.setFreePages(0);
             } else {
-                storeFreeList();
+                syncFreeListMap(nextTxid.get());
                 metaData.setFreePages(freeList.size());
             }
 
@@ -534,6 +546,10 @@ public class PageFile {
                     recoveryFile.close();
                     recoveryFile = null;
                 }
+
+                freePageMap.close();
+                freePageMap = null;
+
                 freeList.clear();
                 if (pageCache != null) {
                     pageCache = null;
@@ -572,6 +588,8 @@ public class PageFile {
             SequenceSet inUse = trackingFreeDuringRecovery.get();
             recovered.remove(inUse);
             freeList.merge(recovered);
+
+            syncFreeListMap(nextTxid.get());
 
             // all set for clean shutdown
             trackingFreeDuringRecovery.set(null);
@@ -619,6 +637,10 @@ public class PageFile {
 
     public File getFreeFile() {
         return new File(directory, IOHelper.toFileSystemSafeName(name) + FREE_FILE_SUFFIX);
+    }
+
+    public File getFreeFileMap() {
+        return new File(directory, IOHelper.toFileSystemSafeName(name) + FREE_FILE_MAP_SUFFIX);
     }
 
     public File getRecoveryFile() {
@@ -959,6 +981,90 @@ public class PageFile {
         readFile.readFully(data);
     }
 
+    private boolean recoverFreePageFromMap(long expectedNextTxId) throws IOException {
+        if (freePageMap.length() < PAGE_FILE_MAP_HEADER_SIZE) {
+            return false;
+        }
+
+        freePageMap.seek(0);
+        Long nextTxId = freePageMap.readLong();
+
+        if (nextTxId != expectedNextTxId) {
+            return false;
+        }
+
+        freePageMap.seek(PAGE_FILE_MAP_HEADER_SIZE);
+        long byteIndex = PAGE_FILE_MAP_HEADER_SIZE;
+
+        while (byteIndex < freePageMap.length()) {
+            byte b = freePageMap.readByte();
+            for (byte bitIndex = 0; bitIndex < 8; bitIndex++) {
+                boolean isFree = (b & (1 << bitIndex)) != 0;
+                long pageId = ((byteIndex - PAGE_FILE_MAP_HEADER_SIZE) * 8) + bitIndex;
+                if (isFree) {
+                    freeList.add(pageId);
+                }
+            }
+            byteIndex++;
+        }
+
+        return true;
+    }
+
+    private void syncFreeListMap(Long nextTxId) throws IOException {
+        for (long pageId : freeList) {
+            setFreePageMap(pageId, true);
+        }
+
+        freePageMap.seek(0);
+        freePageMap.writeLong(nextTxId);
+
+        freePageMap.sync();
+    }
+
+    private void setFreePageMap(ArrayList<PageWrite> batch, Long nextTxId) throws IOException {
+        for (PageWrite pageWrite : batch) {
+            setFreePageMap(pageWrite.getPage().pageId, pageWrite.getPage().getType() == Page.PAGE_FREE_TYPE);
+        }
+
+        freePageMap.seek(0);
+        freePageMap.writeLong(nextTxId);
+
+        if (enableRecoveryFile) {
+            freePageMap.sync();
+        }
+    }
+
+    private void setFreePageMap(long pageId, boolean free) throws IOException {
+        long byteIndex = pageId / 8 + PAGE_FILE_MAP_HEADER_SIZE;
+        long bitIndex = pageId % 8;
+
+        if (freePageMap.length() <= byteIndex) {
+            freePageMap.seek(freePageMap.length());
+            while (freePageMap.length() <= byteIndex) {
+                freePageMap.writeByte(0);
+            }
+        }
+
+        freePageMap.seek(byteIndex);
+
+        byte b = freePageMap.readByte();
+        boolean isFree = (b & (1 << bitIndex)) != 0;
+
+        if (isFree == free) {
+            return;
+        }
+
+        if (free) {
+            b |= 1 << bitIndex;
+        } else {
+            b &= ~(1 << bitIndex);
+        }
+
+        freePageMap.seek(byteIndex);
+        freePageMap.writeByte(b);
+    }
+
     public void freePage(long pageId) {
         freeList.add(pageId);
         removeFromCache(pageId);
@@ -1169,11 +1275,14 @@ public class PageFile {
                 // Write the # of pages that will follow
                 recoveryFile.writeInt(batch.size());
 
+                if (trackingFreeDuringRecovery.get() == null) {
+                    setFreePageMap(batch, nextTxid.get());
+                }
+
                 if (enableDiskSyncs) {
                     recoveryFile.sync();
                 }
             }
-
             for (PageWrite w : batch) {
                 writeFile.seek(toOffset(w.page.getPageId()));
                 writeFile.write(w.getDiskBound(), 0, pageSize);

@@ -16,13 +16,15 @@
  */
 package org.apache.activemq.store.kahadb.disk.page;
 
-import junit.framework.TestCase;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,16 +34,42 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@SuppressWarnings("rawtypes")
-public class PageFileTest extends TestCase {
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+@RunWith(Parameterized.class)
+public class PageFileTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(PageFileTest.class);
 
+    private static String getName() {
+        return "PageFileTest";
+    }
+
+
+    private boolean recoveryFile;
+
+    @Parameterized.Parameters(name="{0}")
+    public static Collection<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][] {
+                {true},
+                {false}
+        });
+    }
+
+    public PageFileTest(boolean recoveryFile) {
+        this.recoveryFile = recoveryFile;
+    }
+
+    @Test
     public void testCRUD() throws IOException {
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
@@ -134,6 +162,7 @@ public class PageFileTest extends TestCase {
         pf.unload();
     }
 
+    @Test
     public void testStreams() throws IOException {
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
@@ -168,6 +197,7 @@ public class PageFileTest extends TestCase {
         pf.unload();
     }
 
+    @Test
     public void testAddRollback() throws IOException {
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
@@ -211,11 +241,12 @@ public class PageFileTest extends TestCase {
     }
 
     //Test for AMQ-6590
+    @Test
     public void testFreePageRecoveryUncleanShutdown() throws Exception {
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
-        pf.setEnableRecoveryFile(false);
+        pf.setEnableRecoveryFile(recoveryFile);
         pf.load();
 
         //Allocate 10 free pages
@@ -227,7 +258,7 @@ public class PageFileTest extends TestCase {
         //Load a second instance on the same directory fo the page file which
         //simulates an unclean shutdown from the previous run
         final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
-        pf2.setEnableRecoveryFile(false);
+        pf2.setEnableRecoveryFile(recoveryFile);
         pf2.load();
         try {
             assertTrue("We have 10 free pages", Wait.waitFor(new Wait.Condition() {
@@ -246,6 +277,7 @@ public class PageFileTest extends TestCase {
         }
     }
 
+    @Test
     public void testAllocatedAndUnusedAreFree() throws Exception {
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
@@ -268,28 +300,34 @@ public class PageFileTest extends TestCase {
 
     }
 
+    @Test
     public void testBackgroundRecoveryIsThreadSafe() throws Exception {
+
+        int numberOfPages = 100000;
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
-        pf.setEnableRecoveryFile(false);
+        pf.setEnableRecoveryFile(recoveryFile);
         pf.load();
 
         Transaction tx = pf.tx();
-        tx.allocate(100000);
+        tx.allocate(numberOfPages);
         tx.commit();
         LOG.info("Number of free pages:" + pf.getFreePageCount());
         pf.flush();
 
         //Simulate an unclean shutdown
         final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
-        pf2.setEnableRecoveryFile(false);
+        pf2.setEnableRecoveryFile(recoveryFile);
         pf2.load();
 
+        //For recovery = false, pagefile should new pages as the freeList still not recovered
+        //For recovery = true, pagefile should use the recovered pages
         Transaction tx2 = pf2.tx();
-        tx2.allocate(100000);
+        tx2.allocate(numberOfPages);
         tx2.commit();
         LOG.info("Number of free pages:" + pf2.getFreePageCount());
+        assertEquals(pf2.getPageCount(), recoveryFile ? numberOfPages : 2 * numberOfPages);
 
         List<Transaction> transactions = new LinkedList<>();
 
@@ -312,7 +350,7 @@ public class PageFileTest extends TestCase {
                 pf2.flush();
                 long freePages = pf2.getFreePageCount();
                 LOG.info("free page count: " + freePages);
-                return  freePages == 199980;
+                return  freePages == (recoveryFile ? numberOfPages - 20 : 2 * numberOfPages - 20);
             }
         }, 12000000));
 
@@ -324,11 +362,12 @@ public class PageFileTest extends TestCase {
 
     }
 
+    @Test
     public void testBackgroundWillNotMarkEaslyPagesAsFree() throws Exception {
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
-        pf.setEnableRecoveryFile(false);
+        pf.setEnableRecoveryFile(recoveryFile);
         pf.load();
 
         Transaction tx = pf.tx();
@@ -339,13 +378,16 @@ public class PageFileTest extends TestCase {
 
         //Simulate an unclean shutdown
         final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
-        pf2.setEnableRecoveryFile(false);
+        pf2.setEnableRecoveryFile(recoveryFile);
         pf2.load();
 
+        //For recovery = false, pagefile should new pages as the freeList still not recovered
+        //For recovery = true, pagefile should use the recovered pages
         Transaction tx2 = pf2.tx();
         tx2.allocate(200);
         tx2.commit();
         LOG.info("Number of free pages:" + pf2.getFreePageCount());
+        assertEquals(pf2.getPageCount(), recoveryFile ? 100000 : 100200);
 
         Transaction tx3 = pf2.tx();
         tx3.allocate(100);
@@ -356,7 +398,7 @@ public class PageFileTest extends TestCase {
                 pf2.flush();
                 long freePages = pf2.getFreePageCount();
                 LOG.info("free page count: " + freePages);
-                return  freePages == 100100;
+                return  freePages == (recoveryFile ? 99900 : 100100);
             }
         }, 12000000));
     }
@@ -381,7 +423,7 @@ public class PageFileTest extends TestCase {
 
         PageFile pf = new PageFile(new File("target/test-data"), getName());
         pf.delete();
-        pf.setEnableRecoveryFile(false);
+        pf.setEnableRecoveryFile(recoveryFile);
         pf.load();
 
         List<Long> pagesToFree = new LinkedList<>();
@@ -406,7 +448,7 @@ public class PageFileTest extends TestCase {
 
         //Simulate an unclean shutdown
         final PageFile pf2 = new PageFile(new File("target/test-data"), getName());
-        pf2.setEnableRecoveryFile(false);
+        pf2.setEnableRecoveryFile(recoveryFile);
         pf2.load();
 
         LOG.info("RecoveredPageFile: Number of free pages:" + pf2.getFreePageCount());
@@ -467,4 +509,115 @@ public class PageFileTest extends TestCase {
 
         assertEquals("pages freed during recovery should be reused", numberOfPages, totalPages);
     }
+
+    @Test
+    public void shouldNotSaveFreePageMapWhenBackgroundRecoveryStillGoing() throws Exception {
+        int numberOfTransactions = 40000;
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(recoveryFile);
+        pf.load();
+
+        LOG.info("Creating Transactions");
+        for (int i = 0; i < numberOfTransactions; i++) {
+            Transaction transaction = pf.tx();
+            Page page = transaction.allocate();
+            String t = "page:" + i;
+            page.set(t);
+            transaction.store(page, StringMarshaller.INSTANCE, false);
+            transaction.commit();
+        }
+
+        assertEquals(0, pf.getFreePageCount());
+        assertEquals(numberOfTransactions, pf.getPageCount());
+
+        pf.flush();
+
+        //Unclean shutdown and force background recovery
+        PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.getFreeFileMap().delete();
+        pf2.setEnableRecoveryFile(recoveryFile);
+        pf2.load();
+
+        for (int i = 0; i < 100; i++) {
+            Transaction transaction = pf2.tx();
+            transaction.free(i * 4);
+            transaction.commit();
+        }
+
+        pf2.flush();
+
+        // Should not save the map file during background srecovery
+        assertEquals(0, pf2.getFreeFileMap().length());
+
+        assertTrue("Free Page map was written", Wait.waitFor(() -> {
+            pf2.flush();
+            return  pf2.getFreeFileMap().length() != 0;
+        }, 12000000));
+
+        pf2.unload();
+
+        //Clean Shurdown
+        PageFile pf3 = new PageFile(new File("target/test-data"), getName());
+        pf3.setEnableRecoveryFile(recoveryFile);
+        pf3.load();
+
+        assertEquals(100, pf3.getFreePageCount());
+    }
+
+    @Test
+    public void testFreePageRecoveryCleanShutdown() throws Exception {
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(recoveryFile);
+        pf.load();
+
+        LOG.info("Creating Transactions");
+        for (int i = 0; i < 400; i++) {
+            Transaction transaction = pf.tx();
+            Page page = transaction.allocate();
+            String t = "page:" + i;
+            page.set(t);
+            transaction.store(page, StringMarshaller.INSTANCE, false);
+            transaction.commit();
+        }
+
+        assertEquals(0, pf.getFreePageCount());
+        assertEquals(400, pf.getPageCount());
+
+        pf.unload();
+
+        // Clear Shutdown
+        pf = new PageFile(new File("target/test-data"), getName());
+        pf.setEnableRecoveryFile(recoveryFile);
+        pf.load();
+
+        assertEquals(0, pf.getFreePageCount());
+
+        for (int i = 0; i < 100; i++) {
+            Transaction transaction = pf.tx();
+            transaction.free(i * 4);
+            transaction.commit();;
+        }
+
+        assertEquals(100, pf.getFreePageCount());
+        assertEquals(400, pf.getPageCount());
+
+        pf.unload();
+
+        // Clear Shutdown
+        pf = new PageFile(new File("target/test-data"), getName());
+        pf.setEnableRecoveryFile(recoveryFile);
+        pf.load();
+
+        assertEquals(100, pf.getFreePageCount());
+        assertEquals(400, pf.getPageCount());
+
+        for (int i = 0; i < 400; i++) {
+            assertEquals(pf.isFreePage(i), i % 4 == 0);
+        }
+
+        pf.unload();
+    }
+
 }
