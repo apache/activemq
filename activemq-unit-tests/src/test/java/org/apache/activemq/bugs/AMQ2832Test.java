@@ -289,7 +289,7 @@ public class AMQ2832Test {
         assertTrue("Less than three journal file expected, was " + getNumberOfJournalFiles(), Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return getNumberOfJournalFiles() <= 3;
+                return getNumberOfJournalFiles() <= 4;
             }
         }, TimeUnit.MINUTES.toMillis(3)));
 
