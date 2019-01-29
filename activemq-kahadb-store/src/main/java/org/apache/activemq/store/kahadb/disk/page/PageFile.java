@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -144,7 +145,7 @@ public class PageFile {
     // Persistent settings stored in the page file.
     private MetaData metaData;
 
-    private final ArrayList<File> tmpFilesForRemoval = new ArrayList<File>();
+    private final HashMap<File, RandomAccessFile> tmpFilesForRemoval = new HashMap<>();
 
     private boolean useLFRUEviction = false;
     private float LFUEvictionFactor = 0.2f;
@@ -197,12 +198,18 @@ public class PageFile {
             return page;
         }
 
-        public byte[] getDiskBound() throws IOException {
+        public byte[] getDiskBound(HashMap<File, RandomAccessFile> tmpFiles) throws IOException {
             if (diskBound == null && diskBoundLocation != -1) {
                 diskBound = new byte[length];
-                try(RandomAccessFile file = new RandomAccessFile(tmpFile, "r")) {
+                if (tmpFiles.containsKey(tmpFile) && tmpFiles.get(tmpFile).getChannel().isOpen()) {
+                    RandomAccessFile file = tmpFiles.get(tmpFile);
                     file.seek(diskBoundLocation);
                     file.read(diskBound);
+                } else {
+                    try (RandomAccessFile file = new RandomAccessFile(tmpFile, "r")) {
+                        file.seek(diskBoundLocation);
+                        file.read(diskBound);
+                    }
                 }
                 diskBoundLocation = -1;
             }
@@ -1144,12 +1151,12 @@ public class PageFile {
 
                 for (PageWrite w : batch) {
                     try {
-                        checksum.update(w.getDiskBound(), 0, pageSize);
+                        checksum.update(w.getDiskBound(tmpFilesForRemoval), 0, pageSize);
                     } catch (Throwable t) {
                         throw IOExceptionSupport.create("Cannot create recovery file. Reason: " + t, t);
                     }
                     recoveryFile.writeLong(w.page.getPageId());
-                    recoveryFile.write(w.getDiskBound(), 0, pageSize);
+                    recoveryFile.write(w.getDiskBound(tmpFilesForRemoval), 0, pageSize);
                 }
 
                 // Can we shrink the recovery buffer??
@@ -1176,7 +1183,7 @@ public class PageFile {
 
             for (PageWrite w : batch) {
                 writeFile.seek(toOffset(w.page.getPageId()));
-                writeFile.write(w.getDiskBound(), 0, pageSize);
+                writeFile.write(w.getDiskBound(tmpFilesForRemoval), 0, pageSize);
                 w.done();
             }
 
@@ -1197,7 +1204,8 @@ public class PageFile {
                     // the write cache.
                     if (w.isDone()) {
                         writes.remove(w.page.getPageId());
-                        if (w.tmpFile != null && tmpFilesForRemoval.contains(w.tmpFile)) {
+                        if (w.tmpFile != null && tmpFilesForRemoval.containsKey(w.tmpFile)) {
+                            tmpFilesForRemoval.get(w.tmpFile).close();
                             if (!w.tmpFile.delete()) {
                                 throw new IOException("Can't delete temporary KahaDB transaction file:" + w.tmpFile);
                             }
@@ -1213,8 +1221,12 @@ public class PageFile {
         }
     }
 
-    public void removeTmpFile(File file) {
-        tmpFilesForRemoval.add(file);
+    public void removeTmpFile(File file, RandomAccessFile randomAccessFile) throws IOException {
+        if (!tmpFilesForRemoval.containsKey(file)) {
+            tmpFilesForRemoval.put(file, randomAccessFile);
+        } else {
+            randomAccessFile.close();
+        }
     }
 
     private long recoveryFileSizeForPages(int pageCount) {
