@@ -17,16 +17,17 @@
 package org.apache.activemq.leveldb.replicated.groups
 
 
-import collection.mutable.{ListBuffer, HashMap}
-
+import collection.mutable.{HashMap, ListBuffer}
 import java.io._
-import com.fasterxml.jackson.databind.ObjectMapper
+
 import collection.JavaConversions._
 import java.util.LinkedHashMap
-import java.lang.{IllegalStateException, String}
+
+import javax.json.bind.{Jsonb, JsonbBuilder, JsonbConfig}
+
 import beans.BeanProperty
-import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.zookeeper.KeeperException.NoNodeException
+
 import scala.reflect.ClassTag
 
 /**
@@ -46,7 +47,6 @@ trait NodeState {
 
 class TextNodeState extends NodeState {
   @BeanProperty
-  @JsonProperty
   var id:String = _
 }
 
@@ -57,19 +57,19 @@ class TextNodeState extends NodeState {
  */
 object ClusteredSupport {
 
-  val DEFAULT_MAPPER = new ObjectMapper
+  val DEFAULT_MAPPER = JsonbBuilder.create(new JsonbConfig().setProperty("johnzon.cdi.activated", false))
 
-  def decode[T](t : Class[T], buffer: Array[Byte], mapper: ObjectMapper=DEFAULT_MAPPER): T = decode(t, new ByteArrayInputStream(buffer), mapper)
-  def decode[T](t : Class[T], in: InputStream, mapper: ObjectMapper): T =  mapper.readValue(in, t)
+  def decode[T](t : Class[T], buffer: Array[Byte], mapper: Jsonb=DEFAULT_MAPPER): T = decode(t, new ByteArrayInputStream(buffer), mapper)
+  def decode[T](t : Class[T], in: InputStream, mapper: Jsonb): T =  mapper.fromJson(in, t)
 
-  def encode(value: AnyRef, mapper: ObjectMapper=DEFAULT_MAPPER): Array[Byte] = {
+  def encode(value: AnyRef, mapper: Jsonb=DEFAULT_MAPPER): Array[Byte] = {
     var baos: ByteArrayOutputStream = new ByteArrayOutputStream
     encode(value, baos, mapper)
-    return baos.toByteArray
+    baos.toByteArray
   }
 
-  def encode(value: AnyRef, out: OutputStream, mapper: ObjectMapper): Unit = {
-    mapper.writeValue(out, value)
+  def encode(value: AnyRef, out: OutputStream, mapper: Jsonb): Unit = {
+    mapper.toJson(value, out)
   }
 
 }

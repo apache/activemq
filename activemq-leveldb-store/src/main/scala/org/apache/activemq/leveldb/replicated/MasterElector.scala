@@ -17,29 +17,29 @@
 package org.apache.activemq.leveldb.replicated
 
 import org.apache.activemq.leveldb.replicated.groups._
-import com.fasterxml.jackson.annotation.JsonProperty
-import org.apache.activemq.leveldb.util.{Log, JsonCodec}
-import java.io.IOException
+import org.apache.activemq.leveldb.util.{JsonCodec, Log}
+
+import scala.beans.BeanProperty
 
 
 class LevelDBNodeState extends NodeState {
 
-  @JsonProperty
+  @BeanProperty
   var id: String = _
 
-  @JsonProperty
+  @BeanProperty
   var container: String = _
 
-  @JsonProperty
+  @BeanProperty
   var address: String = _
 
-  @JsonProperty
+  @BeanProperty
   var position: Long = -1
 
-  @JsonProperty
+  @BeanProperty
   var weight: Int = 0
 
-  @JsonProperty
+  @BeanProperty
   var elected: String = _
 
   override def equals(obj: Any): Boolean = {

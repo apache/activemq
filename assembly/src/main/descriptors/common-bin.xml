@@ -226,7 +226,9 @@
         <include>org.linkedin:org.linkedin.zookeeper-impl</include>
         <include>org.linkedin:org.linkedin.util-core</include>
         <include>org.apache.zookeeper:zookeeper</include>
-        <include>com.fasterxml.jackson.core:*</include>
+        <include>org.apache.geronimo.specs:geronimo-jsonb_1.0_spec</include>
+        <include>org.apache.geronimo.specs:geronimo-json_1.1_spec</include>
+        <include>org.apache.johnzon:*</include>
 
         <!-- Apache Shiro dependencies: -->
         <include>org.apache.shiro:shiro-core</include>

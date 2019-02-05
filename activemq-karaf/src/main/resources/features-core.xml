@@ -65,9 +65,11 @@
       <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries-version}</bundle>
       <bundle dependency="true">mvn:org.apache.activemq/activeio-core/${activeio-version}</bundle>
       <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison-version}</bundle>
-      <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jackson-version}</bundle>
-      <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jackson-version}</bundle>
-      <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson-version}</bundle>
+      <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-json_1.1_spec/${geronimo-jsonp.version}</bundle>
+      <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jsonb_1.0_spec/${geronimo-jsonb.version}</bundle>
+      <bundle dependency="true">mvn:org.apache.johnzon/johnzon-core/${johnzon.version}</bundle>
+      <bundle dependency="true">mvn:org.apache.johnzon/johnzon-mapper/${johnzon.version}</bundle>
+      <bundle dependency="true">mvn:org.apache.johnzon/johnzon-jsonb/${johnzon.version}</bundle>
       <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
     </feature>
   </features>

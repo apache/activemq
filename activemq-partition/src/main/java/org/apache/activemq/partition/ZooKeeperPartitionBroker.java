@@ -26,6 +26,7 @@ import org.linkedin.util.clock.Timespan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -116,7 +117,7 @@ public class ZooKeeperPartitionBroker extends PartitionBroker {
         }
 
         try {
-            config = Partitioning.MAPPER.readValue(data, Partitioning.class);
+            config = Partitioning.MAPPER.fromJson(new ByteArrayInputStream(data), Partitioning.class);
         } catch (Exception e) {
             LOG.warn("Invalid partitioning configuration: " + e, e);
         }

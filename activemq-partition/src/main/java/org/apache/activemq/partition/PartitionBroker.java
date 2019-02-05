@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -154,7 +155,7 @@ public class PartitionBroker extends BrokerFilter {
         connection.dispatchAsync(cc);
     }
 
-    protected String getConnectionString(HashSet<String> ids) {
+    protected String getConnectionString(Set<String> ids) {
         StringBuilder rc = new StringBuilder();
         for (String id : ids) {
             String url = plugin.getBrokerURL(this, id);

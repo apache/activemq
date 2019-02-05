@@ -71,20 +71,6 @@
       <version>${zookeeper-version}</version>
     </dependency>
 
-    <!-- For Optional Snappy Compression -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-    </dependency>
-
     <!-- Testing Dependencies -->
     <dependency>
       <groupId>org.slf4j</groupId>

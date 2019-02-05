@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.leveldb.util
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.fusesource.hawtbuf.{ByteArrayOutputStream, Buffer}
+import org.fusesource.hawtbuf.{Buffer, ByteArrayOutputStream}
 import java.io.InputStream
+import java.nio.charset.StandardCharsets
+
+import javax.json.JsonObject
+import javax.json.bind.{Jsonb, JsonbBuilder}
+import javax.xml.bind.annotation.XmlRootElement
 
 /**
  *
@@ -27,23 +31,20 @@ import java.io.InputStream
  */
 object JsonCodec {
 
-  final val mapper: ObjectMapper = new ObjectMapper
+  final val mapper: Jsonb = JsonbBuilder.create()
 
   def decode[T](buffer: Buffer, clazz: Class[T]): T = {
-    val original = Thread.currentThread.getContextClassLoader
-    Thread.currentThread.setContextClassLoader(this.getClass.getClassLoader)
-    try {
-      return mapper.readValue(buffer.in, clazz)
-    } finally {
-      Thread.currentThread.setContextClassLoader(original)
-    }
+    decode(buffer.in, clazz)
   }
 
   def decode[T](is: InputStream, clazz : Class[T]): T = {
     var original: ClassLoader = Thread.currentThread.getContextClassLoader
     Thread.currentThread.setContextClassLoader(this.getClass.getClassLoader)
     try {
-      return JsonCodec.mapper.readValue(is, clazz)
+      val wrapper = JsonCodec.mapper.fromJson(is, classOf[JsonObject])
+      val name = clazz.getAnnotation(classOf[XmlRootElement]).name()
+      val obj = wrapper.get(name)
+      JsonCodec.mapper.fromJson(obj.asJsonObject().toString, clazz)
     }
     finally {
       Thread.currentThread.setContextClassLoader(original)
@@ -53,8 +54,12 @@ object JsonCodec {
 
   def encode(value: AnyRef): Buffer = {
     var baos = new ByteArrayOutputStream
-    mapper.writeValue(baos, value)
-    return baos.toBuffer
+    baos.write("{\"".getBytes(StandardCharsets.UTF_8))
+    baos.write(value.getClass.getAnnotation(classOf[XmlRootElement]).name().getBytes(StandardCharsets.UTF_8))
+    baos.write("\":".getBytes(StandardCharsets.UTF_8))
+    mapper.toJson(value, baos)
+    baos.write("}".getBytes(StandardCharsets.UTF_8))
+    baos.toBuffer
   }
 
 }

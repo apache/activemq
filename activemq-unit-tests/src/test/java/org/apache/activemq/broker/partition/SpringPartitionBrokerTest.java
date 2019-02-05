@@ -45,7 +45,7 @@ public class SpringPartitionBrokerTest extends TestCase {
         "    \"broker2\":\"tcp://localhost:61616\"\n" +
         "  }\n" +
         "}";
-        Partitioning expected = Partitioning.MAPPER.readValue(json, Partitioning.class);
+        Partitioning expected = Partitioning.MAPPER.fromJson(json, Partitioning.class);
         assertEquals(expected.toString(), config.toString());
 
     }

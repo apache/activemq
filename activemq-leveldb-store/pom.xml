@@ -158,6 +158,23 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- for json mapping need -->
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jsonb_1.0_spec</artifactId>
+      <version>${geronimo-jsonb.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-json_1.1_spec</artifactId>
+      <version>${geronimo-jsonp.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.johnzon</groupId>
+      <artifactId>johnzon-jsonb</artifactId>
+      <version>${johnzon.version}</version>
+    </dependency>
+
     <!-- For Optional Snappy Compression -->
     <dependency>
       <groupId>org.xerial.snappy</groupId>
@@ -168,18 +185,6 @@
       <groupId>org.iq80.snappy</groupId>
       <artifactId>snappy</artifactId>
       <version>0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>

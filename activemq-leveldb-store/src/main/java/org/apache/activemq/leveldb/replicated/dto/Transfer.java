@@ -17,8 +17,6 @@
 
 package org.apache.activemq.leveldb.replicated.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -29,7 +27,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name="transfer_request")
 @XmlAccessorType(XmlAccessType.FIELD)
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Transfer {
     @XmlAttribute(name="file")
     public String file;
