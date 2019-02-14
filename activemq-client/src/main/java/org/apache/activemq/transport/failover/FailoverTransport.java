@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.failover;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.broker.SslContext;
@@ -128,6 +130,8 @@ public class FailoverTransport implements CompositeTransport {
     private boolean priorityBackupAvailable = false;
     private String nestedExtraQueryOptions;
     private volatile boolean shuttingDown = false;
+    private AtomicLong lastmodified ;
+	private String newUris;
 
     public FailoverTransport() {
         brokerSslContext = SslContext.getCurrentSslContext();
@@ -890,11 +894,16 @@ public class FailoverTransport implements CompositeTransport {
     private void doUpdateURIsFromDisk() {
         // If updateURIsURL is specified, read the file and add any new
         // transport URI's to this FailOverTransport.
-        // Note: Could track file timestamp to avoid unnecessary reading.
+        // Added time stamp check to make reading efficient.
         String fileURL = getUpdateURIsURL();
+        File f = new File(fileURL);
+        if(  lastmodified.compareAndSet(f.lastModified(), f.lastModified())) {
+        	 processNewTransports(isRebalanceUpdateURIs(), newUris);
+        	 return;
+        }
         if (fileURL != null) {
             BufferedReader in = null;
-            String newUris = null;
+            newUris = null;
             StringBuffer buffer = new StringBuffer();
 
             try {
@@ -1307,7 +1316,7 @@ public class FailoverTransport implements CompositeTransport {
     /**
      * @param updateURIsURL the updateURIsURL to set
      */
-    public void setUpdateURIsURL(String updateURIsURL) {
+	public void setUpdateURIsURL(String updateURIsURL) {
         this.updateURIsURL = updateURIsURL;
     }
 
