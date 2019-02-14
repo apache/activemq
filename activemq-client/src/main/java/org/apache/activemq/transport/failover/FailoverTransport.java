@@ -130,7 +130,7 @@ public class FailoverTransport implements CompositeTransport {
     private boolean priorityBackupAvailable = false;
     private String nestedExtraQueryOptions;
     private volatile boolean shuttingDown = false;
-    private AtomicLong lastmodified ;
+    private AtomicLong lastmodified = new AtomicLong(0) ;
 	private String newUris;
 
     public FailoverTransport() {
