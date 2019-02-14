@@ -131,7 +131,7 @@ public class FailoverTransport implements CompositeTransport {
     private String nestedExtraQueryOptions;
     private volatile boolean shuttingDown = false;
     private AtomicLong lastmodified = new AtomicLong(0) ;
-	private String newUris;
+    private String newUris;
 
     public FailoverTransport() {
         brokerSslContext = SslContext.getCurrentSslContext();
@@ -1316,7 +1316,7 @@ public class FailoverTransport implements CompositeTransport {
     /**
      * @param updateURIsURL the updateURIsURL to set
      */
-	public void setUpdateURIsURL(String updateURIsURL) {
+    public void setUpdateURIsURL(String updateURIsURL) {
         this.updateURIsURL = updateURIsURL;
     }
 
