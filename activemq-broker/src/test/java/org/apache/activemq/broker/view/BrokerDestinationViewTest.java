@@ -16,19 +16,30 @@
  */
 package org.apache.activemq.broker.view;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Map;
+
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.DestinationsViewFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BrokerDestinationViewTest {
 
@@ -42,8 +53,7 @@ public class BrokerDestinationViewTest {
     protected Queue queue;
     protected int messageCount = 10000;
     protected int timeOutInSeconds = 10;
-
-
+    protected String queueName = "testQueue";
 
     @Before
     public void setUp() throws Exception {
@@ -55,7 +65,7 @@ public class BrokerDestinationViewTest {
         producerConnection = factory.createConnection();
         producerConnection.start();
         producerSession = producerConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        queue = producerSession.createQueue(getClass().getName());
+        queue = producerSession.createQueue(queueName);
         producer = producerSession.createProducer(queue);
     }
 
@@ -76,9 +86,30 @@ public class BrokerDestinationViewTest {
              producer.send(message);
 
          }
+
          MessageBrokerView messageBrokerView = MessageBrokerViewRegistry.getInstance().lookup("");
-         BrokerDestinationView destinationView = messageBrokerView.getQueueDestinationView(getClass().getName());
+         BrokerDestinationView destinationView = messageBrokerView.getQueueDestinationView(queueName);
          assertEquals(destinationView.getQueueSize(),messageCount);
 
+         final DestinationsViewFilter filter = new DestinationsViewFilter();
+         filter.setName(queueName);
+         filter.setFilter("nonEmpty");
+         final ObjectMapper mapper = new ObjectMapper();
+
+         final BrokerViewMBean brokerView = getBrokerView();
+         String output = brokerView.queryQueues(mapper.writeValueAsString(filter), 1, 10);
+         Map<?,?> queryResults = mapper.readValue(output, Map.class);
+
+         final Integer count = (Integer) queryResults.get("count");
+         final Map<?,?> data = (Map<?, ?>) queryResults.get("data");
+         assertEquals((Integer)1, count);
+         assertEquals(1, data.size());
+    }
+
+    private BrokerViewMBean getBrokerView() throws MalformedObjectNameException {
+        ObjectName brokerName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost");
+        BrokerViewMBean view = (BrokerViewMBean) brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
+        assertNotNull(view);
+        return view;
     }
 }
