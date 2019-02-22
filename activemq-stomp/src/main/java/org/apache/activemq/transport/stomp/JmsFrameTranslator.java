@@ -39,6 +39,7 @@ import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.transport.stomp.Stomp.Headers;
 import org.apache.activemq.transport.stomp.Stomp.Responses;
 import org.apache.activemq.transport.stomp.Stomp.Transformations;
+import org.apache.activemq.util.XStreamSupport;
 import org.codehaus.jettison.mapped.Configuration;
 import org.fusesource.hawtbuf.UTF8Buffer;
 
