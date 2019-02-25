@@ -320,7 +320,7 @@
       <!-- for the paho dependency -->
       <repository>
           <id>spring.io</id>
-          <url>http://repo.spring.io/plugins-release</url>
+          <url>https://repo.spring.io/plugins-release</url>
           <releases><enabled>true</enabled></releases>
           <snapshots><enabled>false</enabled></snapshots>
       </repository>
