@@ -96,12 +96,14 @@ public class ActiveMQConnectionExecutorThreadCleanUpTest {
         // connection error.
         for (int i=0; i<10; i++) {
             LOG.debug("Iteration " + i);
+            ra.start(null);
             try {
                 XAResource[] resources = ra.getXAResources(null);
                 resources[0].recover(100);
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());
             }
+            ra.stop();
             // allow some small time for thread cleanup to happen
             Thread.sleep(300);
 
@@ -111,7 +113,6 @@ public class ActiveMQConnectionExecutorThreadCleanUpTest {
                     "\" not cleared up with ActiveMQConnection.",
                 hasActiveMQConnectionExceutorThread());
         }
-        ra.stop();
     }
 
 
