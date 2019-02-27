@@ -195,6 +195,9 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                     }
                     dataFile.closeRandomAccessFile(file);
                 }
+                if (wb != null && wb.buff != null) {
+                    wb.buff.close();
+                }
             } catch (Throwable ignore) {
             }
             shutdownDone.countDown();
