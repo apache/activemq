@@ -29,4 +29,10 @@ public interface PersistenceAdapterViewMBean {
 
     @MBeanInfo("Current size.")
     long getSize();
+
+    @MBeanInfo("Statistics related to the PersistentAdapter.")
+    String getStatistics();
+
+    @MBeanInfo("Resets statistics.")
+    String resetStatistics();
 }

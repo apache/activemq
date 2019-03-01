@@ -71,6 +71,7 @@ import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.MessageStoreStatistics;
 import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
+import org.apache.activemq.store.PersistenceAdapterStatistics;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.kahadb.data.KahaAckMessageFileMapCommand;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
@@ -249,6 +250,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected PageFile pageFile;
     protected Journal journal;
     protected Metadata metadata = new Metadata();
+    protected final PersistenceAdapterStatistics persistenceAdapterStatistics = new PersistenceAdapterStatistics();
 
     protected MetadataMarshaller metadataMarshaller = new MetadataMarshaller();
 
@@ -1141,6 +1143,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
                     }
                 }
+
+                persistenceAdapterStatistics.addWriteTime(end - start);
+
             } finally {
                 checkpointLock.readLock().unlock();
             }
@@ -1176,6 +1181,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 LOG.info("Slow KahaDB access: Journal read took: "+(end-start)+" ms");
             }
         }
+
+        persistenceAdapterStatistics.addReadTime(end - start);
+
         DataByteArrayInputStream is = new DataByteArrayInputStream(data);
         byte readByte = is.readByte();
         KahaEntryType type = KahaEntryType.valueOf(readByte);
@@ -3523,6 +3531,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public boolean isEnableIndexPageCaching() {
         return enableIndexPageCaching;
+    }
+
+    public PersistenceAdapterStatistics getPersistenceAdapterStatistics() {
+        return this.persistenceAdapterStatistics;
     }
 
     // /////////////////////////////////////////////////////////////////
