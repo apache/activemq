@@ -16,16 +16,25 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.util.concurrent.Callable;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.activemq.management.TimeStatisticImpl;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.PersistenceAdapterStatistics;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 public class PersistenceAdapterView implements PersistenceAdapterViewMBean {
 
+    private final static ObjectMapper mapper = new ObjectMapper();
     private final String name;
     private final PersistenceAdapter persistenceAdapter;
 
     private Callable<String> inflightTransactionViewCallable;
     private Callable<String> dataViewCallable;
+    private PersistenceAdapterStatistics persistenceAdapterStatistics;
 
     public PersistenceAdapterView(PersistenceAdapter adapter) {
         this.name = adapter.toString();
@@ -52,6 +61,22 @@ public class PersistenceAdapterView implements PersistenceAdapterViewMBean {
         return persistenceAdapter.size();
     }
 
+    @Override
+    public String getStatistics() {
+        return serializePersistenceAdapterStatistics();
+    }
+
+    @Override
+    public String resetStatistics() {
+        final String result = serializePersistenceAdapterStatistics();
+
+        if (persistenceAdapterStatistics != null) {
+            persistenceAdapterStatistics.reset();
+        }
+
+        return result;
+    }
+
     private String invoke(Callable<String> callable) {
         String result = null;
         if (callable != null) {
@@ -64,11 +89,45 @@ public class PersistenceAdapterView implements PersistenceAdapterViewMBean {
         return result;
     }
 
+    private String serializePersistenceAdapterStatistics() {
+        if (persistenceAdapterStatistics != null) {
+            try {
+                Map<String, Object> result = new HashMap<String, Object>();
+                result.put("writeTime", getTimeStatisticAsMap(persistenceAdapterStatistics.getWriteTime()));
+                result.put("readTime", getTimeStatisticAsMap(persistenceAdapterStatistics.getReadTime()));
+                return mapper.writeValueAsString(result);
+            } catch (IOException e) {
+                return e.toString();
+            }
+        }
+
+        return null;
+    }
+
+    private Map<String, Object> getTimeStatisticAsMap(final TimeStatisticImpl timeStatistic) {
+        Map<String, Object> result = new HashMap<String, Object>();
+
+        result.put("count", timeStatistic.getCount());
+        result.put("maxTime", timeStatistic.getMaxTime());
+        result.put("minTime", timeStatistic.getMinTime());
+        result.put("totalTime", timeStatistic.getTotalTime());
+        result.put("averageTime", timeStatistic.getAverageTime());
+        result.put("averageTimeExMinMax", timeStatistic.getAverageTimeExcludingMinMax());
+        result.put("averagePerSecond", timeStatistic.getAveragePerSecond());
+        result.put("averagePerSecondExMinMax", timeStatistic.getAveragePerSecondExcludingMinMax());
+
+        return result;
+    }
+
     public void setDataViewCallable(Callable<String> dataViewCallable) {
         this.dataViewCallable = dataViewCallable;
     }
 
     public void setInflightTransactionViewCallable(Callable<String> inflightTransactionViewCallable) {
         this.inflightTransactionViewCallable = inflightTransactionViewCallable;
+    }
+
+    public void setPersistenceAdapterStatistics(PersistenceAdapterStatistics persistenceAdapterStatistics) {
+        this.persistenceAdapterStatistics = persistenceAdapterStatistics;
     }
 }
