@@ -485,6 +485,9 @@ public class PageFile {
 
             // allow flush (with index lock held) to merge eventually
             recoveredFreeList.lazySet(newFreePages);
+        } else {
+            // If there is no free pages, set trackingFreeDuringRecovery to allow the broker to have a clean shutdown
+            trackingFreeDuringRecovery.set(null);
         }
     }
 
@@ -556,6 +559,10 @@ public class PageFile {
 
     public boolean isLoaded() {
         return loaded.get();
+    }
+
+    public boolean isCleanShutdown() {
+        return metaData != null && metaData.isCleanShutdown();
     }
 
     public void allowIOResumption() {
