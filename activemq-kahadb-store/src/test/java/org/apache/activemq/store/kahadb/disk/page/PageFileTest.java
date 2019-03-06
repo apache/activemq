@@ -361,6 +361,56 @@ public class PageFileTest extends TestCase {
         }, 12000000));
     }
 
+    public void testRecoveryAfterUncleanShutdownAndZeroFreePages() throws Exception {
+        final int numberOfPages = 1000;
+        final AtomicBoolean recoveryEnd = new AtomicBoolean();
+
+        Appender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel().equals(Level.INFO) && event.getMessage().toString().contains("Recovered pageFile free list")) {
+                    recoveryEnd.set(true);
+                }
+            }
+        };
+
+        org.apache.log4j.Logger log4jLogger =
+                org.apache.log4j.Logger.getLogger(PageFile.class);
+        log4jLogger.addAppender(appender);
+        log4jLogger.setLevel(Level.DEBUG);
+
+        PageFile pf = new PageFile(new File("target/test-data"), getName());
+        pf.delete();
+        pf.setEnableRecoveryFile(false);
+        pf.load();
+
+        LOG.info("Creating Transactions");
+        for (int i = 0; i < numberOfPages; i++) {
+            Transaction tx = pf.tx();
+            Page page = tx.allocate();
+            String t = "page:" + i;
+            page.set(t);
+            tx.store(page, StringMarshaller.INSTANCE, false);
+            tx.commit();
+        }
+
+        pf.flush();
+
+        assertEquals(pf.getFreePageCount(), 0);
+
+        //Simulate an unclean shutdown
+        PageFile pf2 = new PageFile(new File("target/test-data"), getName());
+        pf2.setEnableRecoveryFile(false);
+        pf2.load();
+
+        assertTrue("Recovery Finished", Wait.waitFor(recoveryEnd::get, 100000));
+
+        //Simulate a clean shutdown
+        pf2.unload();
+        assertTrue(pf2.isCleanShutdown());
+
+    }
+
     public void testBackgroundWillMarkUsedPagesAsFreeInTheBeginning() throws Exception {
         final int numberOfPages = 100000;
         final AtomicBoolean recoveryEnd = new AtomicBoolean();
