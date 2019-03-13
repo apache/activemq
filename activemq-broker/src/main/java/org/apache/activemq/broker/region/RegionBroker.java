@@ -826,7 +826,7 @@ public class RegionBroker extends EmptyBroker {
             return getBrokerService().getBroker();
         } catch (Exception e) {
             LOG.error("Trying to get Root Broker", e);
-            throw new RuntimeException("The broker from the BrokerService should not throw an exception");
+            throw new RuntimeException("The broker from the BrokerService should not throw an exception", e);
         }
     }
 
