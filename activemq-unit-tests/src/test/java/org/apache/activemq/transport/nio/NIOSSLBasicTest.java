@@ -29,11 +29,20 @@ import javax.net.ssl.SSLHandshakeException;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import junit.framework.TestCase;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static junit.framework.TestCase.assertTrue;
 
 public class NIOSSLBasicTest {
 
@@ -87,7 +96,7 @@ public class NIOSSLBasicTest {
 
     @Test
     public void enabledCipherSuites() throws Exception {
-        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false&transport.enabledCipherSuites=TLS_RSA_WITH_AES_256_CBC_SHA256");
+        BrokerService broker = createBroker("nio+ssl", getTransportType() + "://localhost:0?transport.needClientAuth=true&transport.verifyHostName=false&transport.enabledCipherSuites=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256");
         basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort() + "?socket.verifyHostName=false");
         stopBroker(broker);
     }
@@ -102,14 +111,35 @@ public class NIOSSLBasicTest {
     //Client is missing verifyHostName=false so it should fail as cert doesn't have right host name
     @Test(expected = Exception.class)
     public void verifyHostNameErrorClient() throws Exception {
+
+        final CountDownLatch gotLogMessage = new CountDownLatch(1);
+        final AtomicBoolean gotRemoteAddressInLog = new AtomicBoolean();
+        final DefaultTestAppender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel().equals(Level.ERROR) && event.getRenderedMessage().contains("Could not accept connection")) {
+                    gotLogMessage.countDown();
+                    if (event.getRenderedMessage().contains("tcp")) {
+                        // got remote address
+                        gotRemoteAddressInLog.set(true);
+                    }
+                }
+            }
+        };
+        org.apache.log4j.Logger rootLogger = org.apache.log4j.Logger.getRootLogger();
+        rootLogger.addAppender(appender);
+
         BrokerService broker = null;
         try {
             broker = createBroker("nio+ssl", getTransportType() + "://localhost:61616?transport.needClientAuth=true");
             basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
         } finally {
+            gotLogMessage.await(5, TimeUnit.SECONDS);
             if (broker != null) {
                 stopBroker(broker);
             }
+            rootLogger.removeAppender(appender);
+            assertTrue("Got remote address in log", gotRemoteAddressInLog.get());
         }
     }
 

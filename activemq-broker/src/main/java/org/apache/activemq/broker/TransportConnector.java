@@ -208,6 +208,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         getServer().setAcceptListener(new TransportAcceptListener() {
             @Override
             public void onAccept(final Transport transport) {
+                final String remoteHost = transport.getRemoteAddress();
                 try {
                     brokerService.getTaskRunnerFactory().execute(new Runnable() {
                         @Override
@@ -220,14 +221,12 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                                     throw new BrokerStoppedException("Broker " + brokerService + " is being stopped");
                                 }
                             } catch (Exception e) {
-                                String remoteHost = transport.getRemoteAddress();
                                 ServiceSupport.dispose(transport);
                                 onAcceptError(e, remoteHost);
                             }
                         }
                     });
                 } catch (Exception e) {
-                    String remoteHost = transport.getRemoteAddress();
                     ServiceSupport.dispose(transport);
                     onAcceptError(e, remoteHost);
                 }
@@ -240,9 +239,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
             private void onAcceptError(Exception error, String remoteHost) {
                 if (brokerService != null && brokerService.isStopping()) {
-                    LOG.info("Could not accept connection during shutdown {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error);
+                    LOG.info("Could not accept connection during shutdown {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error.getLocalizedMessage());
                 } else {
-                    LOG.error("Could not accept connection {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error);
+                    LOG.error("Could not accept connection {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error.getLocalizedMessage());
                     LOG.debug("Reason: " + error, error);
                 }
             }
