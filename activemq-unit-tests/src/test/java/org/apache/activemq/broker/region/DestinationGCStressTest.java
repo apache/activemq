@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerStoppedException;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -130,6 +131,7 @@ public class DestinationGCStressTest {
                             while ((j = max.decrementAndGet()) > 0) {
                                 producer.send(new ActiveMQTopic("A." + j), message);
                             }
+                            c.close();
                         } catch (Exception ignored) {
                             ignored.printStackTrace();
                         }
@@ -162,8 +164,13 @@ public class DestinationGCStressTest {
             @Override
             public void doAppend(LoggingEvent event) {
                 if (event.getLevel().equals(Level.ERROR) && event.getMessage().toString().startsWith("Failed to remove inactive")) {
-                    logger.info("received unexpected log message: " + event.getMessage());
-                    failed.set(true);
+                    if (event.getThrowableInformation().getThrowable() != null
+                            && event.getThrowableInformation().getThrowable().getCause() instanceof BrokerStoppedException) {
+                        // ok
+                    } else {
+                        logger.info("received unexpected log message: " + event.getMessage());
+                        failed.set(true);
+                    }
                 }
             }
         };
@@ -193,6 +200,7 @@ public class DestinationGCStressTest {
                             while ((j = max.decrementAndGet()) > 0) {
                                 producer.send(new ActiveMQTopic("A." + j), message);
                             }
+                            c.close();
                         } catch (Exception ignored) {
                             ignored.printStackTrace();
                         }
@@ -209,6 +217,7 @@ public class DestinationGCStressTest {
                             messageConsumer.close();
 
                         } catch (Exception ignored) {
+                            ignored.printStackTrace();
                         }
                     }
                 }
@@ -266,6 +275,7 @@ public class DestinationGCStressTest {
                         while ((j = max.decrementAndGet()) > 0) {
                             producer.send(new ActiveMQTopic("A." + j), message);
                         }
+                        c.close();
                     } catch (Exception ignored) {
                         ignored.printStackTrace();
                     }
@@ -285,6 +295,7 @@ public class DestinationGCStressTest {
                         messageConsumer.close();
 
                     } catch (Exception ignored) {
+                        ignored.printStackTrace();
                     }
                 }
             }
