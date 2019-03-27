@@ -1457,7 +1457,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             session.getConnection().rollbackDuplicate(this, md.getMessage());
                             dispatch(md);
                         } else {
-                            LOG.warn("{} suppressing duplicate delivery on connection, poison acking: {}", getConsumerId(), md);
+                            LOG.warn("{} suppressing duplicate delivery on connection, poison acking: {}", getConsumerId(), md.getMessage());
                             posionAck(md, "Suppressing duplicate delivery on connection, consumer " + getConsumerId());
                         }
                     }
