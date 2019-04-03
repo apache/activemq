@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,22 +26,28 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.LinkedNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An optimized writer to do batch appends to a data file. This object is thread
  * safe and gains throughput as you increase the number of concurrent writes it
  * does.
- * 
- * 
+ *
+ *
  */
 class DataFileAppender {
+
+
+    static final Logger LOG = LoggerFactory.getLogger(DataFileAppender.class);
 
     protected static final byte[] RESERVED_SPACE = new byte[AsyncDataManager.ITEM_HEAD_RESERVED_SPACE];
     protected static final int DEFAULT_MAX_BATCH_SIZE = 1024 * 1024 * 4;
 
     protected final AsyncDataManager dataManager;
     protected final Map<WriteKey, WriteCommand> inflightWrites;
-    protected final Object enqueueMutex = new Object(){};
+    protected final Object enqueueMutex = new Object() {
+    };
     protected WriteBatch nextWriteBatch;
 
     protected boolean shutdown;
@@ -61,7 +67,7 @@ class DataFileAppender {
             file = item.getDataFileId();
             offset = item.getOffset();
             // TODO: see if we can build a better hash
-            hash = (int)(file ^ offset);
+            hash = (int) (file ^ offset);
         }
 
         public int hashCode() {
@@ -70,7 +76,7 @@ class DataFileAppender {
 
         public boolean equals(Object obj) {
             if (obj instanceof WriteKey) {
-                WriteKey di = (WriteKey)obj;
+                WriteKey di = (WriteKey) obj;
                 return di.file == file && di.offset == offset;
             }
             return false;
@@ -117,21 +123,21 @@ class DataFileAppender {
             this.location = location;
             this.data = data;
             this.sync = sync;
-            this.onComplete=null;
+            this.onComplete = null;
         }
 
         public WriteCommand(Location location, ByteSequence data, Runnable onComplete) {
             this.location = location;
             this.data = data;
-			this.onComplete = onComplete;
+            this.onComplete = onComplete;
             this.sync = false;
-		}
+        }
     }
 
 
     /**
      * Construct a Store writer
-     * 
+     *
      * @param fileId
      */
     public DataFileAppender(AsyncDataManager dataManager) {
@@ -169,7 +175,7 @@ class DataFileAppender {
         synchronized (this) {
             // Find the position where this item will land at.
             DataFile dataFile = dataManager.allocateLocation(location);
-            if( !sync ) {
+            if (!sync) {
                 inflightWrites.put(new WriteKey(location), write);
             }
             batch = enqueue(dataFile, write);
@@ -181,7 +187,7 @@ class DataFileAppender {
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
             }
-            IOException exception = batch.exception.get(); 
+            IOException exception = batch.exception.get();
             if (exception != null) {
                 throw exception;
             }
@@ -189,8 +195,8 @@ class DataFileAppender {
 
         return location;
     }
-    
-	public Location storeItem(ByteSequence data, byte type, Runnable onComplete) throws IOException {
+
+    public Location storeItem(ByteSequence data, byte type, Runnable onComplete) throws IOException {
         // Write the packet our internal buffer.
         int size = data.getLength() + AsyncDataManager.ITEM_HEAD_FOOT_SPACE;
 
@@ -214,7 +220,7 @@ class DataFileAppender {
         location.setLatch(batch.latch);
 
         return location;
-	}
+    }
 
     private WriteBatch enqueue(DataFile dataFile, WriteCommand write) throws IOException {
         synchronized (enqueueMutex) {
@@ -222,7 +228,7 @@ class DataFileAppender {
             if (shutdown) {
                 throw new IOException("Async Writter Thread Shutdown");
             }
-            
+
             if (!running) {
                 running = true;
                 thread = new Thread() {
@@ -236,7 +242,7 @@ class DataFileAppender {
                 thread.start();
                 firstAsyncException = null;
             }
-            
+
             if (firstAsyncException != null) {
                 throw firstAsyncException;
             }
@@ -296,12 +302,12 @@ class DataFileAppender {
     /**
      * The async processing loop that writes to the data files and does the
      * force calls.
-     * 
+     *
      * Since the file sync() call is the slowest of all the operations, this
      * algorithm tries to 'batch' or group together several file sync() requests
      * into a single file sync() call. The batching is accomplished attaching
      * the same CountDownLatch instance to every force request in a group.
-     * 
+     *
      */
     protected void processQueue() {
         DataFile dataFile = null;
@@ -330,7 +336,7 @@ class DataFileAppender {
                     enqueueMutex.notify();
                 }
 
-                wb = (WriteBatch)o;
+                wb = (WriteBatch) o;
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
                         dataFile.closeRandomAccessFile(file);
@@ -346,14 +352,14 @@ class DataFileAppender {
                 // are in sequence.
                 file.seek(write.location.getOffset());
 
-                
-                boolean forceToDisk=false;
-                
-                // 
+
+                boolean forceToDisk = false;
+
+                //
                 // is it just 1 big write?
                 if (wb.size == write.location.getSize()) {
-                    forceToDisk = write.sync | write.onComplete!=null;
-                    
+                    forceToDisk = write.sync | write.onComplete != null;
+
                     // Just write it directly..
                     file.writeInt(write.location.getSize());
                     file.writeByte(write.location.getType());
@@ -366,7 +372,7 @@ class DataFileAppender {
 
                     // Combine the smaller writes into 1 big buffer
                     while (write != null) {
-                        forceToDisk |= write.sync | write.onComplete!=null;
+                        forceToDisk |= write.sync | write.onComplete != null;
 
                         buff.writeInt(write.location.getSize());
                         buff.writeByte(write.location.getType());
@@ -375,7 +381,7 @@ class DataFileAppender {
                         buff.write(write.data.getData(), write.data.getOffset(), write.data.getLength());
                         buff.write(AsyncDataManager.ITEM_HEAD_EOR);
 
-                        write = (WriteCommand)write.getNext();
+                        write = (WriteCommand) write.getNext();
                     }
 
                     // Now do the 1 big write.
@@ -384,11 +390,11 @@ class DataFileAppender {
                     buff.reset();
                 }
 
-                if( forceToDisk ) {
+                if (forceToDisk) {
                     file.getFD().sync();
                 }
-                
-                WriteCommand lastWrite = (WriteCommand)wb.first.getTailNode();
+
+                WriteCommand lastWrite = (WriteCommand) wb.first.getTailNode();
                 dataManager.setLastAppendLocation(lastWrite.location);
 
                 // Now that the data is on disk, remove the writes from the in
@@ -399,21 +405,32 @@ class DataFileAppender {
                     if (!write.sync) {
                         inflightWrites.remove(new WriteKey(write.location));
                     }
-                    if( write.onComplete !=null ) {
-                    	 try {
-							write.onComplete.run();
-						} catch (Throwable e) {
-							e.printStackTrace();
-						}
+                    if (write.onComplete != null) {
+                        try {
+                            write.onComplete.run();
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                        }
                     }
-                    write = (WriteCommand)write.getNext();
+                    write = (WriteCommand) write.getNext();
                 }
-                
+
                 // Signal any waiting threads that the write is on disk.
                 wb.latch.countDown();
             }
-        } catch (IOException e) {
+        } catch (InterruptedException e) {
+        } catch (Throwable t) {
             synchronized (enqueueMutex) {
+
+                LOG.warn("An error occurred processing write queue!", t);
+
+                IOException e;
+                if (t instanceof IOException) {
+                    e = (IOException) t;
+                } else {
+                    e = new IOException(t.getMessage());
+                    e.initCause(t.getCause());
+                }
                 firstAsyncException = e;
                 if (wb != null) {
                     wb.latch.countDown();
@@ -424,7 +441,7 @@ class DataFileAppender {
                     nextWriteBatch.exception.set(e);
                 }
             }
-        } catch (InterruptedException e) {
+
         } finally {
             try {
                 if (file != null) {

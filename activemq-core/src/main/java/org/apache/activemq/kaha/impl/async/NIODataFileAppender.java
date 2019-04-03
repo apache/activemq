@@ -150,6 +150,7 @@ class NIODataFileAppender extends DataFileAppender {
                 }
 
                 if( forceToDisk ) {
+                    LOG.debug("Forcing to disk.");
                     file.getChannel().force(false);
                 }
 
@@ -178,8 +179,21 @@ class NIODataFileAppender extends DataFileAppender {
                 wb.latch.countDown();
             }
 
-        } catch (IOException e) {
+        } catch (InterruptedException e) {
+            LOG.warn("Thread interrupted!", e);
+        } catch (Throwable t) {
+
+            LOG.warn("An error occurred processing write queue!", t);
+
             synchronized (enqueueMutex) {
+
+                IOException e;
+                if (t instanceof IOException) {
+                    e = (IOException) t;
+                } else {
+                    e = new IOException(t.getMessage());
+                    e.initCause(t.getCause());
+                }
                 firstAsyncException = e;
                 if (wb != null) {
                     wb.latch.countDown();
@@ -190,7 +204,7 @@ class NIODataFileAppender extends DataFileAppender {
                     nextWriteBatch.exception.set(e);
                 }
             }
-        } catch (InterruptedException e) {
+
         } finally {
             try {
                 if (file != null) {
