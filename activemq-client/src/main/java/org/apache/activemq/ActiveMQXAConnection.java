@@ -58,18 +58,18 @@ public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicC
     }
 
     public XASession createXASession() throws JMSException {
-        return (XASession) createSession(true, Session.SESSION_TRANSACTED);
+        return (XASession) createSessionInternal(true, Session.SESSION_TRANSACTED);
     }
 
     public XATopicSession createXATopicSession() throws JMSException {
-        return (XATopicSession) createSession(true, Session.SESSION_TRANSACTED);
+        return (XATopicSession) createSessionInternal(true, Session.SESSION_TRANSACTED);
     }
 
     public XAQueueSession createXAQueueSession() throws JMSException {
-        return (XAQueueSession) createSession(true, Session.SESSION_TRANSACTED);
+        return (XAQueueSession) createSessionInternal(true, Session.SESSION_TRANSACTED);
     }
 
-    public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
+    private Session createSessionInternal(boolean transacted, int acknowledgeMode) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
         return new ActiveMQXASession(this, getNextSessionId(), getAckMode(), isDispatchAsync());
