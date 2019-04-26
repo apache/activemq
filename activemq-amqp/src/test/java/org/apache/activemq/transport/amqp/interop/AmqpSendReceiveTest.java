@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.jms.DeliveryMode;
 import javax.jms.Queue;
 import javax.jms.Topic;
 
@@ -46,6 +47,10 @@ import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.util.Wait;
+import org.apache.qpid.proton.amqp.UnsignedByte;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Header;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -496,6 +501,20 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testMessageWithNoHeaderNotMarkedDurable() throws Exception {
+        doMessageNotMarkedDurableTestImpl(false, false);
+    }
+
+    @Test(timeout = 60000)
+    public void testMessageWithHeaderAndDefaultedNonDurableNotMarkedDurable() throws Exception {
+        doMessageNotMarkedDurableTestImpl(true, false);
+    }
+
+    @Test(timeout = 60000)
+    public void testMessageWithHeaderAndMarkedNonDurableNotMarkedDurable() throws Exception {
+        doMessageNotMarkedDurableTestImpl(true, true);
+    }
+
+    private void doMessageNotMarkedDurableTestImpl(boolean sendHeaderWithPriority, boolean explicitSetNonDurable) throws Exception {
         AmqpClient client = createAmqpClient();
         AmqpConnection connection = trackConnection(client.connect());
         AmqpSession session = connection.createSession();
@@ -503,16 +522,39 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         AmqpSender sender = session.createSender("queue://" + getTestName());
         AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
 
-        // Create default message that should be sent as non-durable
-        AmqpMessage message1 = new AmqpMessage();
-        message1.setText("Test-Message -> non-durable");
-        message1.setMessageId("ID:Message:1");
+        Message protonMessage = Message.Factory.create();
+        protonMessage.setMessageId("ID:Message:1");
+        protonMessage.setBody(new AmqpValue("Test-Message -> non-durable"));
+        if(sendHeaderWithPriority) {
+            Header header = new Header();
+            if(explicitSetNonDurable) {
+                header.setDurable(false);
+            }
+            header.setPriority(UnsignedByte.valueOf((byte) 5));
+
+            protonMessage.setHeader(header);
+        } else {
+            assertNull("Should not have a header", protonMessage.getHeader());
+        }
+
+        AmqpMessage message1 = new AmqpMessage(protonMessage);
+
         sender.send(message1);
+
+        final QueueViewMBean queueView = getProxyToQueue(getTestName());
+        assertNotNull(queueView);
+
+        assertEquals(1, queueView.getQueueSize());
+
+        List<javax.jms.Message> messages = (List<javax.jms.Message>) queueView.browseMessages();
+        assertEquals(1, messages.size());
+        javax.jms.Message queueMessage = messages.get(0);
+        assertEquals("Queued message should not be persistent", DeliveryMode.NON_PERSISTENT, queueMessage.getJMSDeliveryMode());
 
         receiver1.flow(1);
         AmqpMessage message2 = receiver1.receive(50, TimeUnit.SECONDS);
         assertNotNull("Should have read a message", message2);
-        assertFalse("Second message sent should not be durable", message2.isDurable());
+        assertFalse("Received message should not be durable", message2.isDurable());
         message2.accept();
 
         sender.close();
