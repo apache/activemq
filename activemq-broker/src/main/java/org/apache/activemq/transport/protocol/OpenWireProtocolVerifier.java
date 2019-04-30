@@ -17,19 +17,17 @@
 package org.apache.activemq.transport.protocol;
 
 import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.openwire.OpenWireFormatFactory;
 
 /**
  *
  *
  */
-public class OpenWireProtocolVerifier  implements ProtocolVerifier {
+public class OpenWireProtocolVerifier implements ProtocolVerifier {
 
-    protected final OpenWireFormatFactory wireFormatFactory;
+    protected final boolean sizePrefixDisabled;
 
-    public OpenWireProtocolVerifier(OpenWireFormatFactory wireFormatFactory) {
-        this.wireFormatFactory = wireFormatFactory;
+    public OpenWireProtocolVerifier(final boolean sizePrefixDisabled) {
+        this.sizePrefixDisabled = sizePrefixDisabled;
     }
 
     /* (non-Javadoc)
@@ -42,7 +40,7 @@ public class OpenWireProtocolVerifier  implements ProtocolVerifier {
                                                  + value.length);
         }
 
-        int start = !((OpenWireFormat)wireFormatFactory.createWireFormat()).isSizePrefixDisabled() ? 4 : 0;
+        int start = !sizePrefixDisabled ? 4 : 0;
         int j = 0;
         // type
         if (value[start] != WireFormatInfo.DATA_STRUCTURE_TYPE) {
