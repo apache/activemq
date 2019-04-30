@@ -99,9 +99,6 @@ public class AutoTcpTransportServer extends TcpTransportServer {
                 }
                 IntrospectionSupport.setProperties(wff, wfOptions);
             }
-            if (wff instanceof OpenWireFormatFactory) {
-                protocolVerifiers.put(AutoTransportUtils.OPENWIRE, new OpenWireProtocolVerifier((OpenWireFormatFactory) wff));
-            }
             return wff;
         } catch (Throwable e) {
            throw IOExceptionSupport.create("Could not create wire format factory for: " + scheme + ", reason: " + e, e);
@@ -238,9 +235,9 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         if (isAllProtocols() || enabledProtocols.contains(AutoTransportUtils.OPENWIRE)) {
             OpenWireProtocolVerifier owpv;
             if (wireFormatFactory instanceof OpenWireFormatFactory) {
-                owpv = new OpenWireProtocolVerifier((OpenWireFormatFactory) wireFormatFactory);
+                owpv = new OpenWireProtocolVerifier(((OpenWireFormatFactory) wireFormatFactory).isSizePrefixDisabled());
             } else {
-                owpv = new OpenWireProtocolVerifier(new OpenWireFormatFactory());
+                owpv = new OpenWireProtocolVerifier(new OpenWireFormatFactory().isSizePrefixDisabled());
             }
             protocolVerifiers.put(AutoTransportUtils.OPENWIRE, owpv);
         }
