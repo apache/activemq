@@ -808,6 +808,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 if (!isPermissableDestination(message.getDestination(), true)) {
                                     return;
                                 }
+                                safeWaitUntilStarted();
                                 // message being forwarded - we need to
                                 // propagate the response to our local send
                                 if (canDuplexDispatch(message)) {
