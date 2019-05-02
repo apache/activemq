@@ -47,7 +47,7 @@
     <aries-version>1.1.0</aries-version>
     <aries-transaction-version>1.1.1</aries-transaction-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>2.22.0</camel-version>
+    <camel-version>2.22.4</camel-version>
     <camel-version-range>[2.20,3)</camel-version-range>
     <cglib-version>2.2</cglib-version>
     <commons-beanutils-version>1.9.3</commons-beanutils-version>
@@ -119,7 +119,7 @@
     <scalatest-version>2.1.5</scalatest-version>
     <slf4j-version>1.7.25</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
-    <spring-version>4.3.18.RELEASE</spring-version>
+    <spring-version>4.3.23.RELEASE</spring-version>
     <stax2-api-version>3.0.2</stax2-api-version>
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>1.7</velocity-version>
