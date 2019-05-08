@@ -41,6 +41,11 @@ public class JobSchedulerTestSupport {
 
     @Rule public TestName name = new TestName();
 
+    enum RestartType {
+        NORMAL,
+        FULL_RECOVERY
+    }
+
     protected String connectionUri;
     protected BrokerService broker;
     protected JobScheduler jobScheduler;
@@ -112,5 +117,23 @@ public class JobSchedulerTestSupport {
         answer.setSchedulerSupport(true);
         answer.setUseJmx(isUseJmx());
         return answer;
+    }
+
+    protected void restartBroker(RestartType restartType) throws Exception {
+        tearDown();
+
+        if (restartType == RestartType.FULL_RECOVERY)  {
+            File dir = broker.getSchedulerDirectoryFile();
+
+            if (dir != null) {
+                IOHelper.deleteFile(new File(dir, "scheduleDB.data"));
+                IOHelper.deleteFile(new File(dir, "scheduleDB.redo"));
+            }
+        }
+
+        broker = createBroker(false);
+
+        broker.start();
+        broker.waitUntilStarted();
     }
 }

@@ -657,22 +657,35 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
      * @param tx
      *        the transaction under which this operation was invoked.
      *
-     * @return a list of all referenced Location values for this JobSchedulerImpl
+     * @return a iterator of all referenced Location values for this JobSchedulerImpl
      *
      * @throws IOException if an error occurs walking the scheduler tree.
      */
-    protected List<JobLocation> getAllScheduledJobs(Transaction tx) throws IOException {
-        List<JobLocation> references = new ArrayList<>();
+    protected Iterator<JobLocation> getAllScheduledJobs(Transaction tx) throws IOException {
+        return new Iterator<JobLocation>() {
 
-        for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx); i.hasNext();) {
-            Map.Entry<Long, List<JobLocation>> entry = i.next();
-            List<JobLocation> scheduled = entry.getValue();
-            for (JobLocation job : scheduled) {
-                references.add(job);
+            final Iterator<Map.Entry<Long, List<JobLocation>>> mapIterator = index.iterator(tx);
+            Iterator<JobLocation> iterator;
+
+            @Override
+            public boolean hasNext() {
+
+                while (iterator == null || !iterator.hasNext()) {
+                    if (!mapIterator.hasNext()) {
+                        break;
+                    }
+
+                    iterator = new ArrayList<>(mapIterator.next().getValue()).iterator();
+                }
+
+                return iterator != null && iterator.hasNext();
             }
-        }
 
-        return references;
+            @Override
+            public JobLocation next() {
+                return iterator.next();
+            }
+        };
     }
 
     @Override
