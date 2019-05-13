@@ -270,6 +270,7 @@ public class CreateCommand extends AbstractCommand {
 
    private String getUnixActivemqData() {
        StringBuffer res = new StringBuffer();
+       res.append("!/bin/sh\n\n");
        res.append("## Figure out the ACTIVEMQ_BASE from the directory this script was run from\n");
        res.append("PRG=\"$0\"\n");
        res.append("progname=`basename \"$0\"`\n");
