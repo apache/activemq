@@ -32,6 +32,7 @@ import org.apache.log4j.spi.LoggingEvent;
 
 import javax.jms.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,14 +49,13 @@ public class UsageBlockedDispatchTest extends TestSupport {
     @Override
     public void setUp() throws Exception {
 
-        broker = new BrokerService();
+        broker = createBroker();
         broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.setAdvisorySupport(false);
         broker.setDeleteAllMessagesOnStartup(true);
 
-        setDefaultPersistenceAdapter(broker);
         SystemUsage sysUsage = broker.getSystemUsage();
         sysUsage.getMemoryUsage().setLimit(100*1024);
 
@@ -73,6 +73,12 @@ public class UsageBlockedDispatchTest extends TestSupport {
         broker.start();
 
         connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
+    }
+
+    protected BrokerService createBroker() throws IOException {
+        BrokerService broker = new BrokerService();
+        setDefaultPersistenceAdapter(broker);
+        return broker;
     }
 
     @Override
@@ -125,8 +131,7 @@ public class UsageBlockedDispatchTest extends TestSupport {
         Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = consumerSession.createConsumer(willGetAPage);
 
-        Message m = consumer.receive(messageReceiveTimeout);
-        assertNotNull("got a message", m);
+        consumer.receive(messageReceiveTimeout);
 
         final AtomicBoolean gotExpectedLogEvent = new AtomicBoolean(false);
         Appender appender = new DefaultTestAppender() {
@@ -144,7 +149,7 @@ public class UsageBlockedDispatchTest extends TestSupport {
 
             MessageConsumer noDispatchConsumer = consumerSession.createConsumer(shouldBeStuckForDispatch);
 
-            m = noDispatchConsumer.receive(messageReceiveTimeout);
+            Message m = noDispatchConsumer.receive(messageReceiveTimeout);
             assertNull("did not get a message", m);
 
             assertTrue("Got the new warning about the blocked cursor", gotExpectedLogEvent.get());

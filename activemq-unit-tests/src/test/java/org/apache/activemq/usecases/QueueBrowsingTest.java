@@ -201,6 +201,10 @@ public class QueueBrowsingTest {
             producer.send(session.createTextMessage(data));
         }
 
+        //Consume one message to free memory and allow the cursor to pageIn messages
+        MessageConsumer consumer = session.createConsumer(queue);
+        consumer.receive(1000);
+
         QueueBrowser browser = session.createBrowser(queue);
         Enumeration<?> enumeration = browser.getEnumeration();
         int received = 0;
