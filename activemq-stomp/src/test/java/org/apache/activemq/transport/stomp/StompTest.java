@@ -901,6 +901,7 @@ public class StompTest extends StompTestSupport {
         try {
             String f = stompConnection.receiveFrame();
             assertTrue(f.startsWith("ERROR"));
+            assertFalse("no stack trace impl leak:" + f, f.contains("at "));
         } catch (IOException socketMayBeClosedFirstByBroker) {}
     }
 
@@ -913,6 +914,7 @@ public class StompTest extends StompTestSupport {
         try {
             String f = stompConnection.receiveFrame();
             assertTrue(f.startsWith("ERROR"));
+            assertFalse("no stack trace impl leak:" + f, f.contains("at "));
         } catch (IOException socketMayBeClosedFirstByBroker) {}
     }
 
@@ -930,6 +932,7 @@ public class StompTest extends StompTestSupport {
         stompConnection.sendFrame(frame);
         String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("ERROR"));
+        assertFalse("no stack trace impl leak:" + f, f.contains("at "));
     }
 
     @Test(timeout = 60000)
@@ -946,6 +949,7 @@ public class StompTest extends StompTestSupport {
         stompConnection.sendFrame(frame);
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("ERROR"));
+        assertFalse("no stack trace impl leak:" + frame, frame.contains("at "));
     }
 
     @Test(timeout = 60000)
@@ -964,6 +968,7 @@ public class StompTest extends StompTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("ERROR"));
         assertTrue("Error Frame did not contain receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+        assertFalse("no stack trace impl leak:" + frame, frame.contains("at "));
     }
 
     @Test(timeout = 60000)

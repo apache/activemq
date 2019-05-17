@@ -297,7 +297,11 @@ public class ProtocolConverter {
         // Let the stomp client know about any protocol errors.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
-        exception.printStackTrace(stream);
+        if (exception instanceof SecurityException || exception.getCause() instanceof SecurityException) {
+            stream.write(exception.getLocalizedMessage());
+        } else {
+            exception.printStackTrace(stream);
+        }
         stream.close();
 
         HashMap<String, String> headers = new HashMap<>();
