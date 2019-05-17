@@ -1085,15 +1085,14 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             consumerInfos.add(consumerInfo);
         }
 
-        for (ConsumerInfo info : consumerInfos) {
-            connection.send(info);
-        }
-
         Message message = null;
         for (ConsumerInfo info : consumerInfos) {
+            // one by one registration to avoid ordering issue with concurrent dispatch from composite dests broker side
+            connection.request(info);
             for (int i = 0; i < numMessages; i++) {
                 message = receiveMessage(connection);
                 assertNotNull(message);
+                LOG.info("ORIG " + message.getMessageId());
                 connection.send(createAck(info, message, 1, MessageAck.DELIVERED_ACK_TYPE));
             }
             MessageAck ack = createAck(info, message, numMessages, MessageAck.STANDARD_ACK_TYPE);
@@ -1574,6 +1573,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     protected void configureBroker(BrokerService broker) throws Exception {
         super.configureBroker(broker);
         broker.setKeepDurableSubsActive(keepDurableSubsActive);
+        maxWait = 2000;
     }
 
     public static Test suite() {
