@@ -526,8 +526,6 @@ public class ProtocolConverter {
             sub.onStompCommit(activemqTx);
         }
 
-        pedingAcks.clear();
-
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
         tx.setTransactionId(activemqTx);
@@ -556,8 +554,6 @@ public class ProtocolConverter {
                 throw new ProtocolException("Transaction abort failed", false, e);
             }
         }
-
-        pedingAcks.clear();
 
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
