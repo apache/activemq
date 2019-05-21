@@ -361,6 +361,84 @@ public class Stomp12Test extends StompTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testClientIndividualAckPrefetchTransaction() throws Exception {
+
+        stompConnection.setVersion(Stomp.V1_2);
+
+        String connect = "STOMP\r\n" +
+                         "accept-version:1.2\r\n" +
+                         "login:system\r\n" +
+                         "passcode:manager\r\n" +
+                         "\r\n" +
+                         "\u0000\r\n";
+
+        stompConnection.sendFrame(connect);
+
+        String f = stompConnection.receiveFrame();
+        LOG.info("Broker sent: " + f);
+
+        assertTrue(f.startsWith("CONNECTED"));
+        assertTrue(f.indexOf("version:1.2") >= 0);
+        assertTrue(f.indexOf("session:") >= 0);
+
+        // Send 100 messages
+        for (int n = 0; n < 100; n++) {
+            String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + String.format("%d", n) + Stomp.NULL;
+            stompConnection.sendFrame(message);
+        }
+
+        // Subscribe to the queue
+        String subscribe = "SUBSCRIBE\n" +
+                           "id:1\n" +
+                           "activemq.prefetchSize:1\n" +
+                           "ack:client-individual\n" +
+                           "destination:/queue/" + getQueueName() + "\n" +
+                           "receipt:1\n" +
+                           "\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(subscribe);
+
+        StompFrame receipt = stompConnection.receive();
+        LOG.info("Broker sent: " + receipt);
+        assertTrue(receipt.getAction().startsWith("RECEIPT"));
+        String receiptId = receipt.getHeaders().get("receipt-id");
+        assertEquals("1", receiptId);
+
+
+        // Receive all 100 messages, each in their own transaction
+        // Ensure we don't have any errors
+        for (int n = 0; n < 100; n++) {
+            StompFrame received = stompConnection.receive();
+            LOG.info("Broker sent: " + received);
+            assertTrue(received.getAction().equals("MESSAGE"));
+            assertTrue(received.getHeaders().containsKey(Stomp.Headers.Message.ACK_ID));
+            assertEquals(String.format("%d", n), received.getBody());
+
+            // Ack & Commit the first message
+            String begin = "BEGIN\n" + "transaction:tx" + String.format("%d", n) + "\n\n" + Stomp.NULL;
+            stompConnection.sendFrame(begin);
+
+            String frame = "ACK\n" + "transaction:tx" + String.format("%d", n) + "\n" + "id:" +
+                    received.getHeaders().get(Stomp.Headers.Message.ACK_ID) + "\n\n" + Stomp.NULL;
+            stompConnection.sendFrame(frame);
+
+            String commit = "COMMIT\n" + "transaction:tx" + String.format("%d", n) + "\n\n" + Stomp.NULL;
+            stompConnection.sendFrame(commit);
+        }
+
+        // We're done
+        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getProxyToBroker().getCurrentConnectionsCount() <= 1;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
+    }
+
+    @Test(timeout = 60000)
     public void testQueueBrowerSubscription() throws Exception {
 
         final int MSG_COUNT = 10;
