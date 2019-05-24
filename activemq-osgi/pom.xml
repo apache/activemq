@@ -35,6 +35,7 @@
       !org.apache.commons.daemon,
       !org.apache.maven*,
       !com.google.thirdparty.publicsuffix,
+      !com.rometools*,
       sun.misc*;resolution:=optional,
       sun.nio*;resolution:=optional,
       javax.jmdns*;resolution:=optional,

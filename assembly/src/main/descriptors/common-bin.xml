@@ -283,8 +283,9 @@
         <include>org.eclipse.jetty.orbit:org.eclipse.jdt.core</include>
 
         <!-- Atom/RSS support -->
-        <include>rome:rome</include>
-        <include>jdom:jdom</include>
+        <include>com.rometools:rome</include>
+        <include>com.rometools:rome-utils</include>
+        <include>org.jdom:jdom2</include>
 
         <!-- REST API -->
         <include>org.jolokia:jolokia-core</include>
