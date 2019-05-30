@@ -1397,6 +1397,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if (before != null) {
                 before.sequenceAssignedWithIndexLocked(-1);
             }
+            // Moving the checkpoint pointer as there is no persistent operations in this transaction to be replayed
+            processLocation(location);
             return;
         }
 
