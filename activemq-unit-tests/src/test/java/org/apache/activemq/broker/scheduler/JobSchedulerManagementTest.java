@@ -23,6 +23,19 @@ import static org.junit.Assert.fail;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.concurrent.TimeUnit;
+import org.apache.activemq.ScheduledMessage;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.store.kahadb.disk.journal.DataFile;
+import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
+import org.apache.log4j.Level;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -44,13 +57,23 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(JobSchedulerManagementTest.class);
 
+    @Override
+    protected BrokerService createBroker() throws Exception {
+        BrokerService brokerService = createBroker(true);
+        ((JobSchedulerStoreImpl) brokerService.getJobSchedulerStore()).setCleanupInterval(500);
+        ((JobSchedulerStoreImpl) brokerService.getJobSchedulerStore()).setJournalMaxFileLength(100* 1024);
+        return brokerService;
+    }
+
     @Test
     public void testRemoveAllScheduled() throws Exception {
-        final int COUNT = 5;
+        org.apache.log4j.Logger.getLogger(Transaction.class).setLevel(Level.DEBUG);
+        final int COUNT = 5000;
+        System.setProperty("maxKahaDBTxSize", "" + (500*1024));
         Connection connection = createConnection();
 
         // Setup the scheduled Message
-        scheduleMessage(connection, TimeUnit.SECONDS.toMillis(6), COUNT);
+        scheduleMessage(connection, TimeUnit.SECONDS.toMillis(180), COUNT);
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -79,6 +102,7 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // Now wait and see if any get delivered, none should.
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), COUNT);
+        assertEquals(1, getNumberOfJournalFiles());
 
         connection.close();
     }
@@ -422,5 +446,16 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         }
 
         producer.close();
+    }
+
+    private int getNumberOfJournalFiles() throws IOException, InterruptedException {
+        Collection<DataFile> files = ((JobSchedulerStoreImpl) broker.getJobSchedulerStore()).getJournal().getFileMap().values();
+        int reality = 0;
+        for (DataFile file : files) {
+            if (file != null) {
+                reality++;
+            }
+        }
+        return reality;
     }
 }
