@@ -56,7 +56,6 @@ import org.apache.activemq.store.TransactionIdTransformer;
 import org.apache.activemq.store.TransactionIdTransformerAware;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
-import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
@@ -552,6 +551,15 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     public int getJournalWriteBatchSize() {
         return transactionStore.getJournalMaxWriteBatchSize();
+    }
+
+
+    public void setJournalCleanupInterval(long journalCleanupInterval) {
+        transactionStore.setJournalCleanupInterval(journalCleanupInterval);
+    }
+
+    public long getJournalCleanupInterval() {
+        return transactionStore.getJournalCleanupInterval();
     }
 
     public List<PersistenceAdapter> getAdapters() {

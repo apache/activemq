@@ -124,6 +124,14 @@ public class Journal {
         }
     }
 
+    public void setCleanupInterval(long cleanupInterval) {
+        this.cleanupInterval = cleanupInterval;
+    }
+
+    public long getCleanupInterval() {
+        return cleanupInterval;
+    }
+
     public enum PreallocationStrategy {
         SPARSE_FILE,
         OS_KERNEL_COPY,
@@ -230,6 +238,7 @@ public class Journal {
     protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
     private File osKernelCopyTemplateFile = null;
     private ByteBuffer preAllocateDirectBuffer = null;
+    private long cleanupInterval = DEFAULT_CLEANUP_INTERVAL;
 
     protected JournalDiskSyncStrategy journalDiskSyncStrategy = JournalDiskSyncStrategy.ALWAYS;
 
@@ -345,7 +354,7 @@ public class Journal {
             public void run() {
                 cleanup();
             }
-        }, DEFAULT_CLEANUP_INTERVAL, DEFAULT_CLEANUP_INTERVAL, TimeUnit.MILLISECONDS);
+        }, cleanupInterval, cleanupInterval, TimeUnit.MILLISECONDS);
 
         long end = System.currentTimeMillis();
         LOG.trace("Startup took: "+(end-start)+" ms");
