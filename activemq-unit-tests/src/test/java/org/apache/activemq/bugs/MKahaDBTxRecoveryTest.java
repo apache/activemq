@@ -207,7 +207,7 @@ public class MKahaDBTxRecoveryTest {
 
         multiKahaDBPersistenceAdapter.setFilteredPersistenceAdapters(adapters);
         multiKahaDBPersistenceAdapter.setJournalMaxFileLength(4*1024);
-        multiKahaDBPersistenceAdapter.setJournalCleanupInterval(CLEANUP_INTERVAL_MILLIS);
+        multiKahaDBPersistenceAdapter.setJournalCleanupInterval(10);
 
         broker = createBroker(multiKahaDBPersistenceAdapter);
     }
