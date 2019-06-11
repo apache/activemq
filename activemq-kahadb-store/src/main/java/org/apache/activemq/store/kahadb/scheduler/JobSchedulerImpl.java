@@ -20,6 +20,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -578,6 +579,9 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
             }
         }
 
+        List<Integer> removedJobFileIds = new ArrayList<>();
+        HashMap<Integer, Integer> decrementJournalCount = new HashMap<>();
+
         for (Long executionTime : keys) {
             List<JobLocation> values = this.index.remove(tx, executionTime);
             if (location != null) {
@@ -586,9 +590,9 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
                     // Remove the references for add and reschedule commands for this job
                     // so that those logs can be GC'd when free.
-                    this.store.decrementJournalCount(tx, job.getLocation());
+                    decrementJournalCount.compute(job.getLocation().getDataFileId(), (key, value) -> value == null ? 1 : value + 1);
                     if (job.getLastUpdate() != null) {
-                        this.store.decrementJournalCount(tx, job.getLastUpdate());
+                        decrementJournalCount.compute(job.getLastUpdate().getDataFileId(), (key, value) -> value == null ? 1 : value + 1);
                     }
 
                     // now that the job is removed from the index we can store the remove info and
@@ -597,10 +601,18 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                     // the same file we don't need to track it and just let a normal GC of the logs
                     // remove it when the log is unreferenced.
                     if (job.getLocation().getDataFileId() != location.getDataFileId()) {
-                        this.store.referenceRemovedLocation(tx, location, job);
+                        removedJobFileIds.add(job.getLocation().getDataFileId());
                     }
                 }
             }
+        }
+
+        if (!removedJobFileIds.isEmpty()) {
+            this.store.referenceRemovedLocation(tx, location, removedJobFileIds);
+        }
+
+        if (decrementJournalCount.size() > 0) {
+            this.store.decrementJournalCount(tx, decrementJournalCount);
         }
     }
 
