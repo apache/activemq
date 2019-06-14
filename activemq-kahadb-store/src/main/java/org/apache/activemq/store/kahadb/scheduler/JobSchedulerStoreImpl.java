@@ -322,7 +322,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
 
             @Override
             public boolean accept(File dir, String name) {
-                if (name.endsWith(".data") || name.endsWith(".redo") || name.endsWith(".log")) {
+                if (name.endsWith(".data") || name.endsWith(".redo") || name.endsWith(".log") || name.endsWith(".free")) {
                     return true;
                 }
                 return false;
