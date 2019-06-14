@@ -60,8 +60,10 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService brokerService = createBroker(true);
-        ((JobSchedulerStoreImpl) brokerService.getJobSchedulerStore()).setCleanupInterval(500);
-        ((JobSchedulerStoreImpl) brokerService.getJobSchedulerStore()).setJournalMaxFileLength(100* 1024);
+        if (isPersistent()) {
+            ((JobSchedulerStoreImpl) brokerService.getJobSchedulerStore()).setCleanupInterval(500);
+            ((JobSchedulerStoreImpl) brokerService.getJobSchedulerStore()).setJournalMaxFileLength(100 * 1024);
+        }
         return brokerService;
     }
 
@@ -102,7 +104,10 @@ public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
         // Now wait and see if any get delivered, none should.
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), COUNT);
-        assertEquals(1, getNumberOfJournalFiles());
+
+        if (isPersistent()) {
+            assertEquals(1, getNumberOfJournalFiles());
+        }
 
         connection.close();
     }
