@@ -38,6 +38,7 @@ public class TextFileCertificateLoginModuleTest {
 
     private static final String CERT_USERS_FILE_SMALL = "cert-users-SMALL.properties";
     private static final String CERT_USERS_FILE_LARGE = "cert-users-LARGE.properties";
+    private static final String CERT_USERS_FILE_REGEXP = "cert-users-REGEXP.properties";
     private static final String CERT_GROUPS_FILE = "cert-groups.properties";
 
     private static final Logger LOG = LoggerFactory.getLogger(TextFileCertificateLoginModuleTest.class);
@@ -74,6 +75,11 @@ public class TextFileCertificateLoginModuleTest {
     @Test
     public void testLoginWithLARGEUsersFile() throws Exception {
         loginTest(CERT_USERS_FILE_LARGE, CERT_GROUPS_FILE);
+    }
+
+    @Test
+    public void testLoginWithREGEXPUsersFile() throws Exception {
+        loginTest(CERT_USERS_FILE_REGEXP, CERT_GROUPS_FILE);
     }
 
     private void loginTest(String usersFiles, String groupsFile) throws LoginException {
