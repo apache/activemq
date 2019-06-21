@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,9 +34,11 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
@@ -57,6 +60,8 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
     private BrokerService broker;
 
     protected void setUp() throws Exception {
+        produced.set(0);
+        consumed.set(0);
         // Setup and start the broker
         broker = new BrokerService();
         broker.setBrokerName(brokerName);
@@ -196,6 +201,119 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
             LOG.info("BlockedCount: " + blockedCounter.get() + ", Warnings:" + warnings.get());
             assertTrue("got a few warnings", warnings.get() > 1);
             assertTrue("warning limited", warnings.get() < blockedCounter.get());
+
+        } finally {
+            log4jLogger.removeAppender(appender);
+        }
+    }
+
+
+    public void testTransactedProducerBlockedAndClosedWillRelease() throws Exception {
+        doTestTransactedProducerBlockedAndClosedWillRelease(false);
+    }
+
+    public void testTransactedSyncSendProducerBlockedAndClosedWillRelease() throws Exception {
+        doTestTransactedProducerBlockedAndClosedWillRelease(true);
+    }
+
+    public void doTestTransactedProducerBlockedAndClosedWillRelease(final boolean alwaysSyncSend) throws Exception {
+
+        // Create the connection factory
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
+        connectionFactory.setWatchTopicAdvisories(false);
+        connectionFactory.setAlwaysSyncSend(alwaysSyncSend);
+        Connection c = connectionFactory.createConnection();
+        c.start();
+
+
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setAll(5000);
+        connectionFactory.setPrefetchPolicy(prefetchPolicy);
+        // Start the test destination listener
+        Session listenerSession = c.createSession(false, 1);
+        Destination destination = createDestination(listenerSession);
+
+
+        final AtomicInteger warnings = new AtomicInteger();
+        Appender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel().equals(Level.WARN) && event.getMessage().toString().contains("Usage Manager memory limit reached")) {
+                    LOG.info("received  log message: " + event.getMessage());
+                    warnings.incrementAndGet();
+                }
+            }
+        };
+        org.apache.log4j.Logger log4jLogger =
+                org.apache.log4j.Logger.getLogger(Topic.class);
+        log4jLogger.addAppender(appender);
+        try {
+
+            // Start producing the test messages
+            final Session session = connectionFactory.createConnection().createSession(true, Session.SESSION_TRANSACTED);
+            final MessageProducer producer = session.createProducer(destination);
+
+            Thread producingThread = new Thread("Producing Thread") {
+                public void run() {
+                    try {
+                        for (long i = 0; i < numMessagesToSend; i++) {
+                            producer.send(session.createTextMessage("test"));
+
+                            long count = produced.incrementAndGet();
+                            if (count % 10000 == 0) {
+                                LOG.info("Produced " + count + " messages");
+                            }
+                        }
+                    } catch (Throwable ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        try {
+                            producer.close();
+                            session.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            };
+
+            producingThread.start();
+
+
+            assertTrue("Producer got blocked", Wait.waitFor(new Wait.Condition() {
+                public boolean isSatisified() throws Exception {
+                    return warnings.get() > 0;
+                }
+            }, 5 * 1000));
+
+
+            LOG.info("Produced: " + produced.get() + ", Warnings:" + warnings.get());
+
+            assertTrue("Producer got blocked", Wait.waitFor(new Wait.Condition() {
+                public boolean isSatisified() throws Exception {
+                    return warnings.get() > 0;
+                }
+            }, 5 * 1000));
+
+
+            final long enqueueCountWhenBlocked = broker.getDestination(ActiveMQDestination.transform(destination)).getDestinationStatistics().getEnqueues().getCount();
+
+            // now whack the hung connection broker side (mimic jmx), and verify usage gone b/c of rollback
+            for (TransportConnection transportConnection : broker.getTransportConnectors().get(0).getConnections()) {
+                transportConnection.serviceException(new IOException("forcing close for hung connection"));
+            }
+
+            assertTrue("Usage gets released on close", Wait.waitFor(new Wait.Condition() {
+                public boolean isSatisified() throws Exception {
+                    LOG.info("Usage: " + broker.getSystemUsage().getMemoryUsage().getUsage());
+
+                    return broker.getSystemUsage().getMemoryUsage().getUsage() == 0;
+                }
+            }, 5 * 1000));
+
+            c.close();
+
+            // verify no pending sends completed in rolledback tx
+            assertEquals("nothing sent during close", enqueueCountWhenBlocked, broker.getDestination(ActiveMQDestination.transform(destination)).getDestinationStatistics().getEnqueues().getCount());
 
         } finally {
             log4jLogger.removeAppender(appender);

@@ -670,7 +670,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                                     // While waiting for space to free up... the
                                     // transaction may be done
                                     if (message.isInTransaction()) {
-                                        if (context.getTransaction().getState() > IN_USE_STATE) {
+                                        if (context.getTransaction() == null || context.getTransaction().getState() > IN_USE_STATE) {
                                             throw new JMSException("Send transaction completed while waiting for space");
                                         }
                                     }

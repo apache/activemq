@@ -94,7 +94,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
      * @return true if space
      */
     @Override
-    public boolean waitForSpace(long timeout) throws InterruptedException {
+    public boolean waitForSpace(final long timeout) throws InterruptedException {
         if (parent != null) {
             if (!parent.waitForSpace(timeout)) {
                 return false;
@@ -106,12 +106,15 @@ public class MemoryUsage extends Usage<MemoryUsage> {
                 usageLock.readLock().unlock();
                 usageLock.writeLock().lock();
                 try {
-                    while (percentUsage >= 100 ) {
-                        waitForSpaceCondition.await(timeout, TimeUnit.MILLISECONDS);
+                    final long deadline = timeout > 0 ? System.currentTimeMillis() + timeout : Long.MAX_VALUE;
+                    long timeleft = deadline;
+                    while (percentUsage >= 100 && timeleft > 0) {
+                        waitForSpaceCondition.await(Math.min(getPollingTime(), timeleft), TimeUnit.MILLISECONDS);
+                        timeleft = deadline - System.currentTimeMillis();
                     }
-                    usageLock.readLock().lock();
                 } finally {
                     usageLock.writeLock().unlock();
+                    usageLock.readLock().lock();
                 }
             }
 
