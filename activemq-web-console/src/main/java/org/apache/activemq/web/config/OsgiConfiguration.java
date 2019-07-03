@@ -34,12 +34,12 @@ public class OsgiConfiguration extends AbstractConfiguration implements ManagedS
     private ServiceRegistration service;
 
     private String jmxUrl = "service:jmx:rmi:///jndi/rmi://localhost:1099/karaf-root";
-    private String jmxUser = "karaf";
-    private String jmxPassword = "karaf";
+    private String jmxUser;
+    private String jmxPassword;
 
     private String jmsUrl = "tcp://localhost:61616";
-    private String jmsUser = "karaf";
-    private String jmsPassword = "karaf";
+    private String jmsUser;
+    private String jmsPassword;
 
     public OsgiConfiguration() {
 
