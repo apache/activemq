@@ -16,10 +16,12 @@
  */
 package org.apache.activemq.network;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +32,8 @@ import javax.jms.Session;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.DestinationStatistics;
@@ -227,5 +231,25 @@ public abstract class DynamicNetworkTestSupport {
         }, 10000, 500));
     }
 
+    protected void assertSubscriptionMapCounts(NetworkBridge networkBridge, final int count) {
+        assertNotNull(networkBridge);
+        DemandForwardingBridgeSupport bridge = (DemandForwardingBridgeSupport) networkBridge;
+        assertEquals(count, bridge.subscriptionMapByLocalId.size());
+        assertEquals(count, bridge.subscriptionMapByRemoteId.size());
+    }
+
+    protected DemandForwardingBridge findDuplexBridge(final TransportConnector connector) throws Exception {
+        assertNotNull(connector);
+
+        for (TransportConnection tc : connector.getConnections()) {
+            if (tc.getConnectionId().startsWith("networkConnector_")) {
+                final Field bridgeField = TransportConnection.class.getDeclaredField("duplexBridge");
+                bridgeField.setAccessible(true);
+                return (DemandForwardingBridge) bridgeField.get(tc);
+            }
+        }
+
+        return null;
+    }
 
 }
