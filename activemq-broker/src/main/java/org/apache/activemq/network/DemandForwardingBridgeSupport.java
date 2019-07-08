@@ -1073,8 +1073,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             sending.setConnectionId(this.localConnectionInfo.getConnectionId());
             localBroker.oneway(sending);
 
-            //remove subscriber from map
+            //remove subscriber from local map
             i.remove();
+
+            //need to remove the mapping from the remote map as well
+            subscriptionMapByRemoteId.remove(ds.getRemoteInfo().getConsumerId());
         }
     }
 
