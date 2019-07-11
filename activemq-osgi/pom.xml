@@ -164,7 +164,8 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
       <exclusions>
-      <exclusion>
+        <exclusion>
+          <groupId>${project.groupId}</groupId>
           <artifactId>activemq-all</artifactId>
         </exclusion>
       </exclusions>
