@@ -182,7 +182,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         }
     }
 
-    public static Class<?> loadClass(String name, ClassLoader loader) throws ClassNotFoundException {
+    private static Class<?> loadClass(String name, ClassLoader loader) throws ClassNotFoundException {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         if (contextClassLoader != null) {
             try {
