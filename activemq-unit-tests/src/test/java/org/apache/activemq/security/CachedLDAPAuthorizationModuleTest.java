@@ -39,6 +39,7 @@ public class CachedLDAPAuthorizationModuleTest extends AbstractCachedLDAPAuthori
     protected SimpleCachedLDAPAuthorizationMap createMap() {
         SimpleCachedLDAPAuthorizationMap map = super.createMap();
         map.setConnectionURL("ldap://localhost:" + getLdapServer().getPort());
+        map.setConnectionPassword("secret");
         return map;
     }
     
