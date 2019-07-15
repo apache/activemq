@@ -89,7 +89,7 @@
     <junit-version>4.12</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>4.2.3</karaf-version>
+    <karaf-version>4.2.6</karaf-version>
     <leveldb-api-version>0.9</leveldb-api-version>
     <leveldb-version>0.9</leveldb-version>
     <leveldbjni-version>1.8</leveldbjni-version>
@@ -151,7 +151,7 @@
 
     <!-- Maven Plugin Version for this Project -->
     <maven-bundle-plugin-version>2.3.7</maven-bundle-plugin-version>
-    <maven-surefire-plugin-version>2.16</maven-surefire-plugin-version>
+    <maven-surefire-plugin-version>2.22.1</maven-surefire-plugin-version>
     <maven-antrun-plugin-version>1.3</maven-antrun-plugin-version>
     <maven-assembly-plugin-version>2.4</maven-assembly-plugin-version>
     <maven-release-plugin-version>2.4.1</maven-release-plugin-version>
