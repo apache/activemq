@@ -39,7 +39,7 @@
 
           <authorizationPlugin>
               <map>
-                <cachedLDAPAuthorizationMap connectionURL="ldap://localhost:${ldapPort}"/>
+                <cachedLDAPAuthorizationMap connectionURL="ldap://localhost:${ldapPort}" connectionPassword="secret" />
               </map>
           </authorizationPlugin>
       </plugins>
