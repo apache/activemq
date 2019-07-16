@@ -66,7 +66,7 @@ public class MessageServlet extends MessageServletSupport {
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 20000;
     private long requestTimeout = 1000;
-    private String defaultContentType = "application/xml";
+    private String defaultContentType;
 
     private final HashMap<String, WebClient> clients = new HashMap<String, WebClient>();
     private final HashSet<MessageAvailableConsumer> activeConsumers = new HashSet<MessageAvailableConsumer>();
@@ -285,15 +285,16 @@ public class MessageServlet extends MessageServletSupport {
             response.setHeader("Pragma", "no-cache"); // HTTP 1.0
             response.setDateHeader("Expires", 0);
 
-
             // Set content type as in request. This should be done before calling getWriter by specification
-            String type = request.getContentType();
+            String type = getContentType(request);
 
             if (type != null) {
                 response.setContentType(type);
             } else {
-                if (isXmlContent(message)) {
+                if (defaultContentType != null) {
                     response.setContentType(defaultContentType);
+                } else if (isXmlContent(message)) {
+                    response.setContentType("application/xml");
                 } else {
                     response.setContentType("text/plain");
                 }
