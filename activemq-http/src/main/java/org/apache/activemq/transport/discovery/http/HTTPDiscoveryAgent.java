@@ -38,7 +38,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
     private static final Logger LOG = LoggerFactory.getLogger(HTTPDiscoveryAgent.class);
 
     private String registryURL = "http://localhost:8080/discovery-registry/default";
-    private HttpClient httpClient = new DefaultHttpClient();
+    private HttpClient httpClient = HttpClientBuilder.create().build();
     private AtomicBoolean running = new AtomicBoolean();
     private final AtomicReference<DiscoveryListener> discoveryListener = new AtomicReference<DiscoveryListener>();
     private final HashSet<String> registeredServices = new HashSet<String>();
