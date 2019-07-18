@@ -63,7 +63,7 @@
     <directory-version>2.0.0-M6</directory-version>
     <ftpserver-version>1.0.6</ftpserver-version>
     <geronimo-version>1.0</geronimo-version>
-    <guava-version>18.0</guava-version>
+    <guava-version>28.0-jre</guava-version>
     <hadoop-version>1.0.4</hadoop-version>
     <hawtbuf-version>1.11</hawtbuf-version>
     <hawtdispatch-version>1.22</hawtdispatch-version>
