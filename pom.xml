@@ -119,7 +119,7 @@
     <scalatest-version>2.1.5</scalatest-version>
     <slf4j-version>1.7.25</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
-    <spring-version>4.3.23.RELEASE</spring-version>
+    <spring-version>4.3.24.RELEASE</spring-version>
     <stax2-api-version>3.0.2</stax2-api-version>
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>1.7</velocity-version>
@@ -129,7 +129,7 @@
     <xmlbeans-bundle-version>2.6.0_2</xmlbeans-bundle-version>
     <xmlresolver-bundle-version>1.2_5</xmlresolver-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
-    <xstream-version>1.4.10</xstream-version>
+    <xstream-version>1.4.11.1</xstream-version>
     <xbean-version>4.2</xbean-version>
     <xerces-version>2.12.0</xerces-version>
     <jaxb-basics-version>0.6.4</jaxb-basics-version>

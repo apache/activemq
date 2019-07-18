@@ -34,7 +34,7 @@
     <xpp3-bundle-version>1.1.4c_5</xpp3-bundle-version>
     <jodatime-bundle-version>2.9</jodatime-bundle-version>
     <dom4j-bundle-version>1.6.1_2</dom4j-bundle-version>
-    <xstream-bundle-version>1.4.8_1</xstream-bundle-version>
+    <xstream-bundle-version>1.4.11.1_1</xstream-bundle-version>
     <servicemix.specs.version>2.4.0</servicemix.specs.version>
   </properties>
 
