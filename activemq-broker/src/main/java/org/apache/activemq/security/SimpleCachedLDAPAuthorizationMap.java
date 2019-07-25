@@ -64,7 +64,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     private final String initialContextFactory = "com.sun.jndi.ldap.LdapCtxFactory";
     private String connectionURL = "ldap://localhost:1024";
     private String connectionUsername = "uid=admin,ou=system";
-    private String connectionPassword = "secret";
+    private String connectionPassword;
     private String connectionProtocol = "s";
     private String authentication = "simple";
 

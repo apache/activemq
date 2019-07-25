@@ -102,7 +102,6 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         initialContextFactory = "com.sun.jndi.ldap.LdapCtxFactory";
         connectionURL = "ldap://localhost:10389";
         connectionUsername = "uid=admin,ou=system";
-        connectionPassword = "secret";
         connectionProtocol = "s";
         authentication = "simple";
 

@@ -65,6 +65,7 @@ public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
         authMap.setQueueSearchMatchingFormat(new MessageFormat("uid={0},ou=queues,ou=destinations,o=ActiveMQ,ou=system"));
         authMap.setAdvisorySearchBase("uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,ou=system");
         authMap.setTempSearchBase("uid=ActiveMQ.Temp,ou=topics,ou=destinations,o=ActiveMQ,ou=system");
+        authMap.setConnectionPassword("secret");
     }
 
     @Test
