@@ -138,7 +138,7 @@
     <pax-exam-version>4.9.1</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
     <pax-runner-version>1.8.6</pax-runner-version>
-    <pax-url-version>2.4.3</pax-url-version>
+    <pax-url-version>2.6.1</pax-url-version>
     <felix-configadmin-version>1.8.0</felix-configadmin-version>
     <felix-framework-version>5.0.1</felix-framework-version>
 
@@ -176,6 +176,7 @@
     <maven-project-info-reports-plugin-version>2.7</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.30</maven-graph-plugin-version>
     <maven-plugin-plugin-version>3.6.0</maven-plugin-plugin-version>
+    <maven-core-version>3.6.1</maven-core-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
