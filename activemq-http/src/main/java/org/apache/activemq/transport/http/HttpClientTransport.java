@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HttpClientTransport extends HttpTransportSupport {
 
-    public static final int MAX_CLIENT_TIMEOUT = 30000;
+    public static final int MAX_CLIENT_TIMEOUT = 90000;
     private static final Logger LOG = LoggerFactory.getLogger(HttpClientTransport.class);
     private static final IdGenerator CLIENT_ID_GENERATOR = new IdGenerator();
 
