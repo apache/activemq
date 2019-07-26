@@ -24,11 +24,13 @@ import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.http.HttpClientTransport;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 public class HttpsClientTransport extends HttpClientTransport {
 
@@ -37,19 +39,17 @@ public class HttpsClientTransport extends HttpClientTransport {
     }
 
     @Override
-    protected ClientConnectionManager createClientConnectionManager() {
-        PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager(createSchemeRegistry());
-        return connectionManager;
+    protected HttpClientConnectionManager createClientConnectionManager() {
+        return new PoolingHttpClientConnectionManager(createRegistry());
     }
 
-    private SchemeRegistry createSchemeRegistry() {
+    private Registry<ConnectionSocketFactory> createRegistry() {
 
-        SchemeRegistry schemeRegistry = new SchemeRegistry();
+        RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create();
         try {
-            SSLSocketFactory sslSocketFactory = new SSLSocketFactory(createSocketFactory(),
-                    SSLSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
-            schemeRegistry.register(new Scheme("https", getRemoteUrl().getPort(), sslSocketFactory));
-            return schemeRegistry;
+            SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(createSocketFactory(), new DefaultHostnameVerifier());
+            registryBuilder.register("https", sslConnectionFactory);
+            return registryBuilder.build();
         } catch (Exception e) {
             throw new IllegalStateException("Failure trying to create scheme registry", e);
         }
