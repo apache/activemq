@@ -96,7 +96,7 @@ public class ManagedRegionBroker extends RegionBroker {
     private final Map<ObjectName, ProducerView> dynamicDestinationProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
     private final Map<SubscriptionKey, ObjectName> subscriptionKeys = new ConcurrentHashMap<SubscriptionKey, ObjectName>();
     private final Map<Subscription, ObjectName> subscriptionMap = new ConcurrentHashMap<Subscription, ObjectName>();
-    private final Set<ObjectName> registeredMBeans = new CopyOnWriteArraySet<ObjectName>();
+    private final Set<ObjectName> registeredMBeans = new ConcurrentHashMap<>().newKeySet();
     /* This is the first broker in the broker interceptor chain. */
     private Broker contextBroker;
 
