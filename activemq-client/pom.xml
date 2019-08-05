@@ -32,6 +32,15 @@
 
   <properties>
     <surefire.argLine>-Xmx512M</surefire.argLine>
+    <activemq.osgi.import.pkg>
+      !com.google.errorprone.annotations,
+      !com.google.errorprone.annotations.concurrent,
+      *
+    </activemq.osgi.import.pkg>
+    <activemq.osgi.private.pkg>
+      com.google.errorprone.annotations,
+      com.google.errorprone.annotations.concurrent
+    </activemq.osgi.private.pkg>
   </properties>
 
   <dependencies>
