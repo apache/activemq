@@ -73,7 +73,7 @@
     <httpcore-version>4.4.11</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.9.9</jackson-version>
-    <jackson-databind-version>2.9.9.1</jackson-databind-version>
+    <jackson-databind-version>2.9.9.3</jackson-databind-version>
     <jasypt-version>1.9.2</jasypt-version>
     <jaxb-bundle-version>2.2.11_1</jaxb-bundle-version>
     <jetty9-version>9.2.26.v20180806</jetty9-version>
