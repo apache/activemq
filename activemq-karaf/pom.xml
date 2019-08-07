@@ -153,7 +153,7 @@
                 </artifact>
                 <artifact>
                   <file>target/classes/activemq.xml</file>
-                  <type>xml</type>
+                  <type>xml</type>>
                   <classifier>activemq</classifier>
                 </artifact>
                 <artifact>
@@ -179,12 +179,17 @@
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Export-Package>org.apache.activemq.karaf*;version=${project.version};-split-package:=merge-first</Export-Package>
             <Import-Package>
+              !com.google.errorprone.annotations,
+              !com.google.errorprone.annotations.concurrent,
               org.apache.felix.gogo.commands,
               org.apache.karaf.shell.console;version="[2,4)",
               org.apache.karaf.shell.console.commands;version="[2,4)",
               *
             </Import-Package>
-            <Private-Package>!*</Private-Package>
+            <Private-Package>
+              com.google.errorprone.annotations,
+              com.google.errorprone.annotations.concurrent
+            </Private-Package>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             <Embed-Transitive>true</Embed-Transitive>
           </instructions>
