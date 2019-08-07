@@ -103,7 +103,7 @@
     <org.osgi.core-version>4.3.1</org.osgi.core-version>
     <p2psockets-version>1.1.2</p2psockets-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
-    <zookeeper-version>3.4.6</zookeeper-version>
+    <zookeeper-version>3.4.14</zookeeper-version>
     <qpid-proton-version>0.33.1</qpid-proton-version>
     <qpid-jms-version>0.44.0</qpid-jms-version>
     <qpid-jms-netty-version>4.1.37.Final</qpid-jms-netty-version>
