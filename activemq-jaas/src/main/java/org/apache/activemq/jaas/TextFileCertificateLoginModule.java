@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
@@ -32,13 +33,14 @@ import javax.security.auth.login.LoginException;
 /**
  * A LoginModule allowing for SSL certificate based authentication based on
  * Distinguished Names (DN) stored in text files. The DNs are parsed using a
- * Properties class where each line is <user_name>=<user_DN>. This class also
- * uses a group definition file where each line is <group_name>=<user_name_1>,<user_name_2>,etc.
+ * Properties class where each line is either <UserName>=<StringifiedSubjectDN>
+ * or <UserName>=/<SubjectDNRegExp>/. This class also uses a group definition
+ * file where each line is <GroupName>=<UserName1>,<UserName2>,etc.
  * The user and group files' locations must be specified in the
  * org.apache.activemq.jaas.textfiledn.user and
- * org.apache.activemq.jaas.textfiledn.user properties respectively. NOTE: This
- * class will re-read user and group files for every authentication (i.e it does
- * live updates of allowed groups and users).
+ * org.apache.activemq.jaas.textfiledn.group properties respectively.
+ * NOTE: This class will re-read user and group files for every authentication
+ * (i.e it does live updates of allowed groups and users).
  *
  * @author sepandm@gmail.com (Sepand)
  */
@@ -48,6 +50,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
     private static final String GROUP_FILE_PROP_NAME = "org.apache.activemq.jaas.textfiledn.group";
 
     private Map<String, Set<String>> groupsByUser;
+    private Map<String, Pattern> regexpByUser;
     private Map<String, String> usersByDn;
 
     /**
@@ -58,6 +61,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         super.initialize(subject, callbackHandler, sharedState, options);
 
         usersByDn = load(USER_FILE_PROP_NAME, "", options).invertedPropertiesMap();
+        regexpByUser = load(USER_FILE_PROP_NAME, "", options).regexpPropertiesMap();
         groupsByUser = load(GROUP_FILE_PROP_NAME, "", options).invertedPropertiesValuesMap();
      }
 
@@ -76,8 +80,8 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         if (certs == null) {
             throw new LoginException("Client certificates not found. Cannot authenticate.");
         }
-
-        return usersByDn.get(getDistinguishedName(certs));
+        String dn = getDistinguishedName(certs);
+        return usersByDn.containsKey(dn) ? usersByDn.get(dn) : getUserByRegexp(dn);
     }
 
     /**
@@ -96,4 +100,17 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         }
         return userGroups;
     }
+
+    private synchronized String getUserByRegexp(String dn) {
+        String name = null;
+        for (Map.Entry<String, Pattern> val : regexpByUser.entrySet()) {
+            if (val.getValue().matcher(dn).matches()) {
+                name = val.getKey();
+                break;
+            }
+        }
+        usersByDn.put(dn, name);
+        return name;
+    }
+
 }
