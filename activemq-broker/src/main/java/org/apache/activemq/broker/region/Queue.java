@@ -1471,10 +1471,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         int count = 0;
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         do {
-            int oldMaxSize = getMaxPageSize();
-            setMaxPageSize((int) this.destinationStatistics.getMessages().getCount());
-            doPageIn(true);
-            setMaxPageSize(oldMaxSize);
+            doPageIn(true, false, (messages.isCacheEnabled() || !broker.getBrokerService().isPersistent()) ? messages.size() : getMaxBrowsePageSize());
             pagedInMessagesLock.readLock().lock();
             try {
                 set.addAll(pagedInMessages.values());
