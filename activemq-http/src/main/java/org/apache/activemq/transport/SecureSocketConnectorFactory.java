@@ -92,7 +92,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
                     factory.setSecureRandomAlgorithm(secureRandomCertficateAlgorithm);
                 }
                 if (keyCertificateAlgorithm != null) {
-                    factory.setSslKeyManagerFactoryAlgorithm(keyCertificateAlgorithm);
+                    factory.setKeyManagerFactoryAlgorithm(keyCertificateAlgorithm);
                 }
                 if (trustCertificateAlgorithm != null) {
                     factory.setTrustManagerFactoryAlgorithm(trustCertificateAlgorithm);
