@@ -80,6 +80,7 @@
       <!-- using it for Jetty's JNDI context to work /w Joram tests. -->
       <groupId>org.eclipse.jetty.aggregate</groupId>
       <artifactId>jetty-all</artifactId>
+      <classifier>uber</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
