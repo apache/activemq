@@ -23,8 +23,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,10 +49,13 @@ import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.activemq.util.Wait;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.message.impl.MessageImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -64,6 +69,8 @@ import org.slf4j.LoggerFactory;
 public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AmqpSendReceiveTest.class);
+
+    private static final int PAYLOAD = 110 * 1024;
 
     @Test(timeout = 60000)
     public void testSimpleSendOneReceiveOneToQueue() throws Exception {
@@ -857,5 +864,67 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         sender.close();
         receiver.close();
         connection.close();
+    }
+
+   @Test(timeout = 60000)
+   public void testSendAMQPMessageWithComplexAnnotationsReceiveAMQP() throws Exception {
+      String testQueueName = "ConnectionFrameSize";
+      int nMsgs = 200;
+
+      AmqpClient client = createAmqpClient();
+
+      Symbol annotation = Symbol.valueOf("x-opt-embedded-map");
+      Map<String, String> embeddedMap = new LinkedHashMap<>();
+      embeddedMap.put("test-key-1", "value-1");
+      embeddedMap.put("test-key-2", "value-2");
+      embeddedMap.put("test-key-3", "value-3");
+
+      {
+         AmqpConnection connection = client.connect();
+         AmqpSession session = connection.createSession();
+         AmqpSender sender = session.createSender(testQueueName);
+         AmqpMessage message = createAmqpMessage((byte) 'A', PAYLOAD);
+
+         message.setApplicationProperty("IntProperty", 42);
+         message.setDurable(true);
+         message.setMessageAnnotation(annotation.toString(), embeddedMap);
+         sender.send(message);
+         session.close();
+         connection.close();
+      }
+
+      {
+         AmqpConnection connection = client.connect();
+         AmqpSession session = connection.createSession();
+         AmqpReceiver receiver = session.createReceiver(testQueueName);
+         receiver.flow(nMsgs);
+
+         AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+         assertNotNull("Failed to read message with embedded map in annotations", message);
+         MessageImpl wrapped = (MessageImpl) message.getWrappedMessage();
+         if (wrapped.getBody() instanceof Data) {
+            Data data = (Data) wrapped.getBody();
+            System.out.println("received : message: " + data.getValue().getLength());
+            assertEquals(PAYLOAD, data.getValue().getLength());
+         }
+
+         assertNotNull(message.getWrappedMessage().getMessageAnnotations());
+         assertNotNull(message.getWrappedMessage().getMessageAnnotations().getValue());
+         assertEquals(embeddedMap, message.getWrappedMessage().getMessageAnnotations().getValue().get(annotation));
+
+         message.accept();
+         session.close();
+         connection.close();
+      }
+   }
+
+   private AmqpMessage createAmqpMessage(byte value, int payloadSize) {
+       AmqpMessage message = new AmqpMessage();
+       byte[] payload = new byte[payloadSize];
+       for (int i = 0; i < payload.length; i++) {
+          payload[i] = value;
+       }
+       message.setBytes(payload);
+       return message;
     }
 }
