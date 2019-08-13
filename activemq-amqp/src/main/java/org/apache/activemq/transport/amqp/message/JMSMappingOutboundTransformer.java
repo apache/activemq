@@ -319,7 +319,7 @@ public class JMSMappingOutboundTransformer implements OutboundTransformer {
                         footerMap = new HashMap<>();
                     }
                     String name = key.substring(JMS_AMQP_FOOTER_PREFIX.length());
-                    footerMap.put(name, value);
+                    footerMap.put(Symbol.valueOf(name), value);
                     continue;
                 }
             } else if (key.startsWith(AMQ_SCHEDULED_MESSAGE_PREFIX )) {
