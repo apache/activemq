@@ -24,6 +24,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 
+import java.util.Random;
 /**
  * The Retailer orders computers from the Vendor by sending a message via
  * the VendorOrderQueue. It then syncronously receives the reponse message
@@ -58,7 +59,8 @@ public class Retailer implements Runnable {
 			for (int i = 0; i < 5; i++) {
 				MapMessage message = session.createMapMessage();
 				message.setString("Item", "Computer(s)");
-				int quantity = (int)(Math.random() * 4) + 1;
+				Random rand = new Random();
+				int quantity = (int)(rand.nextDouble() * 4) + 1;
 				message.setInt("Quantity", quantity);
 				message.setJMSReplyTo(retailerConfirmQueue);
 				producer.send(message);
