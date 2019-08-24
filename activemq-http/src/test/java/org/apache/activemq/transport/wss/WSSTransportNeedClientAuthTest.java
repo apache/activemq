@@ -16,19 +16,16 @@
  */
 package org.apache.activemq.transport.wss;
 
-import junit.framework.Assert;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.ws.MQTTWSConnection;
 import org.apache.activemq.transport.ws.StompWSConnection;
-import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.eclipse.jetty.websocket.client.io.ConnectPromise;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
