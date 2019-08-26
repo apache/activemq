@@ -78,7 +78,7 @@ public class MQTTWSTransportWillTest extends WSTransportTestSupport {
         //turn off advisory support
         broker = createBroker(true, false);
 
-        wsClient = new WebSocketClient(new SslContextFactory(true));
+        wsClient = new WebSocketClient(new SslContextFactory.Client(true));
         wsClient.start();
 
         request = new ClientUpgradeRequest();
