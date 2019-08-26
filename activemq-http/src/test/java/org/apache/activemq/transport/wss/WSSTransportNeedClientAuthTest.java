@@ -77,7 +77,7 @@ public class WSSTransportNeedClientAuthTest {
     public void testStompNeedClientAuth() throws Exception {
         StompWSConnection wsStompConnection = new StompWSConnection();
         System.out.println("starting connection");
-        SslContextFactory factory = new SslContextFactory();
+        SslContextFactory factory = new SslContextFactory.Client();
         factory.setKeyStorePath(KEYSTORE);
         factory.setKeyStorePassword(PASSWORD);
         factory.setKeyStoreType(KEYSTORE_TYPE);
@@ -110,7 +110,7 @@ public class WSSTransportNeedClientAuthTest {
 
     @Test
     public void testMQTTNeedClientAuth() throws Exception {
-        SslContextFactory factory = new SslContextFactory();
+        SslContextFactory factory = new SslContextFactory.Client();
         factory.setKeyStorePath(KEYSTORE);
         factory.setKeyStorePassword(PASSWORD);
         factory.setKeyStoreType(KEYSTORE_TYPE);

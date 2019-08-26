@@ -68,7 +68,7 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
     public void setUp() throws Exception {
         super.setUp();
 
-        wsClient = new WebSocketClient(new SslContextFactory(true));
+        wsClient = new WebSocketClient(new SslContextFactory.Client(true));
         wsClient.start();
 
         request = new ClientUpgradeRequest();

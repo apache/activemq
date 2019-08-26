@@ -163,7 +163,7 @@ public class WSTransportTest extends WSTransportTestSupport {
     protected void testGet(final String uri, SslContextFactory
             sslContextFactory) throws Exception {
         HttpClient httpClient = sslContextFactory != null ? new HttpClient(sslContextFactory) :
-            new HttpClient(new SslContextFactory());
+            new HttpClient(new SslContextFactory.Client());
         httpClient.start();
 
         final CountDownLatch latch = new CountDownLatch(1);

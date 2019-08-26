@@ -46,7 +46,8 @@ public class WSSTransportTest extends WSTransportTest {
     @Override
     @Test(timeout=10000)
     public void testGet() throws Exception {
-        SslContextFactory factory = new SslContextFactory();
+        SslContextFactory factory = new SslContextFactory.Client();
+        factory.setEndpointIdentificationAlgorithm(null);       // service cert does not contain a SAN
         factory.setSslContext(broker.getSslContext().getSSLContext());
 
         testGet("https://127.0.0.1:" + port, factory);
