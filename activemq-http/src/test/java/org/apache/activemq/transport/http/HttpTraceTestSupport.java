@@ -47,13 +47,13 @@ public class HttpTraceTestSupport {
     }
 
     public static void testHttpTraceEnabled(final String uri, final int expectedStatus) throws Exception {
-        testHttpTraceEnabled(uri, expectedStatus, new SslContextFactory());
+        testHttpTraceEnabled(uri, expectedStatus, new SslContextFactory.Client());
     }
 
     public static void testHttpTraceEnabled(final String uri, final int expectedStatus, SslContextFactory
             sslContextFactory) throws Exception {
         HttpClient httpClient = sslContextFactory != null ? new HttpClient(sslContextFactory) :
-            new HttpClient(new SslContextFactory());
+            new HttpClient(new SslContextFactory.Client());
         httpClient.start();
 
         final CountDownLatch latch = new CountDownLatch(1);

@@ -57,7 +57,7 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         ClientUpgradeRequest request = new ClientUpgradeRequest();
         request.setSubProtocols("v11.stomp");
 
-        wsClient = new WebSocketClient(new SslContextFactory(true));
+        wsClient = new WebSocketClient(new SslContextFactory.Client(true));
         wsClient.start();
 
         wsClient.connect(wsStompConnection, wsConnectUri, request);

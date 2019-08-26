@@ -67,7 +67,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 
         SslContextFactory factory;
         if (contextFactory == null) {
-            factory = new SslContextFactory();
+            factory = new SslContextFactory.Server();
             if (context != null) {
                 // Should not be using this method since it does not use all of the values
                 // from the passed SslContext instance.....
