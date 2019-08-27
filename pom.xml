@@ -61,6 +61,7 @@
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>3.6</commons-net-version>
     <directory-version>2.0.0.AM25</directory-version>
+    <ecj.version>3.17.0</ecj.version>
     <ftpserver-version>1.1.1</ftpserver-version>
     <geronimo-version>1.0</geronimo-version>
     <guava-version>28.0-jre</guava-version>
