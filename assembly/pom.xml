@@ -333,8 +333,8 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jdt</groupId>
-      <artifactId>core</artifactId>
-      <version>3.1.1</version>
+      <artifactId>ecj</artifactId>
+      <version>${ecj.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.derby</groupId>

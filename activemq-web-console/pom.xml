@@ -251,9 +251,9 @@
       <scope>test</scope>
     </dependency>
      <dependency>
-      <groupId>org.eclipse.jetty.orbit</groupId>
-      <artifactId>org.eclipse.jdt.core</artifactId>
-      <version>3.8.2.v20130121</version>
+      <groupId>org.eclipse.jdt</groupId>
+      <artifactId>ecj</artifactId>
+      <version>${ecj.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
