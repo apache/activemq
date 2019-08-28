@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.15.10</version>
+  <version>5.15.11-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -272,7 +272,7 @@
     <connection>scm:git:http://gitbox.apache.org/repos/asf/activemq.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/activemq.git</developerConnection>
     <url>https://gitbox.apache.org/repos/asf?p=activemq.git;a=summary</url>
-    <tag>activemq-5.15.10</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <dependencyManagement>
