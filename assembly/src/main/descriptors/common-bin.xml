@@ -280,7 +280,7 @@
 
         <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
         <include>org.ow2.asm:asm</include>
-        <include>org.eclipse.jetty.orbit:org.eclipse.jdt.core</include>
+        <include>org.eclipse.jdt:ecj</include>
 
         <!-- Atom/RSS support -->
         <include>com.rometools:rome</include>
