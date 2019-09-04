@@ -297,9 +297,8 @@ public class FailoverDurableSubTransactionTest {
         final Session receiveSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         consumer = receiveSession.createDurableSubscriber(destination, "DS");
 
-        AtomicBoolean success = new AtomicBoolean(false);
-
-        HashSet<Integer> dupCheck = new HashSet<Integer>();
+        final AtomicBoolean success = new AtomicBoolean(false);
+        final HashSet<Integer> dupCheck = new HashSet<Integer>();
         final AtomicInteger receivedCount = new AtomicInteger();
         consumer.setMessageListener(new MessageListener() {
             @Override
