@@ -686,7 +686,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 throw new IOException("isValid(10) failed for: " + connection);
             }
         } catch (SQLException e) {
-            LOG.debug("Could not get JDBC connection for checkpoint: " + e);
+            LOG.debug("Could not get JDBC connection for checkpoint: " + e, e);
             throw IOExceptionSupport.create(e);
         } finally {
             if (connection != null) {
