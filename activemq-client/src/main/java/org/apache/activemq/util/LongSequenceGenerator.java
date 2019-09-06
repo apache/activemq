@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.util;
 
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
@@ -35,7 +34,7 @@ public class LongSequenceGenerator {
     }
 
     public long getLastSequenceId() {
-        return SEQUENCE_UPDATER.get(this);
+        return lastSequenceId;
     }
 
     public void setLastSequenceId(long l) {
