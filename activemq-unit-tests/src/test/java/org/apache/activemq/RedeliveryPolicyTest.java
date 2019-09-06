@@ -540,7 +540,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals("1st", m.getText());
         String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
         assertTrue("cause exception has policy ref: " + cause, cause.contains("RedeliveryPolicy"));
-        assertTrue("cause exception has pre dispatch and count:" + cause, cause.contains("Dispatch[5]"));
+        assertTrue("cause exception has pre dispatch and count:" + cause, cause.contains("[5]"));
 
         dlqSession.commit();
 
