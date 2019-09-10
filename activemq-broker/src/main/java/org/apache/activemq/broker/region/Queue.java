@@ -1405,7 +1405,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
             try {
-                set.addAll(pagedInMessages.values());
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return movedCounter;
+                };
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
@@ -1474,7 +1477,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             doPageIn(true, false, (messages.isCacheEnabled() || !broker.getBrokerService().isPersistent()) ? messages.size() : getMaxBrowsePageSize());
             pagedInMessagesLock.readLock().lock();
             try {
-                set.addAll(pagedInMessages.values());
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return movedCounter;
+                }
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
@@ -1591,7 +1597,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
             try {
-                set.addAll(pagedInMessages.values());
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return movedCounter;
+                }
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
@@ -1623,7 +1632,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
             try {
-                set.addAll(pagedInMessages.values());
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return restoredCounter;
+                }
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
