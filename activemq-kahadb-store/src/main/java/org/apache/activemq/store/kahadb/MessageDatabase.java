@@ -1205,6 +1205,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     void process(JournalCommand<?> data, final Location location, final Location inDoubtlocation) throws IOException {
         if (inDoubtlocation != null && location.compareTo(inDoubtlocation) >= 0) {
+            initMessageStore(data);
             process(data, location, (IndexAware) null);
         } else {
             // just recover producer audit
@@ -1215,6 +1216,23 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             });
         }
+    }
+
+    private void initMessageStore(JournalCommand<?> data) throws IOException {
+        data.visit(new Visitor() {
+            @Override
+            public void visit(KahaAddMessageCommand command) throws IOException {
+                final KahaDestination destination = command.getDestination();
+                if (!storedDestinations.containsKey(key(destination))) {
+                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                        @Override
+                        public void execute(Transaction tx) throws IOException {
+                            getStoredDestination(destination, tx);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     // /////////////////////////////////////////////////////////////////
@@ -1486,8 +1504,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private final HashSet<Integer> journalFilesBeingReplicated = new HashSet<>();
 
     long updateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
-        StoredDestination sd = getStoredDestination(command.getDestination(), tx);
-
+        StoredDestination sd = getExistingStoredDestination(command.getDestination(), tx);
+        if (sd == null) {
+            // if the store no longer exists, skip
+            return -1;
+        }
         // Skip adding the message to the index if this is a topic and there are
         // no subscriptions.
         if (sd.subscriptions != null && sd.subscriptions.isEmpty(tx)) {

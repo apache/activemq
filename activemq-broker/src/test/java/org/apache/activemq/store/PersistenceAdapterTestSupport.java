@@ -57,6 +57,7 @@ abstract public class PersistenceAdapterTestSupport extends TestCase {
 
         
         MessageStore ms = pa.createQueueMessageStore(new ActiveMQQueue("TEST"));
+        ms.start();
         ConnectionContext context = new ConnectionContext();
 
         ActiveMQTextMessage message = new ActiveMQTextMessage();
