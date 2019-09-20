@@ -24,7 +24,7 @@
     <!--
         The <broker> element is used to configure the ActiveMQ broker.
     -->
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="target/data">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" brokerId="brokerId" dataDirectory="target/data">
 
         <destinationPolicy>
             <policyMap>
