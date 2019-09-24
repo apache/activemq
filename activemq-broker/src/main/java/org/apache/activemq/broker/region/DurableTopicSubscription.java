@@ -322,10 +322,12 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     protected boolean canDispatch(MessageReference node) {
-        if (!ackedAndPrepared.isEmpty() && ackedAndPrepared.contains(node.getMessageId())) {
-            return false; // prepared ack
-        }
         return true;  // let them go, our dispatchPending gates the active / inactive state.
+    }
+
+    @Override
+    protected boolean trackedInPendingTransaction(MessageReference node) {
+        return !ackedAndPrepared.isEmpty() && ackedAndPrepared.contains(node.getMessageId());
     }
 
     @Override
@@ -349,6 +351,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 @Override
                 public void afterCommit() throws Exception {
                     synchronized (pendingLock) {
+                        // may be in the cursor post activate/load from the store
+                        pending.remove(node);
                         ackedAndPrepared.remove(node.getMessageId());
                     }
                 }
@@ -357,7 +361,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 public void afterRollback() throws Exception {
                     synchronized (pendingLock) {
                         ackedAndPrepared.remove(node.getMessageId());
-                        pending.addMessageFirst(node);
                     }
                     dispatchPending();
                 }
