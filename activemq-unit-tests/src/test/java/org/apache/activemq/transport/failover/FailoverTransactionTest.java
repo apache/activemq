@@ -667,7 +667,7 @@ public class FailoverTransactionTest extends TestSupport {
         connection.start();
 
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-        Queue destination = session.createQueue(QUEUE_NAME);
+        Queue destination = session.createQueue("testFailoverWithConnectionConsumer");
 
         final CountDownLatch connectionConsumerGotOne = new CountDownLatch(1);
         final Session poolSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -903,6 +903,7 @@ public class FailoverTransactionTest extends TestSupport {
         configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
+        connections.add(connection);
         Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue destination = producerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=1");
 
