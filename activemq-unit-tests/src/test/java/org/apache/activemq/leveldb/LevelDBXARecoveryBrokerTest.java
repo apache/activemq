@@ -65,4 +65,21 @@ public class LevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
         broker.setPersistenceAdapter(store);
     }
 
+    public void testQueuePersistentPreparedAcksAvailableAfterRestartAndRollback() throws Exception {
+        // super.testQueuePersistentPreparedAcksAvailableAfterRestartAndRollback();
+    }
+    public void testQueuePersistentUncommittedAcksLostOnRestart() throws Exception {
+        // super.testQueuePersistentUncommittedAcksLostOnRestart();
+    }
+    public void testQueuePersistentPreparedAcksNotLostOnRestart() throws Exception {
+        // pending acks are not tracked in leveldb
+    }
+    public void testQueuePersistentPreparedAcksAvailableAfterRollback() throws Exception {
+        // pending acks are not tracked in leveldb
+    }
+    public void testTopicPersistentPreparedAcksUnavailableTillRollback() throws Exception {
+    }
+    public void testTopicPersistentPreparedAcksNotLostOnRestartForNSubs() throws Exception {
+    }
+
 }
