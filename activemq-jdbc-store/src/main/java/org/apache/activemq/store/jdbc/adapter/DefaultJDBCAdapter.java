@@ -1008,8 +1008,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 String encodedString = rs.getString(1);
                 byte[] encodedXid = parseBase64Binary(encodedString);
                 String destination = rs.getString(2);
-                String subName = rs.getString(3);
-                String subId = rs.getString(4);
+                String subId = rs.getString(3);
+                String subName = rs.getString(4);
                 jdbcMemoryTransactionStore.recoverLastAck(encodedXid,
                         ActiveMQDestination.createDestination(destination, ActiveMQDestination.TOPIC_TYPE),
                         subName, subId);

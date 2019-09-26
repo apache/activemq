@@ -713,7 +713,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     }
 
-    public void x_initCombosForTestTopicPersistentPreparedAcksNotLostOnRestart() {
+    public void initCombosForTestTopicPersistentPreparedAcksNotLostOnRestart() {
         addCombinationValues("prioritySupport", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
     }
 
@@ -785,6 +785,97 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         m = receiveMessage(connection);
         assertNull(m);
         assertNoMessagesLeft(connection);
+
+        connection.request(createCommitTransaction2Phase(connectionInfo, txid));
+
+        // validate recovery complete
+        dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
+        assertEquals("there are no prepared tx", 0, dataArrayResponse.getData().length);
+    }
+
+    public void testTopicPersistentPreparedAcksNotLostOnRestartForNSubs() throws Exception {
+        ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
+
+        // Setup the producer and send the message.
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+
+        // setup durable subs
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("sub");
+        connection.send(consumerInfo);
+
+        ConsumerInfo consumerInfoX = createConsumerInfo(sessionInfo, destination);
+        consumerInfoX.setSubscriptionName("subX");
+        connection.send(consumerInfoX);
+        connection.send(consumerInfoX.createRemoveCommand());
+
+        final int numMessages = 4;
+        for (int i = 0; i < numMessages; i++) {
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            connection.send(message);
+        }
+
+        // Begin the transaction.
+        XATransactionId txid = createXATransaction(sessionInfo);
+        connection.send(createBeginTransaction(connectionInfo, txid));
+
+        final int messageCount = expectedMessageCount(numMessages, destination);
+        Message m = null;
+        for (int i = 0; i < messageCount; i++) {
+            m = receiveMessage(connection);
+            assertNotNull("unexpected null on: " + i, m);
+        }
+
+        // one ack with last received, mimic a beforeEnd synchronization
+        MessageAck ack = createAck(consumerInfo, m, messageCount, MessageAck.STANDARD_ACK_TYPE);
+        ack.setTransactionId(txid);
+        connection.send(ack);
+
+        connection.request(createPrepareTransaction(connectionInfo, txid));
+
+        // restart the broker.
+        restartBroker();
+
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        connection.send(connectionInfo);
+
+        // validate recovery
+        TransactionInfo recoverInfo = new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER);
+        DataArrayResponse dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
+
+        assertEquals("there is a prepared tx", 1, dataArrayResponse.getData().length);
+        assertEquals("it matches", txid, dataArrayResponse.getData()[0]);
+
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(sessionInfo);
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("sub");
+        connection.send(consumerInfo);
+
+        // no redelivery, exactly once semantics unless there is rollback
+        m = receiveMessage(connection);
+        assertNull(m);
+        assertNoMessagesLeft(connection);
+
+        // ensure subX can get it's copy of the messages
+        consumerInfoX = createConsumerInfo(sessionInfo, destination);
+        consumerInfoX.setSubscriptionName("subX");
+        connection.send(consumerInfoX);
+
+        for (int i = 0; i < messageCount; i++) {
+            m = receiveMessage(connection);
+            assertNotNull("unexpected null for subX on: " + i, m);
+        }
 
         connection.request(createCommitTransaction2Phase(connectionInfo, txid));
 

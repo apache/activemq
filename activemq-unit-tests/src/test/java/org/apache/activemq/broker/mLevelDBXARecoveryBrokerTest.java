@@ -74,4 +74,6 @@ public class mLevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
     }
     public void testTopicPersistentPreparedAcksUnavailableTillRollback() throws Exception {
     }
+    public void testTopicPersistentPreparedAcksNotLostOnRestartForNSubs() throws Exception {
+    }
 }

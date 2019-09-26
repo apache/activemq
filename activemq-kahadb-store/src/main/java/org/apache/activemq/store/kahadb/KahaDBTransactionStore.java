@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
@@ -359,6 +360,10 @@ public class KahaDBTransactionStore implements TransactionStore {
                     MessageDatabase.RemoveOperation rmOp = (MessageDatabase.RemoveOperation) op;
                     Buffer ackb = rmOp.getCommand().getAck();
                     MessageAck ack = (MessageAck) wireFormat().unmarshal(new DataInputStream(ackb.newInput()));
+                    // allow the ack to be tracked back to its durable sub
+                    ConsumerId subKey = new ConsumerId();
+                    subKey.setConnectionId(rmOp.getCommand().getSubscriptionKey());
+                    ack.setConsumerId(subKey);
                     ackList.add(ack);
                 }
             }

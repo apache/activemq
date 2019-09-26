@@ -294,7 +294,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
             @Override
             public void rollback(ConnectionContext context) throws IOException {
-                ((JDBCPersistenceAdapter)persistenceAdapter).rollbackLastAck(context, priority, jdbcTopicMessageStore.getDestination(), subName, clientId);
+                ((JDBCPersistenceAdapter)persistenceAdapter).rollbackLastAck(context, jdbcTopicMessageStore.isPrioritizedMessages() ? priority : 0, jdbcTopicMessageStore.getDestination(), subName, clientId);
                 jdbcTopicMessageStore.complete(clientId, subName);
             }
 

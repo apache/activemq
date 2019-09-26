@@ -29,6 +29,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.AnyDestination;
 import org.apache.activemq.filter.DestinationMap;
@@ -405,6 +406,182 @@ public class XACompletionTest extends TestSupport {
         assertEquals("cursor size", 0, proxy.cursorSize());
         assertEquals("dq", 10, proxy.getDequeueCount());
 
+    }
+
+    @Test
+    public void testConsumeAfterAckPreparedRolledbackTopic() throws Exception {
+
+        factory = new ActiveMQXAConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=0");
+        factory.setWatchTopicAdvisories(false);
+
+        final ActiveMQTopic destination = new ActiveMQTopic("TEST");
+
+        ActiveMQXAConnection activeMQXAConnection = (ActiveMQXAConnection) factory.createXAConnection();
+        activeMQXAConnection.setClientID("durable");
+        activeMQXAConnection.start();
+        XASession xaSession = activeMQXAConnection.createXASession();
+
+        MessageConsumer consumer = xaSession.createDurableSubscriber(destination, "sub1");
+        consumer.close();
+        consumer = xaSession.createDurableSubscriber(destination, "sub2");
+
+        sendMessagesTo(10, destination);
+
+        XAResource resource = xaSession.getXAResource();
+        resource.recover(XAResource.TMSTARTRSCAN);
+        resource.recover(XAResource.TMNOFLAGS);
+
+        dumpMessages();
+        Xid tid = createXid();
+
+        resource.start(tid, XAResource.TMNOFLAGS);
+
+        int messagesReceived = 0;
+
+        for (int i = 0; i < 5; i++) {
+
+            Message message = null;
+            try {
+                LOG.debug("Receiving message " + (messagesReceived + 1) + " of " + messagesExpected);
+                message = consumer.receive(2000);
+                LOG.info("Received : " + message);
+                messagesReceived++;
+            } catch (Exception e) {
+                LOG.debug("Caught exception:", e);
+            }
+        }
+
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.prepare(tid);
+
+        consumer.close();
+        activeMQXAConnection.close();
+
+        LOG.info("after close");
+
+        broker = restartBroker();
+
+        LOG.info("Try consume... after restart");
+        dumpMessages();
+
+        factory = new ActiveMQXAConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=0");
+        factory.setWatchTopicAdvisories(false);
+
+        activeMQXAConnection = (ActiveMQXAConnection) factory.createXAConnection();
+        activeMQXAConnection.start();
+        xaSession = activeMQXAConnection.createXASession();
+
+        XAResource xaResource = xaSession.getXAResource();
+
+        Xid[] xids = xaResource.recover(XAResource.TMSTARTRSCAN);
+        xaResource.recover(XAResource.TMNOFLAGS);
+
+        LOG.info("Rollback outcome for ack");
+        xaResource.rollback(xids[0]);
+
+        assertTrue("got expected", consumeOnlyN(10,"durable", "sub1", destination));
+        assertTrue("got expected", consumeOnlyN(10, "durable", "sub2", destination));
+    }
+
+    @Test
+    public void testConsumeAfterAckPreparedCommitTopic() throws Exception {
+
+        factory = new ActiveMQXAConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=0");
+        factory.setWatchTopicAdvisories(false);
+
+        final ActiveMQTopic destination = new ActiveMQTopic("TEST");
+
+        ActiveMQXAConnection activeMQXAConnection = (ActiveMQXAConnection) factory.createXAConnection();
+        activeMQXAConnection.setClientID("durable");
+        activeMQXAConnection.start();
+        XASession xaSession = activeMQXAConnection.createXASession();
+
+        MessageConsumer consumer = xaSession.createDurableSubscriber(destination, "sub1");
+        consumer.close();
+        consumer = xaSession.createDurableSubscriber(destination, "sub2");
+
+        sendMessagesTo(10, destination);
+
+        XAResource resource = xaSession.getXAResource();
+        resource.recover(XAResource.TMSTARTRSCAN);
+        resource.recover(XAResource.TMNOFLAGS);
+
+        dumpMessages();
+        Xid tid = createXid();
+
+        resource.start(tid, XAResource.TMNOFLAGS);
+
+        int messagesReceived = 0;
+
+        for (int i = 0; i < 5; i++) {
+
+            Message message = null;
+            try {
+                LOG.debug("Receiving message " + (messagesReceived + 1) + " of " + messagesExpected);
+                message = consumer.receive(2000);
+                LOG.info("Received : " + message);
+                messagesReceived++;
+            } catch (Exception e) {
+                LOG.debug("Caught exception:", e);
+            }
+        }
+
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.prepare(tid);
+
+        consumer.close();
+        activeMQXAConnection.close();
+
+        LOG.info("after close");
+
+        broker = restartBroker();
+
+        LOG.info("Try consume... after restart");
+        dumpMessages();
+
+        factory = new ActiveMQXAConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=0");
+        factory.setWatchTopicAdvisories(false);
+
+        activeMQXAConnection = (ActiveMQXAConnection) factory.createXAConnection();
+        activeMQXAConnection.start();
+        xaSession = activeMQXAConnection.createXASession();
+
+        XAResource xaResource = xaSession.getXAResource();
+
+        Xid[] xids = xaResource.recover(XAResource.TMSTARTRSCAN);
+        xaResource.recover(XAResource.TMNOFLAGS);
+
+        LOG.info("Rollback outcome for ack");
+        xaResource.commit(xids[0], false);
+
+        assertTrue("got expected", consumeOnlyN(10,"durable", "sub1", destination));
+        assertTrue("got expected", consumeOnlyN(5, "durable", "sub2", destination));
+
+        LOG.info("at end...");
+        dumpMessages();
+
+    }
+
+    private boolean consumeOnlyN(int expected, String clientId, String subName, ActiveMQTopic destination) throws Exception {
+        int drained = 0;
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=" + expected);
+        factory.setWatchTopicAdvisories(false);
+        javax.jms.Connection connection = factory.createConnection();
+        connection.setClientID(clientId);
+        try {
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer = session.createDurableSubscriber(destination, subName);
+            Message message = null;
+            while ( (message =consumer.receive(2000)) != null) {
+                drained++;
+                LOG.info("Sub:" + subName + ", received: " + message.getJMSMessageID());
+            }
+            consumer.close();
+        } finally {
+            connection.close();
+        }
+        return drained == expected;
     }
 
     @Test
@@ -938,16 +1115,24 @@ public class XACompletionTest extends TestSupport {
     }
 
     protected void sendMessages(int messagesExpected) throws Exception {
+        sendMessagesTo(messagesExpected, new ActiveMQQueue("TEST"));
+    }
+
+    protected void sendMessagesTo(int messagesExpected, Destination destination) throws Exception {
         ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(connectionUri);
         activeMQConnectionFactory.setWatchTopicAdvisories(false);
-        sendMessagesWith(activeMQConnectionFactory, messagesExpected);
+        sendMessagesWithTo(activeMQConnectionFactory, messagesExpected, destination);
     }
 
     protected void sendMessagesWith(ConnectionFactory factory, int messagesExpected) throws Exception {
+        sendMessagesWithTo(factory, messagesExpected, new ActiveMQQueue("TEST"));
+    }
+
+    protected void sendMessagesWithTo(ConnectionFactory factory, int messagesExpected, Destination destination) throws Exception {
         javax.jms.Connection connection = factory.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = session.createQueue("TEST");
+
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
@@ -973,6 +1158,15 @@ public class XACompletionTest extends TestSupport {
             org.apache.activemq.command.Message message = (org.apache.activemq.command.Message) wireFormat.unmarshal(new ByteSequence(result.getBytes(2)));
             String xid = result.getString(3);
             LOG.info("id: " + id + ", message SeqId: " + message.getMessageId().getBrokerSequenceId() + ", XID:" + xid + ", MSG: " + message);
+        }
+        statement.close();
+
+        statement = conn.prepareStatement("SELECT LAST_ACKED_ID, CLIENT_ID, SUB_NAME, PRIORITY, XID FROM ACTIVEMQ_ACKS");
+        result = statement.executeQuery();
+        LOG.info("Messages in ACKS table db...");
+        while (result.next()) {
+            LOG.info("lastAcked: {}, clientId: {}, SUB_NAME: {}, PRIORITY: {}, XID {}",
+                    result.getLong(1), result.getString(2), result.getString(3), result.getInt(4), result.getString(5));
         }
         statement.close();
         conn.close();
@@ -1011,6 +1205,7 @@ public class XACompletionTest extends TestSupport {
         DestinationMap destinationMap = new DestinationMap();
         GroupPrincipal anaGroup = new GroupPrincipal(id);
         destinationMap.put(new AnyDestination(new ActiveMQDestination[]{new ActiveMQQueue(">")}), anaGroup);
+        destinationMap.put(new AnyDestination(new ActiveMQDestination[]{new ActiveMQTopic(">")}), anaGroup);
         map.setWriteACLs(destinationMap);
         map.setAdminACLs(destinationMap);
         map.setReadACLs(destinationMap);
