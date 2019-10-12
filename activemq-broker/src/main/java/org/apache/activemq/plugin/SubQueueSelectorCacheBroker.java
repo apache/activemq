@@ -131,8 +131,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        // don't track selectors for advisory topics or temp destinations
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
+        if (!ignoredConsumer(info)) {
             String destinationName = info.getDestination().getQualifiedName();
             LOG.debug("Caching consumer selector [{}] on  '{}'", info.getSelector(), destinationName);
 
@@ -155,29 +154,35 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                     }
                 }
 
-                LOG.debug("adding new selector: into cache " + selector);
+                LOG.debug("adding new selector: into cache {} for consumer {} on {}", selector, info.getConsumerId(), next.getBrokerName());
                 selectors.add(selector);
-                LOG.debug("current selectors in cache: " + selectors);
+                LOG.debug("current selectors in cache: {}", selectors);
                 subSelectorCache.put(destinationName, selectors);
             }
         }
 
         return super.addConsumer(context, info);
     }
-
+    
+    private boolean ignoredConsumer(ConsumerInfo info) {
+        return AdvisorySupport.isAdvisoryTopic(info.getDestination())
+                || info.getDestination().isTemporary()
+                || info.isNetworkSubscription()
+                || info.isBrowser();
+    }
     static boolean hasWildcards(String selector) {
         return WildcardFinder.hasWildcards(selector);
     }
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
+        if (!ignoredConsumer(info)) {
             if (singleSelectorPerDestination) {
                 String destinationName = info.getDestination().getQualifiedName();
                 Set<String> selectors = subSelectorCache.get(destinationName);
-                if (info.getSelector() == null && selectors.size() > 1) {
+                if (info.getSelector() == null && selectors != null && selectors.size() > 1) {
                     boolean removed = selectors.remove(MATCH_EVERYTHING);
-                    LOG.debug("A non-selector consumer has dropped. Removing the catchall matching pattern 'TRUE'. Successful? " + removed);
+                    LOG.debug("A non-selector consumer has dropped on {}. Removing the catchall matching pattern 'TRUE'. Successful? {}", next.getBrokerName(), removed);
                 }
             }
 
