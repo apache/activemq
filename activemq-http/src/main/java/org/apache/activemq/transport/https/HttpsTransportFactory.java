@@ -37,6 +37,12 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class HttpsTransportFactory extends HttpTransportFactory {
 
+    public HttpsTransportFactory() {}
+
+    public HttpsTransportFactory(final String defaultWireFormatType) {
+        super(defaultWireFormatType);
+    }
+
     public TransportServer doBind(String brokerId, URI location) throws IOException {
         return doBind(location);
     }
@@ -67,6 +73,6 @@ public class HttpsTransportFactory extends HttpTransportFactory {
             cause.initCause(e);
             throw cause;
         }
-        return new HttpsClientTransport(asTextWireFormat(wf), uri);
+        return new HttpsClientTransport(createMarshaller(wf), uri);
     }
 }

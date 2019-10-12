@@ -19,7 +19,7 @@ package org.apache.activemq.transport.http;
 import java.net.URI;
 
 import org.apache.activemq.transport.TransportThreadSupport;
-import org.apache.activemq.transport.util.TextWireFormat;
+import org.apache.activemq.transport.http.marshallers.HttpTransportMarshaller;
 
 /**
  * A useful base class for HTTP Transport implementations.
@@ -27,15 +27,15 @@ import org.apache.activemq.transport.util.TextWireFormat;
  *
  */
 public abstract class HttpTransportSupport extends TransportThreadSupport {
-    private TextWireFormat textWireFormat;
+    private HttpTransportMarshaller marshaller;
     private URI remoteUrl;
     private String proxyHost;
     private int proxyPort = 8080;
     private String proxyUser;
     private String proxyPassword;
 
-    public HttpTransportSupport(TextWireFormat textWireFormat, URI remoteUrl) {
-        this.textWireFormat = textWireFormat;
+    public HttpTransportSupport(final HttpTransportMarshaller marshaller, final URI remoteUrl) {
+        this.marshaller = marshaller;
         this.remoteUrl = remoteUrl;
     }
 
@@ -53,12 +53,8 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
         return remoteUrl;
     }
 
-    public TextWireFormat getTextWireFormat() {
-        return textWireFormat;
-    }
-
-    public void setTextWireFormat(TextWireFormat textWireFormat) {
-        this.textWireFormat = textWireFormat;
+    public HttpTransportMarshaller getMarshaller() {
+        return marshaller;
     }
 
     public String getProxyHost() {
