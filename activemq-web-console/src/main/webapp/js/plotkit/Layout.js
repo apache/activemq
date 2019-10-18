@@ -454,7 +454,7 @@ PlotKit.Layout.prototype._evaluateLineTicksForXAxis = function() {
         var tickCount = 0;
 
         this.xticks = new Array();
-        for (var i = 0; i <= xvalues.length; i++) {
+        for (var i = 0; i < xvalues.length; i++) {
             if (xvalues[i] >= (tickCount) * roughSeparation) {
                 var pos = this.xscale * (xvalues[i] - this.minxval);
                 if ((pos > 1.0) || (pos < 0.0))
