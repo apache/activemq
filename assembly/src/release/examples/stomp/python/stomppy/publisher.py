@@ -33,8 +33,10 @@ conn = stomp.Connection(host_and_ports = [(host, port)])
 conn.start()
 conn.connect(login=user,passcode=password)
 
+
 for i in range(0, messages):
   conn.send(data, destination=destination, persistent='false')
+
 
 conn.send("SHUTDOWN", destination=destination, persistent='false')
 
