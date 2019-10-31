@@ -53,11 +53,11 @@
     <commons-beanutils-version>1.9.4</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-daemon-version>1.0.15</commons-daemon-version>
-    <commons-dbcp2-version>2.6.0</commons-dbcp2-version>
+    <commons-dbcp2-version>2.7.0</commons-dbcp2-version>
     <commons-io-version>2.6</commons-io-version>
     <commons-lang-version>2.6</commons-lang-version>
     <commons-logging-version>1.2</commons-logging-version>
-    <commons-pool2-version>2.6.2</commons-pool2-version>
+    <commons-pool2-version>2.7.0</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>3.6</commons-net-version>
     <directory-version>2.0.0.AM25</directory-version>
