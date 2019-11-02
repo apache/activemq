@@ -41,8 +41,8 @@
     <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
-    <ant-version>1.8.4</ant-version>
-    <ant-bundle-version>1.7.0_6</ant-bundle-version>
+    <ant-version>1.10.7</ant-version>
+    <ant-bundle-version>1.10.7_1</ant-bundle-version>
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>1.1.0</aries-version>
     <aries-transaction-version>1.1.1</aries-transaction-version>
