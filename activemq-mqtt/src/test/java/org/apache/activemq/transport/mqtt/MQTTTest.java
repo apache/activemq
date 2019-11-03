@@ -1642,7 +1642,7 @@ public class MQTTTest extends MQTTTestSupport {
             payload[i] = '2';
         }
 
-        int numberOfRuns = 100;
+        int numberOfRuns = 50;
         int messagesPerRun = 2;
 
         final MQTT mqttPub = createMQTTConnection("MQTT-Pub-Client", true);
