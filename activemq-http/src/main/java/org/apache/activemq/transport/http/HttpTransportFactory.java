@@ -48,9 +48,11 @@ public class HttpTransportFactory extends TransportFactory {
             Map<String, Object> jettyOptions = IntrospectionSupport.extractProperties(options, "jetty.");
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            Map<String, Object> wireFormatOptions = IntrospectionSupport.extractProperties(options, "wireFormat.");
             result.setJettyOptions(jettyOptions);
             result.setTransportOption(transportOptions);
             result.setHttpOptions(httpOptions);
+            result.setWireFormatOptions(wireFormatOptions);
             return result;
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);

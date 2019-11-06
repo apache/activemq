@@ -18,6 +18,7 @@ package org.apache.activemq.transport.http;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.activemq.command.BrokerInfo;
@@ -38,6 +39,7 @@ public class HttpTransportServer extends WebTransportServerSupport {
 
     private TextWireFormat wireFormat;
     private final HttpTransportFactory transportFactory;
+    private Map<String, Object> wireFormatOptions = new HashMap<>();
 
     public HttpTransportServer(URI uri, HttpTransportFactory factory) {
         super(uri);
@@ -93,6 +95,7 @@ public class HttpTransportServer extends WebTransportServerSupport {
         contextHandler.setAttribute("wireFormat", getWireFormat());
         contextHandler.setAttribute("transportFactory", transportFactory);
         contextHandler.setAttribute("transportOptions", transportOptions);
+        contextHandler.setAttribute("wireFormatOptions", wireFormatOptions);
 
         //AMQ-6182 - disabling trace by default
         configureTraceMethod((ConstraintSecurityHandler) contextHandler.getSecurityHandler(),
@@ -169,6 +172,10 @@ public class HttpTransportServer extends WebTransportServerSupport {
     public void setTransportOption(Map<String, Object> transportOptions) {
         socketConnectorFactory.setTransportOptions(transportOptions);
         super.setTransportOption(transportOptions);
+    }
+
+    public void setWireFormatOptions(Map<String, Object> wireFormatOptions) {
+        this.wireFormatOptions = wireFormatOptions;
     }
 
     @Override
