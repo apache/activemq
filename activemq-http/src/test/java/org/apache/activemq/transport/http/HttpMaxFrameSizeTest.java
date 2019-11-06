@@ -21,6 +21,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.lang.StringUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +41,7 @@ public class HttpMaxFrameSizeTest {
         brokerService.setPersistent(false);
         brokerService.setUseJmx(false);
         brokerService.deleteAllMessages();
-        brokerService.addConnector("http://localhost:8888?wireFormat.maxFrameSize=10");
+        brokerService.addConnector("http://localhost:8888?wireFormat.maxFrameSize=4000");
         brokerService.start();
         brokerService.waitUntilStarted();
     }
@@ -50,13 +51,27 @@ public class HttpMaxFrameSizeTest {
         brokerService.stop();
     }
 
-    @Test(expected = JMSException.class)
-    public void sendTest() throws Exception {
+    @Test
+    public void sendOversizedMessageTest() throws Exception {
+        try {
+            send(5000);
+        } catch (JMSException jmsException) {
+            Assert.assertTrue(jmsException.getMessage().contains("500 Server Error"));
+        }
+    }
+
+    @Test
+    public void sendGoodMessageTest() throws Exception {
+        // no exception expected there
+        send(10);
+    }
+
+    private void send(int size) throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("http://localhost:8888");
         Connection connection = connectionFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(new ActiveMQQueue("test"));
-        String payload = StringUtils.repeat("*", 2000);
+        String payload = StringUtils.repeat("*", size);
         TextMessage textMessage = session.createTextMessage(payload);
         producer.send(textMessage);
     }
