@@ -197,7 +197,7 @@ public class HttpTunnelServlet extends HttpServlet {
         // Record the client's transport and ensure that it has not already registered; this is thread-safe and only allows one
         // thread to register the client
         if (clients.putIfAbsent(clientID, answer) != null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for clientID '" + clientID + "' has already been established");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for the given clientID has already been established");
             LOG.warn("A session for clientID '" + clientID + "' has already been established");
             return null;
         }
@@ -237,7 +237,7 @@ public class HttpTunnelServlet extends HttpServlet {
 
         // Ensure that the transport was not prematurely disposed.
         if (transport.isDisposed()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "The session for clientID '" + clientID + "' was prematurely disposed");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "The session for the given clientID was prematurely disposed");
             LOG.warn("The session for clientID '" + clientID + "' was prematurely disposed");
             return null;
         }
