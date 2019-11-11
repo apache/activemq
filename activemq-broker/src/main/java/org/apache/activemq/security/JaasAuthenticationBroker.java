@@ -94,7 +94,7 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
 
             result = new JaasSecurityContext(username, subject);
         } catch (Exception ex) {
-            throw new SecurityException("User name [" + username + "] or password is invalid.", ex);
+            throw new SecurityException("User name [" + username + "] or password is invalid.");
         }
 
         return result;
