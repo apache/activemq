@@ -240,10 +240,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
             private void onAcceptError(Exception error, String remoteHost) {
                 if (brokerService != null && brokerService.isStopping()) {
-                    LOG.info("Could not accept connection during shutdown {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error);
+                    LOG.info("Could not accept connection during shutdown {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error.getLocalizedMessage());
                 } else {
-                    LOG.error("Could not accept connection {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error);
-                    LOG.debug("Reason: " + error, error);
+                    LOG.warn("Could not accept connection {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error.getLocalizedMessage());
+                    LOG.debug("Reason: " + error.getMessage(), error);
                 }
             }
         });
