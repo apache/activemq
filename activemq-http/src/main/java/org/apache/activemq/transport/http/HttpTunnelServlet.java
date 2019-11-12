@@ -60,6 +60,7 @@ public class HttpTunnelServlet extends HttpServlet {
     private ConcurrentMap<String, BlockingQueueTransport> clients = new ConcurrentHashMap<String, BlockingQueueTransport>();
     private final long requestTimeout = 30000L;
     private HashMap<String, Object> transportOptions;
+    private HashMap<String, Object> wireFormatOptions;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -74,6 +75,7 @@ public class HttpTunnelServlet extends HttpServlet {
             throw new ServletException("No such attribute 'transportFactory' available in the ServletContext");
         }
         transportOptions = (HashMap<String, Object>)getServletContext().getAttribute("transportOptions");
+        wireFormatOptions = (HashMap<String, Object>)getServletContext().getAttribute("wireFormatOptions");
         wireFormat = (TextWireFormat)getServletContext().getAttribute("wireFormat");
         if (wireFormat == null) {
             wireFormat = createWireFormat();
@@ -117,6 +119,10 @@ public class HttpTunnelServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        if (wireFormatOptions.get("maxFrameSize") != null && request.getContentLength() > Integer.parseInt(wireFormatOptions.get("maxFrameSize").toString())) {
+            throw new ServletException("maxFrameSize exceeded");
+        }
 
         InputStream stream = request.getInputStream();
         String contentType = request.getContentType();
