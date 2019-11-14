@@ -182,18 +182,17 @@ public class ActiveMQXAConnectionTxInterruptTest {
 
                     try {
                         resource.end(tid, XAResource.TMSUCCESS);
-                        fail("Expect end to fail");
                     } catch (Throwable expectedWithInterrupt) {
                         assertTrue(expectedWithInterrupt instanceof XAException);
                         assertCause(expectedWithInterrupt, new Class[]{InterruptedException.class});
                     }
 
+                    assertTrue("Was interrupted during ack!", Thread.currentThread().isInterrupted());
                     try {
                         resource.rollback(tid);
-                        fail("Expect rollback to fail due to connection being closed");
-                    } catch (Throwable expectedWithInterrupt) {
-                        assertTrue(expectedWithInterrupt instanceof XAException);
-                        assertCause(expectedWithInterrupt, new Class[]{ConnectionClosedException.class, InterruptedException.class});
+                    } catch (Throwable expectedWithInterruptIfClosed) {
+                        assertTrue(expectedWithInterruptIfClosed.toString(), expectedWithInterruptIfClosed instanceof XAException);
+                        assertCause(expectedWithInterruptIfClosed, new Class[]{ConnectionClosedException.class, InterruptedException.class});
                     }
                     session.close();
 
