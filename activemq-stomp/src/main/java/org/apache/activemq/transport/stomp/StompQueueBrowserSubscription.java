@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.jms.JMSException;
 
@@ -27,15 +28,14 @@ import org.apache.activemq.command.TransactionId;
 
 public class StompQueueBrowserSubscription extends StompSubscription {
 
-    public StompQueueBrowserSubscription(ProtocolConverter stompTransport, String subscriptionId, ConsumerInfo consumerInfo, String transformation) {
-        super(stompTransport, subscriptionId, consumerInfo, transformation);
+    public StompQueueBrowserSubscription(ProtocolConverter stompTransport, String subscriptionId, ConsumerInfo consumerInfo, String transformation, Map<String, StompAckEntry> pendingAcks) {
+        super(stompTransport, subscriptionId, consumerInfo, transformation, pendingAcks);
     }
 
     @Override
-    void onMessageDispatch(MessageDispatch md, String ackId) throws IOException, JMSException {
-
+    void onMessageDispatch(MessageDispatch md) throws IOException, JMSException {
         if (md.getMessage() != null) {
-            super.onMessageDispatch(md, ackId);
+            super.onMessageDispatch(md);
         } else {
             StompFrame browseDone = new StompFrame(Stomp.Responses.MESSAGE);
             browseDone.getHeaders().put(Stomp.Headers.Message.SUBSCRIPTION, this.getSubscriptionId());
@@ -52,5 +52,4 @@ public class StompQueueBrowserSubscription extends StompSubscription {
     public MessageAck onStompMessageNack(String messageId, TransactionId transactionId) throws ProtocolException {
         throw new ProtocolException("Cannot Nack a message on a Queue Browser Subscription.");
     }
-
 }

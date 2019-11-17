@@ -209,6 +209,8 @@ public class CreateCommand extends AbstractCommand {
     // utlity method to write an xml source to file
     private void writeToFile(Source src, File file) throws TransformerException {
         TransformerFactory tFactory = TransformerFactory.newInstance();
+        tFactory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
+
         Transformer fileTransformer = tFactory.newTransformer();
 
         Result res = new StreamResult(file);
@@ -270,6 +272,7 @@ public class CreateCommand extends AbstractCommand {
 
    private String getUnixActivemqData() {
        StringBuffer res = new StringBuffer();
+       res.append("#!/bin/sh\n\n");
        res.append("## Figure out the ACTIVEMQ_BASE from the directory this script was run from\n");
        res.append("PRG=\"$0\"\n");
        res.append("progname=`basename \"$0\"`\n");

@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -42,6 +43,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
@@ -58,6 +60,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private boolean keepDurableSubsActive;
     private final AtomicBoolean active = new AtomicBoolean();
     private final AtomicLong offlineTimestamp = new AtomicLong(-1);
+    private final HashSet<MessageId> ackedAndPrepared = new HashSet<MessageId>();
 
     public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
             throws JMSException {
@@ -323,12 +326,46 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     @Override
-    protected void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
+    protected boolean trackedInPendingTransaction(MessageReference node) {
+        return !ackedAndPrepared.isEmpty() && ackedAndPrepared.contains(node.getMessageId());
+    }
+
+    @Override
+    protected void acknowledge(ConnectionContext context, MessageAck ack, final MessageReference node) throws IOException {
         this.setTimeOfLastMessageAck(System.currentTimeMillis());
         Destination regionDestination = (Destination) node.getRegionDestination();
         regionDestination.acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
+        if (context.isInTransaction() && context.getTransaction().getTransactionId().isXATransaction()) {
+            context.getTransaction().addSynchronization(new Synchronization() {
+
+                @Override
+                public void beforeCommit() throws Exception {
+                    // post xa prepare call
+                    synchronized (pendingLock) {
+                        ackedAndPrepared.add(node.getMessageId());
+                    }
+                }
+
+                @Override
+                public void afterCommit() throws Exception {
+                    synchronized (pendingLock) {
+                        // may be in the cursor post activate/load from the store
+                        pending.remove(node);
+                        ackedAndPrepared.remove(node.getMessageId());
+                    }
+                }
+
+                @Override
+                public void afterRollback() throws Exception {
+                    synchronized (pendingLock) {
+                        ackedAndPrepared.remove(node.getMessageId());
+                    }
+                    dispatchPending();
+                }
+            });
+        }
         ((Destination)node.getRegionDestination()).getDestinationStatistics().getDequeues().increment();
         if (info.isNetworkSubscription()) {
             ((Destination)node.getRegionDestination()).getDestinationStatistics().getForwards().add(ack.getMessageCount());
@@ -368,6 +405,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 node.decrementReferenceCount();
             }
             dispatched.clear();
+            ackedAndPrepared.clear();
         }
         setSlowConsumer(false);
     }

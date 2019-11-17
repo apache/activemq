@@ -217,6 +217,11 @@ public class BrokerTestSupport extends CombinationTestSupport {
         return info;
     }
 
+    protected TransactionInfo createEndTransaction(ConnectionInfo connectionInfo, TransactionId txid) {
+        TransactionInfo info = new TransactionInfo(connectionInfo.getConnectionId(), txid, TransactionInfo.END);
+        return info;
+    }
+
     protected TransactionInfo createPrepareTransaction(ConnectionInfo connectionInfo, TransactionId txid) {
         TransactionInfo info = new TransactionInfo(connectionInfo.getConnectionId(), txid, TransactionInfo.PREPARE);
         return info;

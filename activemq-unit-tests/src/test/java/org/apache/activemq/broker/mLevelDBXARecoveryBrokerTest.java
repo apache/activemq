@@ -72,4 +72,8 @@ public class mLevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
     public void testQueuePersistentPreparedAcksAvailableAfterRollback() throws Exception {
         // pending acks are not tracked in leveldb
     }
+    public void testTopicPersistentPreparedAcksUnavailableTillRollback() throws Exception {
+    }
+    public void testTopicPersistentPreparedAcksNotLostOnRestartForNSubs() throws Exception {
+    }
 }

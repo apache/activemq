@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.failover;
 
+import org.apache.activemq.broker.PublishedAddressPolicy;
 import org.apache.activemq.broker.TransportConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,7 +174,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         initSingleTcBroker("", null, null);
 
         Thread.sleep(2000);
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false&initialReconnectDelay=500");
+        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false&initialReconnectDelay=500&randomize=false");
         createClients(100);
         Thread.sleep(5000);
 
@@ -233,6 +234,41 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         Thread.sleep(5000);
 
         // Client should failover to B.
+        assertAllConnectedTo(BROKER_B_CLIENT_TC_ADDRESS);
+    }
+
+    public void testStaticInfoAvailableAfterPattialUpdate() throws Exception {
+
+        addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
+        TransportConnector connectorA = getBroker(BROKER_A_NAME).addConnector(BROKER_A_CLIENT_TC_ADDRESS);
+        connectorA.setName("openwire");
+        connectorA.setRebalanceClusterClients(true);
+        connectorA.setUpdateClusterClients(true);
+        connectorA.getPublishedAddressPolicy().setPublishedHostStrategy(PublishedAddressPolicy.PublishedHostStrategy.IPADDRESS);
+
+        getBroker(BROKER_A_NAME).start();
+
+        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "?trace=true," + BROKER_B_CLIENT_TC_ADDRESS + "?trace=true)?useExponentialBackOff=false&initialReconnectDelay=500");
+        createClients(1);
+
+        assertAllConnectedTo(BROKER_A_CLIENT_TC_ADDRESS);
+
+        getBroker(BROKER_A_NAME).stop();
+
+
+        addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
+        TransportConnector connectorB = getBroker(BROKER_B_NAME).addConnector(BROKER_B_CLIENT_TC_ADDRESS);
+        connectorB.setName("openwire");
+        connectorB.setRebalanceClusterClients(true);
+        connectorB.setUpdateClusterClients(true);
+        connectorB.getPublishedAddressPolicy().setPublishedHostStrategy(PublishedAddressPolicy.PublishedHostStrategy.IPADDRESS);
+
+        getBroker(BROKER_B_NAME).start();
+
+        getBroker(BROKER_B_NAME).waitUntilStarted();
+        Thread.sleep(1000);
+
+        // verify can connect?
         assertAllConnectedTo(BROKER_B_CLIENT_TC_ADDRESS);
     }
 

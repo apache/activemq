@@ -34,6 +34,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.PublishedAddressPolicy;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
 public class FailoverClusterTestSupport extends TestCase {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static final int NUMBER_OF_CLIENTS = 30;
+    protected static final int NUMBER_OF_CLIENTS = 30;
 
     private String clientUrl;
 
@@ -102,6 +103,22 @@ public class FailoverClusterTestSupport extends TestCase {
                     + ".  Actuall distribution was " + percentage + " for connection " + key,
                     percentage >= minimumPercentage);
         }
+    }
+
+    protected void assertAllConnected(final int expected) throws Exception {
+        assertTrue("All connections connected!", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                int connectedCount = 0;
+                for (ActiveMQConnection c : connections) {
+                    if(c.getTransportChannel().isConnected()) {
+                        connectedCount++;
+                    }
+                }
+                logger.info("Found " + connectedCount + " of " + expected + " connected");
+                return connectedCount == expected;
+            }
+        }));
     }
 
     protected void assertAllConnectedTo(String url) throws Exception {
@@ -175,6 +192,7 @@ public class FailoverClusterTestSupport extends TestCase {
             connector.setUpdateClusterClients(false);
             connector.setUpdateClusterClientsOnRemove(false);
         }
+        connector.getPublishedAddressPolicy().setPublishedHostStrategy(PublishedAddressPolicy.PublishedHostStrategy.IPADDRESS);
     }
 
     protected void addNetworkBridge(BrokerService answer, String bridgeName,

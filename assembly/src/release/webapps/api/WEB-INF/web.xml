@@ -71,4 +71,10 @@
         <url-pattern>/jolokia/*</url-pattern>
     </servlet-mapping>
 
+    <session-config>
+        <cookie-config>
+            <http-only>true</http-only>
+        </cookie-config>
+    </session-config>
+
 </web-app>

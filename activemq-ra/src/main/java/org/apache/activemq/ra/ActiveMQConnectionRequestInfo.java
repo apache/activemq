@@ -271,7 +271,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     @Override
     public String toString() {
         return new StringBuffer("ActiveMQConnectionRequestInfo{ userName = '").append(userName).append("' ").append(", serverUrl = '").append(serverUrl)
-            .append("' ").append(", clientid = '").append(clientid).append("' ").append(", userName = '").append(userName).append("' ")
+            .append("' ").append(", clientid = '").append(clientid).append("' ")
             .append(", useSessionArgs = '").append(useSessionArgs).append("' ").append(", useInboundSession = '").append(useInboundSession).append("'  }")
             .toString();
     }

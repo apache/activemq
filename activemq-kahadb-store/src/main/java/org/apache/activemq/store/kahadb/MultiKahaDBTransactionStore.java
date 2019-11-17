@@ -63,11 +63,13 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(MultiKahaDBTransactionStore.class);
     final MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter;
     final ConcurrentMap<TransactionId, Tx> inflightTransactions = new ConcurrentHashMap<TransactionId, Tx>();
-    final Set<TransactionId> recoveredPendingCommit = new HashSet<TransactionId>();
+    final ConcurrentMap<TransactionId, Tx> pendingCommit = new ConcurrentHashMap<TransactionId, Tx>();
     private Journal journal;
     private int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     private int journalWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     private final AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean recovered = new AtomicBoolean(false);
+    private long journalCleanupInterval = Journal.DEFAULT_CLEANUP_INTERVAL;
 
     public MultiKahaDBTransactionStore(MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter) {
         this.multiKahaDBPersistenceAdapter = multiKahaDBPersistenceAdapter;
@@ -190,6 +192,14 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         this.journalWriteBatchSize = journalWriteBatchSize;
     }
 
+    public void setJournalCleanupInterval(long journalCleanupInterval) {
+        this.journalCleanupInterval = journalCleanupInterval;
+    }
+
+    public long getJournalCleanupInterval() {
+        return journalCleanupInterval;
+    }
+
     public class Tx {
         private final HashMap<TransactionStore, TransactionId> stores = new HashMap<TransactionStore, TransactionId>();
         private int prepareLocationId = 0;
@@ -284,10 +294,12 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     public void persistOutcome(Tx tx, TransactionId txid) throws IOException {
         tx.trackPrepareLocation(store(new KahaPrepareCommand().setTransactionInfo(TransactionIdConversion.convert(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid)))));
+        pendingCommit.put(txid, tx);
     }
 
     public void persistCompletion(TransactionId txid) throws IOException {
         store(new KahaCommitCommand().setTransactionInfo(TransactionIdConversion.convert(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid))));
+        pendingCommit.remove(txid);
     }
 
     private Location store(JournalCommand<?> data) throws IOException {
@@ -328,16 +340,24 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             journal.setDirectory(getDirectory());
             journal.setMaxFileLength(journalMaxFileLength);
             journal.setWriteBatchSize(journalWriteBatchSize);
+            journal.setCleanupInterval(journalCleanupInterval);
             IOHelper.mkdirs(journal.getDirectory());
             journal.start();
             recoverPendingLocalTransactions();
+            recovered.set(true);
             store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
         }
     }
 
     private void txStoreCleanup() {
+        if (!recovered.get()) {
+            return;
+        }
         Set<Integer> knownDataFileIds = new TreeSet<Integer>(journal.getFileMap().keySet());
         for (Tx tx : inflightTransactions.values()) {
+            knownDataFileIds.remove(tx.getPreparedLocationId());
+        }
+        for (Tx tx : pendingCommit.values()) {
             knownDataFileIds.remove(tx.getPreparedLocationId());
         }
         try {
@@ -362,11 +382,11 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     private void recoverPendingLocalTransactions() throws IOException {
         Location location = journal.getNextLocation(null);
         while (location != null) {
-            process(load(location));
+            process(location, load(location));
             location = journal.getNextLocation(location);
         }
-        recoveredPendingCommit.addAll(inflightTransactions.keySet());
-        LOG.info("pending local transactions: " + recoveredPendingCommit);
+        pendingCommit.putAll(inflightTransactions);
+        LOG.info("pending local transactions: " + pendingCommit.keySet());
     }
 
     public JournalCommand<?> load(Location location) throws IOException {
@@ -381,11 +401,11 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return message;
     }
 
-    public void process(JournalCommand<?> command) throws IOException {
+    public void process(final Location location, JournalCommand<?> command) throws IOException {
         switch (command.type()) {
             case KAHA_PREPARE_COMMAND:
                 KahaPrepareCommand prepareCommand = (KahaPrepareCommand) command;
-                getTx(TransactionIdConversion.convert(prepareCommand.getTransactionInfo()));
+                getTx(TransactionIdConversion.convert(prepareCommand.getTransactionInfo())).trackPrepareLocation(location);
                 break;
             case KAHA_COMMIT_COMMAND:
                 KahaCommitCommand commitCommand = (KahaCommitCommand) command;
@@ -422,10 +442,9 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             for (TransactionId txid : broker.getPreparedTransactions(null)) {
                 if (multiKahaDBPersistenceAdapter.isLocalXid(txid)) {
                     try {
-                        if (recoveredPendingCommit.contains(txid)) {
+                        if (pendingCommit.keySet().contains(txid)) {
                             LOG.info("delivering pending commit outcome for tid: " + txid);
                             broker.commitTransaction(null, txid, false);
-
                         } else {
                             LOG.info("delivering rollback outcome to store for tid: " + txid);
                             broker.forgetTransaction(null, txid);

@@ -106,6 +106,7 @@ public class DbRestartJDBCQueueTest extends JmsTopicSendReceiveWithTwoConnection
             LOG.info("STOPPING DB!@!!!!");
             final EmbeddedDataSource ds = sharedDs;
             ds.setShutdownDatabase("shutdown");
+            ds.setCreateDatabase("not_any_more");
             try {
                 ds.getConnection();
             } catch (Exception ignored) {

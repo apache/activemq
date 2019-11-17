@@ -54,6 +54,16 @@
                   <property name="name" value="X-FRAME-OPTIONS"/>
                   <property name="value" value="SAMEORIGIN"/>
                 </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                  <property name="pattern" value="*"/>
+                  <property name="name" value="X-XSS-Protection"/>
+                  <property name="value" value="1; mode=block"/>
+                </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                  <property name="pattern" value="*"/>
+                  <property name="name" value="X-Content-Type-Options"/>
+                  <property name="value" value="nosniff"/>
+                </bean>
             </list>
         </property>
     </bean>

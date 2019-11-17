@@ -540,7 +540,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals("1st", m.getText());
         String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
         assertTrue("cause exception has policy ref: " + cause, cause.contains("RedeliveryPolicy"));
-        assertTrue("cause exception has pre dispatch and count:" + cause, cause.contains("Dispatch[5]"));
+        assertTrue("cause exception has pre dispatch and count:" + cause, cause.contains("[5]"));
 
         dlqSession.commit();
 
@@ -598,6 +598,45 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
             }
         }
     }
+
+
+    public void testRepeatedServerClose() throws Exception {
+
+        connection.start();
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        MessageProducer producer = session.createProducer(destination);
+
+        // Send the messages
+        producer.send(session.createTextMessage("1st"));
+        session.commit();
+
+        final int maxRedeliveries = 10000;
+        for (int i=0;i<=maxRedeliveries + 1;i++) {
+
+            final ActiveMQConnection toTest = (ActiveMQConnection)factory.createConnection(userName, password);
+            toTest.start();
+
+            // abortive close via broker
+            for (VMTransportServer transportServer : VMTransportFactory.SERVERS.values()) {
+                transportServer.stop();
+            }
+
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return toTest.isTransportFailed();
+                }
+            },10000, 100 );
+
+            try {
+                toTest.close();
+            } catch (Exception expected) {
+            } finally {
+            }
+        }
+    }
+
 
 
     public void testRepeatedRedeliveryOnMessageNoCommit() throws Exception {

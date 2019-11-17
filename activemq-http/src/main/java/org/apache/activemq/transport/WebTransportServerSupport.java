@@ -27,6 +27,7 @@ import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.Logger;
@@ -61,7 +62,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
                 if (!file.exists()) {
                     throw new IllegalArgumentException("Jetty XML not found: " + file.getAbsolutePath());
                 }
-                XmlConfiguration xmlConfiguration = new XmlConfiguration(file.toURI().toURL());
+                XmlConfiguration xmlConfiguration = new XmlConfiguration(Resource.newResource(file));
                 server = (Server) xmlConfiguration.configure();
             } catch (Throwable t) {
                 throw new IllegalStateException("Jetty configuration can't be loaded", t);

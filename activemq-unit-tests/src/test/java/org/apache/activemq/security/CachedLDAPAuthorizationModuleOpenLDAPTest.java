@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.security;
 
+import org.apache.directory.api.ldap.model.name.Dn;
+import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapNetworkConnection;
-import org.apache.directory.shared.ldap.model.exception.LdapException;
-import org.apache.directory.shared.ldap.model.name.Dn;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

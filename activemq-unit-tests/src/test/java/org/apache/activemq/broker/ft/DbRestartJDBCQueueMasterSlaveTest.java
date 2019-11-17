@@ -45,6 +45,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
             LOG.info("STOPPING DB!@!!!!");
             final EmbeddedDataSource ds = ((SyncCreateDataSource)getExistingDataSource()).getDelegate();
             ds.setShutdownDatabase("shutdown");
+            ds.setCreateDatabase("not_any_more");
             LOG.info("DB STOPPED!@!!!!");
             
             Thread dbRestartThread = new Thread("db-re-start-thread") {

@@ -28,6 +28,7 @@ import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
 import org.apache.camel.blueprint.CamelContextFactoryBean;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
@@ -45,7 +46,8 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQServiceFactory.class);
 
     BundleContext bundleContext;
-    HashMap<String, BrokerService> brokers = new HashMap<String, BrokerService>();
+    Map<String, BrokerService> brokers = new HashMap<>();
+    Map<String, ServiceRegistration<BrokerService>> brokerRegs = new HashMap<>();
 
     @Override
     public String getName() {
@@ -56,9 +58,8 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
         return Collections.unmodifiableMap(brokers);
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
-    synchronized public void updated(String pid, Dictionary properties) throws ConfigurationException {
+    synchronized public void updated(String pid, Dictionary<String, ?> properties) throws ConfigurationException {
 
         // First stop currently running broker (if any)
         deleted(pid);
@@ -143,6 +144,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             if (!broker.isSlave())
                 broker.waitUntilStarted();
             brokers.put(pid, broker);
+            brokerRegs.put(pid, bundleContext.registerService(BrokerService.class, broker, properties));
         } catch (Exception e) {
             throw new ConfigurationException(null, "Cannot start the broker", e);
         }
@@ -159,18 +161,25 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
     @Override
     synchronized public void deleted(String pid) {
-        BrokerService broker = brokers.get(pid);
-        if (broker == null) {
-            return;
+        ServiceRegistration<BrokerService> reg = brokerRegs.remove(pid);
+        if (reg != null) {
+            reg.unregister();
         }
-        try {
+        BrokerService broker = brokers.remove(pid);
+        if (broker != null) {
+            stop(pid, broker);
+        }
+    }
+
+	private void stop(String pid, BrokerService broker) {
+		try {
             LOG.info("Stopping broker " + pid);
             broker.stop();
             broker.waitUntilStopped();
         } catch (Exception e) {
             LOG.error("Exception on stopping broker", e);
         }
-    }
+	}
 
     synchronized public void destroy() {
         for (String broker : brokers.keySet()) {

@@ -63,6 +63,10 @@ import org.apache.activemq.util.SubscriptionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.JMSException;
+
+import static org.apache.activemq.transaction.Transaction.IN_USE_STATE;
+
 /**
  * The Topic is a destination that sends a copy of a message to every active
  * Subscription registered.
@@ -409,8 +413,15 @@ public class Topic extends BaseDestination implements Task {
                             public void run() {
                                 try {
 
-                                    // While waiting for space to free up... the
-                                    // message may have expired.
+                                    // While waiting for space to free up...
+                                    // the transaction may be done
+                                    if (message.isInTransaction()) {
+                                        if (context.getTransaction() == null || context.getTransaction().getState() > IN_USE_STATE) {
+                                            throw new JMSException("Send transaction completed while waiting for space");
+                                        }
+                                    }
+
+                                    // the message may have expired.
                                     if (message.isExpired()) {
                                         broker.messageExpired(context, message, null);
                                         getDestinationStatistics().getExpired().increment();

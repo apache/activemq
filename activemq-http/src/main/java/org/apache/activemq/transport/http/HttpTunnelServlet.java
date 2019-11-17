@@ -60,6 +60,7 @@ public class HttpTunnelServlet extends HttpServlet {
     private ConcurrentMap<String, BlockingQueueTransport> clients = new ConcurrentHashMap<String, BlockingQueueTransport>();
     private final long requestTimeout = 30000L;
     private HashMap<String, Object> transportOptions;
+    private HashMap<String, Object> wireFormatOptions;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -74,6 +75,7 @@ public class HttpTunnelServlet extends HttpServlet {
             throw new ServletException("No such attribute 'transportFactory' available in the ServletContext");
         }
         transportOptions = (HashMap<String, Object>)getServletContext().getAttribute("transportOptions");
+        wireFormatOptions = (HashMap<String, Object>)getServletContext().getAttribute("wireFormatOptions");
         wireFormat = (TextWireFormat)getServletContext().getAttribute("wireFormat");
         if (wireFormat == null) {
             wireFormat = createWireFormat();
@@ -117,6 +119,10 @@ public class HttpTunnelServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        if (wireFormatOptions.get("maxFrameSize") != null && request.getContentLength() > Integer.parseInt(wireFormatOptions.get("maxFrameSize").toString())) {
+            throw new ServletException("maxFrameSize exceeded");
+        }
 
         InputStream stream = request.getInputStream();
         String contentType = request.getContentType();
@@ -197,7 +203,7 @@ public class HttpTunnelServlet extends HttpServlet {
         // Record the client's transport and ensure that it has not already registered; this is thread-safe and only allows one
         // thread to register the client
         if (clients.putIfAbsent(clientID, answer) != null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for clientID '" + clientID + "' has already been established");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for the given clientID has already been established");
             LOG.warn("A session for clientID '" + clientID + "' has already been established");
             return null;
         }
@@ -237,7 +243,7 @@ public class HttpTunnelServlet extends HttpServlet {
 
         // Ensure that the transport was not prematurely disposed.
         if (transport.isDisposed()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "The session for clientID '" + clientID + "' was prematurely disposed");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "The session for the given clientID was prematurely disposed");
             LOG.warn("The session for clientID '" + clientID + "' was prematurely disposed");
             return null;
         }

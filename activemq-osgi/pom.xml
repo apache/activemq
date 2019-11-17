@@ -35,6 +35,10 @@
       !org.apache.commons.daemon,
       !org.apache.maven*,
       !com.google.thirdparty.publicsuffix,
+      !com.rometools*,
+      !com.google.errorprone.annotations,
+      !com.google.errorprone.annotations.concurrent,
+      !com.google.j2objc.annotations,
       sun.misc*;resolution:=optional,
       sun.nio*;resolution:=optional,
       javax.jmdns*;resolution:=optional,
@@ -62,12 +66,12 @@
       org.springframework*;version="[4,5)";resolution:=optional,
       org.xmlpull*;resolution:=optional,
       scala*;resolution:=optional,
-      javax.annotation*,
+      javax.annotation*;version="[1,4)",
       !com.thoughtworks.qdox*,
       org.apache.commons.logging;version="[1.2,2)";resolution:=optional,
       javax.jms*;version="[1.1,3)",
       javax.management*,
-      javax.transaction*,
+      javax.transaction*;version="[1,3)",
       javax.naming*;resolution:=optional,
       org.apache.commons.pool*;resolution:=optional,
       org.apache.commons.net*;resolution:=optional,
@@ -79,6 +83,7 @@
       org.apache.tools.ant*;resolution:=optional,
       org.apache.log4j*;resolution:=optional,
       org.json*;resolution:=optional,
+      org.objectweb.asm;version="[5,8)";resolution:=optional,
         *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
@@ -92,6 +97,9 @@
          org.fusesource.hawtbuf*,
          org.apache.qpid*,
          com.google.common*,
+         com.google.errorprone.annotations,
+         com.google.errorprone.annotations.concurrent,
+         com.google.j2objc.annotations,
          org.linkedin*,
          org.iq80*
     </activemq.osgi.private.pkg>
@@ -163,7 +171,8 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
       <exclusions>
-      <exclusion>
+        <exclusion>
+          <groupId>${project.groupId}</groupId>
           <artifactId>activemq-all</artifactId>
         </exclusion>
       </exclusions>
@@ -493,8 +502,8 @@
         </dependency>
         <!-- <dependency>
           <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
-          <version>1.0.1</version>
+          <artifactId>geronimo-jta_1.1_spec</artifactId>
+          <version>1.1.1</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency> -->

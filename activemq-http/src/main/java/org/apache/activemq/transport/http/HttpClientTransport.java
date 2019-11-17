@@ -40,26 +40,23 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.params.CookiePolicy;
-import org.apache.http.client.params.HttpClientParams;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.params.ConnRoutePNames;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.AbstractHttpMessage;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -72,7 +69,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HttpClientTransport extends HttpTransportSupport {
 
-    public static final int MAX_CLIENT_TIMEOUT = 30000;
+    public static final int MAX_CLIENT_TIMEOUT = 90000;
     private static final Logger LOG = LoggerFactory.getLogger(HttpClientTransport.class);
     private static final IdGenerator CLIENT_ID_GENERATOR = new IdGenerator();
 
@@ -317,9 +314,10 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected HttpClient createHttpClient() {
-        DefaultHttpClient client = new DefaultHttpClient(createClientConnectionManager());
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+        clientBuilder.setConnectionManager(createClientConnectionManager());
         if (useCompression) {
-            client.addRequestInterceptor( new HttpRequestInterceptor() {
+            clientBuilder.addInterceptorLast(new HttpRequestInterceptor() {
                 @Override
                 public void process(HttpRequest request, HttpContext context) {
                     // We expect to received a compression response that we un-gzip
@@ -327,31 +325,30 @@ public class HttpClientTransport extends HttpTransportSupport {
                 }
             });
         }
+
+        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
         if (getProxyHost() != null) {
             HttpHost proxy = new HttpHost(getProxyHost(), getProxyPort());
-            client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+            requestConfigBuilder.setProxy(proxy);
 
-            if (client.getConnectionManager().getSchemeRegistry().get("http") == null) {
-                client.getConnectionManager().getSchemeRegistry().register(
-                    new Scheme("http", getProxyPort(), PlainSocketFactory.getSocketFactory()));
-            }
-
-            if(getProxyUser() != null && getProxyPassword() != null) {
-                client.getCredentialsProvider().setCredentials(
+            if (getProxyUser() != null && getProxyPassword() != null) {
+                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                credentialsProvider.setCredentials(
                     new AuthScope(getProxyHost(), getProxyPort()),
                     new UsernamePasswordCredentials(getProxyUser(), getProxyPassword()));
+                clientBuilder.setDefaultCredentialsProvider(credentialsProvider);
             }
         }
 
-        HttpParams params = client.getParams();
-        HttpConnectionParams.setSoTimeout(params, soTimeout);
-        HttpClientParams.setCookiePolicy(params, CookiePolicy.BROWSER_COMPATIBILITY);
+        requestConfigBuilder.setSocketTimeout(soTimeout);
+        requestConfigBuilder.setCookieSpec(CookieSpecs.DEFAULT);
+        clientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
 
-        return client;
+        return clientBuilder.build();
     }
 
-    protected ClientConnectionManager createClientConnectionManager() {
-        return new PoolingClientConnectionManager();
+    protected HttpClientConnectionManager createClientConnectionManager() {
+        return new PoolingHttpClientConnectionManager();
     }
 
     protected void configureMethod(AbstractHttpMessage method) {

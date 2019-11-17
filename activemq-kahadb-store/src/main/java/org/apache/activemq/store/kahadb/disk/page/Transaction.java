@@ -22,6 +22,8 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayInputStream;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IOHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Iterator;
@@ -33,6 +35,8 @@ import java.util.TreeMap;
  * do multiple update operations in a single unit of work.
  */
 public class Transaction implements Iterable<Page> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Transaction.class);
 
     private RandomAccessFile tmpFile;
     private File txFile;
@@ -656,8 +660,8 @@ public class Transaction implements Iterable<Page> {
     public void commit() throws IOException {
         if( writeTransactionId!=-1 ) {
             if (tmpFile != null) {
-                tmpFile.close();
-                pageFile.removeTmpFile(getTempFile());
+                LOG.debug("Committing transaction {}: Size {} kb", writeTransactionId, tmpFile.length() / (1024));
+                pageFile.removeTmpFile(getTempFile(), tmpFile);
                 tmpFile = null;
                 txFile = null;
             }
@@ -683,7 +687,7 @@ public class Transaction implements Iterable<Page> {
         if( writeTransactionId!=-1 ) {
             if (tmpFile != null) {
                 tmpFile.close();
-                pageFile.removeTmpFile(getTempFile());
+                getTempFile().delete();
                 tmpFile = null;
                 txFile = null;
             }

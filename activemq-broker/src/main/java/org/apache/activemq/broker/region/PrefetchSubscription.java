@@ -532,9 +532,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     @Override
     public long getPendingMessageSize() {
-        synchronized (pendingLock) {
-            return pending.messageSize();
-        }
+        return pending.messageSize();
     }
 
     @Override
@@ -643,6 +641,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         if (node == null) {
                             break;
                         }
+                        if (trackedInPendingTransaction(node)) {
+                            node.decrementReferenceCount();
+                            continue;
+                        }
 
                         // Synchronize between dispatched list and remove of message from pending list
                         // related to remove subscription action
@@ -685,6 +687,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 dest.slowConsumer(context, this);
             }
         }
+    }
+
+    protected boolean trackedInPendingTransaction(MessageReference node) {
+        return false;
     }
 
     protected void setPendingBatchSize(PendingMessageCursor pending, int numberToDispatch) {

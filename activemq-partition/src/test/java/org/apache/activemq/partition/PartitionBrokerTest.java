@@ -181,7 +181,7 @@ public class PartitionBrokerTest {
     }
 
     protected Connection createConnectionTo(String brokerId) throws IOException, URISyntaxException, JMSException {
-        return createConnectionToUrl("failover://(" + getConnectURL(brokerId) + ")");
+        return createConnectionToUrl("failover://(" + getConnectURL(brokerId) + ")?randomize=false");
     }
 
     private Connection createConnectionToUrl(String url) throws JMSException {

@@ -16,25 +16,28 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
+import static org.apache.activemq.util.IntrospectionSupport.findGetterMethod;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import javax.management.ObjectName;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.ObjectName;
-import java.io.IOException;
-import java.io.Serializable;
-import java.io.StringWriter;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.apache.activemq.util.IntrospectionSupport.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Defines a query API for destinations MBeans
@@ -126,8 +129,12 @@ public class DestinationsViewFilter implements Serializable {
      * @throws IOException
      */
     String filter(int page, int pageSize) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        destinations = Maps.filterValues(destinations, getPredicate());
+        final ObjectMapper mapper = new ObjectMapper();
+        final Predicate<DestinationView> predicate = getPredicate();
+        final Map<ObjectName, DestinationView> filteredDestinations = new HashMap<>(destinations);
+        destinations = filteredDestinations.entrySet().stream().filter(d -> predicate.test(d.getValue())).collect(
+                Collectors.toMap(d -> d.getKey(), d -> d.getValue()));
+
         Map<ObjectName, DestinationView> pagedDestinations = getPagedDestinations(page, pageSize);
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("data", pagedDestinations);
@@ -138,24 +145,19 @@ public class DestinationsViewFilter implements Serializable {
     }
 
     Map<ObjectName, DestinationView> getPagedDestinations(int page, int pageSize) {
-        ImmutableMap.Builder<ObjectName, DestinationView> builder = ImmutableMap.builder();
         int start = (page - 1) * pageSize;
         int end = Math.min(page * pageSize, destinations.size());
-        int i = 0;
-        for (Map.Entry<ObjectName, DestinationView> entry :
-                getOrdering().sortedCopy(destinations.entrySet())) {
-            if (i >= start && i < end) {
-                builder.put(entry.getKey(), entry.getValue());
-            }
-            i++;
-        }
-        return builder.build();
+
+        final List<Map.Entry<ObjectName, DestinationView>> sortedCopy = new ArrayList<>(destinations.entrySet());
+        sortedCopy.sort(getComparator());
+        return sortedCopy.subList(start, end).stream().collect(
+                Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
     }
 
     Predicate<DestinationView> getPredicate() {
         return new Predicate<DestinationView>() {
             @Override
-            public boolean apply(DestinationView input) {
+            public boolean test(DestinationView input) {
                 boolean match = true;
                 if (getName() != null && !getName().isEmpty()) {
                     match = input.getName().contains(getName());
@@ -181,11 +183,12 @@ public class DestinationsViewFilter implements Serializable {
         };
     }
 
-    Ordering<Map.Entry<ObjectName, DestinationView>> getOrdering() {
-        return new Ordering<Map.Entry<ObjectName, DestinationView>>() {
+    Comparator<Map.Entry<ObjectName, DestinationView>> getComparator() {
+        return new Comparator<Map.Entry<ObjectName, DestinationView>>() {
 
             Method getter = findGetterMethod(DestinationView.class, getSortColumn());
 
+            @SuppressWarnings({ "unchecked", "rawtypes" })
             @Override
             public int compare(Map.Entry<ObjectName, DestinationView> left, Map.Entry<ObjectName, DestinationView> right) {
                 try {

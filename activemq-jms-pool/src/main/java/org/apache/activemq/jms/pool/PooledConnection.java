@@ -81,8 +81,8 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public void close() throws JMSException {
-        this.cleanupConnectionTemporaryDestinations();
         this.cleanupAllLoanedSessions();
+        this.cleanupConnectionTemporaryDestinations();
         if (this.pool != null) {
             this.pool.decrementReferenceCount();
             this.pool = null;

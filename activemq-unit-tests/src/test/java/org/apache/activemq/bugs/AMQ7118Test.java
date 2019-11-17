@@ -16,11 +16,9 @@
  */
 package org.apache.activemq.bugs;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ConnectionId;
 import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -53,7 +51,6 @@ public class AMQ7118Test {
     private final String xbean = "xbean:";
     private final String confBase = "src/test/resources/org/apache/activemq/bugs/amq7118";
     int checkpointIndex = 0;
-    protected long idGenerator;
 
     private static final ActiveMQConnectionFactory ACTIVE_MQ_CONNECTION_FACTORY = new ActiveMQConnectionFactory(WIRE_LEVEL_ENDPOINT);
 
@@ -61,6 +58,7 @@ public class AMQ7118Test {
     public void setup() throws Exception {
         deleteData(new File("target/data"));
         createBroker();
+        ACTIVE_MQ_CONNECTION_FACTORY.setConnectionIDPrefix("bla");
     }
 
     @After
@@ -70,10 +68,6 @@ public class AMQ7118Test {
 
     public void setupProducerConnection() throws Exception {
         producerConnection = ACTIVE_MQ_CONNECTION_FACTORY.createConnection();
-
-        //Small hack to be sure the message IDs are the same across platforms when testing
-        ((ActiveMQConnection)producerConnection).getConnectionInfo().setConnectionId(new ConnectionId("connection:" + (++idGenerator)));
-
         producerConnection.start();
         pSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
@@ -139,11 +133,11 @@ public class AMQ7118Test {
         LOG.info("All messages Consumed.");
 
         //Clean up the log files and be sure its stable
-        checkFiles(true, 2, "db-33.log");
-        checkFiles(true, 3, "db-34.log");
-        checkFiles(true, 2, "db-34.log");
-        checkFiles(true, 2, "db-34.log");
-        checkFiles(true, 2, "db-34.log");
+        checkFiles(true, 2, "db-30.log");
+        checkFiles(true, 3, "db-31.log");
+        checkFiles(true, 2, "db-31.log");
+        checkFiles(true, 2, "db-31.log");
+        checkFiles(true, 2, "db-31.log");
 
         broker.stop();
         broker.waitUntilStopped();

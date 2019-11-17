@@ -19,7 +19,9 @@ package org.apache.activemq.transport.mqtt;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.net.ProtocolException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +36,7 @@ import org.fusesource.mqtt.codec.CONNECT;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.fusesource.mqtt.codec.PUBLISH;
 import org.fusesource.mqtt.codec.SUBSCRIBE;
+import org.fusesource.mqtt.codec.UNSUBSCRIBE;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -252,6 +255,28 @@ public class MQTTCodecTest {
         publish = new PUBLISH().decode(frames.get(0));
         assertFalse(publish.dup());
         assertEquals(MESSAGE_SIZE, publish.payload().length());
+    }
+
+    @Test
+    public void testMessageDecodingCorrupted() throws Exception {
+        UNSUBSCRIBE unsubscribe = new UNSUBSCRIBE();
+
+        MQTTFrame frame = unsubscribe.encode();
+
+        DataByteArrayOutputStream str = new DataByteArrayOutputStream(5);
+        str.write(new byte[] {0,0,0,0,0});
+
+        frame.buffers[0] = str.toBuffer();
+
+        boolean decodingFailed = false;
+        try {
+            unsubscribe.decode(frame);
+        } catch (ProtocolException pe) {
+            decodingFailed = true;
+        }
+        if (!decodingFailed) {
+            fail("Should have failed decoding the frame");
+        }
     }
 
     @Test

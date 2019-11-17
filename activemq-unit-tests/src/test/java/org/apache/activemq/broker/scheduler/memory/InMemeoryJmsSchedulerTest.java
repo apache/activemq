@@ -34,7 +34,17 @@ public class InMemeoryJmsSchedulerTest extends JmsSchedulerTest {
     }
 
     @Override
+    public void testScheduleFullRecoveryRestart() throws Exception {
+        // No persistence so scheduled jobs don't survive restart.
+    }
+
+    @Override
     public void testJobSchedulerStoreUsage() throws Exception {
         // No store usage numbers for in-memory store.
+    }
+
+    @Override
+    public void testUpdatesAppliedToIndexBeforeJournalShouldBeDiscarded() throws Exception {
+        // not applicable when non persistent
     }
 }

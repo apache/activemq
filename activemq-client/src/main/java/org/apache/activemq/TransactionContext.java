@@ -545,7 +545,11 @@ public class TransactionContext implements XAResource {
             // No risk for concurrent updates as we own the list now
             if (l != null) {
                 for (TransactionContext ctx : l) {
-                    ctx.afterRollback();
+                    try {
+                        ctx.afterRollback();
+                    } catch (Exception ignored) {
+                        LOG.debug("ignoring exception from after rollback on ended transaction: {}", ignored, ignored);
+                    }
                 }                  
             }
         } catch (JMSException e) {

@@ -91,6 +91,8 @@ public abstract class InboundTransformer {
 
             if (header.getDurable() != null) {
                 jms.setPersistent(header.getDurable().booleanValue());
+            } else {
+                jms.setPersistent(false);
             }
 
             if (header.getPriority() != null) {

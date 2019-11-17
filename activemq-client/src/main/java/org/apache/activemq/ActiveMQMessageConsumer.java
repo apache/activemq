@@ -111,6 +111,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             this.transactionId = transactionId;
         }
     }
+    class PreviouslyDelivered {
+        org.apache.activemq.command.Message message;
+        boolean redelivered;
+
+        PreviouslyDelivered(MessageDispatch messageDispatch) {
+            message = messageDispatch.getMessage();
+        }
+
+        PreviouslyDelivered(MessageDispatch messageDispatch, boolean redelivered) {
+            message = messageDispatch.getMessage();
+            this.redelivered = redelivered;
+        }
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageConsumer.class);
     protected final ActiveMQSession session;
@@ -124,7 +137,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     // Always walk list in reverse order.
     protected final LinkedList<MessageDispatch> deliveredMessages = new LinkedList<MessageDispatch>();
     // track duplicate deliveries in a transaction such that the tx integrity can be validated
-    private PreviouslyDeliveredMap<MessageId, Boolean> previouslyDeliveredMessages;
+    private PreviouslyDeliveredMap<MessageId, PreviouslyDelivered> previouslyDeliveredMessages;
     private int deliveredCounter;
     private int additionalWindowSize;
     private long redeliveryDelay;
@@ -144,7 +157,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private final AtomicBoolean deliveryingAcknowledgements = new AtomicBoolean();
     private ExecutorService executorService;
     private MessageTransformer transformer;
-    private boolean clearDeliveredList;
+    private volatile boolean clearDeliveredList;
     AtomicInteger inProgressClearRequiredFlag = new AtomicInteger(0);
 
     private MessageAck pendingAck;
@@ -766,14 +779,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                     // allow dispatch on this connection to resume
                     session.connection.transportInterruptionProcessingComplete();
-                    inProgressClearRequiredFlag.decrementAndGet();
+                    inProgressClearRequiredFlag.set(0);
 
                     // Wake up any blockers and allow them to recheck state.
                     unconsumedMessages.getMutex().notifyAll();
                 }
             }
+            clearDeliveredList();
         }
-        clearDeliveredList();
     }
 
     void deliverAcks() {
@@ -869,6 +882,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
         }
+        if (previouslyDeliveredMessages != null) {
+            for (PreviouslyDelivered previouslyDelivered : previouslyDeliveredMessages.values()) {
+                session.connection.rollbackDuplicate(this, previouslyDelivered.message);
+            }
+        }
+        clearPreviouslyDelivered();
     }
 
     /**
@@ -1141,8 +1160,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 numberNotReplayed = 0;
                 synchronized(deliveredMessages) {
                     if (previouslyDeliveredMessages != null) {
-                        for (Entry<MessageId, Boolean> entry: previouslyDeliveredMessages.entrySet()) {
-                            if (!entry.getValue()) {
+                        for (PreviouslyDelivered entry: previouslyDeliveredMessages.values()) {
+                            if (!entry.redelivered) {
                                 numberNotReplayed++;
                             }
                         }
@@ -1169,11 +1188,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             // if any previously delivered messages was not re-delivered, transaction is invalid and must rollback
             // as messages have been dispatched else where.
             int numberNotReplayed = 0;
-            for (Entry<MessageId, Boolean> entry: previouslyDeliveredMessages.entrySet()) {
-                if (!entry.getValue()) {
+            for (PreviouslyDelivered entry: previouslyDeliveredMessages.values()) {
+                if (!entry.redelivered) {
                     numberNotReplayed++;
                     LOG.debug("previously delivered message has not been replayed in transaction: {}, messageId: {}",
-                              previouslyDeliveredMessages.transactionId, entry.getKey());
+                              previouslyDeliveredMessages.transactionId, entry.message.getMessageId());
                 }
             }
             if (numberNotReplayed > 0) {
@@ -1244,8 +1263,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 for (Iterator<MessageDispatch> iter = deliveredMessages.iterator(); iter.hasNext();) {
                     MessageDispatch md = iter.next();
                     md.getMessage().onMessageRolledBack();
-                    // ensure we don't filter this as a duplicate
-                    session.connection.rollbackDuplicate(this, md.getMessage());
                 }
 
                 if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
@@ -1275,17 +1292,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         session.sendAck(ack,true);
                     }
 
-                    // stop the delivery of messages.
-                    if (nonBlockingRedelivery) {
-                        if (!unconsumedMessages.isClosed()) {
+                    final LinkedList<MessageDispatch> pendingSessionRedelivery =
+                            new LinkedList<MessageDispatch>(deliveredMessages);
 
-                            final LinkedList<MessageDispatch> pendingRedeliveries =
-                                new LinkedList<MessageDispatch>(deliveredMessages);
+                    captureDeliveredMessagesForDuplicateSuppressionWithRequireRedelivery(false);
 
-                            Collections.reverse(pendingRedeliveries);
+                    deliveredCounter -= deliveredMessages.size();
+                    deliveredMessages.clear();
 
-                            deliveredCounter -= deliveredMessages.size();
-                            deliveredMessages.clear();
+                    if (!unconsumedMessages.isClosed()) {
+
+                        if (nonBlockingRedelivery) {
+                            Collections.reverse(pendingSessionRedelivery);
 
                             // Start up the delivery again a little later.
                             session.getScheduler().executeAfterDelay(new Runnable() {
@@ -1293,7 +1311,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 public void run() {
                                     try {
                                         if (!unconsumedMessages.isClosed()) {
-                                            for(MessageDispatch dispatch : pendingRedeliveries) {
+                                            for(MessageDispatch dispatch : pendingSessionRedelivery) {
                                                 session.dispatch(dispatch);
                                             }
                                         }
@@ -1302,41 +1320,51 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                     }
                                 }
                             }, redeliveryDelay);
-                        }
 
-                    } else {
-                        unconsumedMessages.stop();
+                        } else {
+                            // stop the delivery of messages.
+                            unconsumedMessages.stop();
 
-                        for (MessageDispatch md : deliveredMessages) {
-                            unconsumedMessages.enqueueFirst(md);
-                        }
+                            final ActiveMQMessageConsumer dispatcher = this;
 
-                        deliveredCounter -= deliveredMessages.size();
-                        deliveredMessages.clear();
-
-                        if (redeliveryDelay > 0 && !unconsumedMessages.isClosed()) {
-                            // Start up the delivery again a little later.
-                            session.getScheduler().executeAfterDelay(new Runnable() {
+                            Runnable redispatchWork = new Runnable() {
                                 @Override
                                 public void run() {
                                     try {
-                                        if (started.get()) {
-                                            start();
+                                        if (!unconsumedMessages.isClosed()) {
+                                            synchronized (unconsumedMessages.getMutex()) {
+                                                for (MessageDispatch md : pendingSessionRedelivery) {
+                                                    unconsumedMessages.enqueueFirst(md);
+                                                }
+
+                                                if (messageListener.get() != null) {
+                                                    session.redispatch(dispatcher, unconsumedMessages);
+                                                }
+                                            }
+                                            if (started.get()) {
+                                                start();
+                                            }
                                         }
                                     } catch (JMSException e) {
                                         session.connection.onAsyncException(e);
                                     }
                                 }
-                            }, redeliveryDelay);
-                        } else {
-                            start();
+                            };
+
+                            if (redeliveryDelay > 0 && !unconsumedMessages.isClosed()) {
+                                // Start up the delivery again a little later.
+                                session.getScheduler().executeAfterDelay(redispatchWork, redeliveryDelay);
+                            } else {
+                                redispatchWork.run();
+                            }
+                        }
+                    } else {
+                        for (MessageDispatch md : pendingSessionRedelivery) {
+                            session.connection.rollbackDuplicate(this, md.getMessage());
                         }
                     }
                 }
             }
-        }
-        if (messageListener.get() != null) {
-            session.redispatch(this, unconsumedMessages);
         }
     }
 
@@ -1347,10 +1375,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     private void rollbackPreviouslyDeliveredAndNotRedelivered() {
         if (previouslyDeliveredMessages != null) {
-            for (Entry<MessageId, Boolean> entry: previouslyDeliveredMessages.entrySet()) {
-                if (!entry.getValue()) {
-                    LOG.trace("rollback non redelivered: {}" + entry.getKey());
-                    removeFromDeliveredMessages(entry.getKey());
+            for (PreviouslyDelivered entry: previouslyDeliveredMessages.values()) {
+                if (!entry.redelivered) {
+                    LOG.trace("rollback non redelivered: {}", entry.message.getMessageId());
+                    removeFromDeliveredMessages(entry.message.getMessageId());
                 }
             }
             clearPreviouslyDelivered();
@@ -1390,7 +1418,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             clearDeliveredList();
             synchronized (unconsumedMessages.getMutex()) {
                 if (!unconsumedMessages.isClosed()) {
-                    if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
+                    // deliverySequenceId non zero means previously queued dispatch
+                    if (this.info.isBrowser() || md.getDeliverySequenceId() != 0l || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
                             if (redeliveryExceeded(md)) {
                                 posionAck(md, "listener dispatch[" + md.getRedeliveryCounter() + "] to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
@@ -1416,11 +1445,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 }
                             }
                         } else {
-                            if (!unconsumedMessages.isRunning()) {
-                                // delayed redelivery, ensure it can be re delivered
-                                session.connection.rollbackDuplicate(this, md.getMessage());
-                            }
-
+                            md.setDeliverySequenceId(-1); // skip duplicate check on subsequent queued delivery
                             if (md.getMessage() == null) {
                                 // End of browse or pull request timeout.
                                 unconsumedMessages.enqueue(md);
@@ -1476,9 +1501,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (session.isTransacted()) {
             synchronized (deliveredMessages) {
                 if (previouslyDeliveredMessages != null) {
-                    if (previouslyDeliveredMessages.containsKey(md.getMessage().getMessageId())) {
+                    PreviouslyDelivered entry;
+                    if ((entry = previouslyDeliveredMessages.get(md.getMessage().getMessageId())) != null) {
                         if (markReceipt) {
-                            previouslyDeliveredMessages.put(md.getMessage().getMessageId(), true);
+                            entry.redelivered = true;
                         }
                         return true;
                     }
@@ -1506,15 +1532,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 if (clearDeliveredList) {
                     if (!deliveredMessages.isEmpty()) {
                         if (session.isTransacted()) {
-
-                            if (previouslyDeliveredMessages == null) {
-                                previouslyDeliveredMessages = new PreviouslyDeliveredMap<MessageId, Boolean>(session.getTransactionContext().getTransactionId());
-                            }
-                            for (MessageDispatch delivered : deliveredMessages) {
-                                previouslyDeliveredMessages.put(delivered.getMessage().getMessageId(), false);
-                            }
-                            LOG.debug("{} tracking existing transacted {} delivered list ({}) on transport interrupt",
-                                      getConsumerId(), previouslyDeliveredMessages.transactionId, deliveredMessages.size());
+                            captureDeliveredMessagesForDuplicateSuppression();
                         } else {
                             if (session.isClientAcknowledge()) {
                                 LOG.debug("{} rolling back delivered list ({}) on transport interrupt", getConsumerId(), deliveredMessages.size());
@@ -1534,6 +1552,21 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
         }
+    }
+
+    // called with deliveredMessages locked
+    private void captureDeliveredMessagesForDuplicateSuppression() {
+        captureDeliveredMessagesForDuplicateSuppressionWithRequireRedelivery (true);
+    }
+
+    private void captureDeliveredMessagesForDuplicateSuppressionWithRequireRedelivery(boolean requireRedelivery) {
+        if (previouslyDeliveredMessages == null) {
+            previouslyDeliveredMessages = new PreviouslyDeliveredMap<MessageId, PreviouslyDelivered>(session.getTransactionContext().getTransactionId());
+        }
+        for (MessageDispatch delivered : deliveredMessages) {
+            previouslyDeliveredMessages.put(delivered.getMessage().getMessageId(), new PreviouslyDelivered(delivered, !requireRedelivery));
+        }
+        LOG.trace("{} tracking existing transacted {} delivered list({})", getConsumerId(), previouslyDeliveredMessages.transactionId, deliveredMessages.size());
     }
 
     public int getMessageSize() {

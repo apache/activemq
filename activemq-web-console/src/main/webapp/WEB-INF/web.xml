@@ -155,7 +155,15 @@
   </error-page>
   
   <session-config>
-  	<session-timeout>30</session-timeout>
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <http-only>true</http-only>
+    </cookie-config>
   </session-config>
+
+  <context-param>
+    <param-name>org.eclipse.jetty.servlet.Default.dirAllowed</param-name>
+    <param-value>false</param-value>
+  </context-param>
   
 </web-app>

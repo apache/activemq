@@ -134,7 +134,6 @@ public class SelectorWorker implements Runnable {
                 }
             }
         } catch (Throwable e) {
-            e.printStackTrace();
             // Notify all the selections that the error occurred.
             Set<SelectionKey> keys = selector.keys();
             for (Iterator<SelectionKey> i = keys.iterator(); i.hasNext();) {

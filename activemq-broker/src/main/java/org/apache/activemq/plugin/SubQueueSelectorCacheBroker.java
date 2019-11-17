@@ -131,8 +131,10 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        // don't track selectors for advisory topics or temp destinations
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()) {
+		// don't track selectors for advisory topics, temp destinations or console
+		// related consumers
+		if (!AdvisorySupport.isAdvisoryTopic(info.getDestination()) && !info.getDestination().isTemporary()
+				&& !info.isBrowser()) {
             String destinationName = info.getDestination().getQualifiedName();
             LOG.debug("Caching consumer selector [{}] on  '{}'", info.getSelector(), destinationName);
 

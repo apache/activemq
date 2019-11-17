@@ -64,7 +64,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         LOG.info("{} purge of {} messages", destination.getActiveMQDestination().getQualifiedName(), originalMessageCount);
     }
 
-    public boolean removeMessage(String messageId) throws Exception {
+    public synchronized boolean removeMessage(String messageId) throws Exception {
         return ((Queue)destination).removeMessage(messageId);
     }
 
@@ -76,25 +76,25 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return ((Queue)destination).removeMatchingMessages(selector, maximumMessages);
     }
 
-    public boolean copyMessageTo(String messageId, String destinationName) throws Exception {
+    public synchronized boolean copyMessageTo(String messageId, String destinationName) throws Exception {
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).copyMessageTo(context, messageId, toDestination);
     }
 
-    public int copyMatchingMessagesTo(String selector, String destinationName) throws Exception {
+    public synchronized int copyMatchingMessagesTo(String selector, String destinationName) throws Exception {
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).copyMatchingMessagesTo(context, selector, toDestination);
     }
 
-    public int copyMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception {
+    public synchronized int copyMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception {
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).copyMatchingMessagesTo(context, selector, toDestination, maximumMessages);
     }
 
-    public boolean moveMessageTo(String messageId, String destinationName) throws Exception {
+    public synchronized boolean moveMessageTo(String messageId, String destinationName) throws Exception {
         ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).moveMessageTo(context, messageId, toDestination);
@@ -123,6 +123,9 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     public boolean retryMessage(String messageId) throws Exception {
         Queue queue = (Queue) destination;
         QueueMessageReference ref = queue.getMessage(messageId);
+        if (ref == null) {
+            throw new JMSException("Could not find message reference: "+ messageId);
+        }
         Message rc = ref.getMessage();
         if (rc != null) {
             ActiveMQDestination originalDestination = rc.getOriginalDestination();

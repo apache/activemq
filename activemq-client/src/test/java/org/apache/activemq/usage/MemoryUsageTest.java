@@ -17,9 +17,6 @@
 
 package org.apache.activemq.usage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -28,6 +25,11 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class MemoryUsageTest {
 
@@ -81,6 +83,15 @@ public class MemoryUsageTest {
 
         child.setUsagePortion(1f);
         assertEquals("limits are still matched whole", underTest.getLimit(), child.getLimit());
+    }
+
+    @Test(timeout=2000)
+    public void testLimitedWaitFail() throws Exception {
+        underTest.setLimit(10);
+        underTest.start();
+        underTest.increaseUsage(11);
+
+        assertFalse("did not get usage within limit", underTest.waitForSpace(500));
     }
 
     @Before

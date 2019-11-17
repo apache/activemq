@@ -16,20 +16,28 @@
  */
 package org.apache.activemq.util;
 
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+
+/**
+ * Updated LongSequenceGenerator that uses an AtomicLongFieldUpdater for performance instead of
+ * synchronized methods
+ */
 public class LongSequenceGenerator {
 
-    private long lastSequenceId;
+    private static final AtomicLongFieldUpdater<LongSequenceGenerator> SEQUENCE_UPDATER =
+            AtomicLongFieldUpdater.newUpdater(LongSequenceGenerator.class, "lastSequenceId");
 
-    public synchronized long getNextSequenceId() {
-        return ++lastSequenceId;
+    private volatile long lastSequenceId;
+
+    public long getNextSequenceId() {
+        return SEQUENCE_UPDATER.incrementAndGet(this);
     }
 
-    public synchronized long getLastSequenceId() {
+    public long getLastSequenceId() {
         return lastSequenceId;
     }
 
-    public synchronized void setLastSequenceId(long l) {
-        lastSequenceId = l;
+    public void setLastSequenceId(long l) {
+        SEQUENCE_UPDATER.set(this, l);
     }
-
 }

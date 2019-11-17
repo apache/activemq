@@ -150,7 +150,7 @@ public class StompWSSubProtocolTest extends WSTransportTestSupport {
             request.setSubProtocols(subProtocol);
         }
 
-        wsClient = new WebSocketClient(new SslContextFactory(true));
+        wsClient = new WebSocketClient(new SslContextFactory.Client(true));
         wsClient.start();
 
         wsClient.connect(wsStompConnection, wsConnectUri, request);

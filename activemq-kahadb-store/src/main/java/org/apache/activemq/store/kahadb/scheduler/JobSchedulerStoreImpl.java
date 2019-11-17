@@ -322,7 +322,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
 
             @Override
             public boolean accept(File dir, String name) {
-                if (name.endsWith(".data") || name.endsWith(".redo") || name.endsWith(".log")) {
+                if (name.endsWith(".data") || name.endsWith(".redo") || name.endsWith(".log") || name.endsWith(".free")) {
                     return true;
                 }
                 return false;
@@ -493,6 +493,37 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
     }
 
     /**
+     * Removes multiple references for the Journal log file indicated in the given Location map.
+     *
+     * The references are used to track which log files cannot be GC'd.  When the reference count
+     * on a log file reaches zero the file id is removed from the tracker and the log will be
+     * removed on the next check point update.
+     *
+     * @param tx
+     *      The TX under which the update is to be performed.
+     * @param decrementsByFileIds
+     *      Map indicating how many decrements per fileId.
+     *
+     * @throws IOException if an error occurs while updating the journal references table.
+     */
+    protected void decrementJournalCount(Transaction tx, HashMap<Integer, Integer> decrementsByFileIds) throws IOException {
+        for(Map.Entry<Integer, Integer> entry : decrementsByFileIds.entrySet()) {
+            int logId = entry.getKey();
+            Integer refCount = metaData.getJournalRC().get(tx, logId);
+
+            if (refCount != null) {
+                int refCountValue = refCount;
+                refCountValue -= entry.getValue();
+                if (refCountValue <= 0) {
+                    metaData.getJournalRC().remove(tx, logId);
+                } else {
+                    metaData.getJournalRC().put(tx, logId, refCountValue);
+                }
+            }
+        }
+    }
+
+    /**
      * Updates the Job removal tracking index with the location of a remove command and the
      * original JobLocation entry.
      *
@@ -516,6 +547,33 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             removed = new ArrayList<Integer>();
         }
         removed.add(removedJob.getLocation().getDataFileId());
+        this.metaData.getRemoveLocationTracker().put(tx, logId, removed);
+    }
+
+    /**
+     * Updates the Job removal tracking index with the location of a remove command and the
+     * original JobLocation entry.
+     *
+     * The JobLocation holds the locations in the logs where the add and update commands for
+     * a job stored.  The log file containing the remove command can only be discarded after
+     * both the add and latest update log files have also been discarded.
+     *
+     * @param tx
+     *      The TX under which the update is to be performed.
+     * @param location
+     *      The location value to reference a remove command.
+     * @param removedJobsFileId
+     *      List of the original JobLocation instances that holds the add and update locations
+     *
+     * @throws IOException if an error occurs while updating the remove location tracker.
+     */
+    protected void referenceRemovedLocation(Transaction tx, Location location, List<Integer> removedJobsFileId) throws IOException {
+        int logId = location.getDataFileId();
+        List<Integer> removed = this.metaData.getRemoveLocationTracker().get(tx, logId);
+        if (removed == null) {
+            removed = new ArrayList<Integer>();
+        }
+        removed.addAll(removedJobsFileId);
         this.metaData.getRemoveLocationTracker().put(tx, logId, removed);
     }
 
@@ -826,8 +884,8 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             Map.Entry<String, JobSchedulerImpl> entry = i.next();
             JobSchedulerImpl scheduler = entry.getValue();
 
-            List<JobLocation> jobs = scheduler.getAllScheduledJobs(tx);
-            for (JobLocation job : jobs) {
+            for (Iterator<JobLocation> jobLocationIterator = scheduler.getAllScheduledJobs(tx); jobLocationIterator.hasNext();) {
+                final JobLocation job = jobLocationIterator.next();
                 if (job.getLocation().compareTo(lastAppendLocation) >= 0) {
                     if (scheduler.removeJobAtTime(tx, job.getJobId(), job.getNextTime())) {
                         LOG.trace("Removed Job past last appened in the journal: {}", job.getJobId());
@@ -854,8 +912,8 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             Map.Entry<String, JobSchedulerImpl> entry = i.next();
             JobSchedulerImpl scheduler = entry.getValue();
 
-            List<JobLocation> jobs = scheduler.getAllScheduledJobs(tx);
-            for (JobLocation job : jobs) {
+            for (Iterator<JobLocation> jobLocationIterator = scheduler.getAllScheduledJobs(tx); jobLocationIterator.hasNext();) {
+                final JobLocation job = jobLocationIterator.next();
                 missingJournalFiles.add(job.getLocation().getDataFileId());
                 if (job.getLastUpdate() != null) {
                     missingJournalFiles.add(job.getLastUpdate().getDataFileId());
@@ -937,8 +995,8 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
             Map.Entry<String, JobSchedulerImpl> entry = i.next();
             JobSchedulerImpl scheduler = entry.getValue();
 
-            List<JobLocation> jobs = scheduler.getAllScheduledJobs(tx);
-            for (JobLocation job : jobs) {
+            for (Iterator<JobLocation> jobLocationIterator = scheduler.getAllScheduledJobs(tx); jobLocationIterator.hasNext();) {
+                final JobLocation job = jobLocationIterator.next();
 
                 // Remove all jobs in missing log files.
                 if (missing.contains(job.getLocation().getDataFileId())) {

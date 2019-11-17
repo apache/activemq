@@ -18,7 +18,7 @@ package org.apache.activemq.security;
 
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.jaas.UserPrincipal;
-import org.apache.directory.shared.ldap.model.message.ModifyRequest;
+import org.apache.directory.api.ldap.model.message.ModifyRequest;
 import org.junit.Test;
 
 import java.util.Set;

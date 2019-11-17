@@ -70,6 +70,7 @@ import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.MessageStoreStatistics;
 import org.apache.activemq.store.MessageStoreSubscriptionStatistics;
+import org.apache.activemq.store.PersistenceAdapterStatistics;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.kahadb.data.KahaAckMessageFileMapCommand;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
@@ -249,6 +250,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected PageFile pageFile;
     protected Journal journal;
     protected Metadata metadata = new Metadata();
+    protected final PersistenceAdapterStatistics persistenceAdapterStatistics = new PersistenceAdapterStatistics();
 
     protected MetadataMarshaller metadataMarshaller = new MetadataMarshaller();
 
@@ -1142,6 +1144,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
                     }
                 }
+
+                persistenceAdapterStatistics.addWriteTime(end - start);
+
             } finally {
                 checkpointLock.readLock().unlock();
             }
@@ -1174,6 +1179,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 LOG.info("Slow KahaDB access: Journal read took: "+(end-start)+" ms");
             }
         }
+
+        persistenceAdapterStatistics.addReadTime(end - start);
+
         DataByteArrayInputStream is = new DataByteArrayInputStream(data);
         byte readByte = is.readByte();
         KahaEntryType type = KahaEntryType.valueOf(readByte);
@@ -1197,6 +1205,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     void process(JournalCommand<?> data, final Location location, final Location inDoubtlocation) throws IOException {
         if (inDoubtlocation != null && location.compareTo(inDoubtlocation) >= 0) {
+            initMessageStore(data);
             process(data, location, (IndexAware) null);
         } else {
             // just recover producer audit
@@ -1207,6 +1216,23 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             });
         }
+    }
+
+    private void initMessageStore(JournalCommand<?> data) throws IOException {
+        data.visit(new Visitor() {
+            @Override
+            public void visit(KahaAddMessageCommand command) throws IOException {
+                final KahaDestination destination = command.getDestination();
+                if (!storedDestinations.containsKey(key(destination))) {
+                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                        @Override
+                        public void execute(Transaction tx) throws IOException {
+                            getStoredDestination(destination, tx);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     // /////////////////////////////////////////////////////////////////
@@ -1389,6 +1415,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if (before != null) {
                 before.sequenceAssignedWithIndexLocked(-1);
             }
+            // Moving the checkpoint pointer as there is no persistent operations in this transaction to be replayed
+            processLocation(location);
             return;
         }
 
@@ -1476,8 +1504,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private final HashSet<Integer> journalFilesBeingReplicated = new HashSet<>();
 
     long updateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
-        StoredDestination sd = getStoredDestination(command.getDestination(), tx);
-
+        StoredDestination sd = getExistingStoredDestination(command.getDestination(), tx);
+        if (sd == null) {
+            // if the store no longer exists, skip
+            return -1;
+        }
         // Skip adding the message to the index if this is a topic and there are
         // no subscriptions.
         if (sd.subscriptions != null && sd.subscriptions.isEmpty(tx)) {
@@ -3649,6 +3680,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public boolean isEnableIndexPageCaching() {
         return enableIndexPageCaching;
+    }
+
+    public PersistenceAdapterStatistics getPersistenceAdapterStatistics() {
+        return this.persistenceAdapterStatistics;
     }
 
     // /////////////////////////////////////////////////////////////////

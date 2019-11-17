@@ -17,7 +17,6 @@
 package org.apache.activemq.ra;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -101,6 +100,7 @@ public class ActiveMQConnectionFactoryTest {
     @Test(timeout = 60000)
     public void testGetXAResource() throws Exception {
         ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+        ra.start(null);
         ra.setServerUrl(url);
         ra.setUserName(user);
         ra.setPassword(pwd);
@@ -114,6 +114,6 @@ public class ActiveMQConnectionFactoryTest {
         XAResource[] resource2 = ra.getXAResources(null);
         assertEquals("one resource", 1, resource2.length);
         assertTrue("isSameRM true", resources[0].isSameRM(resource2[0]));
-        assertFalse("no tthe same instance", resources[0].equals(resource2[0]));
+        assertTrue("the same instance", resources[0].equals(resource2[0]));
     }
 }

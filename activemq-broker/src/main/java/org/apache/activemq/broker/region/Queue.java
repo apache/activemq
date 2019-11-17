@@ -694,7 +694,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                                     // While waiting for space to free up... the
                                     // transaction may be done
                                     if (message.isInTransaction()) {
-                                        if (context.getTransaction().getState() > IN_USE_STATE) {
+                                        if (context.getTransaction() == null || context.getTransaction().getState() > IN_USE_STATE) {
                                             throw new JMSException("Send transaction completed while waiting for space");
                                         }
                                     }
@@ -1405,7 +1405,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
             try {
-                set.addAll(pagedInMessages.values());
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return movedCounter;
+                };
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
@@ -1471,13 +1474,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         int count = 0;
         Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         do {
-            int oldMaxSize = getMaxPageSize();
-            setMaxPageSize((int) this.destinationStatistics.getMessages().getCount());
-            doPageIn(true);
-            setMaxPageSize(oldMaxSize);
+            doPageIn(true, false, (messages.isCacheEnabled() || !broker.getBrokerService().isPersistent()) ? messages.size() : getMaxBrowsePageSize());
             pagedInMessagesLock.readLock().lock();
             try {
-                set.addAll(pagedInMessages.values());
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return movedCounter;
+                }
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
@@ -1594,7 +1597,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
             try {
-                set.addAll(pagedInMessages.values());
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return movedCounter;
+                }
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
@@ -1626,7 +1632,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
             try {
-                set.addAll(pagedInMessages.values());
+                if (!set.addAll(pagedInMessages.values())) {
+                    // nothing new to check - mem constraint on page in
+                    return restoredCounter;
+                }
             } finally {
                 pagedInMessagesLock.readLock().unlock();
             }

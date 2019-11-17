@@ -72,7 +72,7 @@ public class XATransaction extends Transaction {
         case PREPARED_STATE:
             // 2 phase commit, work done.
             // We would record commit here.
-            storeCommit(getTransactionId(), true, preCommitTask, postCommitTask);
+            storeCommit(getTransactionId(), true, null /* done post prepare call */, postCommitTask);
             setStateFinished();
             break;
         default:
@@ -198,6 +198,7 @@ public class XATransaction extends Transaction {
             doPrePrepare();
             setState(Transaction.PREPARED_STATE);
             transactionStore.prepare(getTransactionId());
+            preCommitTask.run();
             return XAResource.XA_OK;
         default:
             illegalStateTransition("prepare");

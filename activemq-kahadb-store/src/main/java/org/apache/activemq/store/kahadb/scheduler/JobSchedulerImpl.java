@@ -20,6 +20,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -578,6 +579,9 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
             }
         }
 
+        List<Integer> removedJobFileIds = new ArrayList<>();
+        HashMap<Integer, Integer> decrementJournalCount = new HashMap<>();
+
         for (Long executionTime : keys) {
             List<JobLocation> values = this.index.remove(tx, executionTime);
             if (location != null) {
@@ -586,9 +590,9 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
 
                     // Remove the references for add and reschedule commands for this job
                     // so that those logs can be GC'd when free.
-                    this.store.decrementJournalCount(tx, job.getLocation());
+                    decrementJournalCount.compute(job.getLocation().getDataFileId(), (key, value) -> value == null ? 1 : value + 1);
                     if (job.getLastUpdate() != null) {
-                        this.store.decrementJournalCount(tx, job.getLastUpdate());
+                        decrementJournalCount.compute(job.getLastUpdate().getDataFileId(), (key, value) -> value == null ? 1 : value + 1);
                     }
 
                     // now that the job is removed from the index we can store the remove info and
@@ -597,10 +601,18 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
                     // the same file we don't need to track it and just let a normal GC of the logs
                     // remove it when the log is unreferenced.
                     if (job.getLocation().getDataFileId() != location.getDataFileId()) {
-                        this.store.referenceRemovedLocation(tx, location, job);
+                        removedJobFileIds.add(job.getLocation().getDataFileId());
                     }
                 }
             }
+        }
+
+        if (!removedJobFileIds.isEmpty()) {
+            this.store.referenceRemovedLocation(tx, location, removedJobFileIds);
+        }
+
+        if (decrementJournalCount.size() > 0) {
+            this.store.decrementJournalCount(tx, decrementJournalCount);
         }
     }
 
@@ -657,22 +669,35 @@ public class JobSchedulerImpl extends ServiceSupport implements Runnable, JobSch
      * @param tx
      *        the transaction under which this operation was invoked.
      *
-     * @return a list of all referenced Location values for this JobSchedulerImpl
+     * @return a iterator of all referenced Location values for this JobSchedulerImpl
      *
      * @throws IOException if an error occurs walking the scheduler tree.
      */
-    protected List<JobLocation> getAllScheduledJobs(Transaction tx) throws IOException {
-        List<JobLocation> references = new ArrayList<>();
+    protected Iterator<JobLocation> getAllScheduledJobs(Transaction tx) throws IOException {
+        return new Iterator<JobLocation>() {
 
-        for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx); i.hasNext();) {
-            Map.Entry<Long, List<JobLocation>> entry = i.next();
-            List<JobLocation> scheduled = entry.getValue();
-            for (JobLocation job : scheduled) {
-                references.add(job);
+            final Iterator<Map.Entry<Long, List<JobLocation>>> mapIterator = index.iterator(tx);
+            Iterator<JobLocation> iterator;
+
+            @Override
+            public boolean hasNext() {
+
+                while (iterator == null || !iterator.hasNext()) {
+                    if (!mapIterator.hasNext()) {
+                        break;
+                    }
+
+                    iterator = new ArrayList<>(mapIterator.next().getValue()).iterator();
+                }
+
+                return iterator != null && iterator.hasNext();
             }
-        }
 
-        return references;
+            @Override
+            public JobLocation next() {
+                return iterator.next();
+            }
+        };
     }
 
     @Override

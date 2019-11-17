@@ -114,6 +114,7 @@ public class MessageDatabaseSizeTest {
 
         //Add a single message and update once so we can compare the size consistently
         MessageStore messageStore = store.createQueueMessageStore(destination);
+        messageStore.start();
         messageStore.addMessage(broker.getAdminConnectionContext(), textMessage);
         messageStore.updateMessage(textMessage);
 
@@ -134,6 +135,7 @@ public class MessageDatabaseSizeTest {
 
         //Add a single message and update once so we can compare the size consistently
         MessageStore messageStore = store.createQueueMessageStore(destination);
+        messageStore.start();
         messageStore.addMessage(broker.getAdminConnectionContext(), textMessage);
         textMessage.setText("new size of message");
         messageStore.updateMessage(textMessage);

@@ -2097,9 +2097,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public void redispatch(ActiveMQDispatcher dispatcher, MessageDispatchChannel unconsumedMessages) throws JMSException {
 
         List<MessageDispatch> c = unconsumedMessages.removeAll();
-        for (MessageDispatch md : c) {
-            this.connection.rollbackDuplicate(dispatcher, md.getMessage());
-        }
         Collections.reverse(c);
 
         for (Iterator<MessageDispatch> iter = c.iterator(); iter.hasNext();) {
