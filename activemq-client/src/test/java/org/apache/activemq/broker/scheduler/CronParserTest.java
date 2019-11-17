@@ -16,17 +16,20 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import static org.junit.Assert.assertEquals;
-
-import static org.junit.Assert.fail;
-
-import java.time.*;
-import java.util.Calendar;
-import java.util.List;
-import javax.jms.MessageFormatException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.MessageFormatException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class CronParserTest {
 
@@ -270,12 +273,9 @@ public class CronParserTest {
 
         calender.setTimeInMillis(next);
         LOG.debug("next:" + calender.getTime());
-        long result = next - current;
-        if (startHours == 20 && startMinutes == 50) {
-            assertEquals(60*40*1000,result); // allow for 30 min offset timezone
-        } else {
-            assertEquals(60*10*1000,result);
-        }
+        int nextMinutes=calender.get(Calendar.MINUTE);
+        assertEquals(30,nextMinutes);
+
     }
 
     @Test
