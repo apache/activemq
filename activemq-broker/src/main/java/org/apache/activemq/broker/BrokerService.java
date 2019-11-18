@@ -175,7 +175,7 @@ public class BrokerService implements Service {
     private TaskRunnerFactory persistenceTaskRunnerFactory;
     private SystemUsage systemUsage;
     private SystemUsage producerSystemUsage;
-    private SystemUsage consumerSystemUsaage;
+    private SystemUsage consumerSystemUsage;
     private PersistenceAdapter persistenceAdapter;
     private PersistenceAdapterFactory persistenceFactory;
     protected DestinationFactory destinationFactory;
@@ -1207,29 +1207,29 @@ public class BrokerService implements Service {
      * @throws IOException
      */
     public SystemUsage getConsumerSystemUsage() throws IOException {
-        if (this.consumerSystemUsaage == null) {
+        if (this.consumerSystemUsage == null) {
             if (splitSystemUsageForProducersConsumers) {
-                this.consumerSystemUsaage = new SystemUsage(getSystemUsage(), "Consumer");
+                this.consumerSystemUsage = new SystemUsage(getSystemUsage(), "Consumer");
                 float portion = consumerSystemUsagePortion / 100f;
-                this.consumerSystemUsaage.getMemoryUsage().setUsagePortion(portion);
-                addService(this.consumerSystemUsaage);
+                this.consumerSystemUsage.getMemoryUsage().setUsagePortion(portion);
+                addService(this.consumerSystemUsage);
             } else {
-                consumerSystemUsaage = getSystemUsage();
+                consumerSystemUsage = getSystemUsage();
             }
         }
-        return this.consumerSystemUsaage;
+        return this.consumerSystemUsage;
     }
 
     /**
-     * @param consumerSystemUsaage
+     * @param consumerSystemUsage
      *            the storeSystemUsage to set
      */
-    public void setConsumerSystemUsage(SystemUsage consumerSystemUsaage) {
-        if (this.consumerSystemUsaage != null) {
-            removeService(this.consumerSystemUsaage);
+    public void setConsumerSystemUsage(SystemUsage consumerSystemUsage) {
+        if (this.consumerSystemUsage != null) {
+            removeService(this.consumerSystemUsage);
         }
-        this.consumerSystemUsaage = consumerSystemUsaage;
-        addService(this.consumerSystemUsaage);
+        this.consumerSystemUsage = consumerSystemUsage;
+        addService(this.consumerSystemUsage);
     }
 
     /**
