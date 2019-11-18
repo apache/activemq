@@ -122,7 +122,7 @@
     <spring-version>4.3.24.RELEASE</spring-version>
     <stax2-api-version>3.0.2</stax2-api-version>
     <taglibs-version>1.2.5</taglibs-version>
-    <velocity-version>1.7</velocity-version>
+    <velocity-version>2.1</velocity-version>
     <woodstox-core-asl-version>4.2.0</woodstox-core-asl-version>
     <xalan-version>2.7.2</xalan-version>
     <xmlbeans-version>2.6.0</xmlbeans-version>
@@ -1137,7 +1137,7 @@
 
       <dependency>
         <groupId>org.apache.velocity</groupId>
-        <artifactId>velocity</artifactId>
+        <artifactId>velocity-engine-core</artifactId>
         <version>${velocity-version}</version>
       </dependency>
       <dependency>
