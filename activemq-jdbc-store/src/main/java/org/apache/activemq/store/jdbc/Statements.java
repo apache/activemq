@@ -115,7 +115,8 @@ public class Statements {
                 "ALTER TABLE " + getFullAckTableName() + " " + getDropAckPKAlterStatementEnd(),
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIMARY KEY (CONTAINER, CLIENT_ID, SUB_NAME, PRIORITY)",
                 "CREATE INDEX " + getFullMessageTableName() + "_XIDX ON " + getFullMessageTableName() + " (XID)",
-                "CREATE INDEX " + getFullAckTableName() + "_XIDX ON " + getFullAckTableName() + " (XID)"
+                "CREATE INDEX " + getFullAckTableName() + "_XIDX ON " + getFullAckTableName() + " (XID)",
+                "CREATE INDEX " + getFullMessageTableName() + "_IIDX ON " + getFullMessageTableName() + " (ID ASC, XID, CONTAINER)"
             };
         }
         getCreateLockSchemaStatements();
