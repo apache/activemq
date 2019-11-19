@@ -172,7 +172,6 @@
       <artifactId>activemq-web</artifactId>
       <exclusions>
         <exclusion>
-          <groupId>${project.groupId}</groupId>
           <artifactId>activemq-all</artifactId>
         </exclusion>
       </exclusions>
