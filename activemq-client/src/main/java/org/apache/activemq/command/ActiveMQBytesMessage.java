@@ -913,12 +913,6 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     }
 
     @Override
-    public void setObjectProperty(String name, Object value) throws JMSException {
-        initializeWriting();
-        super.setObjectProperty(name, value);
-    }
-
-    @Override
     public String toString() {
         return super.toString() + " ActiveMQBytesMessage{ " + "bytesOut = " + bytesOut + ", dataOut = " + dataOut + ", dataIn = " + dataIn + " }";
     }
