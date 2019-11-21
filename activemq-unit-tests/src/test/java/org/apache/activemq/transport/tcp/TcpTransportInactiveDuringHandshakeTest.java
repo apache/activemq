@@ -60,8 +60,8 @@ public class TcpTransportInactiveDuringHandshakeTest {
 
     private BrokerService brokerService;
     private DefaultTestAppender appender;
-    CountDownLatch inactivityMonitorFired = new CountDownLatch(1);
-    CountDownLatch handShakeComplete = new CountDownLatch(1);
+    CountDownLatch inactivityMonitorFired;
+    CountDownLatch handShakeComplete;
 
     @Before
     public void before() throws Exception {
@@ -69,6 +69,8 @@ public class TcpTransportInactiveDuringHandshakeTest {
         brokerService.setPersistent(false);
         brokerService.setUseJmx(false);
 
+        inactivityMonitorFired = new CountDownLatch(1);
+        handShakeComplete = new CountDownLatch(1);
         appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
@@ -93,7 +95,7 @@ public class TcpTransportInactiveDuringHandshakeTest {
         }
     }
 
-    @Test(timeout = 60000)
+    @Test
     public void testInactivityMonitorThreadCompletesWhenFiringDuringStart() throws Exception {
         brokerService.addConnector("mqtt+nio+ssl://localhost:0?transport.connectAttemptTimeout=1000&transport.closeAsync=false");
         brokerService.start();
@@ -103,7 +105,7 @@ public class TcpTransportInactiveDuringHandshakeTest {
         URI uri = transportConnector.getPublishableConnectURI();
 
 
-        CountDownLatch blockHandShakeCompletion = new CountDownLatch(1);
+        final CountDownLatch blockHandShakeCompletion = new CountDownLatch(1);
 
         TrustManager[] trustManagers = new TrustManager[]{new X509TrustManager() {
             @Override
@@ -163,7 +165,7 @@ public class TcpTransportInactiveDuringHandshakeTest {
                 int activeCount = Thread.currentThread().getThreadGroup().enumerate(threads);
                 for (int i = 0; i<activeCount; i++) {
                     Thread thread = threads[i];
-                    LOG.info("T[" + i++ + "]: " + thread);
+                    LOG.info("T[" + i + "]: " + thread);
                     if (thread.getName().contains("InactivityMonitor") && thread.getState().equals(Thread.State.TIMED_WAITING)) {
                         LOG.info("Found inactivity monitor in timed-wait");
                         // good
