@@ -229,8 +229,10 @@ public class AdvisoryBroker extends BrokerFilter {
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.addProducer(context, info);
 
-        // Don't advise advisory topics.
-        if (info.getDestination() != null && !AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
+        //Verify destination is either non-null or that we want to advise anonymous producers on null destination
+        //Don't advise advisory topics.
+        if ((info.getDestination() != null || getBrokerService().isAnonymousProducerAdvisorySupport())
+                && !AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(info.getDestination());
             fireProducerAdvisory(context, info.getDestination(), topic, info);
             producers.put(info.getProducerId(), info);
@@ -412,12 +414,13 @@ public class AdvisoryBroker extends BrokerFilter {
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.removeProducer(context, info);
 
-        // Don't advise advisory topics.
+        //Verify destination is either non-null or that we want to advise anonymous producers on null destination
+        //Don't advise advisory topics.
         ActiveMQDestination dest = info.getDestination();
-        if (info.getDestination() != null && !AdvisorySupport.isAdvisoryTopic(dest)) {
+        if ((dest != null || getBrokerService().isAnonymousProducerAdvisorySupport()) && !AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(dest);
             producers.remove(info.getProducerId());
-            if (!dest.isTemporary() || destinations.containsKey(dest)) {
+            if (dest == null || !dest.isTemporary() || destinations.containsKey(dest)) {
                 fireProducerAdvisory(context, dest, topic, info.createRemoveCommand());
             }
         }

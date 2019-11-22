@@ -192,6 +192,7 @@ public class BrokerService implements Service {
     // to other jms messaging systems
     private boolean deleteAllMessagesOnStartup;
     private boolean advisorySupport = true;
+    private boolean anonymousProducerAdvisorySupport = false;
     private URI vmConnectorURI;
     private String defaultSocketURIString;
     private PolicyMap destinationPolicy;
@@ -1520,6 +1521,14 @@ public class BrokerService implements Service {
      */
     public void setAdvisorySupport(boolean advisorySupport) {
         this.advisorySupport = advisorySupport;
+    }
+
+    public boolean isAnonymousProducerAdvisorySupport() {
+        return anonymousProducerAdvisorySupport;
+    }
+
+    public void setAnonymousProducerAdvisorySupport(boolean anonymousProducerAdvisorySupport) {
+        this.anonymousProducerAdvisorySupport = anonymousProducerAdvisorySupport;
     }
 
     public List<TransportConnector> getTransportConnectors() {

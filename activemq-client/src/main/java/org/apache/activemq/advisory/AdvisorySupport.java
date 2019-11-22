@@ -36,6 +36,7 @@ public final class AdvisorySupport {
     public static final String PRODUCER_ADVISORY_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "Producer.";
     public static final String QUEUE_PRODUCER_ADVISORY_TOPIC_PREFIX = PRODUCER_ADVISORY_TOPIC_PREFIX + "Queue.";
     public static final String TOPIC_PRODUCER_ADVISORY_TOPIC_PREFIX = PRODUCER_ADVISORY_TOPIC_PREFIX + "Topic.";
+    public static final String ANONYMOUS_PRODUCER_ADVISORY_TOPIC_PREFIX = PRODUCER_ADVISORY_TOPIC_PREFIX + "Anonymous";
     public static final String CONSUMER_ADVISORY_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "Consumer.";
     public static final String VIRTUAL_DESTINATION_CONSUMER_ADVISORY_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "VirtualDestination.Consumer.";
     public static final String QUEUE_CONSUMER_ADVISORY_TOPIC_PREFIX = CONSUMER_ADVISORY_TOPIC_PREFIX + "Queue.";
@@ -137,7 +138,9 @@ public final class AdvisorySupport {
 
     public static ActiveMQTopic getProducerAdvisoryTopic(ActiveMQDestination destination) {
         String prefix;
-        if (destination.isQueue()) {
+        if (destination == null) {
+            prefix = ANONYMOUS_PRODUCER_ADVISORY_TOPIC_PREFIX;
+        } else if (destination.isQueue()) {
             prefix = QUEUE_PRODUCER_ADVISORY_TOPIC_PREFIX;
         } else {
             prefix = TOPIC_PRODUCER_ADVISORY_TOPIC_PREFIX;
@@ -146,7 +149,8 @@ public final class AdvisorySupport {
     }
 
     private static ActiveMQTopic getAdvisoryTopic(ActiveMQDestination destination, String prefix, boolean consumerTopics) {
-        return new ActiveMQTopic(prefix + destination.getPhysicalName().replaceAll(",", "&sbquo;"));
+        return destination != null ? new ActiveMQTopic(prefix + destination.getPhysicalName().replaceAll(",", "&sbquo;")):
+            new ActiveMQTopic(prefix);
     }
 
     public static ActiveMQTopic getExpiredMessageTopic(Destination destination) throws JMSException {
