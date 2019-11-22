@@ -35,7 +35,7 @@ import javax.management.ObjectName;
 import static org.junit.Assert.*;
 
 // https://issues.apache.org/jira/browse/AMQ-7302
-public class JmxOpPageInOnMemoryLimit {
+public class JmxOpPageInOnMemoryLimitTest {
 
     BrokerService broker;
     protected MBeanServer mbeanServer;
