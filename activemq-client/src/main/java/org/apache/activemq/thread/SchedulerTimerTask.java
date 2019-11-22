@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.thread;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.TimerTask;
 
 /**
@@ -23,6 +26,8 @@ import java.util.TimerTask;
  *
  */
 public class SchedulerTimerTask extends TimerTask {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SchedulerTimerTask.class);
+
     private final Runnable task;
 
     public SchedulerTimerTask(Runnable task) {
@@ -30,6 +35,24 @@ public class SchedulerTimerTask extends TimerTask {
     }
 
     public void run() {
-        this.task.run();                         
+        try {
+            this.task.run();
+        } catch (Error error) {
+            // Very bad error. Can't swallow this but can log it.
+            LOGGER.error("Scheduled task error", error);
+            throw error;
+        } catch (Exception exception) {
+            // It is a known issue of java.util.Timer that if a TimerTask.run() method throws an exception, the
+            // Timer's thread exits as if Timer.cancel() had been called. This makes the Timer completely unusable from
+            // that point on - whenever the Timer triggers there is an 'IllegalStateException: Timer already cancelled'
+            // and the task does not get executed.
+            //
+            // In practice, this makes the ActiveMQ client unable to refresh connections to brokers. Generally, tasks
+            // are well coded to not throw exceptions but if they do, problems ensue...
+            //
+            // The answer, here, is to log the exception and then carry on without throwing further. This gives the
+            // added benefit that, having seen the exception thrown, one can then go and fix the offending task!
+            LOGGER.error("Scheduled task exception", exception);
+        }
     }
 }
