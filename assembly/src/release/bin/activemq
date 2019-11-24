@@ -1,15 +1,4 @@
 #!/bin/sh
-
-### BEGIN INIT INFO
-# Provides:          activemq
-# Required-Start:    $remote_fs $network $syslog
-# Required-Stop:     $remote_fs $network $syslog
-# Default-Start:     3 5
-# Default-Stop:      0 1 6
-# Short-Description: Starts ActiveMQ
-# Description:       Starts ActiveMQ Message Broker Server
-### END INIT INFO
-
 # ------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -45,9 +34,7 @@
 # Marc Schoechlin <ms@256bit.org>
 
 # ------------------------------------------------------------------------
-# IMPROVED DEBUGGING (execute with bash -x)
-# export PS4=' ${BASH_SOURCE}:${LINENO}(${FUNCNAME[0]}) '
-#
+
 # Backup invocation parameters
 COMMANDLINE_ARGS="$@"
 EXEC_OPTION=""
@@ -109,14 +96,7 @@ if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
 
-# Configure user specified classpath here or externally using this variable
-if [ -z "$ACTIVEMQ_USER_CLASSPATH" ] ; then
-    ACTIVEMQ_USER_CLASSPATH=""
-fi
-
-# ActiveMQ Classpath configuration
-ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/:$ACTIVEMQ_USER_CLASSPATH"
-
+ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/"
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
 
@@ -245,7 +225,7 @@ if [ -z "$JAVACMD" ] || [ "$JAVACMD" = "auto" ] ; then
 fi
 
 # Hm, we still do not know the location of the java binary
-if [ -z "$JAVACMD" ] || [ "$JAVACMD" = "auto" ] || [ ! -x "$JAVACMD" ] ; then
+if [ ! -x "$JAVACMD" ] ; then
     JAVACMD=`which java 2> /dev/null `
     if [ -z "$JAVACMD" ] ; then
         JAVACMD=java
@@ -325,12 +305,8 @@ invokeJar(){
       DOIT_POSTFIX=" - $ACTIVEMQ_USER"
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
    fi
-
    # Execute java binary
    if [ -n "$TASK_TODO" ] && [ "$TASK_TODO" != "stop" ];then
-      if [ -z "$ACTIVEMQ_OUT" ]; then
-         ACTIVEMQ_OUT="/dev/null"
-      fi
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -338,7 +314,7 @@ invokeJar(){
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> $ACTIVEMQ_OUT 2>&1 &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > "${PIDFILE}";
               echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
@@ -386,8 +362,8 @@ checkRunning(){
         echo "ERROR: Pidfile '$ACTIVEMQ_PIDFILE' exists but contains no pid"
         return 2
        fi
-       ACTIVEMQ_PID="`cat ${ACTIVEMQ_PIDFILE}`"
-       RET="`ps -p "${ACTIVEMQ_PID}"|grep java`"
+       ACTIVEMQ_PID="`cat $ACTIVEMQ_PIDFILE`"
+       RET="`ps -p "$ACTIVEMQ_PID"|grep java`"
        if [ -n "$RET" ];then
          return 0;
        else
@@ -405,7 +381,7 @@ checkStopRunning(){
         echo "ERROR: Pidfile os stop process '$PID_STOP' exists but contains no pid"
         return 2
        fi
-       THEPID=`cat ${PID_STOP}`
+       THEPID="`cat $PID`"
        RET=`ps -p $THEPID|grep java`
        if [ -n "$RET" ];then
          return 0;
@@ -503,12 +479,10 @@ invoke_console(){
 
 invoke_kill(){
     if ( checkRunning ); then
-       ACTIVEMQ_PID="`cat ${ACTIVEMQ_PIDFILE}`"
+       ACTIVEMQ_PID="`cat $ACTIVEMQ_PIDFILE`"
        echo "INFO: sending SIGKILL to pid '$ACTIVEMQ_PID'"
        kill -KILL $ACTIVEMQ_PID
-       RET="$?"
-       rm -f "${ACTIVEMQ_PIDFILE}"
-       return $RET
+       return $?
     fi
     echo "INFO: not running, nothing to do"
     return 0
@@ -599,11 +573,6 @@ invoke_task(){
          echo "Activemq is not running."
          exit 1
        fi
-    elif [ "$CHECKRUNNING" = "checkfornotrunning" ];then
-      if ( checkRunning );then
-         echo "Activemq is running."
-         exit 1
-       fi
     fi
 
     # call task in java binary
@@ -616,6 +585,9 @@ invoke_task(){
     fi
     invokeJar "$ACTIVEMQ_PIDFILE"
     RET="$?"
+    if [ "$RET" != "0" ];then
+       echo "ERROR: task failed"
+    fi
     exit $RET
 }
 
@@ -656,8 +628,8 @@ case "$1" in
   restart)
     if ( checkRunning );then
       $0 stop
-      echo
     fi
+    $0 status
     $0 start
     $0 status
     ;;
@@ -669,14 +641,40 @@ case "$1" in
     exit $?
     ;;
   stop)
-    invoke_stop
+    invoke_stop 
     exit $?
     ;;
   kill)
     invoke_kill
     exit $?
     ;;
+  decrypt|encrypt|create)
+    invoke_task checknotforrunning
+    exit $?
+    ;;
+  query|bstat|dstat|purge)
+    # Only check for a running broker if "--jmxurl" is part of the COMMANDLINE_ARGS
+    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--jmxurl");then
+      invoke_task checknotforrunning
+      RET="$?"
+    else
+      invoke_task checkforrunning
+      RET="$?"
+    fi
+    exit $RET
+    ;;
+  browse)
+    # Only check for a running broker if "--amqurl" is part of the COMMANDLINE_ARGS
+    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--amqurl");then
+      invoke_task checknotforrunning
+      RET="$?"
+    else
+      invoke_task checkforrunning
+      RET="$?"
+    fi
+    exit $RET
+    ;;
   *)
-    invoke_task
+    invoke_task checkforrunning
     exit $?
 esac

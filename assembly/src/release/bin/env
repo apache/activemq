@@ -19,27 +19,14 @@
 # Configuration file for running Apache Active MQ as standalone provider.
 #
 # This file overwrites the predefined settings of the sysv init-script.
-# You can also use alternate location for default settings -
+# You can also use alternate location for default settings -  
 # invoke the init-script without a argument an review help section "Configuration of this script"
 # /etc/default/activemq <activemq user home>/.activemqrc <activemq installation dir>/bin/env
 
-# Active MQ installation dirs
-# ACTIVEMQ_HOME="<Installationdir>/"
-# ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
-# ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
-# ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
-# ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
-
-# Set jvm memory configuration (minimal/maximum amount of memory)
+# Set jvm memory configuration
 ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
 
-if [ -z "$ACTIVEMQ_OPTS" ] ; then
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
-fi
-
-if [ -z "$ACTIVEMQ_OUT" ]; then
-   ACTIVEMQ_OUT="/dev/null"
-fi
+ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
 
 # Uncomment to enable audit logging
 #ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS -Dorg.apache.activemq.audit=true"
@@ -81,24 +68,25 @@ ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
 ACTIVEMQ_SUNJMX_CONTROL=""
 
 # Specify the queue manager URL for using "browse" option of sysv initscript
-if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
-    ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
-fi
+ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
 
 # Set additional JSE arguments
-if [ -z "$ACTIVEMQ_SSL_OPTS" ] ; then
-    #ACTIVEMQ_SSL_OPTS="-Djava.security.properties=$ACTIVEMQ_CONF/java.security"
-    ACTIVEMQ_SSL_OPTS=""
-fi
+#ACTIVEMQ_SSL_OPTS="-Dcom.sun.security.enableCRLDP=true -Docsp.enable=true -Docsp.responderURL=http://ocsp.example.net:80"
+ACTIVEMQ_SSL_OPTS=""
 
 # Uncomment to enable remote debugging
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 
 # ActiveMQ tries to shutdown the broker by jmx,
 # after a specified number of seconds send SIGKILL
-if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
-    ACTIVEMQ_KILL_MAXSECONDS=30
-fi
+ACTIVEMQ_KILL_MAXSECONDS=30
+
+# Active MQ installation dirs
+# ACTIVEMQ_HOME="<Installationdir>/"
+# ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
+# ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+# ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+# ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
 
 # Configure a user with non root privileges, if no user is specified do not change user
 # (the entire activemq installation should be owned by this user)
