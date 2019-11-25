@@ -24,11 +24,15 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jms.support.JmsUtils;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -38,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class AMQ5486Test {
-
+    private static Logger LOG = LoggerFactory.getLogger(AMQ5486Test.class);
     private static final int maxConnections = 100;
     private static final int maxPoolSize = 10;
 
@@ -72,7 +76,7 @@ public class AMQ5486Test {
     public void testFailureOnSelectorThreadPoolExhaustion() throws Exception {
         final ConnectionFactory cf = createConnectionFactory();
         final CountDownLatch startupLatch = new CountDownLatch(1);
-        final LinkedList<Exception> exceptions = new LinkedList<Exception>();
+        final List<Exception> exceptions = Collections.synchronizedList(new LinkedList<Exception>());
         for(int i = 0; i < maxConnections; i++) {
             executor.submit(new Runnable() {
                 @Override
@@ -82,7 +86,6 @@ public class AMQ5486Test {
                         startupLatch.await();
                         conn = (ActiveMQConnection) cf.createConnection();
                         conn.start();
-                        //conn.syncSendPacket(new TransactionInfo(conn.getConnectionInfo().getConnectionId(), null, TransactionInfo.END));
                         connections.add(conn);
                     } catch (Exception e) {
                         exceptions.add(e);
@@ -110,12 +113,22 @@ public class AMQ5486Test {
             })
         );
 
-        assertTrue("Expected: more than " + (maxPoolSize - 1) + " connections, found: " + connector.getConnections().size(),
+        assertTrue("Expected some connections, provided not all errored out",
                 Wait.waitFor(new Wait.Condition() {
                     @Override
                     public boolean isSatisified() throws Exception {
-                        // selector thread will take one thread from the pool
-                        return connector.getConnections().size() >= maxPoolSize - 1;
+                        LOG.info("Exceptions size: " + exceptions.size() + ", connections size: " + connector.getConnections().size());
+                        return exceptions.size() == maxConnections || connector.getConnections().size() > 0;
+                    }
+                })
+        );
+
+        assertTrue("Expected: connections or exceptions match attempts: "  + maxConnections,
+                Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        LOG.info("Exceptions size: " + exceptions.size() + ", connections size: " + connector.getConnections().size());
+                        return connector.getConnections().size()  + exceptions.size() == maxConnections;
                     }
                 })
         );
@@ -129,6 +142,7 @@ public class AMQ5486Test {
             JmsUtils.closeConnection(connection);
         }
 
+        connections.clear();
         service.stop();
         service.waitUntilStopped();
     }
