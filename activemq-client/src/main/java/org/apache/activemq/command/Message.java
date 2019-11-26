@@ -79,7 +79,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected String userID;
 
     protected ByteSequence content;
-    protected ByteSequence marshalledProperties;
+    protected volatile ByteSequence marshalledProperties;
     protected DataStructure dataStructure;
     protected int redeliveryCounter;
 

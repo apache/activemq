@@ -746,8 +746,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
             } finally {
                 connection.removeSession(this);
-                this.transactionContext = null;
                 closed = true;
+                this.transactionContext = null;
             }
         }
     }
