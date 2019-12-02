@@ -186,7 +186,7 @@ public class MDBTest {
         MessageConsumer advisory = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(new ActiveMQQueue("TEST")));
 
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.setServerUrl("vm://localhost?broker.persistent=false&create=false");
         adapter.setQueuePrefetch(1);
         adapter.start(new StubBootstrapContext());
 
@@ -255,7 +255,7 @@ public class MDBTest {
         MessageConsumer advisory = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(new ActiveMQQueue("TEST")));
 
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.setServerUrl("vm://localhost?broker.persistent=false&create=false");
         adapter.setQueuePrefetch(1);
         adapter.start(new StubBootstrapContext());
 
@@ -320,7 +320,7 @@ public class MDBTest {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.setServerUrl("vm://localhost?broker.persistent=false&create=false");
         adapter.start(new StubBootstrapContext());
 
         final CountDownLatch messageDelivered = new CountDownLatch(10);
@@ -618,7 +618,7 @@ public class MDBTest {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.setServerUrl("vm://localhost?broker.persistent=false?create=false");
         adapter.start(new StubBootstrapContext());
 
         final CountDownLatch messageDelivered = new CountDownLatch(5);
@@ -720,7 +720,7 @@ public class MDBTest {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.setServerUrl("vm://localhost?broker.persistent=false&create=false");
         adapter.start(new StubBootstrapContext());
         final String ORDER_PROP = "Order";
         final List<Integer> orderedReceipt = new ArrayList<Integer>();
@@ -823,7 +823,7 @@ public class MDBTest {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.setServerUrl("vm://localhost?broker.persistent=false&create=false");
         adapter.start(new StubBootstrapContext());
 
         final CountDownLatch messageDelivered = new CountDownLatch(2);
@@ -915,7 +915,7 @@ public class MDBTest {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.setServerUrl("vm://localhost?broker.persistent=false&create=false");
         adapter.start(new StubBootstrapContext());
 
         final CountDownLatch messageDelivered = new CountDownLatch(1);
