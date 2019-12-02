@@ -87,7 +87,7 @@ public class NetworkReconnectSslNioTest {
                     if (!networkConnector.activeBridges().isEmpty()) {
                         try {
                             DurableConduitBridge durableConduitBridge = (DurableConduitBridge) networkConnector.activeBridges().iterator().next();
-                            if ("R".equals(durableConduitBridge.getRemoteBrokerName())) {
+                            if ("R".equals(durableConduitBridge.getRemoteBrokerName()) && durableConduitBridge.bridgeFailed.get() == false) {
                                 bridge.set(durableConduitBridge);
                             }
                         } catch (NoSuchElementException expectedContention) {}
