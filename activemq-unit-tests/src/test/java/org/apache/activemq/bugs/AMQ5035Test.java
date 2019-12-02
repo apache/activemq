@@ -17,8 +17,10 @@
 package org.apache.activemq.bugs;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.Topic;
@@ -72,7 +74,11 @@ public class AMQ5035Test {
         consumer.close();
 
         BrokerViewMBean brokerView = getBrokerView(DURABLE_SUB_NAME);
-        brokerView.destroyDurableSubscriber(CLIENT_ID, DURABLE_SUB_NAME);
+        try {
+            brokerView.destroyDurableSubscriber(CLIENT_ID, DURABLE_SUB_NAME);
+        } catch (JMSException okAsCloseIsAsync) {
+            assertTrue("inactive reason", okAsCloseIsAsync.getMessage().contains("in use"));
+        }
     }
 
     private BrokerViewMBean getBrokerView(String testDurable) throws MalformedObjectNameException {
