@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-import javax.jms.Destination;
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -558,7 +557,7 @@ public class MQTTProtocolConverter {
 
         ActiveMQDestination destination;
         synchronized (activeMQDestinationMap) {
-            destination = activeMQDestinationMap.get(command.topicName());
+            destination = activeMQDestinationMap.get(command.topicName().toString());
             if (destination == null) {
                 String topicName = MQTTProtocolSupport.convertMQTTToActiveMQ(command.topicName().toString());
                 try {

@@ -404,25 +404,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    /*
-     * Holder for subscription that needs attention on next iterate browser
-     * needs access to existing messages in the queue that have already been
-     * dispatched
-     */
-    class BrowserDispatch {
-        QueueBrowserSubscription browser;
-
-        public BrowserDispatch(QueueBrowserSubscription browserSubscription) {
-            browser = browserSubscription;
-            browser.incrementQueueRef();
-        }
-
-        public QueueBrowserSubscription getBrowser() {
-            return browser;
-        }
-    }
-
-    ConcurrentLinkedQueue<BrowserDispatch> browserDispatches = new ConcurrentLinkedQueue<BrowserDispatch>();
+    ConcurrentLinkedQueue<QueueBrowserSubscription> browserSubscriptions = new ConcurrentLinkedQueue<>();
 
     @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
@@ -471,8 +453,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             if (sub instanceof QueueBrowserSubscription) {
                 // tee up for dispatch in next iterate
                 QueueBrowserSubscription browserSubscription = (QueueBrowserSubscription) sub;
-                BrowserDispatch browserDispatch = new BrowserDispatch(browserSubscription);
-                browserDispatches.add(browserDispatch);
+                browserSubscription.incrementQueueRef();
+                browserSubscriptions.add(browserSubscription);
             }
 
             if (!this.optimizedDispatch) {
@@ -585,7 +567,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 dispatchPendingList.addForRedelivery(unAckedMessages, strictOrderDispatch && consumers.isEmpty());
                 if (sub instanceof QueueBrowserSubscription) {
                     ((QueueBrowserSubscription)sub).decrementQueueRef();
-                    browserDispatches.remove(sub);
+                    browserSubscriptions.remove(sub);
                 }
                 // AMQ-5107: don't resend if the broker is shutting down
                 if (dispatchPendingList.hasRedeliveries() && (! this.brokerService.isStopping())) {
@@ -1664,7 +1646,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 pagedInPendingDispatchLock.readLock().unlock();
             }
 
-            boolean hasBrowsers = !browserDispatches.isEmpty();
+            boolean hasBrowsers = !browserSubscriptions.isEmpty();
 
             if (pageInMoreMessages || hasBrowsers || !dispatchPendingList.hasRedeliveries()) {
                 try {
@@ -1684,14 +1666,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     pagedInMessagesLock.readLock().unlock();
                 }
 
-                Iterator<BrowserDispatch> browsers = browserDispatches.iterator();
+                Iterator<QueueBrowserSubscription> browsers = browserSubscriptions.iterator();
                 while (browsers.hasNext()) {
-                    BrowserDispatch browserDispatch = browsers.next();
+                    QueueBrowserSubscription browser = browsers.next();
                     try {
                         MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
                         msgContext.setDestination(destination);
-
-                        QueueBrowserSubscription browser = browserDispatch.getBrowser();
 
                         LOG.debug("dispatch to browser: {}, already dispatched/paged count: {}", browser, messagesInMemory.size());
                         boolean added = false;
@@ -1707,12 +1687,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         // are we done browsing? no new messages paged
                         if (!added || browser.atMax()) {
                             browser.decrementQueueRef();
-                            browserDispatches.remove(browserDispatch);
+                            browsers.remove();
                         } else {
                             wakeup();
                         }
                     } catch (Exception e) {
-                        LOG.warn("exception on dispatch to browser: {}", browserDispatch.getBrowser(), e);
+                        LOG.warn("exception on dispatch to browser: {}", browser, e);
                     }
                 }
             }
@@ -2070,7 +2050,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     private final boolean haveRealConsumer() {
-        return consumers.size() - browserDispatches.size() > 0;
+        return consumers.size() - browserSubscriptions.size() > 0;
     }
 
     private void doDispatch(PendingList list) throws Exception {
