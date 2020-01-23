@@ -50,7 +50,7 @@
 <td><a href="<c:url value="message.jsp">
                  <c:param name="id" value="${row.JMSMessageID}" />
                  <c:param name="JMSDestination" value="${requestContext.queueBrowser.JMSDestination}"/></c:url>"
-    title="${row.properties}">${row.JMSMessageID}</a></td>
+    title="<c:out value="${row.properties}"/>">${row.JMSMessageID}</a></td>
 <td><c:out value="${row.JMSCorrelationID}"/></td>
 <td><jms:persistent message="${row}"/></td>
 <td><c:out value="${row.JMSPriority}"/></td>
