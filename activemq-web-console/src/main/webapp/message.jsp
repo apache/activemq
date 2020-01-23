@@ -151,7 +151,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                        </tr>
                     </c:if>
                     <tr class="odd">
-                    <td><a href="<c:out value="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')">Copy</a></td>
+                    <td><a href="<c:out value="javascript:confirmAction('queue', 'copyMessage"/>')">Copy</a></td>
                         <td rowspan="2">
                             <select id="queue">
                                 <option value=""> -- Please select --</option>
@@ -165,7 +165,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 
                     </tr>
                     <tr class="odd">
-                        <td><a href="<c:out value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')"
+                        <td><a href="<c:out value="javascript:confirmAction('queue', 'moveMessage"/>')"
                             >Move</a></td>
                     </tr>
                 </tbody>
@@ -223,6 +223,22 @@ function selectOptionByText (selElem, selText) {
         }
         iter++;
     }
+}
+
+function confirmAction(id, action) {
+	//TODO i18n messages
+	var select = document.getElementById(id);
+	var selectedIndex = select.selectedIndex; 
+	if (select.selectedIndex == 0) {
+		alert("Please select a value");
+		return;
+	}
+	var value = select.options[selectedIndex].value;
+	var url = action + ".action?destination=" + value;
+	url += "&JMSDestination=${requestContext.messageQuery.JMSDestination}";
+	url += "&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}";
+	if (confirm("Are you sure?"))
+	  location.href=url;
 }
 
 window.onload=function() {

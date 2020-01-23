@@ -106,16 +106,3 @@ function getEventTarget(e) {
 	return targ;
 }
 
-function confirmAction(id, url) {
-	//TODO i18n messages
-	var select = document.getElementById(id);
-	var selectedIndex = select.selectedIndex; 
-	if (select.selectedIndex == 0) {
-		alert("Please select a value");
-		return;
-	}
-	var value = select.options[selectedIndex].value;
-	url = url.replace(/%target%/gi, value);
-	if (confirm("Are you sure?"))
-	  location.href=url;
-}
