@@ -75,7 +75,7 @@
     <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.9.10</jackson-version>
     <jackson-databind-version>2.9.10.1</jackson-databind-version>
-    <jasypt-version>1.9.2</jasypt-version>
+    <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.2.11_1</jaxb-bundle-version>
     <jetty9-version>9.4.22.v20191022</jetty9-version>
     <jetty-version>${jetty9-version}</jetty-version>
