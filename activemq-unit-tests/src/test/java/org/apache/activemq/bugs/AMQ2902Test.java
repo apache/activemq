@@ -55,7 +55,7 @@ public class AMQ2902Test extends TestCase {
                 LOG.error("got event: " + event + ", ex:" + event.getThrowableInformation().getThrowable(), event.getThrowableInformation().getThrowable());
                 LOG.error("Event source: ", new Throwable("Here"));
             }
-            if( !"Loaded the Bouncy Castle security provider.".equals(event.getMessage()) ) {
+            if( !((String) event.getMessage()).startsWith("Loaded the Bouncy Castle security provider at position") ) {
                 if (event.getMDC("activemq.broker") == null) {
                     failedToFindMDC.set(Boolean.TRUE);
                 }
