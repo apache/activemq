@@ -101,18 +101,18 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     }
 
 
-    public void addExcludedDestination(ActiveMQDestination destiantion) {
-        this.excludedDestinations.add(destiantion);
+    public void addExcludedDestination(ActiveMQDestination destination) {
+        this.excludedDestinations.add(destination);
     }
 
 
-    public void addStaticallyIncludedDestination(ActiveMQDestination destiantion) {
-        this.staticallyIncludedDestinations.add(destiantion);
+    public void addStaticallyIncludedDestination(ActiveMQDestination destination) {
+        this.staticallyIncludedDestinations.add(destination);
     }
 
 
-    public void addDynamicallyIncludedDestination(ActiveMQDestination destiantion) {
-        this.dynamicallyIncludedDestinations.add(destiantion);
+    public void addDynamicallyIncludedDestination(ActiveMQDestination destination) {
+        this.dynamicallyIncludedDestinations.add(destination);
     }
 
     public ConnectionFilter getConnectionFilter() {
