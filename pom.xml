@@ -70,7 +70,7 @@
     <hawtdispatch-version>1.22</hawtdispatch-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.12</hsqldb-version>
-    <httpclient-version>4.5.9</httpclient-version>
+    <httpclient-version>4.5.11</httpclient-version>
     <httpcore-version>4.4.11</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.9.10</jackson-version>
