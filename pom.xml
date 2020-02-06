@@ -131,7 +131,7 @@
     <xmlresolver-bundle-version>1.2_5</xmlresolver-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.11.1</xstream-version>
-    <xbean-version>4.14</xbean-version>
+    <xbean-version>4.16</xbean-version>
     <xerces-version>2.12.0</xerces-version>
     <jaxb-basics-version>0.6.4</jaxb-basics-version>
     <stompjms-version>1.19</stompjms-version>
