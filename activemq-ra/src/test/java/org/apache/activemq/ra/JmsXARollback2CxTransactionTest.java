@@ -51,6 +51,7 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
     @Override
     protected void setUp() throws Exception {
         LOG.info("Starting ----------------------------> {}", this.getName());
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
         super.setUp();
     }
 

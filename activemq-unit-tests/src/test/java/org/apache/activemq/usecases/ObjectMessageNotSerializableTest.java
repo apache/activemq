@@ -56,13 +56,14 @@ public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
     }
 	
 	protected void setUp() throws Exception {
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "org.apache.activemq.usecases,java.util,java.lang");
         exceptions.clear();
         broker = createBroker();
     }
 	
-	public void testSendNotSerializeableObjectMessage() throws Exception {
+	public void testSendNotSerializableObjectMessage() throws Exception {
 
-        final  ActiveMQDestination destination = new ActiveMQQueue("testQ");
+        final ActiveMQDestination destination = new ActiveMQQueue("testQ");
         final MyObject obj = new MyObject("A message");
 
         final CountDownLatch consumerStarted = new CountDownLatch(1);
@@ -129,7 +130,7 @@ public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
         assertTrue("no unexpected exceptions: " + exceptions, exceptions.isEmpty());
 	}
 
-    public void testSendNotSerializeableObjectMessageOverTcp() throws Exception {
+    public void testSendNotSerializableObjectMessageOverTcp() throws Exception {
         final  ActiveMQDestination destination = new ActiveMQTopic("testTopic");
         final MyObject obj = new MyObject("A message");
 

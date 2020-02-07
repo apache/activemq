@@ -18,6 +18,7 @@
 package org.apache.activemq.transport.http;
 
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -71,6 +72,7 @@ public class HttpJMSMessagesWithCompressionTest {
 
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(getBrokerURL());
+        factory.setTrustedPackages(Arrays.asList("java.lang".split(",")));
         return factory;
     }
 

@@ -50,6 +50,10 @@ import org.junit.Test;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class AMQ3537Test implements InvocationHandler, Serializable {
 
+    static {
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util,org.apache.activemq.bugs");
+    }
+
     private static final long serialVersionUID = 1L;
 
     /**

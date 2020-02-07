@@ -43,6 +43,12 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
     private Xid xid;
 
     @Override
+    protected void setUp() throws Exception {
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
+        super.setUp();
+    }
+
+    @Override
     protected void setSessionTransacted() {
         resourceProvider.setTransacted(false);
         resourceProvider.setAckMode(Session.AUTO_ACKNOWLEDGE);
