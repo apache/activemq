@@ -113,3 +113,10 @@ ACTIVEMQ_USER=""
 # (set JAVACMD to "auto" for automatic detection)
 #JAVA_HOME=""
 JAVACMD="auto"
+
+# Packages allowed for serialization (when used with ObjectMessage).
+# Packages set is limited to org.apache.activemmq, org.fusesource.hawtbuf and com.thoughtworks.xstream.mapper by default.
+# java* packages are excluded by default for security reason.
+#ACTIVEMQ_OPTS="-Dorg.apache.activemq.SERIALIZABLE_PACKAGES=org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper"
+# You have explicitely add java.lang, javax.security, and java.util packages and your own packages:
+#ACTIVEMQ_OPTS="-Dorg.apache.activemq.SERIALIZABLE_PACKAGES=java.lang,javax.security,java.util,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper"

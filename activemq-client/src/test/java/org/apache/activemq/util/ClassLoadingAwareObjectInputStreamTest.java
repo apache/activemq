@@ -35,6 +35,10 @@ import org.junit.rules.TestName;
 
 public class ClassLoadingAwareObjectInputStreamTest {
 
+    static {
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
+    }
+
     private final String ACCEPTS_ALL_FILTER = "*";
     private final String ACCEPTS_NONE_FILTER = "";
 
@@ -364,6 +368,7 @@ public class ClassLoadingAwareObjectInputStreamTest {
 
     @Test
     public void testReadObjectFailsWithUntrustedType() throws Exception {
+
         byte[] serialized = serializeObject(new SimplePojo(name.getMethodName()));
 
         try (ByteArrayInputStream input = new ByteArrayInputStream(serialized);

@@ -108,7 +108,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
      * 
      * @throws Exception
      */
-    public void testSendReceiveInSeperateSessionTest() throws Exception {
+    public void testSendReceiveInSeparatedSessionTest() throws Exception {
         session.close();
         int batchCount = 10;
 

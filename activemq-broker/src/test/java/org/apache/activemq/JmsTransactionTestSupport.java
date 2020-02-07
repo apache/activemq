@@ -114,6 +114,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      */
     protected BrokerService createBroker() throws Exception, URISyntaxException {
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util");
         return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
     }
 
@@ -569,6 +570,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     public void testChangeMutableObjectInObjectMessageThenRollback() throws Exception {
+
         ArrayList<String> list = new ArrayList<String>();
         list.add("First");
         Message outbound = session.createObjectMessage(list);
