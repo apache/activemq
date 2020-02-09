@@ -404,7 +404,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     }
 
     private KahaDBMessageStore findMatchingStore(ActiveMQDestination activeMQDestination) throws IOException {
-        ProxyMessageStore store = (ProxyMessageStore) storeCache.get(convert(activeMQDestination));
+        ProxyMessageStore store = (ProxyMessageStore) storeCache.get(key(convert(activeMQDestination)));
         if (store == null) {
             if (activeMQDestination.isQueue()) {
                 store = (ProxyMessageStore) createQueueMessageStore((ActiveMQQueue) activeMQDestination);
