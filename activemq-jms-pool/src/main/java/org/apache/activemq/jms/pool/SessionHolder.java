@@ -33,9 +33,9 @@ import javax.jms.TopicSession;
 public class SessionHolder {
 
     private final Session session;
-    private MessageProducer producer;
-    private TopicPublisher publisher;
-    private QueueSender sender;
+    private volatile MessageProducer producer;
+    private volatile TopicPublisher publisher;
+    private volatile QueueSender sender;
 
     public SessionHolder(Session session) {
         this.session = session;
