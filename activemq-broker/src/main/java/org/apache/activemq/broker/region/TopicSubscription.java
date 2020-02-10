@@ -504,7 +504,7 @@ public class TopicSubscription extends AbstractSubscription {
         this.messageEvictionStrategy = messageEvictionStrategy;
     }
 
-    public int getMaxProducersToAudit() {
+    public synchronized int getMaxProducersToAudit() {
         return maxProducersToAudit;
     }
 
@@ -515,7 +515,7 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
-    public int getMaxAuditDepth() {
+    public synchronized int getMaxAuditDepth() {
         return maxAuditDepth;
     }
 
