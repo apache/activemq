@@ -752,7 +752,7 @@ public class MQTTProtocolConverter {
                 public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
                     if (response.isException()) {
                         Throwable error = ((ExceptionResponse) response).getException();
-                        LOG.warn("Failed to send MQTT Publish: ", command, error.getMessage());
+                        LOG.warn("Failed to send MQTT Publish: {}: {}", command, error.getMessage());
                         LOG.trace("Error trace: {}", error);
                     }
 

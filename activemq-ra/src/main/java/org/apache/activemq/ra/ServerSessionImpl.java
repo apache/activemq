@@ -197,7 +197,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                         pool.returnToPool(this);
                         break;
                     } else {
-                        log.debug("Session has session has more work to do b/c of unconsumed", this);
+                        log.debug("Session {} has more work to do b/c of unconsumed", this);
                     }
                 }
             }

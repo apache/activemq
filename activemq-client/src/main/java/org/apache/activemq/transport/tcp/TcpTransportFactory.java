@@ -133,7 +133,7 @@ public class TcpTransportFactory extends TransportFactory {
                 String localString = location.getScheme() + ":/" + path;
                 localLocation = new URI(localString);
             } catch (Exception e) {
-                LOG.warn("path isn't a valid local location for TcpTransport to use", e.getMessage());
+                LOG.warn("path isn't a valid local location for TcpTransport to use: {}", e.getMessage());
                 if(LOG.isDebugEnabled()) {
                     LOG.debug("Failure detail", e);
                 }

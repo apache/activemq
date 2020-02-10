@@ -119,7 +119,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
         // check for simple types first
         final Class<?> clazz = loadSimpleType(className);
         if (clazz != null) {
-            LOG.trace("Loaded class: {} as simple type -> ", className, clazz);
+            LOG.trace("Loaded class: {} as simple type -> {}", className, clazz);
             return clazz;
         }
 
@@ -129,7 +129,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
             try {
                 Class<?> answer = Class.forName(className, false, loader);
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("Loaded class: {} using classloader: {} -> ", new Object[]{className, cl, answer});
+                    LOG.trace("Loaded class: {} using classloader: {} -> {}", className, cl, answer);
                 }
                 return answer;
             } catch (ClassNotFoundException e) {
