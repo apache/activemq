@@ -260,7 +260,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
      * @return the maxProducersToAudit
      */
     @Override
-    public int getMaxProducersToAudit() {
+    public synchronized int getMaxProducersToAudit() {
         return maxProducersToAudit;
     }
 
@@ -279,7 +279,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
      * @return the maxAuditDepth
      */
     @Override
-    public int getMaxAuditDepth() {
+    public synchronized int getMaxAuditDepth() {
         return maxAuditDepth;
     }
 

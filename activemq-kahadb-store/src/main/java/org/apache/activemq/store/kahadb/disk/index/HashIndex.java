@@ -122,7 +122,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     
     private Metadata.Marshaller metadataMarshaller = new Metadata.Marshaller();
     private HashBin.Marshaller<Key,Value> hashBinMarshaller = new HashBin.Marshaller<Key,Value>(this);
-    private Marshaller<Key> keyMarshaller;
+    private volatile Marshaller<Key> keyMarshaller;
     private Marshaller<Value> valueMarshaller;
 
     
@@ -392,7 +392,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
      * 
      * @param marshaller
      */
-    public synchronized void setKeyMarshaller(Marshaller<Key> marshaller) {
+    public void setKeyMarshaller(Marshaller<Key> marshaller) {
         this.keyMarshaller = marshaller;
     }
 
