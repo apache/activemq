@@ -2031,7 +2031,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             ConnectionContext connectionContext = createConnectionContext();
                             dropMessage(ref);
                             if (gotToTheStore(ref.getMessage())) {
-                                LOG.debug("Duplicate message {} from cursor, removing from store", this, ref.getMessage());
+                                LOG.debug("Duplicate message {} from cursor, removing from store", ref.getMessage());
                                 store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
                             }
                             broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from cursor for " + destination));
