@@ -25,6 +25,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 import javax.jms.InvalidClientIDException;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.security.auth.login.CredentialException;
