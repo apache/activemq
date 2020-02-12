@@ -32,6 +32,11 @@ import org.apache.activemq.test.TestSupport;
  *
  */
 public class ChangeSentMessageTest extends TestSupport {
+
+    static {
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util,java.lang");
+    }
+
     private static final int COUNT = 200;
     private static final String VALUE_NAME = "value";
 

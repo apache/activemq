@@ -44,6 +44,10 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
  */
 public class JoramJmsTest extends TestCase {
 
+    static {
+        System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "java.util,java.lang");
+    }
+
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(SelectorTest.class);

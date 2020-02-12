@@ -40,9 +40,6 @@
 #
 # For more information on configuring the script, see http://activemq.apache.org/unix-shell-script.html
 #
-#
-# Authors:
-# Marc Schoechlin <ms@256bit.org>
 
 # ------------------------------------------------------------------------
 # IMPROVED DEBUGGING (execute with bash -x)
