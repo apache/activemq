@@ -279,7 +279,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 // Rejection is a terminal outcome, we poison the message for dispatch to
                 // the DLQ.  If a custom redelivery policy is used on the broker the message
                 // can still be redelivered based on the configation of that policy.
-                LOG.trace("onDelivery: Rejected state = {}, message poisoned.", state, md.getRedeliveryCounter());
+                LOG.trace("onDelivery: Rejected state = {}, message poisoned.", state);
                 settle(delivery, MessageAck.POSION_ACK_TYPE);
             } else if (state instanceof Released) {
                 LOG.trace("onDelivery: Released state = {}", state);
