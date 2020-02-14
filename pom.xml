@@ -90,7 +90,7 @@
     <junit-version>4.12</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>4.2.6</karaf-version>
+    <karaf-version>4.2.8</karaf-version>
     <leveldb-api-version>0.9</leveldb-api-version>
     <leveldb-version>0.9</leveldb-version>
     <leveldbjni-version>1.8</leveldbjni-version>
@@ -136,7 +136,7 @@
     <jaxb-basics-version>0.6.4</jaxb-basics-version>
     <stompjms-version>1.19</stompjms-version>
 
-    <pax-exam-version>4.9.1</pax-exam-version>
+    <pax-exam-version>4.13.1</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
     <pax-runner-version>1.8.6</pax-runner-version>
     <pax-url-version>2.6.2</pax-url-version>
