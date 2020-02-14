@@ -194,7 +194,20 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 try (FileInputStream fis = new FileInputStream(persistFile);) {
                     ObjectInputStream in = new ObjectInputStream(fis);
                     try {
+                        LOG.debug("Reading selector cache....");
                         subSelectorCache = (ConcurrentHashMap<String, Set<String>>) in.readObject();
+
+                        if (LOG.isDebugEnabled()) {
+                            final StringBuilder sb = new StringBuilder();
+                            sb.append("Selector cache data loaded from: ").append(persistFile.getAbsolutePath()).append("\n");
+                            sb.append("The following entries were loaded from the cache file: \n");
+
+                            subSelectorCache.forEach((k,v) -> {
+                                sb.append("\t").append(k).append(": ").append(v).append("\n");
+                            });
+
+                            LOG.debug(sb.toString());
+                        }
                     } catch (ClassNotFoundException ex) {
                         LOG.error("Invalid selector cache data found. Please remove file.", ex);
                     } finally {
