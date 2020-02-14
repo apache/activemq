@@ -20,6 +20,8 @@ package org.apache.activemq.transport.https;
 import java.io.IOException;
 import java.net.URI;
 
+import javax.net.ssl.HostnameVerifier;
+
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.http.HttpClientTransport;
 import org.apache.activemq.transport.util.TextWireFormat;
@@ -29,13 +31,22 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 public class HttpsClientTransport extends HttpClientTransport {
 
+    private final javax.net.ssl.SSLSocketFactory sslSocketFactory;
+    private boolean verifyHostName = true;
+
     public HttpsClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
+        try {
+            sslSocketFactory = createSocketFactory();
+        } catch (IOException e) {
+            throw new IllegalStateException("Error trying to configure TLS", e);
+        }
     }
 
     @Override
@@ -47,7 +58,8 @@ public class HttpsClientTransport extends HttpClientTransport {
 
         RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create();
         try {
-            SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(createSocketFactory(), new DefaultHostnameVerifier());
+            HostnameVerifier hostnameVerifier = verifyHostName ? new DefaultHostnameVerifier() : new NoopHostnameVerifier();
+            SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(sslSocketFactory, hostnameVerifier);
             registryBuilder.register("https", sslConnectionFactory);
             return registryBuilder.build();
         } catch (Exception e) {
@@ -79,6 +91,14 @@ public class HttpsClientTransport extends HttpClientTransport {
     @Override
     protected String getSystemPropertyPrefix() {
         return "https.";
+    }
+
+    public Boolean getVerifyHostName() {
+        return verifyHostName;
+    }
+
+    public void setVerifyHostName(Boolean verifyHostName) {
+        this.verifyHostName = verifyHostName;
     }
 
 }
