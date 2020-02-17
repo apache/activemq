@@ -223,7 +223,7 @@ public class AmqpSupport {
      * @param destination
      *      The ActiveMQDestination whose capability is being requested.
      *
-     * @return a Symbol that matches the defined Capability value for the ActiveMQDestiantion.
+     * @return a Symbol that matches the defined Capability value for the ActiveMQDestination.
      */
     public static Symbol getDestinationTypeSymbol(ActiveMQDestination destination) {
         if (destination.isQueue()) {

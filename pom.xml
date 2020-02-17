@@ -64,7 +64,7 @@
     <ecj.version>3.17.0</ecj.version>
     <ftpserver-version>1.1.1</ftpserver-version>
     <geronimo-version>1.0</geronimo-version>
-    <guava-version>28.0-jre</guava-version>
+    <guava-version>28.2-jre</guava-version>
     <hadoop-version>1.0.4</hadoop-version>
     <hawtbuf-version>1.11</hawtbuf-version>
     <hawtdispatch-version>1.22</hawtdispatch-version>
@@ -74,10 +74,10 @@
     <httpcore-version>4.4.13</httpcore-version>
     <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.9.10</jackson-version>
-    <jackson-databind-version>2.9.10.1</jackson-databind-version>
+    <jackson-databind-version>2.9.10.2</jackson-databind-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-bundle-version>2.2.11_1</jaxb-bundle-version>
-    <jetty9-version>9.4.22.v20191022</jetty9-version>
+    <jetty9-version>9.4.26.v20200117</jetty9-version>
     <jetty-version>${jetty9-version}</jetty-version>
     <jmdns-version>3.4.1</jmdns-version>
     <tomcat-api-version>9.0.30</tomcat-api-version>
@@ -96,7 +96,7 @@
     <leveldbjni-version>1.8</leveldbjni-version>
     <log4j-version>1.2.17</log4j-version>
     <mockito-version>1.10.19</mockito-version>
-    <owasp-dependency-check-version>5.2.2</owasp-dependency-check-version>
+    <owasp-dependency-check-version>5.2.4</owasp-dependency-check-version>
     <powermock-version>1.6.5</powermock-version>
     <mqtt-client-version>1.15</mqtt-client-version>
     <openjpa-version>1.2.0</openjpa-version>
@@ -115,20 +115,17 @@
     <saxon-version>9.5.1-5</saxon-version>
     <saxon-bundle-version>9.5.1-5_1</saxon-bundle-version>
     <scala-plugin-version>3.1.0</scala-plugin-version>
-    <scala-version>2.11.0</scala-version>
+    <scala-version>2.11.12</scala-version>
     <shiro-version>1.5.0</shiro-version>
-    <scalatest-version>2.1.5</scalatest-version>
+    <scalatest-version>3.1.0</scalatest-version>
     <slf4j-version>1.7.25</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
     <spring-version>4.3.26.RELEASE</spring-version>
-    <stax2-api-version>3.0.2</stax2-api-version>
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>2.1</velocity-version>
-    <woodstox-core-asl-version>4.2.0</woodstox-core-asl-version>
     <xalan-version>2.7.2</xalan-version>
     <xmlbeans-version>2.6.0</xmlbeans-version>
     <xmlbeans-bundle-version>2.6.0_2</xmlbeans-bundle-version>
-    <xmlresolver-bundle-version>1.2_5</xmlresolver-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.11.1</xstream-version>
     <xbean-version>4.16</xbean-version>
@@ -137,10 +134,8 @@
     <stompjms-version>1.19</stompjms-version>
 
     <pax-exam-version>4.13.1</pax-exam-version>
-    <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
-    <pax-runner-version>1.8.6</pax-runner-version>
     <pax-url-version>2.6.2</pax-url-version>
-    <felix-configadmin-version>1.8.0</felix-configadmin-version>
+    <pax-logging-version>1.11.5</pax-logging-version>
     <felix-framework-version>5.0.1</felix-framework-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>

@@ -77,6 +77,11 @@
       <artifactId>leveldbjni</artifactId>
       <version>${leveldbjni-version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava-version}</version>
+    </dependency>
     
     <!-- Lets not include the JNI libs for now so that we can harden the pure java driver more -->
     <!--
