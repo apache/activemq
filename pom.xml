@@ -101,7 +101,7 @@
     <mqtt-client-version>1.15</mqtt-client-version>
     <openjpa-version>1.2.0</openjpa-version>
     <org-apache-derby-version>10.14.2.0</org-apache-derby-version>
-    <org.osgi.core-version>4.3.1</org.osgi.core-version>
+    <osgi-version>6.0.0</osgi-version>
     <p2psockets-version>1.1.2</p2psockets-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.14</zookeeper-version>
@@ -602,8 +602,13 @@
 
       <dependency>
         <groupId>org.osgi</groupId>
-        <artifactId>org.osgi.core</artifactId>
-        <version>${org.osgi.core-version}</version>
+        <artifactId>osgi.core</artifactId>
+        <version>${osgi-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>osgi.cmpn</artifactId>
+        <version>${osgi-version}</version>
       </dependency>
 
       <dependency>
