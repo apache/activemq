@@ -57,16 +57,32 @@ public class HttpsTransportFactory extends HttpTransportFactory {
     }
 
     @Override
-    protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {
+    protected Transport createTransport(URI location, WireFormat wf) throws IOException {
         // need to remove options from uri
-        URI uri;
         try {
-            uri = URISupport.removeQuery(location);
+            URI uri = URISupport.removeQuery(location);
+
+            Map<String, String> options = new HashMap<>(URISupport.parseParameters(location));
+            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            boolean verifyHostName = true;
+            if (transportOptions.containsKey("verifyHostName")) {
+                verifyHostName = Boolean.parseBoolean(transportOptions.get("verifyHostName").toString());
+            }
+
+            HttpsClientTransport clientTransport = new HttpsClientTransport(asTextWireFormat(wf), uri);
+            clientTransport.setVerifyHostName(verifyHostName);
+            return clientTransport;
         } catch (URISyntaxException e) {
             MalformedURLException cause = new MalformedURLException("Error removing query on " + location);
             cause.initCause(e);
             throw cause;
         }
-        return new HttpsClientTransport(asTextWireFormat(wf), uri);
+    }
+
+    // TODO Not sure if there is a better way of removing transport.verifyHostName here?
+    @Override
+    public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+        options.remove("transport.verifyHostName");
+        return super.compositeConfigure(transport, format, options);
     }
 }
