@@ -121,14 +121,11 @@
     <slf4j-version>1.7.25</slf4j-version>
     <snappy-version>1.1.2</snappy-version>
     <spring-version>4.3.26.RELEASE</spring-version>
-    <stax2-api-version>3.0.2</stax2-api-version>
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>2.1</velocity-version>
-    <woodstox-core-asl-version>4.2.0</woodstox-core-asl-version>
     <xalan-version>2.7.2</xalan-version>
     <xmlbeans-version>2.6.0</xmlbeans-version>
     <xmlbeans-bundle-version>2.6.0_2</xmlbeans-bundle-version>
-    <xmlresolver-bundle-version>1.2_5</xmlresolver-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.11.1</xstream-version>
     <xbean-version>4.16</xbean-version>
@@ -137,11 +134,8 @@
     <stompjms-version>1.19</stompjms-version>
 
     <pax-exam-version>4.13.1</pax-exam-version>
-    <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
-    <pax-runner-version>1.8.6</pax-runner-version>
     <pax-url-version>2.6.2</pax-url-version>
-    <felix-configadmin-version>1.8.0</felix-configadmin-version>
-    <felix-framework-version>5.0.1</felix-framework-version>
+    <felix-framework-version>5.6.12</felix-framework-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
     <source-version>1.8</source-version>
