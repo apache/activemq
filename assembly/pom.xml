@@ -336,6 +336,12 @@
       <artifactId>jetty-all</artifactId>
       <classifier>uber</classifier>
     </dependency>
+    <!-- jetty.orbit artifact will be removed as soon as https://github.com/eclipse/jetty.project/issues/4621 is fixed -->
+    <dependency>
+      <groupId>org.eclipse.jetty.orbit</groupId>
+      <artifactId>javax.security.auth.message</artifactId>
+      <version>1.0.0.v201108011116</version>
+    </dependency>
     <dependency>
       <groupId>org.eclipse.jdt</groupId>
       <artifactId>ecj</artifactId>
