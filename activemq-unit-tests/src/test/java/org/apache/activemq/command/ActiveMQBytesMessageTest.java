@@ -269,6 +269,30 @@ public class ActiveMQBytesMessageTest extends TestCase {
         }
     }
 
+    public void testClearProperties() throws Exception {
+        ActiveMQBytesMessage bytesMessage = new ActiveMQBytesMessage();
+        bytesMessage.setIntProperty("one", 1);
+        // simulate send
+        bytesMessage.onSend();
+
+        assertEquals(1, bytesMessage.getIntProperty("one"));
+        assertTrue(bytesMessage.isReadOnlyProperties());
+
+        try {
+            bytesMessage.setIntProperty("two", 2);
+            fail("should have thrown b/c readonly");
+        } catch (MessageNotWriteableException expected) {
+        }
+
+        // allow writing new properties
+        bytesMessage.clearProperties();
+        assertFalse(bytesMessage.propertyExists("one"));
+        assertFalse(bytesMessage.isReadOnlyProperties());
+
+        bytesMessage.setIntProperty("two", 2);
+        assertEquals(2, bytesMessage.getIntProperty("two"));
+    }
+
     public void testReset() throws JMSException {
         ActiveMQBytesMessage message = new ActiveMQBytesMessage();
         try {
