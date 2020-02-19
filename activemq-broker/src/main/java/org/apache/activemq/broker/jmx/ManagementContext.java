@@ -690,10 +690,17 @@ public class ManagementContext implements Service {
             super(port);
         }
 
-        @Override
+        private String getLookupName() {
+            if (getConnectorPath() == null || getConnectorPath().length() == 0) {
+                return LOOKUP_NAME;
+            }
 
+            return getConnectorPath().replaceAll("^/+", "").replaceAll("/+$", "");
+        }
+
+        @Override
         public Remote lookup(String s) throws RemoteException, NotBoundException {
-            return LOOKUP_NAME.equals(s) ? serverStub : null;
+            return getLookupName().equals(s) ? serverStub : null;
         }
 
         @Override
