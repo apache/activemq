@@ -70,6 +70,11 @@ public class ManagementContext implements Service {
      */
     public static final String DEFAULT_DOMAIN = "org.apache.activemq";
 
+    /**
+     * Default registry lookup name
+     */
+    public static final String DEFAULT_LOOKUP_NAME = "jmxrmi";
+
     static {
         String option = Boolean.FALSE.toString();
         try {
@@ -95,6 +100,7 @@ public class ManagementContext implements Service {
     private Map<String, ?> environment;
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
+    private String lookupName = DEFAULT_LOOKUP_NAME;
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final CountDownLatch connectorStarted = new CountDownLatch(1);
     private JMXConnectorServer connectorServer;
@@ -597,6 +603,12 @@ public class ManagementContext implements Service {
 
     public void setConnectorPath(String connectorPath) {
         this.connectorPath = connectorPath;
+
+        if (connectorPath == null || connectorPath.length() == 0) {
+            this.lookupName = DEFAULT_LOOKUP_NAME;
+        } else {
+            this.lookupName = connectorPath.replaceAll("^/+", "").replaceAll("/+$", "");
+        }
     }
 
     public int getConnectorPort() {
@@ -684,23 +696,15 @@ public class ManagementContext implements Service {
      */
     @SuppressWarnings("restriction")
     private class JmxRegistry extends sun.rmi.registry.RegistryImpl {
-        public static final String LOOKUP_NAME = "jmxrmi";
+
 
         public JmxRegistry(int port) throws RemoteException {
             super(port);
         }
 
-        private String getLookupName() {
-            if (getConnectorPath() == null || getConnectorPath().length() == 0) {
-                return LOOKUP_NAME;
-            }
-
-            return getConnectorPath().replaceAll("^/+", "").replaceAll("/+$", "");
-        }
-
         @Override
         public Remote lookup(String s) throws RemoteException, NotBoundException {
-            return getLookupName().equals(s) ? serverStub : null;
+            return lookupName.equals(s) ? serverStub : null;
         }
 
         @Override
@@ -717,7 +721,7 @@ public class ManagementContext implements Service {
 
         @Override
         public String[] list() throws RemoteException {
-            return new String[] {LOOKUP_NAME};
+            return new String[] {lookupName};
         }
     }
 }
