@@ -124,7 +124,7 @@
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>2.1</velocity-version>
     <xalan-version>2.7.2</xalan-version>
-    <xmlbeans-version>2.6.0</xmlbeans-version>
+    <xmlbeans-version>3.1.0</xmlbeans-version>
     <xmlbeans-bundle-version>2.6.0_2</xmlbeans-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.11.1</xstream-version>
