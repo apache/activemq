@@ -79,10 +79,12 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
             AuthenticationUser user = (AuthenticationUser)it.next();
             userPasswords.put(user.getUsername(), user.getPassword());
             Set<Principal> groups = new HashSet<Principal>();
-            StringTokenizer iter = new StringTokenizer(user.getGroups(), ",");
-            while (iter.hasMoreTokens()) {
-                String name = iter.nextToken().trim();
-                groups.add(new GroupPrincipal(name));
+            if (user.getGroups() != null) {
+                StringTokenizer iter = new StringTokenizer(user.getGroups(), ",");
+                while (iter.hasMoreTokens()) {
+                    String name = iter.nextToken().trim();
+                    groups.add(new GroupPrincipal(name));
+                }
             }
             userGroups.put(user.getUsername(), groups);
         }
