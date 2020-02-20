@@ -190,6 +190,7 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <version>${hadoop-version}</version>
+      <scope>test</scope>
       <exclusions>
         <!-- hadoop's transative dependencies are such a pig -->
         <exclusion>
