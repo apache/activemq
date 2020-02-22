@@ -43,7 +43,7 @@ public class JmsPoolTestSupport {
 
     @Before
     public void setUp() throws Exception {
-        LOG.info("========== start " + getTestName() + " ==========");
+        LOG.info("========== start {} ==========", getTestName());
     }
 
     @After
@@ -54,11 +54,11 @@ public class JmsPoolTestSupport {
                 brokerService.waitUntilStopped();
                 brokerService = null;
             } catch (Exception ex) {
-                LOG.warn("Suppress error on shutdown: {}", ex);
+                LOG.warn("Suppress error on shutdown: {}", (Object)ex);
             }
         }
 
-        LOG.info("========== tearDown " + getTestName() + " ==========");
+        LOG.info("========== tearDown {} ==========", getTestName());
     }
 
     public String getTestName() {

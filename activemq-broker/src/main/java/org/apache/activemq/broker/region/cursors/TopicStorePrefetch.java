@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * persist pendingCount messages pendingCount message (messages awaiting disptach
+ * persist pendingCount messages pendingCount message (messages awaiting dispatch
  * to a consumer) cursor
  *
  *
