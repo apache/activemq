@@ -80,7 +80,7 @@
     <jetty9-version>9.4.22.v20191022</jetty9-version>
     <jetty-version>${jetty9-version}</jetty-version>
     <jmdns-version>3.4.1</jmdns-version>
-    <tomcat-api-version>9.0.30</tomcat-api-version>
+    <tomcat-api-version>9.0.31</tomcat-api-version>
     <jettison-version>1.4.0</jettison-version>
     <jmock-version>2.5.1</jmock-version>
     <jolokia-version>1.6.2</jolokia-version>
