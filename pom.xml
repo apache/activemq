@@ -47,7 +47,7 @@
     <aries-version>1.1.0</aries-version>
     <aries-transaction-version>1.1.1</aries-transaction-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>2.24.1</camel-version>
+    <camel-version>2.24.3</camel-version>
     <camel-version-range>[2.20,3)</camel-version-range>
     <cglib-version>2.2</cglib-version>
     <commons-beanutils-version>1.9.4</commons-beanutils-version>
