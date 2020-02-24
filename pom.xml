@@ -122,7 +122,7 @@
     <snappy-version>1.1.2</snappy-version>
     <spring-version>4.3.26.RELEASE</spring-version>
     <taglibs-version>1.2.5</taglibs-version>
-    <velocity-version>2.1</velocity-version>
+    <velocity-version>2.2</velocity-version>
     <xalan-version>2.7.2</xalan-version>
     <xmlbeans-version>3.1.0</xmlbeans-version>
     <xmlbeans-bundle-version>2.6.0_2</xmlbeans-bundle-version>
