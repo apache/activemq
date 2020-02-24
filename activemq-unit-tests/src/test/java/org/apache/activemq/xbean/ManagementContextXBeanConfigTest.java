@@ -42,10 +42,18 @@ import org.slf4j.LoggerFactory;
  */
 public class ManagementContextXBeanConfigTest extends TestCase {
 
-    protected BrokerService brokerService;
+    private static final String MANAGEMENT_CONTEXT_TEST_XML = "org/apache/activemq/xbean/management-context-test.xml";
+    private static final String MANAGEMENT_CONTEXT_TEST_XML_CONNECTOR_PATH =
+            "org/apache/activemq/xbean/management-context-test-connector-path.xml";
+
     private static final transient Logger LOG = LoggerFactory.getLogger(ManagementContextXBeanConfigTest.class);
 
+    protected BrokerService brokerService;
+
     public void testManagmentContextConfiguredCorrectly() throws Exception {
+        brokerService = getBrokerService(MANAGEMENT_CONTEXT_TEST_XML);
+        brokerService.start();
+
         assertEquals(2011, brokerService.getManagementContext().getConnectorPort());
         assertEquals("test.domain", brokerService.getManagementContext().getJmxDomainName());
         // Make sure the broker is registered in the right jmx domain.
@@ -58,6 +66,9 @@ public class ManagementContextXBeanConfigTest extends TestCase {
     }
 
     public void testSuccessAuthentication() throws Exception {
+        brokerService = getBrokerService(MANAGEMENT_CONTEXT_TEST_XML);
+        brokerService.start();
+
         JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:2011/jmxrmi");
         Map<String, Object> env = new HashMap<String, Object>();
         env.put(JMXConnector.CREDENTIALS, new String[]{"admin", "activemq"});
@@ -65,7 +76,21 @@ public class ManagementContextXBeanConfigTest extends TestCase {
         assertAuthentication(connector);
     }
 
+    public void testConnectorPath() throws Exception {
+        brokerService = getBrokerService(MANAGEMENT_CONTEXT_TEST_XML_CONNECTOR_PATH);
+        brokerService.start();
+
+        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:2011/activemq-jmx");
+        Map<String, Object> env = new HashMap<String, Object>();
+        env.put(JMXConnector.CREDENTIALS, new String[]{"admin", "activemq"});
+        JMXConnector connector = JMXConnectorFactory.connect(url, env);
+        assertAuthentication(connector);
+    }
+
     public void testFailAuthentication() throws Exception {
+        brokerService = getBrokerService(MANAGEMENT_CONTEXT_TEST_XML);
+        brokerService.start();
+
         JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:2011/jmxrmi");
         try {
             JMXConnector connector = JMXConnectorFactory.connect(url, null);
@@ -86,20 +111,13 @@ public class ManagementContextXBeanConfigTest extends TestCase {
     }
 
     @Override
-    protected void setUp() throws Exception {
-        brokerService = createBroker();
-        brokerService.start();
-    }
-
-    @Override
     protected void tearDown() throws Exception {
         if (brokerService != null) {
             brokerService.stop();
         }
     }
 
-    protected BrokerService createBroker() throws Exception {
-        String uri = "org/apache/activemq/xbean/management-context-test.xml";
+    private BrokerService getBrokerService(String uri) throws Exception {
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
