@@ -16,17 +16,14 @@
  */
 package org.apache.activemq.transport.http;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
+import javax.jms.JMSException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -121,7 +118,13 @@ public class HttpTunnelServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         if (wireFormatOptions.get("maxFrameSize") != null && request.getContentLength() > Integer.parseInt(wireFormatOptions.get("maxFrameSize").toString())) {
-            throw new ServletException("maxFrameSize exceeded");
+            response.setStatus(405);
+            response.setContentType("plain/text");
+            PrintWriter writer = response.getWriter();
+            writer.println("maxFrameSize exceeded");
+            writer.flush();
+            writer.close();
+            return;
         }
 
         InputStream stream = request.getInputStream();

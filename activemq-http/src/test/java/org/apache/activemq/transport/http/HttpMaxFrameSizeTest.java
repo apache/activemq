@@ -56,7 +56,7 @@ public class HttpMaxFrameSizeTest {
         try {
             send(5000);
         } catch (JMSException jmsException) {
-            Assert.assertTrue(jmsException.getMessage().contains("500 Server Error"));
+            Assert.assertTrue(jmsException.getMessage().contains("405 Method Not Allowed"));
         }
     }
 
