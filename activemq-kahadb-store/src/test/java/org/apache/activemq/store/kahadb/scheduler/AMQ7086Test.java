@@ -32,8 +32,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class AMQ7086Test {
 
@@ -56,7 +55,7 @@ public class AMQ7086Test {
         LOG.info("kahadb store: " + kahaDBPersistenceAdapter);
         int numKahadbFiles = kahaDBPersistenceAdapter.getStore().getJournal().getFileMap().size();
 
-        LOG.info("Num files, job store: {}, messge store: {}", numKahadbFiles, numKahadbFiles);
+        LOG.info("Num files, job store: {}, message store: {}", numKahadbFiles, numKahadbFiles);
 
         // pull the dirs before we stop
         File jobDir = jobSchedulerStore.getJournal().getDirectory();
@@ -64,8 +63,7 @@ public class AMQ7086Test {
 
         brokerService.stop();
 
-
-        assertEquals("Expected job store data files", 1, verifyFilesOnDisk(jobDir));
+        assertTrue("Expected job store data files at least 1", verifyFilesOnDisk(jobDir) >= 1);
         assertEquals("Expected kahadb data files", 1, verifyFilesOnDisk(kahaDir));
     }
 
@@ -82,7 +80,7 @@ public class AMQ7086Test {
         LOG.info("kahadb store: " + kahaDBPersistenceAdapter);
         int numKahadbFiles = kahaDBPersistenceAdapter.getStore().getJournal().getFileMap().size();
 
-        LOG.info("Num files, job store: {}, messge store: {}", numKahadbFiles, numKahadbFiles);
+        LOG.info("Num files, job store: {}, message store: {}", numKahadbFiles, numKahadbFiles);
 
         // pull the dirs before we stop
         File jobDir = jobSchedulerStore.getJournal().getDirectory();
