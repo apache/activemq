@@ -332,6 +332,10 @@ public class LDAPLoginModule implements LoginModule {
             throw ex;
         }
 
+        if (context != null) {
+            close(context);
+        }
+
         return true;
     }
 
