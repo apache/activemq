@@ -792,7 +792,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public void commitRemove(ConnectionContext context, MessageAck ack) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
-            getAdapter().doRemoveMessage(c, (Long)ack.getLastMessageId().getFutureOrSequenceLong(), null);
+            if (getAdapter() != null && c != null && ack != null && ack.getLastMessageId() != null && ack.getLastMessageId().getFutureOrSequenceLong() != null) {
+                getAdapter().doRemoveMessage(c, (Long) ack.getLastMessageId().getFutureOrSequenceLong(), null);
+            }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit last ack: " + ack + ". Reason: " + e,e);
