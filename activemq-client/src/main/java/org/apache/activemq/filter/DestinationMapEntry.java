@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.filter;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.activemq.command.*;
 
 /**

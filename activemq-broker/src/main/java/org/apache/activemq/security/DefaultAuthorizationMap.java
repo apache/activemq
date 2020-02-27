@@ -24,8 +24,6 @@ import java.util.*;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.filter.DestinationMapNode;
-import org.apache.activemq.filter.DestinationNode;
 
 /**
  * Represents a destination based configuration of policies so that individual
