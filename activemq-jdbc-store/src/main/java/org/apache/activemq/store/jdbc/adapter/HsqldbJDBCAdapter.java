@@ -30,4 +30,9 @@ public class HsqldbJDBCAdapter extends BytesJDBCAdapter {
         super.setStatements(statements);
     }
 
+    @Override
+    public String limitQuery(String query) {
+        return query + " LIMIT " + getMaxRows();
+    }
+
 }

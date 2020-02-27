@@ -96,4 +96,10 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
     public void setTypeStatement(String typeStatement) {
         this.typeStatement = typeStatement;
     }
+
+    @Override
+    public String limitQuery(String query) {
+        return query + " LIMIT " + getMaxRows();
+    }
+
 }
