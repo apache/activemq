@@ -248,12 +248,13 @@ public class PartitionBroker extends BrokerFilter {
             }
 
             // The target with largest score wins..
-            if( !targetScores.isEmpty() ) {
+            if (!targetScores.isEmpty()) {
                 Target bestTarget = null;
-                int bestScore=0;
+                int bestScore = 0;
                 for (Map.Entry<Target, Score> entry : targetScores.entrySet()) {
-                    if( entry.getValue().value > bestScore ) {
+                    if (entry.getValue().value > bestScore) {
                         bestTarget = entry.getKey();
+                        bestScore = entry.getValue().value;
                     }
                 }
                 return bestTarget;
