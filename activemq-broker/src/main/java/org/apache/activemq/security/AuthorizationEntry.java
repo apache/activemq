@@ -45,9 +45,8 @@ public class AuthorizationEntry extends DestinationMapEntry {
         return groupClass;
     }
 
-    @SuppressWarnings("unchecked")
     private Set<Object> emptySet() {
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     public void setGroupClass(String groupClass) {
