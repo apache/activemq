@@ -1923,7 +1923,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                                 (pendingAcks.size() == 1 && pendingAcks.getTail().range() == 1)) {
 
                                 if (LOG.isTraceEnabled()) {
-                                    LOG.trace("Found candidate for rewrite: {} from file {}", entry.getKey(), dataFileId);
+                                    LOG.trace("Found candidate for rewrite: sub {} on {} from file {}", subscriptionKey, entry.getKey(), dataFileId);
                                 }
 
                                 final KahaSubscriptionCommand kahaSub =
@@ -1939,6 +1939,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             }
                         }
 
+                        if (LOG.isTraceEnabled()) {
+                            final StoredDestination destination = entry.getValue();
+                            final String subscriptionKey = subscription.getKey();
+                            final SequenceSet pendingAcks = destination.ackPositions.get(tx, subscriptionKey);
+                            LOG.trace("sub {} on {} in dataFile {} has pendingCount {}", subscriptionKey, entry.getKey(), dataFileId, pendingAcks.rangeSize()-1);
+                        }
                         gcCandidateSet.remove(dataFileId);
                     }
                 }
