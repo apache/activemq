@@ -48,4 +48,5 @@ public class OracleJDBCAdapter extends DefaultJDBCAdapter {
     public String limitQuery(String query) {
         return "SELECT * FROM (" + query + ") WHERE ROWNUM <= " + getMaxRows();
     }
+
 }

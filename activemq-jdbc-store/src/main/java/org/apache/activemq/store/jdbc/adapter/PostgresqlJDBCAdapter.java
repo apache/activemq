@@ -54,4 +54,10 @@ public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {
     public void setAcksPkName(String acksPkName) {
         this.acksPkName = acksPkName;
     }
+
+    @Override
+    public String limitQuery(String query) {
+        return query + " LIMIT " + getMaxRows();
+    }
+
 }
