@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.jms.pool;
 
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -74,6 +75,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
     private int maximumActiveSessionPerConnection = 500;
     private int idleTimeout = 30 * 1000;
+    private int connectionTimeout = 30 * 1000;
     private boolean blockIfSessionPoolIsFull = true;
     private long blockIfSessionPoolIsFullTimeout = -1L;
     private long expiryTimeout = 0l;
@@ -143,6 +145,9 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                     }
 
                 }, poolConfig);
+
+            // Set max wait time to control borrow from pool.
+            this.connectionsPool.setMaxWaitMillis(getConnectionTimeout());
 
             // Set max idle (not max active) since our connections always idle in the pool.
             this.connectionsPool.setMaxIdlePerKey(1);
@@ -232,16 +237,24 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                 // under lock to prevent another thread from triggering an expiration check and
                 // pulling the rug out from under us.
                 while (connection == null) {
-                    connection = connectionsPool.borrowObject(key);
-                    synchronized (connection) {
-                        if (connection.getConnection() != null) {
-                            connection.incrementReferenceCount();
-                            break;
+                    try {
+                        connection = connectionsPool.borrowObject(key);
+                    } catch (NoSuchElementException ex) {
+                        if (!"Timeout waiting for idle object".equals(ex.getMessage())) {
+                            throw ex;
                         }
+                    }
+                    if (connection != null) {
+                        synchronized (connection) {
+                            if (connection.getConnection() != null) {
+                                connection.incrementReferenceCount();
+                                break;
+                            }
 
-                        // Return the bad one to the pool and let if get destroyed as normal.
-                        connectionsPool.returnObject(key, connection);
-                        connection = null;
+                            // Return the bad one to the pool and let if get destroyed as normal.
+                            connectionsPool.returnObject(key, connection);
+                            connection = null;
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -418,6 +431,27 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      */
     public void setIdleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
+    }
+
+    /**
+     * Gets the connection timeout value. The maximum time waited to get a Connection from the pool.
+     * The default value is 30 seconds.
+     *
+     * @return connection timeout value (milliseconds)
+     */
+    public int getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    /**
+     * Sets the connection timeout value for getting Connections from this pool in Milliseconds,
+     * defaults to 30 seconds.
+     *
+     * @param connectionTimeout
+     *      The maximum time to wait for getting a pooled Connection.
+     */
+    public void setConnectionTimeout(int connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
     }
 
     /**
