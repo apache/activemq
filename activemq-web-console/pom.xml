@@ -161,7 +161,8 @@
               org.slf4j.spi;version="[1.6,2)";resolution:=optional,
               org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
               org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional,
-              org.eclipse.jetty*;resolution:=optional;version="[9.0,10)"
+              org.eclipse.jetty*;resolution:=optional;version="[9.0,10)",
+              org.objectweb.asm*;version="[6,8)"
             </Import-Package>
           </instructions>
         </configuration>
@@ -325,11 +326,11 @@
        <groupId>org.apache.geronimo.specs</groupId>
        <artifactId>geronimo-annotation_1.0_spec</artifactId>
     </dependency>
- 
 
 	<dependency>
 		<groupId>org.ow2.asm</groupId>
 		<artifactId>asm</artifactId>
+    <scope>provided</scope>
 	</dependency>
     <dependency>
       <groupId>org.osgi</groupId>
