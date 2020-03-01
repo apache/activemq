@@ -263,6 +263,7 @@
         <include>org.springframework:spring-web</include>
         <include>org.springframework:spring-webmvc</include>
         <include>org.eclipse.jetty.aggregate:jetty-all</include>
+        <include>org.eclipse.jetty.orbit:javax.security.auth.message</include>
         <include>org.apache.tomcat:tomcat-servlet-api</include>
         <include>org.apache.tomcat:tomcat-websocket-api</include>
 
