@@ -29,8 +29,12 @@ import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StompNIOSSLTransport extends NIOSSLTransport {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(StompNIOSSLTransport.class);
 
     StompCodec codec;
 
@@ -52,11 +56,15 @@ public class StompNIOSSLTransport extends NIOSSLTransport {
     }
 
     @Override
-    protected void initializeStreams() throws IOException {
-        codec = new StompCodec(this);
-        super.initializeStreams();
-        if (inputBuffer.position() != 0 && inputBuffer.hasRemaining()) {
-            serviceRead();
+    protected void initializeStreams() {
+        try {
+            codec = new StompCodec(this);
+            super.initializeStreams();
+            if (inputBuffer.position() != 0 && inputBuffer.hasRemaining()) {
+                serviceRead();
+            }
+        } catch (IOException e) {
+            LOGGER.warn("Could not initialize connection from {}", socket.getInetAddress().getHostAddress(), e);
         }
     }
 
