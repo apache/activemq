@@ -367,13 +367,17 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
                 @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                        Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
+                    if (listener.hasSpace()) {
+                        Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
                         msg.getMessageId().setFutureOrSequenceLong(sequenceId);
                         msg.getMessageId().setEntryLocator(sequenceId);
                         listener.recoverMessage(msg);
                         trackLastRecovered(sequenceId, msg.getPriority());
                         return true;
+                    } else {
+                        return false;
+                    }
                 }
 
                 @Override
