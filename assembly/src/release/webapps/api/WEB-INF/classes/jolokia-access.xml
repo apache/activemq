@@ -17,6 +17,11 @@
 -->
 <restrict>
 
+  <!-- Enforce that an Origin/Referer header is present to prevent CSRF -->
+  <cors>
+    <strict-checking/>
+  </cors>
+
   <!-- deny calling operations or getting attributes from these mbeans -->
   <deny>
     <mbean>
