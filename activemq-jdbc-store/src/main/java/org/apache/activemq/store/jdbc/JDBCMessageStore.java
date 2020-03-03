@@ -254,7 +254,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     @Override
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
 
-    	long seq = ack.getLastMessageId().getFutureOrSequenceLong() != null ?
+    	long seq = (ack.getLastMessageId().getFutureOrSequenceLong() != null && ((Long) ack.getLastMessageId().getFutureOrSequenceLong() != 0)) ?
                 (Long) ack.getLastMessageId().getFutureOrSequenceLong() :
                 persistenceAdapter.getStoreSequenceIdForMessageId(context, ack.getLastMessageId(), destination)[0];
 
