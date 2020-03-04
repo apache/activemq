@@ -222,7 +222,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 @Override
                 public void onException(IOException error) {
                     if (!futureLocalBrokerInfo.isDone()) {
-                        LOG.info("error with pending local brokerInfo on: " + localBroker, error);
+                        LOG.info("Error with pending local brokerInfo on: {} ({})", localBroker, error.getMessage());
+                        LOG.debug("Peer error: ", error);
                         futureLocalBrokerInfo.cancel(true);
                         return;
                     }
@@ -241,7 +242,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 @Override
                 public void onException(IOException error) {
                     if (!futureRemoteBrokerInfo.isDone()) {
-                        LOG.info("error with pending remote brokerInfo on: " + remoteBroker, error);
+                        LOG.info("Error with pending remote brokerInfo on: {} ({})", remoteBroker, error.getMessage());
+                        LOG.debug("Peer error: ", error);
                         futureRemoteBrokerInfo.cancel(true);
                         return;
                     }
@@ -642,13 +644,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     public void serviceRemoteException(Throwable error) {
         if (!disposed.get()) {
             if (error instanceof SecurityException || error instanceof GeneralSecurityException) {
-                LOG.error("Network connection between {} and {} shutdown due to a remote error: {}", new Object[]{
-                        localBroker, remoteBroker, error
-                });
+                LOG.error("Network connection between {} and {} shutdown due to a remote error: {}", localBroker, remoteBroker, error.toString());
             } else {
-                LOG.warn("Network connection between {} and {} shutdown due to a remote error: {}", new Object[]{
-                        localBroker, remoteBroker, error
-                });
+                LOG.warn("Network connection between {} and {} shutdown due to a remote error: {}", localBroker, remoteBroker, error.toString());
             }
             LOG.debug("The remote Exception was: {}", error, error);
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
