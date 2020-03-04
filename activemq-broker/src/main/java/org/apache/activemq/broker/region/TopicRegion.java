@@ -369,7 +369,7 @@ public class TopicRegion extends AbstractRegion {
             answer.init();
             return answer;
         } catch (Exception e) {
-            LOG.error("Failed to create TopicSubscription ", e);
+            LOG.debug("Failed to create TopicSubscription ", e);
             JMSException jmsEx = new JMSException("Couldn't create TopicSubscription");
             jmsEx.setLinkedException(e);
             throw jmsEx;
