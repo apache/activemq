@@ -26,6 +26,7 @@ import java.security.cert.X509Certificate;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLHandshakeException;
 
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -64,7 +65,7 @@ public class StompNIOSSLTransport extends NIOSSLTransport {
                 serviceRead();
             }
         } catch (IOException e) {
-            LOGGER.warn("Could not initialize connection from {}", socket.getInetAddress().getHostAddress(), e);
+            LOGGER.warn("Could not initialize connection from {}: {} ({})", socket.getInetAddress().getHostAddress(), e.getMessage(), e.getCause().getMessage());
         }
     }
 
