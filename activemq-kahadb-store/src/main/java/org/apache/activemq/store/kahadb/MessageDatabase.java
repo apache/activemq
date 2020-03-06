@@ -27,8 +27,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -804,7 +806,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (metadata.producerSequenceIdTrackerLocation != null) {
             try {
                 KahaProducerAuditCommand audit = (KahaProducerAuditCommand) load(metadata.producerSequenceIdTrackerLocation);
-                ObjectInputStream objectIn = new ObjectInputStream(audit.getAudit().newInput());
+                ObjectInputStream objectIn = new MessageDatabaseObjectInputStream(audit.getAudit().newInput());
                 int maxNumProducers = getMaxFailoverProducersToTrack();
                 int maxAuditDepth = getFailoverProducersAuditDepth();
                 metadata.producerSequenceIdTracker = (ActiveMQMessageAuditNoSync) objectIn.readObject();
@@ -825,7 +827,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         if (metadata.ackMessageFileMapLocation != null) {
             try {
                 KahaAckMessageFileMapCommand audit = (KahaAckMessageFileMapCommand) load(metadata.ackMessageFileMapLocation);
-                ObjectInputStream objectIn = new ObjectInputStream(audit.getAckMessageFileMap().newInput());
+                ObjectInputStream objectIn = new MessageDatabaseObjectInputStream(audit.getAckMessageFileMap().newInput());
                 metadata.ackMessageFileMap = (Map<Integer, Set<Integer>>) objectIn.readObject();
                 metadata.ackMessageFileMapDirtyFlag.lazySet(true);
                 requiresReplay = false;
@@ -3959,7 +3961,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             byte[] data = new byte[dataLen];
             dataIn.readFully(data);
             ByteArrayInputStream bais = new ByteArrayInputStream(data);
-            ObjectInputStream oin = new ObjectInputStream(bais);
+            ObjectInputStream oin = new MessageDatabaseObjectInputStream(bais);
             try {
                 return (HashSet<String>) oin.readObject();
             } catch (ClassNotFoundException cfe) {
@@ -4071,5 +4073,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     public void setEnableSubscriptionStatistics(boolean enableSubscriptionStatistics) {
         this.enableSubscriptionStatistics = enableSubscriptionStatistics;
+    }
+
+    private static class MessageDatabaseObjectInputStream extends ObjectInputStream {
+
+        public MessageDatabaseObjectInputStream(InputStream is) throws IOException {
+            super(is);
+        }
+
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+            if (!(desc.getName().startsWith("java.lang.") || desc.getName().startsWith("java.util.")
+                || desc.getName().startsWith("org.apache.activemq."))) {
+                throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
+            }
+            return super.resolveClass(desc);
+        }
+
     }
 }
