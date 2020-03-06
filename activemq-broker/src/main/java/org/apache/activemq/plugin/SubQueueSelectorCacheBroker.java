@@ -20,8 +20,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -192,7 +195,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
         if (persistFile != null && persistFile.exists()) {
             try {
                 try (FileInputStream fis = new FileInputStream(persistFile);) {
-                    ObjectInputStream in = new ObjectInputStream(fis);
+                    ObjectInputStream in = new SubSelectorClassObjectInputStream(fis);
                     try {
                         LOG.debug("Reading selector cache....");
                         subSelectorCache = (ConcurrentHashMap<String, Set<String>>) in.readObject();
@@ -363,6 +366,21 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 }
             }
             return false;
+        }
+    }
+
+    private static class SubSelectorClassObjectInputStream extends ObjectInputStream {
+
+        public SubSelectorClassObjectInputStream(InputStream is) throws IOException {
+            super(is);
+        }
+
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+            if (!(desc.getName().equals("java.lang.String") || desc.getName().startsWith("java.util."))) {
+                throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
+            }
+            return super.resolveClass(desc);
         }
     }
 }
