@@ -82,9 +82,6 @@ public class ServiceStopper {
             if (firstException instanceof Exception) {
                 Exception e = (Exception)firstException;
                 throw e;
-            } else if (firstException instanceof RuntimeException) {
-                RuntimeException e = (RuntimeException)firstException;
-                throw e;
             } else {
                 throw new RuntimeException("Unknown type of exception: " + firstException, firstException);
             }
