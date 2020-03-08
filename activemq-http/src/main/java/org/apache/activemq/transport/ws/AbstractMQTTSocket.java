@@ -144,8 +144,9 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
         if (protocolConverter == null) {
             synchronized(this) {
                 if (protocolConverter == null) {
-                    protocolConverter = new MQTTProtocolConverter(this, brokerService);
-                    IntrospectionSupport.setProperties(protocolConverter, transportOptions);
+                    MQTTProtocolConverter newProtocolConverter = new MQTTProtocolConverter(this, brokerService);
+                    IntrospectionSupport.setProperties(newProtocolConverter, transportOptions);
+                    protocolConverter = newProtocolConverter;
                 }
             }
         }
