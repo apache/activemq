@@ -694,7 +694,7 @@ public class MQTTProtocolConverter {
         // Client has sent a valid CONNECT frame, we can stop the connect checker.
         monitor.stopConnectChecker();
 
-        long keepAliveMS = keepAliveSeconds * 1000;
+        long keepAliveMS = keepAliveSeconds * 1000L;
 
         LOG.debug("MQTT Client {} requests heart beat of {} ms", getClientId(), keepAliveMS);
 

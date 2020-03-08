@@ -118,7 +118,7 @@ public class TransportStatusDetector implements Service, Runnable {
     public void stop() throws Exception {
         started.set(false);
         if (runner != null) {
-            runner.join(getSweepInterval() * 5);
+            runner.join(getSweepInterval() * 5L);
         }
     }
 }

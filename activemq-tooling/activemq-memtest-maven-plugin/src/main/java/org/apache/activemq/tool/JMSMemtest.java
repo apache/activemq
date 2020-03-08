@@ -95,7 +95,7 @@ public class JMSMemtest {
         reportName = settings.getProperty("reportName");
         destinationName = settings.getProperty("destinationName");
         reportDirectory = settings.getProperty("reportDirectory");
-        connectionInterval = connectionCheckpointSize * 1024;
+        connectionInterval = connectionCheckpointSize * 1024L;
     }
 
     public static void main(String[] args) {
@@ -171,7 +171,7 @@ public class JMSMemtest {
 
     protected boolean resetConnection(int counter) {
         if (connectionInterval > 0) {
-            long totalMsgSizeConsumed = counter * 1024;
+            long totalMsgSizeConsumed = counter * 1024L;
             if (connectionInterval < totalMsgSizeConsumed) {
                 return true;
             }
