@@ -1237,7 +1237,7 @@ public class PageFile {
     }
 
     private long recoveryFileSizeForPages(int pageCount) {
-        return RECOVERY_FILE_HEADER_SIZE + ((pageSize + 8) * pageCount);
+        return RECOVERY_FILE_HEADER_SIZE + ((pageSize + 8L) * pageCount);
     }
 
     private void releaseCheckpointWaiter() {

@@ -175,7 +175,7 @@ public class BitArrayBin implements Serializable {
                 last = list.get(lastBitArrayIndex);
                 if (last != null) {
                     result += last.length() -1;
-                    result += lastBitArrayIndex * BitArray.LONG_SIZE;
+                    result += lastBitArrayIndex * (long) BitArray.LONG_SIZE;
                     break;
                 }
             }

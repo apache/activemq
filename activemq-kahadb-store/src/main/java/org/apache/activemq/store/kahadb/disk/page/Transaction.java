@@ -726,7 +726,7 @@ public class Transaction implements Iterable<Page> {
         Long key = page.getPageId();
 
         // how much pages we have for this transaction
-        size = writes.size() * pageFile.getPageSize();
+        size = writes.size() * (long) pageFile.getPageSize();
 
         PageWrite write;
 
