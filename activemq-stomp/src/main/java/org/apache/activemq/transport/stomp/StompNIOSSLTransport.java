@@ -57,15 +57,11 @@ public class StompNIOSSLTransport extends NIOSSLTransport {
     }
 
     @Override
-    protected void initializeStreams() {
-        try {
-            codec = new StompCodec(this);
-            super.initializeStreams();
-            if (inputBuffer.position() != 0 && inputBuffer.hasRemaining()) {
-                serviceRead();
-            }
-        } catch (IOException e) {
-            LOGGER.warn("Could not initialize connection from {}: {} ({})", socket.getInetAddress().getHostAddress(), e.getMessage(), e.getCause().getMessage());
+    protected void initializeStreams() throws IOException {
+        codec = new StompCodec(this);
+        super.initializeStreams();
+        if (inputBuffer.position() != 0 && inputBuffer.hasRemaining()) {
+            serviceRead();
         }
     }
 
