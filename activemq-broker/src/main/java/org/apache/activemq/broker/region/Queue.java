@@ -528,11 +528,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 // locate last redelivered in unconsumed list (list in delivery rather than seq order)
                 if (lastDeliveredSequenceId > RemoveInfo.LAST_DELIVERED_UNSET) {
                     for (MessageReference ref : unAckedMessages) {
-                        LOG.debug("UnAck reference message id: {}, reference message broker sequence id: {}", ref.getMessageId(), ref.getMessageId().getBrokerSequenceId());
-                        if (lastDeliveredSequenceId == 0 || (lastDeliveredSequenceId > 0 && ref.getMessageId().getBrokerSequenceId() <= lastDeliveredSequenceId)) {
+                        if (ref.getMessageId().getBrokerSequenceId() == lastDeliveredSequenceId) {
                             lastDeliveredRef = ref;
                             markAsRedelivered = true;
                             LOG.debug("found lastDeliveredSeqID: {}, message reference: {}", lastDeliveredSequenceId, ref.getMessageId());
+                            break;
                         }
                     }
                 }
