@@ -258,7 +258,12 @@ public class ProtocolConverter {
             LOG.warn("Exception occurred while processing a command: {}", exception.toString());
         } else {
             if (exception instanceof JMSException) {
-                LOG.warn("Exception occurred for client {} ({}) processing: {} -> {} ({})", connectionInfo.getClientId(), connectionInfo.getClientIp(), safeGetAction(command), exception.toString(), ((JMSException) exception).getLinkedException().toString());
+                JMSException jmsException = (JMSException) exception;
+                if (jmsException.getLinkedException() != null) {
+                    LOG.warn("Exception occurred for client {} ({}) processing: {} -> {} ({})", connectionInfo.getClientId(), connectionInfo.getClientIp(), safeGetAction(command), exception.toString(), jmsException.getLinkedException().toString());
+                } else {
+                    LOG.warn("Exception occurred for client {} ({}) processing: {} -> {}", connectionInfo.getClientId(), connectionInfo.getClientIp(), safeGetAction(command), exception.toString());
+                }
             } else {
                 LOG.warn("Exception occurred for client {} ({}) processing: {} -> {}", connectionInfo.getClientId(), connectionInfo.getClientIp(), safeGetAction(command), exception.toString());
             }
