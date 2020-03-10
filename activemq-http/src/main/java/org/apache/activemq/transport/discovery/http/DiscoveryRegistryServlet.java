@@ -49,12 +49,7 @@ public class DiscoveryRegistryServlet extends HttpServlet {
     }
 
     private ConcurrentMap<String, Long> getServiceGroup(String group) {
-        ConcurrentMap<String, Long> rc = serviceGroups.get(group);
-        if( rc == null ) {
-            rc = new ConcurrentHashMap<String, Long>();
-            serviceGroups.put(group, rc);
-        }
-        return rc;
+        return serviceGroups.computeIfAbsent(group, k -> new ConcurrentHashMap<String, Long>());
     }
 
     @Override
