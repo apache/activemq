@@ -32,7 +32,6 @@ import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.apache.activemq.util.Wait;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
@@ -261,6 +260,8 @@ public class LeaseDatabaseLockerTest {
             will(returnValue(timestamp));
             allowing(timestamp).getTime();
             will(returnValue(dbTime));
+            allowing(resultSet).close();
+            allowing(preparedStatement).close();
         }});
 
         underTest.configure(jdbcPersistenceAdapter);
