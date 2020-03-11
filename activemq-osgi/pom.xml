@@ -102,8 +102,7 @@
          com.google.errorprone.annotations.concurrent,
          com.google.j2objc.annotations,
          org.linkedin*,
-         org.iq80*,
-         com.google.common.base
+         org.iq80*
     </activemq.osgi.private.pkg>
     <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
     <surefire.argLine>-Xmx512M</surefire.argLine>
