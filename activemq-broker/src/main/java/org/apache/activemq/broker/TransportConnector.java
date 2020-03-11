@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 
 import javax.management.ObjectName;
 
+import com.google.common.base.Throwables;
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
@@ -242,11 +243,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 if (brokerService != null && brokerService.isStopping()) {
                     LOG.info("Could not accept connection during shutdown {} : {}", (remoteHost == null ? "" : "from " + remoteHost), error.getLocalizedMessage());
                 } else {
-                    LOG.debug("Could not accept connection from {}: {}", remoteHost, error.getMessage());
+                    LOG.warn("Could not accept connection from {}: {}", (remoteHost == null ? "" : "from " + remoteHost), error.getMessage());
+                    LOG.warn("Root cause of connection error: {}", Throwables.getRootCause(error).getMessage());
                     LOG.debug("Reason: " + error.getMessage(), error);
-                    if (error != null && error.getMessage() != null && remoteHost != null) {
-                        LOG.warn("Could not accept connection from {}: {}", remoteHost, error.toString());
-                    }
                 }
             }
         });
