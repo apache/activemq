@@ -61,7 +61,7 @@
             <div class="footer_l">
                 <div class="footer_r">
                     <div>
-                        Copyright 2005-2015 The Apache Software Foundation.
+                        Copyright 2005-2020 The Apache Software Foundation.
 
                         <!--  (<a href="?printable=true">printable version</a>)-->
                     </div>
