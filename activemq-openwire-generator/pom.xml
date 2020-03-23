@@ -43,11 +43,6 @@
       <groupId>annogen</groupId>
       <artifactId>annogen</artifactId>
     </dependency>
-    <dependency>
-      <groupId>ant</groupId>
-      <artifactId>ant</artifactId>
-      <version>1.6.2</version>
-    </dependency>
   </dependencies>
 
   <profiles>
