@@ -38,6 +38,24 @@ public class DefaultBlobDownloadStrategy extends DefaultStrategy implements Blob
         if (value == null) {
             return null;
         }
+
+        // Do some checks on the received URL against the transfer policy
+        URL uploadURL = new URL(super.transferPolicy.getUploadUrl());
+        String protocol = message.getURL().getProtocol();
+        if (!protocol.equals(uploadURL.getProtocol())) {
+            throw new IOException("The message URL protocol is incorrect");
+        }
+
+        String host = message.getURL().getHost();
+        if (!host.equals(uploadURL.getHost())) {
+            throw new IOException("The message URL host is incorrect");
+        }
+
+        int port = message.getURL().getPort();
+        if (uploadURL.getPort() != 0 && port != uploadURL.getPort()) {
+            throw new IOException("The message URL port is incorrect");
+        }
+
         return value.openStream();
     }
 
