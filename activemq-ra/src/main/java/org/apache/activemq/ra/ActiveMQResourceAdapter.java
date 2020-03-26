@@ -255,6 +255,14 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
 
                         @Override
                         public boolean isSameRM(XAResource xaresource) throws XAException {
+                            if (!(xaresource instanceof TransactionContext)) {
+                                return false;
+                            }
+
+                            if (getOrCreateConnectionFactory().isRmIdFromConnectionId()) {
+                                return false;
+                            }
+
                             ActiveMQConnection original = null;
                             try {
                                 original = setConnection(newConnection());
@@ -460,5 +468,11 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
         this.connectionFactory = aConnectionFactory;
     }
 
+    ActiveMQConnectionFactory getOrCreateConnectionFactory() {
+        if (getConnectionFactory() != null) {
+            return getConnectionFactory();
+        }
+        return createConnectionFactory(getInfo(), null);
+    }
 
 }

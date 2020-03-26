@@ -114,6 +114,25 @@ public class ActiveMQConnectionFactoryTest {
         XAResource[] resource2 = ra.getXAResources(null);
         assertEquals("one resource", 1, resource2.length);
         assertTrue("isSameRM true", resources[0].isSameRM(resource2[0]));
-        assertFalse("no tthe same instance", resources[0].equals(resource2[0]));
+        assertFalse("not the same instance", resources[0].equals(resource2[0]));
     }
+
+    @Test(timeout = 60000)
+    public void testGetXAResourceWithEnabledRmIdFromConnectionId() throws Exception {
+        ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+        ra.setServerUrl(url + "&jms.rmIdFromConnectionId=true");
+        ra.setUserName(user);
+        ra.setPassword(pwd);
+
+        XAResource[] resources = ra.getXAResources(null);
+        assertEquals("one resource", 1, resources.length);
+
+        assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+        // validate un-equality
+        XAResource[] resource2 = ra.getXAResources(null);
+        assertEquals("one resource", 1, resource2.length);
+        assertFalse("isSameRM false", resources[0].isSameRM(resource2[0]));
+    }
+
 }
