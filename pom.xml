@@ -409,11 +409,6 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-xmpp</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-web-demo</artifactId>
         <version>${project.version}</version>
         <type>war</type>
@@ -1455,7 +1450,6 @@
             <exclude>**/*.txt</exclude>
             <exclude>**/*.md</exclude>
             <exclude>**/kahadb/**/*.data</exclude>
-            <!-- activemq-xmpp schemas -->
             <exclude>**/resources/*.xsd</exclude>
             <exclude>**/src/test/resources/keystore</exclude>
             <!-- web, web-console, web-demo files -->

@@ -1002,7 +1002,6 @@
                 <exclude>org/apache/activemq/transport/vm/VMTransportBrokerNameTest.*</exclude>
                 <exclude>org/apache/activemq/transport/vm/VMTransportWaitForTest.*</exclude>
                 <exclude>org/apache/activemq/transport/vm/VmTransportNetworkBrokerTest.*</exclude>
-                <exclude>org/apache/activemq/transport/xmpp/XmppTest.*</exclude>
                 <exclude>org/apache/activemq/usage/StoreUsageTest.*</exclude>
                 <exclude>org/apache/activemq/usecases/AMQ2927Test.*</exclude>
                 <exclude>org/apache/activemq/usecases/AMQStackOverFlowTest.*</exclude>
