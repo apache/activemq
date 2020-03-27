@@ -543,27 +543,28 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
     }
 
-    protected void checkValidScheduled(String name, Object value) throws MessageFormatException {
-        if (AMQ_SCHEDULED_DELAY.equals(name) || AMQ_SCHEDULED_PERIOD.equals(name) || AMQ_SCHEDULED_REPEAT.equals(name)) {
-            if (value instanceof Long == false && value instanceof Integer == false) {
-                throw new MessageFormatException(name + " should be long or int value");
-            }
-        }
-        if (AMQ_SCHEDULED_CRON.equals(name)) {
-            CronParser.validate(value.toString());
-        }
-    }
-
     protected Object convertScheduled(String name, Object value) throws MessageFormatException {
         Object result = value;
         if (AMQ_SCHEDULED_DELAY.equals(name)){
             result = TypeConversionSupport.convert(value, Long.class);
+            if (result != null && (Long)result < 0) {
+                throw new MessageFormatException(name + " must not be a negative value");
+            }
         }
         else if (AMQ_SCHEDULED_PERIOD.equals(name)){
             result = TypeConversionSupport.convert(value, Long.class);
+            if (result != null && (Long)result < 0) {
+                throw new MessageFormatException(name + " must not be a negative value");
+            }
         }
         else if (AMQ_SCHEDULED_REPEAT.equals(name)){
             result = TypeConversionSupport.convert(value, Integer.class);
+            if (result != null && (Integer)result < 0) {
+                throw new MessageFormatException(name + " must not be a negative value");
+            }
+        }
+        else if (AMQ_SCHEDULED_CRON.equals(name)) {
+            CronParser.validate(value.toString());
         }
         return result;
     }
