@@ -400,7 +400,7 @@
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-spring31</artifactId>
+      <artifactId>jasypt-spring4</artifactId>
       <version>${jasypt-version}</version>
     </dependency>
     <dependency>

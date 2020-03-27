@@ -19,6 +19,7 @@ package org.apache.activemq.console.command;
 import java.util.List;
 
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+import org.jasypt.iv.RandomIvGenerator;
 
 public class EncryptCommand extends AbstractCommand {
 
@@ -30,6 +31,7 @@ public class EncryptCommand extends AbstractCommand {
             "    --password <password>      Password to be used by the encryptor.  Defaults to",
             "                               the value in the ACTIVEMQ_ENCRYPTION_PASSWORD env variable.",
             "    --input <input>            Text to be encrypted.",
+            "    --algorithm <algorithm>    Algorithm to use.",
             "    --version                  Display the version information.",
             "    -h,-?,--help               Display the stop broker help information.",
             ""
@@ -38,6 +40,7 @@ public class EncryptCommand extends AbstractCommand {
     StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
     String input;
     String password;
+    String algorithm;
     
     @Override
     public String getName() {
@@ -64,6 +67,13 @@ public class EncryptCommand extends AbstractCommand {
             return;
         }
         encryptor.setPassword(password);
+        if (algorithm != null) {
+             encryptor.setAlgorithm(algorithm);
+             // From Jasypt: for PBE-AES-based algorithms, the IV generator is MANDATORY"
+             if (algorithm.startsWith("PBE") && algorithm.contains("AES")) {
+                 encryptor.setIvGenerator(new RandomIvGenerator());
+             }
+        }
         context.print("Encrypted text: " + encryptor.encrypt(input));
     }
 
@@ -83,6 +93,13 @@ public class EncryptCommand extends AbstractCommand {
             }
 
             password=(String)tokens.remove(0);            
+        } else if (token.startsWith("--algorithm")) {
+            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                context.printException(new IllegalArgumentException("algorithm not specified"));
+                return;
+            }
+
+            algorithm=(String)tokens.remove(0);
         } else {
             super.handleOption(token, tokens);
         }

@@ -19,6 +19,7 @@ package org.apache.activemq.jaas;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig;
 import org.jasypt.properties.PropertyValueEncryptionUtils;
+import org.jasypt.iv.RandomIvGenerator;
 
 import java.util.ArrayList;
 import java.util.Properties;
@@ -28,8 +29,8 @@ import java.util.Properties;
  */
 public class EncryptionSupport {
 
-    static public void decrypt(Properties props) {
-        StandardPBEStringEncryptor encryptor = createEncryptor();
+    static public void decrypt(Properties props, String algorithm) {
+        StandardPBEStringEncryptor encryptor = createEncryptor(algorithm);
         for (Object k : new ArrayList(props.keySet())) {
             String key = (String) k;
             String value = props.getProperty(key);
@@ -40,10 +41,16 @@ public class EncryptionSupport {
         }
 
     }
-    public static StandardPBEStringEncryptor createEncryptor() {
+    public static StandardPBEStringEncryptor createEncryptor(String algorithm) {
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
         EnvironmentStringPBEConfig config = new EnvironmentStringPBEConfig();
-        config.setAlgorithm("PBEWithMD5AndDES");
+        if (algorithm != null) {
+            encryptor.setAlgorithm(algorithm);
+            // From Jasypt: for PBE-AES-based algorithms, the IV generator is MANDATORY"
+            if (algorithm.startsWith("PBE") && algorithm.contains("AES")) {
+                encryptor.setIvGenerator(new RandomIvGenerator());
+            }
+        }
         config.setPasswordEnvName("ACTIVEMQ_ENCRYPTION_PASSWORD");
         encryptor.setConfig(config);
         return encryptor;

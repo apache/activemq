@@ -48,7 +48,7 @@
     <property name="config" ref="environmentVariablesConfiguration" />
   </bean>  
     
-  <bean id="propertyConfigurer" class="org.jasypt.spring31.properties.EncryptablePropertyPlaceholderConfigurer">
+  <bean id="propertyConfigurer" class="org.jasypt.spring4.properties.EncryptablePropertyPlaceholderConfigurer">
       <constructor-arg ref="configurationEncryptor" /> 
       <property name="location" value="file:${activemq.conf}/credentials-enc.properties"/> 
   </bean> 

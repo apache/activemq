@@ -52,7 +52,7 @@ public class PropertiesLoginModuleTest extends TestCase {
     }
 
     public void testLogin() throws LoginException {
-        LoginContext context = new LoginContext("PropertiesLogin", new UserPassHandler("first", "secret"));
+        LoginContext context = new LoginContext(getLoginModule(), new UserPassHandler("first", "secret"));
         context.login();
 
         Subject subject = context.getSubject();
@@ -113,7 +113,7 @@ public class PropertiesLoginModuleTest extends TestCase {
     }
 
     public void testBadUseridLogin() throws Exception {
-        LoginContext context = new LoginContext("PropertiesLogin", new UserPassHandler("BAD", "secret"));
+        LoginContext context = new LoginContext(getLoginModule(), new UserPassHandler("BAD", "secret"));
 
         try {
             context.login();
@@ -124,7 +124,7 @@ public class PropertiesLoginModuleTest extends TestCase {
     }
 
     public void testBadPWLogin() throws Exception {
-        LoginContext context = new LoginContext("PropertiesLogin", new UserPassHandler("first", "BAD"));
+        LoginContext context = new LoginContext(getLoginModule(), new UserPassHandler("first", "BAD"));
 
         try {
             context.login();
@@ -156,5 +156,9 @@ public class PropertiesLoginModuleTest extends TestCase {
                 }
             }
         }
+    }
+
+    protected String getLoginModule() {
+        return "PropertiesLogin";
     }
 }

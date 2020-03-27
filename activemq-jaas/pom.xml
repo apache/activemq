@@ -56,6 +56,9 @@
             </property>
             -->
           </systemProperties>
+          <environmentVariables>
+              <ACTIVEMQ_ENCRYPTION_PASSWORD>activemq</ACTIVEMQ_ENCRYPTION_PASSWORD>
+          </environmentVariables>
         </configuration>
       </plugin>
     </plugins>
