@@ -19,6 +19,7 @@ package org.apache.activemq.console.command;
 import java.util.List;
 
 import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
+import org.jasypt.iv.RandomIvGenerator;
 
 public class DecryptCommand extends EncryptCommand {
 
@@ -30,6 +31,7 @@ public class DecryptCommand extends EncryptCommand {
             "    --password <password>      Password to be used by the encryptor.  Defaults to",
             "                               the value in the ACTIVEMQ_ENCRYPTION_PASSWORD env variable.",
             "    --input <input>            Text to be encrypted.",
+            "    --algorithm <algorithm>    Algorithm to use.",
             "    --version                  Display the version information.",
             "    -h,-?,--help               Display the stop broker help information.",
             ""
@@ -55,6 +57,13 @@ public class DecryptCommand extends EncryptCommand {
             return;
         }
         encryptor.setPassword(password);
+        if (algorithm != null) {
+            encryptor.setAlgorithm(algorithm);
+            // From Jasypt: for PBE-AES-based algorithms, the IV generator is MANDATORY"
+            if (algorithm.startsWith("PBE") && algorithm.contains("AES")) {
+                encryptor.setIvGenerator(new RandomIvGenerator());
+            }
+        }
         try {
             context.print("Decrypted text: " + encryptor.decrypt(input));
         } catch (EncryptionOperationNotPossibleException e) {

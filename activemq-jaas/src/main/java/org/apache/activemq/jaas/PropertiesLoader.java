@@ -53,12 +53,14 @@ public class PropertiesLoader {
         final boolean reload;
         private boolean decrypt;
         private boolean debug;
+        private String algorithm;
 
         public FileNameKey(String nameProperty, String fallbackName, Map options) {
             this.file = new File(baseDir(options), stringOption(nameProperty, fallbackName, options));
             absPath = file.getAbsolutePath();
             reload = booleanOption("reload", options);
             decrypt = booleanOption("decrypt", options);
+            algorithm = stringOption("algorithm", "PBEWithMD5AndDES", options);
         }
 
         @Override
@@ -85,6 +87,10 @@ public class PropertiesLoader {
 
         public void setDecrypt(boolean decrypt) {
             this.decrypt = decrypt;
+        }
+
+        public String getAlgorithm() {
+            return algorithm;
         }
 
         private String stringOption(String key, String nameDefault, Map options) {

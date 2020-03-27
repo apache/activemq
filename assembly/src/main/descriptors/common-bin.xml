@@ -207,7 +207,7 @@
         <include>org.apache.velocity:velocity-engine-core</include>
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
-        <include>org.jasypt:jasypt-spring31</include>
+        <include>org.jasypt:jasypt-spring4</include>
         <include>javax.jmdns:jmdns</include>
         <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>

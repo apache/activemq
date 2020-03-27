@@ -124,7 +124,7 @@ public class ReloadableProperties {
             props.load(in);
             if (key.isDecrypt()) {
                 try {
-                    EncryptionSupport.decrypt(this.props);
+                    EncryptionSupport.decrypt(this.props, key.getAlgorithm());
                 } catch (NoClassDefFoundError e) {
                     // this Happens whe jasypt is not on the classpath..
                     key.setDecrypt(false);
