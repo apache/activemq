@@ -73,6 +73,7 @@ import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
@@ -882,7 +883,16 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         MessageDispatch messageDispatch;
         while ((messageDispatch = executor.dequeueNoWait()) != null) {
             final MessageDispatch md = messageDispatch;
-            final ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
+
+            // subset of org.apache.activemq.ActiveMQMessageConsumer.createActiveMQMessage
+            final ActiveMQMessage message = (ActiveMQMessage)md.getMessage().copy();
+            if (message.getDataStructureType()==CommandTypes.ACTIVEMQ_BLOB_MESSAGE) {
+                ((ActiveMQBlobMessage)message).setBlobDownloader(new BlobDownloader(getBlobTransferPolicy()));
+            }
+            if (message.getDataStructureType() == CommandTypes.ACTIVEMQ_OBJECT_MESSAGE) {
+                ((ActiveMQObjectMessage)message).setTrustAllPackages(getConnection().isTrustAllPackages());
+                ((ActiveMQObjectMessage)message).setTrustedPackages(getConnection().getTrustedPackages());
+            }
 
             MessageAck earlyAck = null;
             if (message.isExpired()) {
@@ -951,7 +961,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                             @Override
                             public void afterRollback() throws Exception {
                                 if (LOG.isTraceEnabled()) {
-                                    LOG.trace("rollback {}", ack, new Throwable("here"));
+                                    LOG.trace("afterRollback {}", ack, new Throwable("here"));
                                 }
                                 // ensure we don't filter this as a duplicate
                                 connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
@@ -979,6 +989,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                     MessageAck ack = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
                                     ack.setFirstMessageId(md.getMessage().getMessageId());
                                     ack.setPoisonCause(new Throwable("Exceeded ra redelivery policy limit:" + redeliveryPolicy));
+                                    LOG.trace("Exceeded redelivery with count: {}, Ack: {}", redeliveryCounter, ack);
                                     asyncSendPacket(ack);
 
                                 } else {
