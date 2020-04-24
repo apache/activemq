@@ -59,6 +59,7 @@ import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
 public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerContextAware {
 
     XStream xStream = null;
+	XStream xStreamAdvisory = null;
     BrokerContext brokerContext;
 
     @Override
@@ -218,11 +219,18 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerC
             out = new PrettyPrintWriter(buffer);
         }
 
-        XStream xstream = getXStream();
+        XStream xstream = getXStreamAdvisory();
         xstream.setMode(XStream.NO_REFERENCES);
         xstream.aliasPackage("", "org.apache.activemq.command");
         xstream.marshal(ds, out);
         return buffer.toString();
+    }
+	private XStream getXStreamAdvisory()
+    {
+    	  if (xStreamAdvisory == null) {
+    		  xStreamAdvisory = createXStream();
+          }
+          return xStreamAdvisory;
     }
 
     // Properties

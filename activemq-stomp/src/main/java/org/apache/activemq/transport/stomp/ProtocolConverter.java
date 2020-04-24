@@ -125,6 +125,8 @@ public class ProtocolConverter {
     private int lastCommandId;
     private final AtomicBoolean connected = new AtomicBoolean(false);
     private final FrameTranslator frameTranslator = new LegacyFrameTranslator();
+    private ConcurrentMap<String, FrameTranslator> jmsFrameTranslators=new ConcurrentHashMap<String,FrameTranslator>();
+  
     private final FactoryFinder FRAME_TRANSLATOR_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/frametranslator/");
     private final BrokerContext brokerContext;
     private String version = "1.0";
@@ -189,7 +191,17 @@ public class ProtocolConverter {
         FrameTranslator translator = frameTranslator;
         try {
             if (header != null) {
-                translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER.newInstance(header);
+               translator=jmsFrameTranslators.get(header);
+            	if(translator==null) {
+            		LOG.info("Creating a new FrameTranslator to convert "+header);
+            		translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER.newInstance(header);
+            		if(translator!=null) {
+            			LOG.info("Created a new FrameTranslator to convert "+header);
+            			jmsFrameTranslators.put(header,translator);
+            		}else {
+            			LOG.error("Failed in creating FrameTranslator to convert "+header);
+            		}            			
+            	}
             } else {
                 if (destination != null && (advisory || AdvisorySupport.isAdvisoryTopic(destination))) {
                     translator = new JmsFrameTranslator();
@@ -197,6 +209,8 @@ public class ProtocolConverter {
             }
         } catch (Exception ignore) {
             // if anything goes wrong use the default translator
+			LOG.debug("Failed in getting a FrameTranslator to convert ", ignore);
+           	translator = frameTranslator;
         }
 
         if (translator instanceof BrokerContextAware) {
@@ -280,11 +294,7 @@ public class ProtocolConverter {
         // Let the stomp client know about any protocol errors.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
-        if (exception instanceof SecurityException || exception.getCause() instanceof SecurityException) {
-            stream.write(exception.getLocalizedMessage());
-        } else {
-            exception.printStackTrace(stream);
-        }
+        exception.printStackTrace(stream);
         stream.close();
 
         HashMap<String, String> headers = new HashMap<>();
@@ -556,10 +566,6 @@ public class ProtocolConverter {
 
         if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("SUBSCRIBE received without a subscription id!");
-        }
-
-        if (destination == null || "".equals(destination)) {
-            throw new ProtocolException("Invalid empty or 'null' Destination header");
         }
 
         final ActiveMQDestination actualDest = translator.convertDestination(this, destination, true);
