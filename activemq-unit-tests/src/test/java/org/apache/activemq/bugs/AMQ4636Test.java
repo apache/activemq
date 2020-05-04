@@ -243,7 +243,7 @@ public class AMQ4636Test {
         public TestTransactionContext(
                 JDBCPersistenceAdapter jdbcPersistenceAdapter)
                 throws IOException {
-            super(jdbcPersistenceAdapter);
+            super(jdbcPersistenceAdapter, -1, -1);
         }
 
         @Override

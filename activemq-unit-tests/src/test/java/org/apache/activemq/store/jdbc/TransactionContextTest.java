@@ -41,7 +41,7 @@ public class TransactionContextTest {
 
     @Before
     public void setup() throws Exception {
-        underTest = new TransactionContext(jdbcPersistenceAdapter);
+        underTest = new TransactionContext(jdbcPersistenceAdapter, 0, 0);
     }
 
     @Test

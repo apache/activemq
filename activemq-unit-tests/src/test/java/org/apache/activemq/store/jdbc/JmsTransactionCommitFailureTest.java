@@ -335,7 +335,7 @@ public class JmsTransactionCommitFailureTest {
 
         @Override
         public TransactionContext getTransactionContext() throws IOException {
-            TransactionContext answer = new TransactionContext(this) {
+            TransactionContext answer = new TransactionContext(this, -1, -1) {
                 @Override
                 public void executeBatch() throws SQLException {
                     if (isCommitFailureEnabled) {

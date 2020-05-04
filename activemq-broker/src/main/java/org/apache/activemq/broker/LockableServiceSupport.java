@@ -36,6 +36,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     private static final Logger LOG = LoggerFactory.getLogger(LockableServiceSupport.class);
     boolean useLock = true;
+    boolean stopOnError = false;
     Locker locker;
     long lockKeepAlivePeriod = 0;
     private ScheduledFuture<?> keepAliveTicket;
@@ -56,6 +57,15 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     public boolean isUseLock() {
         return this.useLock;
+    }
+
+    @Override
+    public void setStopOnError(boolean stopOnError) {
+        this.stopOnError = stopOnError;
+    }
+
+    public boolean isStopOnError() {
+        return this.stopOnError;
     }
 
     @Override
@@ -129,8 +139,14 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
                 }
             }
         } catch (SuppressReplyException e) {
+            if (stopOnError) {
+                stop = true;
+            }
             LOG.warn("locker keepAlive resulted in", e);
         } catch (IOException e) {
+            if (stopOnError) {
+                stop = true;
+            }
             LOG.warn("locker keepAlive resulted in", e);
         }
         if (stop) {
