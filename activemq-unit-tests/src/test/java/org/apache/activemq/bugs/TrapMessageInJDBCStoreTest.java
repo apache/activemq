@@ -277,7 +277,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
         public TestTransactionContext(
                 JDBCPersistenceAdapter jdbcPersistenceAdapter)
                 throws IOException {
-            super(jdbcPersistenceAdapter);
+            super(jdbcPersistenceAdapter, -1, -1);
         }
 
         public void executeBatch() throws SQLException {

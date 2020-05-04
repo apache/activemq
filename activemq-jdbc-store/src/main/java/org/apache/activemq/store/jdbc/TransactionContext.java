@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -49,10 +50,14 @@ public class TransactionContext {
     private int transactionIsolation = Connection.TRANSACTION_READ_UNCOMMITTED;
     private LinkedList<Runnable> completions = new LinkedList<Runnable>();
     private ReentrantReadWriteLock exclusiveConnectionLock = new ReentrantReadWriteLock();
+    private int networkTimeout;
+    private int queryTimeout;
 
-    public TransactionContext(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
+    public TransactionContext(JDBCPersistenceAdapter persistenceAdapter, int networkTimeout, int queryTimeout) throws IOException {
         this.persistenceAdapter = persistenceAdapter;
         this.dataSource = persistenceAdapter.getDataSource();
+        this.networkTimeout = networkTimeout;
+        this.queryTimeout = queryTimeout;
     }
 
     public Connection getExclusiveConnection() throws IOException {
@@ -68,6 +73,9 @@ public class TransactionContext {
             toLock.lock();
             try {
                 connection = dataSource.getConnection();
+                if (networkTimeout > 0) {
+                    connection.setNetworkTimeout(Executors.newSingleThreadExecutor(), networkTimeout);
+                }
                 if (persistenceAdapter.isChangeAutoCommitAllowed()) {
                     boolean autoCommit = !inTx;
                     if (connection.getAutoCommit() != autoCommit) {
@@ -300,17 +308,29 @@ public class TransactionContext {
         // simple delegate for the  rest of the impl..
         @Override
         public Statement createStatement() throws SQLException {
-            return delegate.createStatement();
+            Statement statement = delegate.createStatement();
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public PreparedStatement prepareStatement(String sql) throws SQLException {
-            return delegate.prepareStatement(sql);
+            PreparedStatement statement = delegate.prepareStatement(sql);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public CallableStatement prepareCall(String sql) throws SQLException {
-            return delegate.prepareCall(sql);
+            CallableStatement statement = delegate.prepareCall(sql);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
@@ -390,17 +410,29 @@ public class TransactionContext {
 
         @Override
         public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-            return delegate.createStatement(resultSetType, resultSetConcurrency);
+            Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-            return delegate.prepareStatement(sql, resultSetType, resultSetConcurrency);
+            PreparedStatement statement = delegate.prepareStatement(sql, resultSetType, resultSetConcurrency);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-            return delegate.prepareCall(sql, resultSetType, resultSetConcurrency);
+            CallableStatement statement = delegate.prepareCall(sql, resultSetType, resultSetConcurrency);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
@@ -445,32 +477,56 @@ public class TransactionContext {
 
         @Override
         public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-            return delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
+            Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-            return delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            PreparedStatement statement = delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-            return delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            CallableStatement statement = delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-            return delegate.prepareStatement(sql, autoGeneratedKeys);
+            PreparedStatement statement = delegate.prepareStatement(sql, autoGeneratedKeys);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
-            return delegate.prepareStatement(sql, columnIndexes);
+            PreparedStatement statement = delegate.prepareStatement(sql, columnIndexes);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override
         public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-            return delegate.prepareStatement(sql, columnNames);
+            PreparedStatement statement = delegate.prepareStatement(sql, columnNames);
+            if (queryTimeout > 0) {
+                statement.setQueryTimeout(queryTimeout);
+            }
+            return statement;
         }
 
         @Override

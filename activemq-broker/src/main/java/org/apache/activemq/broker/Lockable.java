@@ -32,6 +32,13 @@ public interface Lockable {
     public void setUseLock(boolean useLock);
 
     /**
+     * Stop the broker if the locker get an exception while processing lock.
+     *
+     * @param stopOnError
+     */
+    public void setStopOnError(boolean stopOnError);
+
+    /**
      * Create a default locker
      *
      * @return default locker

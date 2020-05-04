@@ -93,6 +93,8 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     private int transactionIsolation;
     private File directory;
     private boolean changeAutoCommitAllowed = true;
+    private int queryTimeout = -1;
+    private int networkTimeout = -1;
 
     protected int maxProducersToAudit=1024;
     protected int maxAuditDepth=1000;
@@ -504,7 +506,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public TransactionContext getTransactionContext() throws IOException {
-        TransactionContext answer = new TransactionContext(this);
+        TransactionContext answer = new TransactionContext(this, networkTimeout, queryTimeout);
         if (transactionIsolation > 0) {
             answer.setTransactionIsolation(transactionIsolation);
         }
@@ -553,6 +555,32 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      */
     public void setChangeAutoCommitAllowed(boolean changeAutoCommitAllowed) {
         this.changeAutoCommitAllowed = changeAutoCommitAllowed;
+    }
+
+    public int getNetworkTimeout() {
+        return networkTimeout;
+    }
+
+    /**
+     * Define the JDBC connection network timeout.
+     *
+     * @param networkTimeout the connection network timeout (in milliseconds).
+     */
+    public void setNetworkTimeout(int networkTimeout) {
+        this.networkTimeout = networkTimeout;
+    }
+
+    public int getQueryTimeout() {
+        return queryTimeout;
+    }
+
+    /**
+     * Define the JDBC statement query timeout.
+     *
+     * @param queryTimeout the statement query timeout (in seconds).
+     */
+    public void setQueryTimeout(int queryTimeout) {
+        this.queryTimeout = queryTimeout;
     }
 
     @Override
