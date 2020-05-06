@@ -30,6 +30,7 @@ import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -61,6 +62,7 @@ public class HttpsClientTransport extends HttpClientTransport {
             HostnameVerifier hostnameVerifier = verifyHostName ? new DefaultHostnameVerifier() : new NoopHostnameVerifier();
             SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(sslSocketFactory, hostnameVerifier);
             registryBuilder.register("https", sslConnectionFactory);
+            registryBuilder.register("http", PlainConnectionSocketFactory.INSTANCE);
             return registryBuilder.build();
         } catch (Exception e) {
             throw new IllegalStateException("Failure trying to create scheme registry", e);
