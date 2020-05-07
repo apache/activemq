@@ -56,9 +56,8 @@ class MyListener(object):
 
 conn = stomp.Connection(host_and_ports = [(host, port)])
 conn.set_listener('', MyListener(conn))
-conn.start()
 conn.connect(login=user,passcode=password)
-conn.subscribe(destination=destination, ack='auto')
+conn.subscribe(destination=destination, id=1, ack='auto')
 print("Waiting for messages...")
 while 1: 
   time.sleep(10) 
