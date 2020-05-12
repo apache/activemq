@@ -345,7 +345,7 @@ public abstract class MessageServletSupport extends HttpServlet {
             LOG.debug("Content-Type={}", contentType);
             // lets read the message body instead
             BufferedReader reader = request.getReader();
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             while (true) {
                 String line = reader.readLine();
                 if (line == null) {
