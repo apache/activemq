@@ -57,4 +57,5 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
     public void setLockable(LockableServiceSupport lockableServiceSupport) {
         this.lockable = lockableServiceSupport;
     }
+
 }
