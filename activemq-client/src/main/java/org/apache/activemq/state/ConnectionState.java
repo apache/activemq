@@ -46,7 +46,7 @@ public class ConnectionState {
     private final List<DestinationInfo> tempDestinations = Collections.synchronizedList(new ArrayList<DestinationInfo>());
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private boolean connectionInterruptProcessingComplete = true;
-    private HashMap<ConsumerId, ConsumerInfo> recoveringPullConsumers;
+    private ConcurrentMap<ConsumerId, ConsumerInfo> recoveringPullConsumers;
 
     public ConnectionState(ConnectionInfo info) {
         this.info = info;
@@ -146,7 +146,7 @@ public class ConnectionState {
 
     public Map<ConsumerId, ConsumerInfo> getRecoveringPullConsumers() {
         if (recoveringPullConsumers == null) {
-            recoveringPullConsumers = new HashMap<ConsumerId, ConsumerInfo>();
+            recoveringPullConsumers = new ConcurrentHashMap<ConsumerId, ConsumerInfo>();
         }
         return recoveringPullConsumers;
     }
