@@ -113,9 +113,13 @@ public class ManagedTransactionContext extends TransactionContext {
         }
     }
 
+    public boolean isRollbackOnly() {
+        return sharedContext.isRollbackOnly() || super.isRollbackOnly();
+    }
+
     public boolean isInXATransaction() {
         if (useSharedTxContext) {
-            // context considers endesd XA transactions as active, so just check for presence
+            // context considers ended XA transactions as active, so just check for presence
             // of tx when it is shared
             return sharedContext.isInTransaction();
         } else {

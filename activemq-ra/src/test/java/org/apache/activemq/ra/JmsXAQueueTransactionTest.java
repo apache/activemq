@@ -20,8 +20,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 
 import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
@@ -33,9 +37,11 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.JmsQueueTransactionTest;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
-
+    private static final Logger LOG = LoggerFactory.getLogger(JmsXAQueueTransactionTest.class);
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
     private XAResource xaResource;
@@ -113,6 +119,12 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
         xid = null;
     }
 
+    protected void abortTx() throws Exception {
+        xaResource.end(xid, XAResource.TMFAIL);
+        xaResource.rollback(xid);
+        xid = null;
+    }
+
     //This test won't work with xa tx it is overridden to do nothing here
     @Override
     public void testMessageListener() throws Exception {
@@ -128,6 +140,84 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
      */
     @Override
     public void testSendSessionClose() throws Exception {
+    }
+
+    public void testSendOnAbortedXATx() throws Exception {
+        connection.close();
+
+        ConnectionFactory connectionFactory = newConnectionFactory();
+        connection = connectionFactory.createConnection();
+        connection.start();
+
+        ManagedConnectionProxy proxy = (ManagedConnectionProxy) connection;
+        ManagedConnection mc = proxy.getManagedConnection();
+        xaResource = mc.getXAResource();
+
+        beginTx();
+
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+
+        MessageProducer producer = session.createProducer(destination);
+
+        abortTx();
+
+        try {
+            producer.send(session.createTextMessage("my tx aborted!"));
+            fail("expect error on send with rolled back tx");
+        } catch (JMSException expected) {
+            assertTrue("matches expected message", expected.getLocalizedMessage().contains("rollback only"));
+            expected.printStackTrace();
+        }
+
+        connection.close();
+    }
+
+    public void testReceiveTwoThenAbort() throws Exception {
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
+
+        // lets consume any outstanding messages from prev test runs
+        beginTx();
+        while (consumer.receive(1000) != null) {
+        }
+        commitTx();
+
+        //
+        beginTx();
+        producer.send(outbound[0]);
+        producer.send(outbound[1]);
+        commitTx();
+
+        LOG.info("Sent 0: " + outbound[0]);
+        LOG.info("Sent 1: " + outbound[1]);
+
+        ArrayList<Message> messages = new ArrayList<Message>();
+        beginTx();
+        Message message = consumer.receive(1000);
+        assertEquals(outbound[0], message);
+
+        message = consumer.receive(1000);
+        assertNotNull(message);
+        assertEquals(outbound[1], message);
+        abortTx();
+
+        // Consume again.. the prev message should
+        // get redelivered.
+        beginTx();
+        message = consumer.receive(5000);
+        assertNotNull("Should have re-received the first message again!", message);
+        messages.add(message);
+        assertEquals(outbound[0], message);
+        message = consumer.receive(5000);
+        assertNotNull("Should have re-received the second message again!", message);
+        messages.add(message);
+        assertEquals(outbound[1], message);
+
+        assertNull(consumer.receiveNoWait());
+        commitTx();
+
+        Message inbound[] = new Message[messages.size()];
+        messages.toArray(inbound);
+        assertTextMessagesEqual("Rollback did not work", outbound, inbound);
     }
 
     public Xid createXid() throws IOException {

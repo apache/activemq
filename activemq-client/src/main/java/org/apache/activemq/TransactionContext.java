@@ -111,6 +111,10 @@ public class TransactionContext implements XAResource {
         rollbackOnly = val;
     }
 
+    public boolean isRollbackOnly() {
+        return rollbackOnly;
+    }
+
     public boolean isInLocalTransaction() {
         return transactionId != null && transactionId.isLocalTransaction();
     }

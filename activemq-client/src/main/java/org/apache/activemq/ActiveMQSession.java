@@ -1926,6 +1926,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         synchronized (sendMutex) {
             // tell the Broker we are about to start a new transaction
             doStartTransaction();
+            if (transactionContext.isRollbackOnly()) {
+                throw new IllegalStateException("transaction marked rollback only");
+            }
             TransactionId txid = transactionContext.getTransactionId();
             long sequenceNumber = producer.getMessageSequence();
 

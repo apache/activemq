@@ -102,6 +102,11 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
             } catch (JMSException e) {
                 throw (XAException)new XAException(XAException.XAER_PROTO).initCause(e);
             }
+            if ((arg1 & TMFAIL) != 0) {
+                // do no further work in this context
+                LOG.debug("Marking transaction: {} rollbackOnly", this);
+                transactionContext.setRollbackOnly(true);
+            }
         }
     }
 

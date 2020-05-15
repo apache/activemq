@@ -459,6 +459,40 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         } catch (javax.jms.IllegalStateException expected) {}
     }
 
+    public void testProducerFailAfterRollbackOnly() throws Exception {
+
+        ActiveMQConnectionFactory cf1 = getXAConnectionFactory("vm://localhost?broker.persistent=false");
+        XAConnection connection1 = (XAConnection)cf1.createConnection();
+        connection1.start();
+
+        XASession session = connection1.createXASession();
+        XAResource resource = session.getXAResource();
+        Destination dest = new ActiveMQQueue(getName());
+
+        // publish a message
+        Xid tid = createXid();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        MessageProducer producer = session.createProducer(dest);
+        ActiveMQTextMessage message  = new ActiveMQTextMessage();
+        message.setText(getName());
+
+        // can happen out of band with XA via RAR
+        resource.end(tid, XAResource.TMFAIL);
+        ((ActiveMQSession)session).getTransactionContext().setRollbackOnly(true);
+        try {
+            producer.send(message);
+            fail("expect error on setRollbackOnly");
+        } catch (JMSException expected) {}
+
+        // rollback only state does not linger
+        tid = createXid();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        producer.send(message);
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+        connection1.close();
+    }
+
     public void testRollbackXaErrorCode() throws Exception {
         String brokerName = "rollbackErrorCode";
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
