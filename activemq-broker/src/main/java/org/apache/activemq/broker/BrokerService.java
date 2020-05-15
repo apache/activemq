@@ -143,6 +143,7 @@ public class BrokerService implements Service {
     public static final String DEFAULT_BROKER_NAME = "localhost";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
     public static final long DEFAULT_START_TIMEOUT = 600000L;
+    public static final int MAX_SCHEDULER_REPEAT_ALLOWED = 1000;
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
 
@@ -238,6 +239,7 @@ public class BrokerService implements Service {
     private boolean forceStart = false;
     private IOExceptionHandler ioExceptionHandler;
     private boolean schedulerSupport = false;
+    private int maxSchedulerRepeatAllowed = MAX_SCHEDULER_REPEAT_ALLOWED;
     private File schedulerDirectoryFile;
     private Scheduler scheduler;
     private ThreadPoolExecutor executor;
@@ -2460,6 +2462,7 @@ public class BrokerService implements Service {
     protected Broker addInterceptors(Broker broker) throws Exception {
         if (isSchedulerSupport()) {
             SchedulerBroker sb = new SchedulerBroker(this, broker, getJobSchedulerStore());
+            sb.setMaxRepeatAllowed(maxSchedulerRepeatAllowed);
             if (isUseJmx()) {
                 JobSchedulerViewMBean view = new JobSchedulerView(sb.getJobScheduler());
                 try {
@@ -3294,5 +3297,13 @@ public class BrokerService implements Service {
 
     public boolean isRollbackOnlyOnAsyncException() {
         return rollbackOnlyOnAsyncException;
+    }
+
+    public int getMaxSchedulerRepeatAllowed() {
+        return maxSchedulerRepeatAllowed;
+    }
+
+    public void setMaxSchedulerRepeatAllowed(int maxSchedulerRepeatAllowed) {
+        this.maxSchedulerRepeatAllowed = maxSchedulerRepeatAllowed;
     }
 }

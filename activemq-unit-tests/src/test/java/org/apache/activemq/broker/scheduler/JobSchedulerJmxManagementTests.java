@@ -56,10 +56,10 @@ public class JobSchedulerJmxManagementTests extends JobSchedulerTestSupport {
         JobSchedulerViewMBean view = getJobSchedulerMBean();
         assertNotNull(view);
         assertTrue(view.getAllJobs().isEmpty());
-        scheduleMessage(60000, -1, -1);
+        scheduleMessage(60000, 0, 0);
         assertFalse(view.getAllJobs().isEmpty());
         assertEquals(1, view.getAllJobs().size());
-        scheduleMessage(60000, -1, -1);
+        scheduleMessage(60000, 0, 0);
         assertEquals(2, view.getAllJobs().size());
     }
 
@@ -68,7 +68,7 @@ public class JobSchedulerJmxManagementTests extends JobSchedulerTestSupport {
         JobSchedulerViewMBean view = getJobSchedulerMBean();
         assertNotNull(view);
         assertTrue(view.getAllJobs().isEmpty());
-        scheduleMessage(60000, -1, -1);
+        scheduleMessage(60000, 0, 0);
         assertFalse(view.getAllJobs().isEmpty());
         TabularData jobs = view.getAllJobs();
         assertEquals(1, jobs.size());
@@ -85,7 +85,7 @@ public class JobSchedulerJmxManagementTests extends JobSchedulerTestSupport {
         JobSchedulerViewMBean view = getJobSchedulerMBean();
         assertNotNull(view);
         assertTrue(view.getAllJobs().isEmpty());
-        scheduleMessage(60000, -1, -1);
+        scheduleMessage(60000, 0, 0);
         assertFalse(view.getAllJobs().isEmpty());
         String now = JobSupport.getDateTime(System.currentTimeMillis());
         String later = JobSupport.getDateTime(System.currentTimeMillis() + 120 * 1000);
@@ -98,7 +98,7 @@ public class JobSchedulerJmxManagementTests extends JobSchedulerTestSupport {
         JobSchedulerViewMBean view = getJobSchedulerMBean();
         assertNotNull(view);
         assertTrue(view.getAllJobs().isEmpty());
-        scheduleMessage(60000, -1, -1);
+        scheduleMessage(60000, 0, 0);
         assertFalse(view.getAllJobs().isEmpty());
         long before = System.currentTimeMillis() + 57 * 1000;
         long toLate = System.currentTimeMillis() + 63 * 1000;

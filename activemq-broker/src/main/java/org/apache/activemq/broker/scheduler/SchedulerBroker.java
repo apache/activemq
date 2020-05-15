@@ -19,6 +19,8 @@ package org.apache.activemq.broker.scheduler;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.jms.MessageFormatException;
+
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
@@ -56,6 +58,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private static final LongSequenceGenerator longGenerator = new LongSequenceGenerator();
+    /**
+     * The max repeat value allowed to prevent clients from causing DoS issues with huge repeat counts
+     */
+    private static final int MAX_REPEAT_ALLOWED = 1000;
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final AtomicBoolean started = new AtomicBoolean();
     private final WireFormat wireFormat = new OpenWireFormat();
@@ -65,6 +71,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     private final JobSchedulerStore store;
     private JobScheduler scheduler;
+    private int maxRepeatAllowed = MAX_REPEAT_ALLOWED;
 
     public SchedulerBroker(BrokerService brokerService, Broker next, JobSchedulerStore store) throws Exception {
         super(next);
@@ -336,6 +343,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         Object repeatValue = msg.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
         if (repeatValue != null) {
             repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
+            if (repeat > maxRepeatAllowed) {
+                throw new MessageFormatException("The scheduled repeat value is too large");
+            }
         }
 
         //job id should be unique for every job (Same format as MessageId)
@@ -357,6 +367,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             int repeat = 0;
             if (repeatValue != null) {
                 repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
+                if (repeat > maxRepeatAllowed) {
+                    throw new MessageFormatException("The scheduled repeat value is too large");
+                }
             }
 
             if (repeat != 0 || cronStr != null && cronStr.length() > 0) {
@@ -455,5 +468,13 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message {}", job.getJobId(), e);
         }
+    }
+
+    public int getMaxRepeatAllowed() {
+        return maxRepeatAllowed;
+    }
+
+    public void setMaxRepeatAllowed(int maxRepeatAllowed) {
+        this.maxRepeatAllowed = maxRepeatAllowed;
     }
 }

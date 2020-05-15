@@ -179,7 +179,7 @@ public class KahaDBSchedulerMissingJournalLogsTest {
         long time = 360 * 1000;
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 500);
-        message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, -1);
+        message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, 0);
         producer.send(message);
     }
 
