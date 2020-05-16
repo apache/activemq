@@ -294,7 +294,11 @@ public class ProtocolConverter {
         // Let the stomp client know about any protocol errors.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
-        exception.printStackTrace(stream);
+        if (exception instanceof SecurityException || exception.getCause() instanceof SecurityException) {
+            stream.write(exception.getLocalizedMessage());
+        } else {
+            exception.printStackTrace(stream);
+        }
         stream.close();
 
         HashMap<String, String> headers = new HashMap<>();
@@ -566,6 +570,10 @@ public class ProtocolConverter {
 
         if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("SUBSCRIBE received without a subscription id!");
+        }
+
+        if (destination == null || "".equals(destination)) {
+            throw new ProtocolException("Invalid empty or 'null' Destination header");
         }
 
         final ActiveMQDestination actualDest = translator.convertDestination(this, destination, true);
