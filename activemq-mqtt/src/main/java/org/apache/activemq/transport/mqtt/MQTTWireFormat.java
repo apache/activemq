@@ -113,7 +113,7 @@ public class MQTTWireFormat implements WireFormat {
     }
 
     /**
-     * @param the version of the wire format
+     * @param version the version of the wire format
      */
     @Override
     public void setVersion(int version) {

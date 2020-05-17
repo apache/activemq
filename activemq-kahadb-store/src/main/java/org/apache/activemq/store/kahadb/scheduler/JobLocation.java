@@ -234,7 +234,7 @@ class JobLocation {
      * zero and increment this value each time a scheduled message is dispatched to its
      * target destination and the job is rescheduled for another cycle.
      *
-     * @param executionCount
+     * @param rescheduledCount
      *        the new execution count to assign the JobLocation.
      */
     public void setRescheduledCount(int rescheduledCount) {

@@ -63,7 +63,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
      *
      * @param session
      *        the AmqpSession under which the coordinator was created.
-     * @param receiver
+     * @param endpoint
      *        the AMQP receiver link endpoint for this coordinator.
      */
     public AmqpTransactionCoordinator(AmqpSession session, Receiver endpoint) {

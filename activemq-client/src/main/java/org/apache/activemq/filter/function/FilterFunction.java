@@ -29,7 +29,7 @@ public interface FilterFunction {
      * to clients at the time invalid selectors are initially specified, rather than waiting until the selector is
      * applied to a message.
      *
-     * @param    FunctionCallExpression expr - the full expression of the function call, as used.
+     * @param expr - the full expression of the function call, as used.
      * @return true - if the function call is valid; false - otherwise.
      */
     public boolean isValid(FunctionCallExpression expr);
@@ -40,7 +40,7 @@ public interface FilterFunction {
      * been parsed.  This allows functions with variable return types to function as boolean expressions in
      * selectors without sacrificing parse-time checking.
      *
-     * @param    FunctionCallExpression expr - the full expression of the function call, as used.
+     * @param expr - the full expression of the function call, as used.
      * @return true - if the function returns a boolean value for its use in the given expression;
      * false - otherwise.
      */
@@ -51,8 +51,8 @@ public interface FilterFunction {
      * Evaluate the function call in the given context.  The arguments must be evaluated, as-needed, by the
      * function.  Note that boolean expressions must return Boolean objects.
      *
-     * @param    FunctionCallExpression expr - the full expression of the function call, as used.
-     * @param    MessageEvaluationContext message - the context within which to evaluate the call.
+     * @param expr - the full expression of the function call, as used.
+     * @param message - the context within which to evaluate the call.
      */
     public Object evaluate(FunctionCallExpression expr, MessageEvaluationContext message)
             throws javax.jms.JMSException;

@@ -28,7 +28,7 @@ public interface JobListener {
      * A Job that has been scheduled is now ready to be fired.  The Job is passed
      * in its raw byte form and must be un-marshaled before being delivered.
      *
-     * @param jobId
+     * @param id
      *        The unique Job Id of the Job that is ready to fire.
      * @param job
      *        The job that is now ready, delivered in byte form.

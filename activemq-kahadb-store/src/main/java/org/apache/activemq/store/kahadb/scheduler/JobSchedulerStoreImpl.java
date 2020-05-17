@@ -645,7 +645,7 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
      * Called during index recovery to rebuild the index from the last known good location.  For
      * entries that occur before the last known good position we just ignore then and move on.
      *
-     * @param command
+     * @param data
      *        the command read from the Journal which should be used to update the index.
      * @param location
      *        the location in the index where the command was read.
