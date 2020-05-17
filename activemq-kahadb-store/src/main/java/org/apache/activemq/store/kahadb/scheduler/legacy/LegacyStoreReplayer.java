@@ -40,7 +40,6 @@ public class LegacyStoreReplayer {
 
     /**
      * Creates a new Legacy Store Replayer with the given target store
-     * @param targetStore
      * @param directory
      */
     public LegacyStoreReplayer(File directory) {

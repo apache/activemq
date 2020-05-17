@@ -49,7 +49,7 @@ public interface Locker extends Service {
      * Specify whether to fail immediately if the lock is already held.  When set, the CustomLock must throw an
      * IOException immediately upon detecting the lock is already held.
      *
-     * @param failIfLocked: true => fail immediately if the lock is held; false => block until the lock can be obtained
+     * @param failIfLocked true => fail immediately if the lock is held; false => block until the lock can be obtained
      *                      (default).
      */
     public void setFailIfLocked(boolean failIfLocked);

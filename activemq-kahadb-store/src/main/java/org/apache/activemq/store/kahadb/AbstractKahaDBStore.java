@@ -609,7 +609,7 @@ public abstract class AbstractKahaDBStore extends LockableServiceSupport {
     /**
      * Creates a new ByteSequence that represents the marshaled form of the given Journal Command.
      *
-     * @param command
+     * @param data
      *      The Journal Command that should be marshaled to bytes for writing.
      *
      * @return the byte representation of the given journal command.

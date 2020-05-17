@@ -144,7 +144,7 @@ public class ConstantExpression implements Expression {
      * Encodes the value of string so that it looks like it would look like when
      * it was provided in a selector.
      * 
-     * @param string
+     * @param s
      * @return
      */
     public static String encodeString(String s) {

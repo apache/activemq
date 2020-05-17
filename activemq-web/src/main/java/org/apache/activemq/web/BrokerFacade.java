@@ -97,7 +97,7 @@ public interface BrokerFacade {
 	/**
 	 * All active non-durable subscribers to a topic.
 	 * 
-	 * @param queueName
+	 * @param topicName
 	 *            the name of the topic, not <code>null</code>
 	 * @return not <code>null</code>
 	 * @throws Exception
@@ -108,8 +108,6 @@ public interface BrokerFacade {
 	/**
 	 * All active non-durable subscribers to a topic.
 	 * 
-	 * @param queueName
-	 *            the name of the topic, not <code>null</code>
 	 * @return not <code>null</code>
 	 * @throws Exception
 	 */

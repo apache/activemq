@@ -68,7 +68,7 @@ public class regexMatchFunction implements FilterFunction {
      * an indication of whether the second argument matches the regular expression in the first argument.
      *
      * @param    expr - the expression consisting of a call to this function.
-     * @param    message_ctx - the context in which the call is being evaluated.
+     * @param    message - the context in which the call is being evaluated.
      * @return true - if the value matches the regular expression; false - otherwise.
      */
 
