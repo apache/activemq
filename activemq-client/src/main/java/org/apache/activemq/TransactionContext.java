@@ -799,12 +799,16 @@ public class TransactionContext implements XAResource {
         if (e.getCause() != null && e.getCause() instanceof XAException) {
             XAException original = (XAException)e.getCause();
             XAException xae = new XAException(original.getMessage());
-            xae.errorCode = original.errorCode;
-            if (xae.errorCode == XA_OK) {
+            if (original != null) {
+                xae.errorCode = original.errorCode;
+            }
+            if (original != null && xae != null && xae.errorCode == XA_OK) {
                 // detail not unmarshalled see: org.apache.activemq.openwire.v1.BaseDataStreamMarshaller.createThrowable
                 xae.errorCode = parseFromMessageOr(original.getMessage(), XAException.XAER_RMERR);
             }
-            xae.initCause(original);
+            if (original != null) {
+                xae.initCause(original);
+            }
             return xae;
         }
 
