@@ -52,7 +52,7 @@ public interface WireFormat {
     Object unmarshal(DataInput in) throws IOException;
     
     /**
-     * @param the version of the wire format
+     * @param version the version of the wire format
      */
     void setVersion(int version);
     

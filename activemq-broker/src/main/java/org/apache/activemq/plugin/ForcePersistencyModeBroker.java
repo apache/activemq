@@ -44,7 +44,7 @@ public class ForcePersistencyModeBroker extends BrokerFilter{
   }
 
   /**
-   * @param persistenceFlag the persistenceFlag to set
+   * @param mode the persistenceFlag to set
    */
   public void setPersistenceFlag(boolean mode) {
     this.persistence = mode;

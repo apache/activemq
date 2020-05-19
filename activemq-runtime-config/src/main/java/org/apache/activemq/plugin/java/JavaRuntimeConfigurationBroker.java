@@ -175,7 +175,7 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
      * This allows the ability to limit which properties are applied to existing destinations.
      *
      * @param existing
-     * @param createIfAbsent
+     * @param createOrReplace
      * @param includedProperties - optional list of properties to apply retrospectively
      */
     public void modifyPolicyEntry(PolicyEntry existing, boolean createOrReplace,

@@ -116,7 +116,6 @@ public interface TopicMessageStore extends MessageStore {
     /**
      * The subscription metrics contained in this store
      *
-     * @param subscriptionKey
      * @return
      */
     MessageStoreSubscriptionStatistics getMessageStoreSubStatistics();
