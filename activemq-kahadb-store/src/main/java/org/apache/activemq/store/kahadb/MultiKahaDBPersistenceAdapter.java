@@ -562,6 +562,14 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         return transactionStore.getJournalCleanupInterval();
     }
 
+    public void setCheckForCorruption(boolean checkForCorruption) {
+        transactionStore.setCheckForCorruption(checkForCorruption);
+    }
+
+    public boolean isCheckForCorruption() {
+        return transactionStore.isCheckForCorruption();
+    }
+
     public List<PersistenceAdapter> getAdapters() {
         return Collections.unmodifiableList(adapters);
     }

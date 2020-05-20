@@ -510,30 +510,32 @@ public class Journal {
 
             while (true) {
                 int size = checkBatchRecord(bs, randomAccessFile);
-                if (size >= 0 && location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size <= totalFileLength) {
-                    if (size == 0) {
-                        // eof batch record
-                        break;
-                    }
+                if (size > 0 && location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size <= totalFileLength) {
                     location.setOffset(location.getOffset() + BATCH_CONTROL_RECORD_SIZE + size);
-                } else {
-
-                    // Perhaps it's just some corruption... scan through the
-                    // file to find the next valid batch record. We
-                    // may have subsequent valid batch records.
+                } else if (size == 0 && location.getOffset() + EOF_RECORD.length + size <= totalFileLength) {
+                    // eof batch record
+                    break;
+                } else  {
+                    // track corruption and skip if possible
+                    Sequence sequence = new Sequence(location.getOffset());
                     if (findNextBatchRecord(bs, randomAccessFile) >= 0) {
                         int nextOffset = Math.toIntExact(randomAccessFile.getFilePointer() - bs.remaining());
-                        Sequence sequence = new Sequence(location.getOffset(), nextOffset - 1);
-                        LOG.warn("Corrupt journal records found in '{}' between offsets: {}", dataFile.getFile(), sequence);
+                        sequence.setLast(nextOffset - 1);
                         dataFile.corruptedBlocks.add(sequence);
+                        LOG.warn("Corrupt journal records found in '{}' between offsets: {}", dataFile.getFile(), sequence);
                         location.setOffset(nextOffset);
                     } else {
+                        // corruption to eof, don't loose track of this corruption, don't truncate
+                        sequence.setLast(Math.toIntExact(randomAccessFile.getFilePointer()));
+                        dataFile.corruptedBlocks.add(sequence);
+                        LOG.warn("Corrupt journal records found in '{}' from offset: {} to EOF", dataFile.getFile(), sequence);
                         break;
                     }
                 }
             }
 
         } catch (IOException e) {
+            LOG.trace("exception on recovery check of: " + dataFile + ", at " + location, e);
         } finally {
             accessorPool.closeDataFileAccessor(reader);
         }
@@ -543,14 +545,6 @@ public class Journal {
         if (existingLen > dataFile.getLength()) {
             totalLength.addAndGet(dataFile.getLength() - existingLen);
         }
-
-        if (!dataFile.corruptedBlocks.isEmpty()) {
-            // Is the end of the data file corrupted?
-            if (dataFile.corruptedBlocks.getTail().getLast() + 1 == location.getOffset()) {
-                dataFile.setLength((int) dataFile.corruptedBlocks.removeLastSequence().getFirst());
-            }
-        }
-
         return location;
     }
 
@@ -654,7 +648,7 @@ public class Journal {
         return totalLength.get();
     }
 
-    private void rotateWriteFile() throws IOException {
+    public void rotateWriteFile() throws IOException {
        synchronized (dataFileIdLock) {
             DataFile dataFile = nextDataFile;
             if (dataFile == null) {

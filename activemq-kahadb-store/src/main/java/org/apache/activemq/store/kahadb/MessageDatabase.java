@@ -670,6 +670,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return infos.toString();
     }
 
+    public String getPreparedTransaction(TransactionId transactionId) {
+        String result = "";
+        synchronized (preparedTransactions) {
+            List<Operation> operations = preparedTransactions.get(transactionId);
+            if (operations != null) {
+                TranInfo info = new TranInfo();
+                info.id = transactionId;
+                for (Operation operation : preparedTransactions.get(transactionId)) {
+                    info.track(operation);
+                }
+                result = info.toString();
+            }
+        }
+        return result;
+    }
+
     /**
      * Move all the messages that were in the journal into long term storage. We
      * just replay and do a checkpoint.

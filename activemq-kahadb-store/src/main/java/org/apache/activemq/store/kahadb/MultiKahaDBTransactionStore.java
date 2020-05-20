@@ -50,6 +50,7 @@ import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaEntryType;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
+import org.apache.activemq.store.kahadb.disk.journal.DataFile;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.usage.StoreUsage;
@@ -70,6 +71,8 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean recovered = new AtomicBoolean(false);
     private long journalCleanupInterval = Journal.DEFAULT_CLEANUP_INTERVAL;
+    private boolean checkForCorruption = true;
+    private AtomicBoolean corruptJournalDetected = new AtomicBoolean(false);
 
     public MultiKahaDBTransactionStore(MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter) {
         this.multiKahaDBPersistenceAdapter = multiKahaDBPersistenceAdapter;
@@ -198,6 +201,14 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     public long getJournalCleanupInterval() {
         return journalCleanupInterval;
+    }
+
+    public void setCheckForCorruption(boolean checkForCorruption) {
+        this.checkForCorruption = checkForCorruption;
+    }
+
+    public boolean isCheckForCorruption() {
+        return checkForCorruption;
     }
 
     public class Tx {
@@ -341,16 +352,22 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             journal.setMaxFileLength(journalMaxFileLength);
             journal.setWriteBatchSize(journalWriteBatchSize);
             journal.setCleanupInterval(journalCleanupInterval);
+            journal.setCheckForCorruptionOnStartup(checkForCorruption);
+            journal.setChecksum(checkForCorruption);
             IOHelper.mkdirs(journal.getDirectory());
             journal.start();
             recoverPendingLocalTransactions();
             recovered.set(true);
-            store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
+            loaded();
         }
     }
 
+    private void loaded() throws IOException {
+        store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
+    }
+
     private void txStoreCleanup() {
-        if (!recovered.get()) {
+        if (!recovered.get() || corruptJournalDetected.get()) {
             return;
         }
         Set<Integer> knownDataFileIds = new TreeSet<Integer>(journal.getFileMap().keySet());
@@ -380,13 +397,30 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     }
 
     private void recoverPendingLocalTransactions() throws IOException {
-        Location location = journal.getNextLocation(null);
-        while (location != null) {
-            process(location, load(location));
-            location = journal.getNextLocation(location);
+
+        if (checkForCorruption) {
+            for (DataFile dataFile: journal.getFileMap().values()) {
+                if (!dataFile.getCorruptedBlocks().isEmpty()) {
+                    LOG.error("Corrupt Transaction journal records found in db-{}.log at {}", dataFile.getDataFileId(),  dataFile.getCorruptedBlocks());
+                    corruptJournalDetected.set(true);
+                }
+            }
         }
-        pendingCommit.putAll(inflightTransactions);
-        LOG.info("pending local transactions: " + pendingCommit.keySet());
+        if (!corruptJournalDetected.get()) {
+            Location location = null;
+            try {
+                location = journal.getNextLocation(null);
+                while (location != null) {
+                    process(location, load(location));
+                    location = journal.getNextLocation(location);
+                }
+            } catch (Exception oops) {
+                LOG.error("Corrupt journal record; unexpected exception on transaction journal replay of location:" + location, oops);
+                corruptJournalDetected.set(true);
+            }
+            pendingCommit.putAll(inflightTransactions);
+            LOG.info("pending local transactions: " + pendingCommit.keySet());
+        }
     }
 
     public JournalCommand<?> load(Location location) throws IOException {
@@ -436,27 +470,60 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             });
         }
 
+        boolean recoveryWorkPending = false;
         try {
             Broker broker = multiKahaDBPersistenceAdapter.getBrokerService().getBroker();
             // force completion of local xa
             for (TransactionId txid : broker.getPreparedTransactions(null)) {
                 if (multiKahaDBPersistenceAdapter.isLocalXid(txid)) {
-                    try {
-                        if (pendingCommit.keySet().contains(txid)) {
-                            LOG.info("delivering pending commit outcome for tid: " + txid);
-                            broker.commitTransaction(null, txid, false);
-                        } else {
-                            LOG.info("delivering rollback outcome to store for tid: " + txid);
-                            broker.forgetTransaction(null, txid);
+                    recoveryWorkPending = true;
+                    if (corruptJournalDetected.get()) {
+                        // not having a record is meaningless once our tx store is corrupt; we need a heuristic decision
+                        LOG.warn("Pending multi store local transaction {} requires manual heuristic outcome via JMX", txid);
+                        logSomeContext(txid);
+                    } else {
+                        try {
+                            if (pendingCommit.keySet().contains(txid)) {
+                                // we recorded the commit outcome, finish the job
+                                LOG.info("delivering pending commit outcome for tid: " + txid);
+                                broker.commitTransaction(null, txid, false);
+                            } else {
+                                // we have not record an outcome, and would have reported a commit failure, so we must rollback
+                                LOG.info("delivering rollback outcome to store for tid: " + txid);
+                                broker.forgetTransaction(null, txid);
+                            }
+                            persistCompletion(txid);
+                        } catch (Exception ex) {
+                            LOG.error("failed to deliver pending outcome for tid: " + txid, ex);
                         }
-                        persistCompletion(txid);
-                    } catch (Exception ex) {
-                        LOG.error("failed to deliver pending outcome for tid: " + txid, ex);
                     }
                 }
             }
         } catch (Exception e) {
             LOG.error("failed to resolve pending local transactions", e);
+        }
+        // can we ignore corruption and resume
+        if (corruptJournalDetected.get() && !recoveryWorkPending) {
+            // move to new write file, gc will cleanup
+            journal.rotateWriteFile();
+            loaded();
+            corruptJournalDetected.set(false);
+            LOG.info("No heuristics outcome pending after corrupt tx store detection, auto resolving");
+        }
+    }
+
+    private void logSomeContext(TransactionId txid) throws IOException {
+        Tx tx = getTx(txid);
+        if (tx != null) {
+            for (TransactionStore store: tx.getStores()) {
+                for (PersistenceAdapter persistenceAdapter : multiKahaDBPersistenceAdapter.adapters) {
+                    if (persistenceAdapter.createTransactionStore() == store) {
+                        if (persistenceAdapter instanceof KahaDBPersistenceAdapter) {
+                            LOG.warn("Heuristic data in: " + persistenceAdapter + ", "  + ((KahaDBPersistenceAdapter)persistenceAdapter).getStore().getPreparedTransaction(txid));
+                        }
+                    }
+                }
+            }
         }
     }
 
