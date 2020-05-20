@@ -261,8 +261,8 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
         executeUpdateErrorOps.add(9);
         executeUpdateErrorOps.add(12);
 
-        getAutoCommitErrors.add(59);
-        getAutoCommitErrors.add(60);
+        getAutoCommitErrors.add(61);
+        getAutoCommitErrors.add(62);
 
 
         factory = new ActiveMQXAConnectionFactory(connectionUri);
