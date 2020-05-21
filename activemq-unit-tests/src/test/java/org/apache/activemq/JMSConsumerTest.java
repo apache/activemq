@@ -251,6 +251,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         }
 
         final List<Subscription> subscriptions = getDestinationConsumers(broker, destination);
+        Thread.sleep(1000);
 
         assertTrue("prefetch extension..",
                 subscriptions.stream().
