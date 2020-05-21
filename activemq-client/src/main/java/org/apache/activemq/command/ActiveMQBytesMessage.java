@@ -832,6 +832,10 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     private void initializeWriting() throws JMSException {
         checkReadOnlyBody();
+        initializeWritingNoCheck();
+    }
+
+    private void initializeWritingNoCheck() throws JMSException {
         if (this.dataOut == null) {
             this.bytesOut = new ByteArrayOutputStream();
             OutputStream os = bytesOut;
@@ -914,7 +918,8 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     @Override
     public void setObjectProperty(String name, Object value) throws JMSException {
-        initializeWriting();
+        checkReadOnlyProperties();
+        initializeWritingNoCheck();
         super.setObjectProperty(name, value);
     }
 

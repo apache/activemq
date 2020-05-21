@@ -736,7 +736,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         setObjectProperty(name, value);
     }
 
-    private void checkReadOnlyProperties() throws MessageNotWriteableException {
+    protected void checkReadOnlyProperties() throws MessageNotWriteableException {
         if (readOnlyProperties) {
             throw new MessageNotWriteableException("Message properties are read-only");
         }
