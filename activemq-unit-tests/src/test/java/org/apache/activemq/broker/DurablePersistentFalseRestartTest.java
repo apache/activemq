@@ -60,7 +60,7 @@ public class DurablePersistentFalseRestartTest extends BrokerRestartTestSupport 
         // make failover aware of the restarted auto assigned port
         ((FailoverTransport) connection.getTransport().narrow(FailoverTransport.class)).add(true, broker.getTransportConnectors().get(0).getPublishableConnectString());
 
-        TextMessage msg = (TextMessage) consumer.receive(4000);
+        TextMessage msg = (TextMessage) consumer.receive(8000);
         assertNull("did not get a message when persistent=false, message: " + msg, msg);
 
         connection.close();
