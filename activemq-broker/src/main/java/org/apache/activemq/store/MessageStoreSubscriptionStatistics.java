@@ -30,8 +30,6 @@ public class MessageStoreSubscriptionStatistics extends AbstractMessageStoreStat
 
     /**
      * @param enabled
-     * @param countDescription
-     * @param sizeDescription
      */
     public MessageStoreSubscriptionStatistics(boolean enabled) {
         super(enabled, "The number of messages or this subscription in the message store",
@@ -99,8 +97,6 @@ public class MessageStoreSubscriptionStatistics extends AbstractMessageStoreStat
 
         /**
          * @param enabled
-         * @param countDescription
-         * @param sizeDescription
          */
         public SubscriptionStatistics(boolean enabled) {
             super(enabled, "The number of messages or this subscription in the message store",

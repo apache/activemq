@@ -41,8 +41,7 @@ public interface DiscoveryAgent extends Service {
     /**
      * register a service
      * @param name
-     * @param details
-     * @throws JMSException
+     * @throws IOException
      */
     void registerService(String name) throws IOException;
     

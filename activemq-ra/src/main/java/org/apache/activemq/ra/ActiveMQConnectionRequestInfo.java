@@ -160,10 +160,6 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         return true;
     }
 
-    /**
-     * @param i
-     * @return
-     */
     private boolean notEqual(Object o1, Object o2) {
         return (o1 == null ^ o2 == null) || (o1 != null && !o1.equals(o2));
     }

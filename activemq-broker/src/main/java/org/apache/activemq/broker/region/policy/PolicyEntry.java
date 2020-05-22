@@ -1029,7 +1029,7 @@ public class PolicyEntry extends DestinationMapEntry {
     /**
      * Sets the amount of time a destination is inactive before it is marked for GC
      *
-     * @param inactiveTimoutBeforeGC
+     * @param inactiveTimeoutBeforeGC
      *        time in milliseconds to configure as the inactive timeout.
      */
     public void setInactiveTimeoutBeforeGC(long inactiveTimeoutBeforeGC) {
