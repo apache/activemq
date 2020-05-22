@@ -59,7 +59,7 @@ public interface LogWriter {
      * @param log The log to be written to.
      * @param command The command to be logged.
      */
-    public void logResponse (Logger log, Object response);
+    public void logResponse (Logger log, Object command);
 
     /**
      * Writes a message to a log when an asynchronous equest command is sent.
@@ -85,7 +85,7 @@ public interface LogWriter {
     /**
      * Writes a message to a log when an exception is received.
      * @param log The log to be written to.
-     * @param command The command to be logged.
+     * @param error The exception to be logged.
      */
     public void logReceivedException (Logger log, IOException error);
     

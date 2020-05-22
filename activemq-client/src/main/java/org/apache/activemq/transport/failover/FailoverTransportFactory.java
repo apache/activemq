@@ -54,7 +54,7 @@ public class FailoverTransportFactory extends TransportFactory {
     }
 
     /**
-     * @param location
+     * @param compositData
      * @return
      * @throws IOException
      */
