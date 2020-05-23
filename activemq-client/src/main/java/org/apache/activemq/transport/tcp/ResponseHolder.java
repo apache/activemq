@@ -35,7 +35,7 @@ public class ResponseHolder {
     /**
      * Set the Response for this holder
      *
-     * @param response
+     * @param r
      *      the response returned from the remote peer.
      */
     public void setResponse(Response r) {

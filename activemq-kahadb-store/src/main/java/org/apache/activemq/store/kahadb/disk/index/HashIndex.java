@@ -129,10 +129,8 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     /**
      * Constructor
      * 
-     * @param directory
-     * @param name
-     * @param indexManager
-     * @param numberOfBins
+     * @param pageFile
+     * @param pageId
      * @throws IOException
      */
     public HashIndex(PageFile pageFile, long pageId) throws IOException {
@@ -399,10 +397,11 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
     public Marshaller<Value> getValueMarshaller() {
         return valueMarshaller;
     }
+
     /**
      * Set the marshaller for value objects
      * 
-     * @param marshaller
+     * @param valueMarshaller
      */
     public void setValueMarshaller(Marshaller<Value> valueMarshaller) {
         this.valueMarshaller = valueMarshaller;

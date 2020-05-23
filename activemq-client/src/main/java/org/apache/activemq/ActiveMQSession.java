@@ -1383,15 +1383,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Creates a <CODE>QueueBrowser</CODE> object to peek at the messages on
-     * the specified queue.
-     *
-     * @param queue the <CODE>queue</CODE> to access
-     * @exception InvalidDestinationException if an invalid destination is
-     *                    specified
-     * @since 1.1
-     */
-    /**
      * Creates a durable subscriber to the specified topic.
      * <P>
      * If a client needs to receive all the messages published on a topic,

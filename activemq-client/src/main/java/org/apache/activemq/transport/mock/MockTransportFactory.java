@@ -45,7 +45,7 @@ public class MockTransportFactory extends TransportFactory {
     }
 
     /**
-     * @param location
+     * @param compositData
      * @return a new Transport instance.
      * @throws Exception
      */
