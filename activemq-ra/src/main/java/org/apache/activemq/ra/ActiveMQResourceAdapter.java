@@ -43,6 +43,8 @@ import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.activemq.TransactionContext.toXAException;
+
 /**
  * Knows how to connect to one ActiveMQ server. It can then activate endpoints
  * and deliver messages to those end points using the connection configure in
@@ -62,7 +64,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
     private transient BrokerService broker;
     private transient Thread brokerStartThread;
     private ActiveMQConnectionFactory connectionFactory;
-    private transient TransactionContext xaRecoveryTransactionContext;
+    private transient ReconnectingXAResource reconnectingXaResource;
 
     /**
      *
@@ -174,15 +176,13 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                 ServiceSupport.dispose(broker);
                 broker = null;
             }
-            if (xaRecoveryTransactionContext != null) {
-                try {
-                    xaRecoveryTransactionContext.getConnection().close();
-                } catch (Throwable ignored) {}
+            if (reconnectingXaResource != null) {
+                reconnectingXaResource.stop();
             }
         }
 
         this.bootstrapContext = null;
-        this.xaRecoveryTransactionContext = null;
+        this.reconnectingXaResource = null;
     }
 
     /**
@@ -269,16 +269,119 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
         }
         try {
             synchronized ( this ) {
-                if (xaRecoveryTransactionContext == null) {
+                if (reconnectingXaResource == null) {
                     LOG.debug("Init XAResource with: " + this.getInfo());
-                    xaRecoveryTransactionContext = new TransactionContext(makeConnection());
+                    reconnectingXaResource = new ReconnectingXAResource(new TransactionContext(makeConnection()));
                 }
             }
-            return new XAResource[]{ xaRecoveryTransactionContext };
+
+            return new XAResource[]{reconnectingXaResource};
+
         } catch (Exception e) {
             throw new ResourceException(e);
         }
     }
+
+    private void ensureConnection(TransactionContext xaRecoveryTransactionContext) throws XAException {
+        final ActiveMQConnection existingConnection  = xaRecoveryTransactionContext.getConnection();
+        if (existingConnection == null || existingConnection.isTransportFailed()) {
+            try {
+                LOG.debug("reconnect XAResource with: " + this.getInfo(), existingConnection == null ? "" : existingConnection.getFirstFailureError());
+                xaRecoveryTransactionContext.setConnection(makeConnection());
+            } catch (JMSException e) {
+                throw toXAException(e);
+            } finally {
+                if (existingConnection != null) {
+                    try {
+                        existingConnection.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }
+    }
+
+    private class ReconnectingXAResource implements XAResource {
+        protected TransactionContext delegate;
+
+        ReconnectingXAResource(TransactionContext delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void commit(Xid xid, boolean b) throws XAException {
+            ensureConnection(delegate);
+            delegate.commit(xid, b);
+        }
+
+        @Override
+        public void end(Xid xid, int i) throws XAException {
+            ensureConnection(delegate);
+            delegate.end(xid, i);
+        }
+
+        @Override
+        public void forget(Xid xid) throws XAException {
+            ensureConnection(delegate);
+            delegate.forget(xid);
+        }
+
+        @Override
+        public int getTransactionTimeout() throws XAException {
+            ensureConnection(delegate);
+            return delegate.getTransactionTimeout();
+        }
+
+        @Override
+        public boolean isSameRM(XAResource xaResource) throws XAException {
+            if (this == xaResource) {
+                return true;
+            }
+            if (!(xaResource instanceof ReconnectingXAResource)) {
+                return false;
+            }
+
+            ensureConnection(delegate);
+            return delegate.isSameRM(((ReconnectingXAResource)xaResource).delegate);
+        }
+
+        @Override
+        public int prepare(Xid xid) throws XAException {
+            ensureConnection(delegate);
+            return delegate.prepare(xid);
+        }
+
+        @Override
+        public Xid[] recover(int i) throws XAException {
+            ensureConnection(delegate);
+            return delegate.recover(i);
+        }
+
+        @Override
+        public void rollback(Xid xid) throws XAException {
+            ensureConnection(delegate);
+            delegate.rollback(xid);
+
+        }
+
+        @Override
+        public boolean setTransactionTimeout(int i) throws XAException {
+            ensureConnection(delegate);
+            return delegate.setTransactionTimeout(i);
+        }
+
+        @Override
+        public void start(Xid xid, int i) throws XAException {
+            ensureConnection(delegate);
+            delegate.start(xid, i);
+        }
+
+        public void stop() {
+            try {
+                delegate.getConnection().close();
+            } catch (Throwable ignored) {}
+        }
+    };
 
     // ///////////////////////////////////////////////////////////////////////
     //

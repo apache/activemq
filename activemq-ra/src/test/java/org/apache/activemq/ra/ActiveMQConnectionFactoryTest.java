@@ -19,6 +19,7 @@ package org.apache.activemq.ra;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +33,9 @@ import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQTopicSubscriber;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.util.Wait;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -115,5 +119,105 @@ public class ActiveMQConnectionFactoryTest {
         assertEquals("one resource", 1, resource2.length);
         assertTrue("isSameRM true", resources[0].isSameRM(resource2[0]));
         assertTrue("the same instance", resources[0].equals(resource2[0]));
+
+        ra.stop();
     }
+
+
+    @Test
+    public void testXAResourceReconnect() throws Exception {
+
+        BrokerService brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+
+        try {
+            final TransportConnector transportConnector = brokerService.getTransportConnectors().get(0);
+
+            String failoverUrl = String.format("failover:(%s)?maxReconnectAttempts=1", transportConnector.getConnectUri());
+
+            ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+            ra.start(null);
+            ra.setServerUrl(failoverUrl);
+            ra.setUserName(user);
+            ra.setPassword(pwd);
+
+            XAResource[] resources = ra.getXAResources(null);
+            assertEquals("one resource", 1, resources.length);
+
+            assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+            transportConnector.stop();
+            assertTrue("no connections", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return transportConnector.getConnections().isEmpty();
+                }
+            }));
+
+            try {
+                resources[0].recover(100);
+                fail("Expect error on broken connection");
+            } catch (Exception expected) {
+            }
+
+            transportConnector.start();
+
+            // should recover ok
+            assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+        } finally {
+            brokerService.stop();
+        }
+    }
+
+    @Test
+    public void testXAResourceFailoverFailBack() throws Exception {
+
+        BrokerService brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.addConnector("tcp://localhost:0");
+        brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+
+        try {
+
+            final TransportConnector primary = brokerService.getTransportConnectors().get(0);
+            final TransportConnector secondary = brokerService.getTransportConnectors().get(1);
+
+            String failoverUrl = String.format("failover:(%s,%s)?maxReconnectAttempts=1&randomize=false", primary.getConnectUri(), secondary.getConnectUri());
+
+            ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+            ra.start(null);
+            ra.setServerUrl(failoverUrl);
+            ra.setUserName(user);
+            ra.setPassword(pwd);
+
+            XAResource[] resources = ra.getXAResources(null);
+            assertEquals("one resource", 1, resources.length);
+
+            assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+            primary.stop();
+
+            // should recover ok
+            assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+            primary.start();
+
+            // should be ok
+            assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+            secondary.stop();
+
+            // should recover ok
+            assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+        } finally {
+            brokerService.stop();
+        }
+
+    }
+
 }

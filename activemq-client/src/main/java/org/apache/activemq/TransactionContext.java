@@ -795,7 +795,7 @@ public class TransactionContext implements XAResource {
      * @param e JMSException to convert
      * @return XAException wrapping original exception or its message
      */
-    private XAException toXAException(JMSException e) {
+    public static XAException toXAException(JMSException e) {
         if (e.getCause() != null && e.getCause() instanceof XAException) {
             XAException original = (XAException)e.getCause();
             XAException xae = new XAException(original.getMessage());
@@ -818,7 +818,7 @@ public class TransactionContext implements XAResource {
         return xae;
     }
 
-    private int parseFromMessageOr(String message, int fallbackCode) {
+    private static int parseFromMessageOr(String message, int fallbackCode) {
         final String marker = "xaErrorCode:";
         final int index = message.lastIndexOf(marker);
         if (index > -1) {
