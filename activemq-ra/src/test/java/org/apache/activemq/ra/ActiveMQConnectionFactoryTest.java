@@ -99,6 +99,7 @@ public class ActiveMQConnectionFactoryTest {
         assertEquals(0, ((ActiveMQTopicSubscriber) sub).getPrefetchNumber());
 
         con.close();
+        ra.stop();
     }
 
     @Test(timeout = 60000)
@@ -167,6 +168,7 @@ public class ActiveMQConnectionFactoryTest {
             // should recover ok
             assertEquals("no pending transactions", 0, resources[0].recover(100).length);
 
+            ra.stop();
         } finally {
             brokerService.stop();
         }
@@ -213,6 +215,8 @@ public class ActiveMQConnectionFactoryTest {
 
             // should recover ok
             assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+            ra.stop();
 
         } finally {
             brokerService.stop();
