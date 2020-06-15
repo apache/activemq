@@ -224,4 +224,88 @@ public class ActiveMQConnectionFactoryTest {
 
     }
 
+    @Test
+    public void testXAResourceRefAfterStop() throws Exception {
+
+        BrokerService brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+
+        try {
+
+            final TransportConnector primary = brokerService.getTransportConnectors().get(0);
+
+            String failoverUrl = String.format("failover:(%s)?maxReconnectAttempts=1&randomize=false", primary.getConnectUri());
+
+            ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+            ra.start(null);
+            ra.setServerUrl(failoverUrl);
+            ra.setUserName(user);
+            ra.setPassword(pwd);
+
+            XAResource[] resources = ra.getXAResources(null);
+            assertEquals("one resource", 1, resources.length);
+
+            assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+            ra.stop();
+
+            try {
+                resources[0].recover(100);
+                fail("Expect error on call after stop b/c of no reconnection");
+            } catch (Exception expected) {
+            }
+
+        } finally {
+            brokerService.stop();
+        }
+    }
+
+    @Test
+    public void testXAResourceRefAfterFailAndStop() throws Exception {
+
+        BrokerService brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+
+        try {
+
+            final TransportConnector primary = brokerService.getTransportConnectors().get(0);
+
+            String failoverUrl = String.format("failover:(%s)?maxReconnectAttempts=1&randomize=false", primary.getConnectUri());
+
+            ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+            ra.start(null);
+            ra.setServerUrl(failoverUrl);
+            ra.setUserName(user);
+            ra.setPassword(pwd);
+
+            XAResource[] resources = ra.getXAResources(null);
+            assertEquals("one resource", 1, resources.length);
+
+            assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+            primary.stop();
+
+            assertTrue("no connections", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return primary.getConnections().isEmpty();
+                }
+            }));
+
+            ra.stop();
+
+            try {
+                resources[0].recover(100);
+                fail("Expect error on call after stop b/c of no reconnection");
+            } catch (Exception expected) {
+            }
+
+        } finally {
+            brokerService.stop();
+        }
+    }
 }
