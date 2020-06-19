@@ -101,6 +101,20 @@
                     <c:param name="JMSDestination" value="${row.name}" />
                     <c:param name="JMSDestinationType" value="queue"   />
                     <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Delete</a>
+    <c:choose>
+    <c:when test="${row.isPaused()}">
+    <a href="<c:url value="resumeDestination.action">
+                    <c:param name="JMSDestination" value="${row.name}" />
+                    <c:param name="JMSDestinationType" value="queue"   />
+                    <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Resume</a>
+    </c:when>
+    <c:otherwise>
+    <a href="<c:url value="pauseDestination.action">
+                    <c:param name="JMSDestination" value="${row.name}" />
+                    <c:param name="JMSDestinationType" value="queue"   />
+                    <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Pause</a>
+    </c:otherwise>
+    </c:choose>
 </td>
 </tr>
 
