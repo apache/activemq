@@ -2860,12 +2860,12 @@ public class BrokerService implements Service {
                 @Override
                 public void rejectedExecution(final Runnable r, final ThreadPoolExecutor executor) {
                     try {
-                        executor.getQueue().offer(r, 60, TimeUnit.SECONDS);
+                        if (!executor.getQueue().offer(r, 60, TimeUnit.SECONDS)) {
+                            throw new RejectedExecutionException("Timed Out while attempting to enqueue Task.");
+                        }
                     } catch (InterruptedException e) {
                         throw new RejectedExecutionException("Interrupted waiting for BrokerService.worker");
                     }
-
-                    throw new RejectedExecutionException("Timed Out while attempting to enqueue Task.");
                 }
             });
         }
