@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.16.0-SNAPSHOT</version>
+    <version>5.16.0</version>
   </parent>
 
   <artifactId>activemq-karaf</artifactId>
@@ -159,7 +159,7 @@
                 </artifact>
                 <artifact>
                   <file>target/classes/activemq.xml</file>
-                  <type>xml</type>>
+                  <type>xml</type>&gt;
                   <classifier>activemq</classifier>
                 </artifact>
                 <artifact>
