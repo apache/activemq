@@ -323,12 +323,37 @@ invokeJar(){
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
    fi
 
+   # Get Java version
+   # Use in priority xpg4 awk or nawk on SunOS as standard awk is outdated
+   AWK=awk
+   if ${solaris}; then
+     if [ -x /usr/xpg4/bin/awk ]; then
+       AWK=/usr/xpg4/bin/awk
+     elif [ -x /usr/bin/nawk ]; then
+       AWK=/usr/bin/nawk
+     fi
+   fi
+   VERSION=`"${JAVACMD}" -version 2>&1 | ${AWK} -F '"' '/version/ {print $2}' | sed -e 's/_.*//g; s/^1\.//g; s/\..*//g; s/-.*//g;'`
+
    # Execute java binary
    if [ -n "$TASK_TODO" ] && [ "$TASK_TODO" != "stop" ];then
       if [ -z "$ACTIVEMQ_OUT" ]; then
          ACTIVEMQ_OUT="/dev/null"
       fi
-      $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+      if [ "${VERSION}" -gt "8" ]; then
+        $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+              --add-reads=java.xml=java.logging \
+              --add-opens java.base/java.security=ALL-UNNAMED \
+              --add-opens java.base/java.net=ALL-UNNAMED \
+              --add-opens java.base/java.lang=ALL-UNNAMED \
+              --add-opens java.base/java.util=ALL-UNNAMED \
+              --add-opens java.naming/javax.naming.spi=ALL-UNNAMED \
+              --add-opens java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED \
+              --add-exports=java.base/sun.net.www.protocol.http=ALL-UNNAMED \
+              --add-exports=java.base/sun.net.www.protocol.https=ALL-UNNAMED \
+              --add-exports=java.base/sun.net.www.protocol.jar=ALL-UNNAMED \
+              --add-exports=jdk.xml.dom/org.w3c.dom.html=ALL-UNNAMED \
+              --add-exports=jdk.naming.rmi/com.sun.jndi.url.rmi=ALL-UNNAMED \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
@@ -339,30 +364,94 @@ invokeJar(){
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > "${PIDFILE}";
               echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
-      RET="$?"
+        RET="$?"
+      else
+        $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+              -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
+              -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
+              -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+              -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
+              -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+              $ACTIVEMQ_CYGWIN \
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >> $ACTIVEMQ_OUT 2>&1 &
+              RET=\"\$?\"; APID=\"\$!\";
+              echo \$APID > "${PIDFILE}";
+              echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
+        RET="$?"
+      fi
    elif [ -n "$TASK_TODO" ] && [ "$TASK_TODO" = "stop" ];then
           SPID="`cat "${PIDFILE}"`"
-          $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
-              -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
-              -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
-              -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
-              -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
-              -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
-              $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
-              RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
-      RET="$?"
+          if [ "${VERSION}" -gt "8" ]; then
+              $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+                --add-reads=java.xml=java.logging \
+                --add-opens java.base/java.security=ALL-UNNAMED \
+                --add-opens java.base/java.net=ALL-UNNAMED \
+                --add-opens java.base/java.lang=ALL-UNNAMED \
+                --add-opens java.base/java.util=ALL-UNNAMED \
+                --add-opens java.naming/javax.naming.spi=ALL-UNNAMED \
+                --add-opens java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED \
+                --add-exports=java.base/sun.net.www.protocol.http=ALL-UNNAMED \
+                --add-exports=java.base/sun.net.www.protocol.https=ALL-UNNAMED \
+                --add-exports=java.base/sun.net.www.protocol.jar=ALL-UNNAMED \
+                --add-exports=jdk.xml.dom/org.w3c.dom.html=ALL-UNNAMED \
+                --add-exports=jdk.naming.rmi/com.sun.jndi.url.rmi=ALL-UNNAMED \
+                -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
+                -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
+                -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+                -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
+                -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+                $ACTIVEMQ_CYGWIN \
+                -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
+                RET=\"\$?\"; APID=\"\$!\";
+                echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
+              RET="$?"
+          else
+              $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+                -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
+                -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
+                -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+                -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
+                -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+                $ACTIVEMQ_CYGWIN \
+                -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
+                RET=\"\$?\"; APID=\"\$!\";
+                echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
+              RET="$?"
+          fi
    else
-      $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
-              -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
-              -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
-              -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
-              -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
-              -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
-              $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
-      RET="$?"
+      if [ "${VERSION}" -gt "8" ]; then
+        $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+          --add-reads=java.xml=java.logging \
+          --add-opens java.base/java.security=ALL-UNNAMED \
+          --add-opens java.base/java.net=ALL-UNNAMED \
+          --add-opens java.base/java.lang=ALL-UNNAMED \
+          --add-opens java.base/java.util=ALL-UNNAMED \
+          --add-opens java.naming/javax.naming.spi=ALL-UNNAMED \
+          --add-opens java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED \
+          --add-exports=java.base/sun.net.www.protocol.http=ALL-UNNAMED \
+          --add-exports=java.base/sun.net.www.protocol.https=ALL-UNNAMED \
+          --add-exports=java.base/sun.net.www.protocol.jar=ALL-UNNAMED \
+          --add-exports=jdk.xml.dom/org.w3c.dom.html=ALL-UNNAMED \
+          --add-exports=jdk.naming.rmi/com.sun.jndi.url.rmi=ALL-UNNAMED \
+          -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
+          -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
+          -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+          -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
+          -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+          $ACTIVEMQ_CYGWIN \
+          -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
+        RET="$?"
+      else
+        $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+          -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
+          -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
+          -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+          -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
+          -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+          $ACTIVEMQ_CYGWIN \
+          -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
+        RET="$?"
+      fi
    fi
    return $RET
 }
