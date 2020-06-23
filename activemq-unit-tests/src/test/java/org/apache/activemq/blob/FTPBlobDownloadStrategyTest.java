@@ -18,8 +18,8 @@ package org.apache.activemq.blob;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.jms.JMSException;
@@ -46,7 +46,9 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
         wrt.close();
 
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
-        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(new BlobTransferPolicy());
+        BlobTransferPolicy transferPolicy = new BlobTransferPolicy();
+        transferPolicy.setUploadUrl(ftpUrl);
+        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(transferPolicy);
         InputStream stream;
         try {
             message.setURL(new URL(ftpUrl + "test.txt"));
@@ -70,9 +72,13 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
         }
     }
 
-    public void testWrongAuthentification() throws MalformedURLException {
+    public void testWrongAuthentification() throws Exception {
+        setConnection();
+
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
-        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(new BlobTransferPolicy());
+        BlobTransferPolicy transferPolicy = new BlobTransferPolicy();
+        transferPolicy.setUploadUrl(ftpUrl);
+        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(transferPolicy);
         try {
             message.setURL(new URL("ftp://" + userNamePass + "_wrong:" + userNamePass + "@localhost:"	+ ftpPort + "/ftptest/"));
             strategy.getInputStream(message);
@@ -88,18 +94,18 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
         assertTrue("Expect Exception", false);
     }
 
-    public void testWrongFTPPort() throws MalformedURLException {
+    public void testWrongFTPPort() throws Exception {
+        setConnection();
+
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
-        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(new BlobTransferPolicy());
+        BlobTransferPolicy transferPolicy = new BlobTransferPolicy();
+        transferPolicy.setUploadUrl(ftpUrl);
+        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(transferPolicy);
         try {
             message.setURL(new URL("ftp://" + userNamePass + ":" + userNamePass + "@localhost:"	+ 422 + "/ftptest/"));
             strategy.getInputStream(message);
-        } catch(JMSException e) {
-            assertEquals("Wrong Exception", "Problem connecting the FTP-server", e.getMessage());
-            return;
-        } catch(Exception e) {
-            e.printStackTrace();
-            assertTrue("Wrong Exception "+ e, false);
+        } catch (IOException e) {
+            assertEquals("Wrong Exception", "The message URL port is incorrect", e.getMessage());
             return;
         }
 
